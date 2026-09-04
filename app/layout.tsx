@@ -13,9 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  applicationName: 'GymApp',
   title: 'GymApp',
   description:
     'Companion app tactil para ejecutar entrenamientos serie a serie.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'GymApp',
+  },
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/app-icon.svg',
+  },
 };
 
 export default function RootLayout({

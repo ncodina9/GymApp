@@ -24,9 +24,15 @@ El plan cargado por la app esta materializado en `data/trainingPlan.json` y se g
 
 ## Persistencia local
 
-La app esta pensada para correr en local en el iPhone como PWA estatica. Guarda el borrador de pantalla en `localStorage` y cada serie registrada como evento en IndexedDB. La pantalla inicial permite reanudar una sesion empezada.
+La app esta pensada para correr en local en el iPhone como PWA instalada desde HTTPS. Guarda el borrador de pantalla en `localStorage` y cada serie registrada como evento en IndexedDB. La pantalla inicial permite reanudar una sesion empezada.
 
 Al terminar, `Guardar CSV` genera un archivo descargable/compartible desde iOS para poder guardarlo manualmente en Archivos, idealmente en la carpeta de exports del sistema de entrenamiento. El CSV sale de los eventos por serie e incluye RIR, molestias y nota rapida.
+
+## PWA y prueba real
+
+La app incluye `manifest.webmanifest`, icono instalable y service worker basico. Para probarla en el gimnasio sin el Mac, despliega `main` en Vercel, abre la URL HTTPS desde Safari y usa `Anadir a pantalla de inicio`.
+
+Ver [docs/vercel-pwa-testing.md](./docs/vercel-pwa-testing.md).
 
 ## Desarrollo
 
@@ -54,6 +60,14 @@ npm run generate:plan
 ```sh
 npm run build
 ```
+
+Para Vercel, el repositorio incluye `vercel.json` y usa:
+
+```sh
+npm run build:vercel
+```
+
+Ese build genera `.vercel/output` mediante Nitro.
 
 ## Roadmap
 

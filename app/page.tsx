@@ -112,6 +112,27 @@ const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 
 const fallbackSession = trainingPlan.sessions[0];
 
+const registerServiceWorker = () => {
+  if (
+    typeof window === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    window.location.protocol === 'http:'
+  ) {
+    return;
+  }
+
+  const register = () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  };
+
+  if (document.readyState === 'complete') {
+    register();
+    return;
+  }
+
+  window.addEventListener('load', register, { once: true });
+};
+
 const getRecommendedSession = () => {
   const today = new Date();
   const todayIso = today.toISOString().slice(0, 10);
@@ -284,6 +305,10 @@ export default function Home() {
     }, 0);
 
     return () => window.clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    registerServiceWorker();
   }, []);
 
   useEffect(() => {

@@ -1,0 +1,19 @@
+{
+  "name": "GymApp",
+  "short_name": "GymApp",
+  "description": "Companion app tactil para ejecutar entrenamientos serie a serie.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0c79d8",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
