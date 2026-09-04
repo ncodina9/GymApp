@@ -809,17 +809,17 @@ function TodayScreen({
 }) {
   return (
     <section className="flex flex-1 flex-col gap-4">
-      <div className="grid h-[232px] grid-rows-[auto_76px_48px_auto] rounded-lg border bg-card p-4 shadow-sm">
+      <div className="flex h-[232px] flex-col rounded-lg border bg-card p-4 shadow-sm">
         <p className="text-sm font-semibold leading-none text-muted-foreground">
           Hoy toca
         </p>
-        <h2 className="mt-2 overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <h2 className="mt-2 h-[70px] overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.label}
         </h2>
-        <p className="mt-2 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <p className="mt-2 h-10 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.focus}
         </p>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <div className="mt-auto grid grid-cols-3 gap-2 text-center">
           <Metric label="Fecha" value={formatDate(selectedSession.date)} />
           <Metric
             label="Tiempo"
