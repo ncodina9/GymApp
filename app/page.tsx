@@ -217,6 +217,27 @@ const formatClock = (totalSeconds: number) => {
   return `${minutes}:${seconds}`;
 };
 
+const createEventId = () => {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
+    return crypto.randomUUID();
+  }
+
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.getRandomValues === 'function'
+  ) {
+    const bytes = crypto.getRandomValues(new Uint32Array(4));
+    return Array.from(bytes, (part) => part.toString(16).padStart(8, '0')).join(
+      '-',
+    );
+  }
+
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+};
+
 const csvEscape = (value: string | number) => {
   const text = String(value);
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
@@ -405,7 +426,7 @@ export default function Home() {
       }
 
       const nextRecord: StoredSetEvent = {
-        id: crypto.randomUUID(),
+        id: createEventId(),
         performedAt: new Date().toISOString(),
         planId: trainingPlan.planId,
         sessionId: selectedSession.sessionId,
@@ -1236,13 +1257,13 @@ function FeedbackScreen({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 text-center">
-          <div className="rounded-lg border bg-card px-3 py-2.5">
+          <div className="rounded-lg border bg-card px-3 py-2">
             <p className="text-sm font-black text-muted-foreground">Reps</p>
-            <p className="text-4xl font-black leading-none">{reps}</p>
+            <p className="text-[2rem] font-black leading-none">{reps}</p>
           </div>
-          <div className="rounded-lg border bg-card px-3 py-2.5">
+          <div className="rounded-lg border bg-card px-3 py-2">
             <p className="text-sm font-black text-muted-foreground">Peso</p>
-            <p className="text-[2rem] font-black leading-none">
+            <p className="text-[1.85rem] font-black leading-none">
               {formatWeight(weight)}
             </p>
           </div>
@@ -1313,7 +1334,7 @@ function SetFeedback({
   onSetNoteChange: (value: string) => void;
 }) {
   return (
-    <div className="grid shrink-0 gap-1.5 rounded-lg border bg-card p-2">
+    <div className="grid shrink-0 gap-2 rounded-lg border bg-card p-2.5">
       <div
         className="grid items-center gap-2"
         style={{ gridTemplateColumns: 'minmax(0, 1fr) 112px' }}
@@ -1321,11 +1342,11 @@ function SetFeedback({
         <span className="text-sm font-black text-muted-foreground">RIR</span>
         <div
           className="grid items-center gap-1"
-          style={{ gridTemplateColumns: '40px minmax(0, 1fr) 40px' }}
+          style={{ gridTemplateColumns: '44px minmax(0, 1fr) 44px' }}
         >
           <Button
             aria-label="Bajar RIR"
-            className="h-8 w-full rounded-md"
+            className="h-10 w-full rounded-md"
             variant="secondary"
             onClick={() => onRirChange(Math.max(0, rir - 1))}
           >
@@ -1336,7 +1357,7 @@ function SetFeedback({
           </span>
           <Button
             aria-label="Subir RIR"
-            className="h-8 w-full rounded-md"
+            className="h-10 w-full rounded-md"
             variant="secondary"
             onClick={() => onRirChange(Math.min(5, rir + 1))}
           >
@@ -1365,7 +1386,7 @@ function SetFeedback({
         {noteOptions.map((option) => (
           <button
             key={option}
-            className={`h-9 rounded-md border text-sm font-black ${
+            className={`h-11 rounded-md border text-sm font-black ${
               setNote === option
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border bg-secondary text-secondary-foreground'
@@ -1393,13 +1414,13 @@ function PainControl({
   return (
     <div
       className="grid items-center gap-1.5"
-      style={{ gridTemplateColumns: 'minmax(0, 1fr) repeat(4, 40px)' }}
+      style={{ gridTemplateColumns: 'minmax(0, 1fr) repeat(4, 44px)' }}
     >
       <span className="text-sm font-black text-muted-foreground">{label}</span>
       {[0, 1, 2, 3].map((level) => (
         <button
           key={level}
-          className={`h-8 rounded-md border text-sm font-black ${
+          className={`h-10 rounded-md border text-sm font-black ${
             value === level
               ? 'border-primary bg-primary text-primary-foreground'
               : 'border-border bg-secondary text-secondary-foreground'
@@ -1534,7 +1555,7 @@ function TactileNumber({
           <p className="text-base font-black text-muted-foreground">{label}</p>
           <span aria-hidden="true" />
         </div>
-        <p className="max-w-full text-center text-[clamp(3rem,18vw,5.25rem)] font-black leading-none tracking-normal">
+        <p className="max-w-full text-center text-[clamp(2.75rem,16vw,4.75rem)] font-black leading-none tracking-normal">
           {value}
         </p>
       </div>
