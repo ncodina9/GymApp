@@ -2,8 +2,8 @@
   "planId": "training-plan-2026-q4",
   "sourceDocument": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
   "startsOn": "2026-09-07",
-  "endsOn": "2026-11-27",
-  "durationWeeks": 12,
+  "endsOn": "2026-12-18",
+  "durationWeeks": 13,
   "sessions": [
     {
       "sessionId": "2026-09-07-lunes-torso-fuerza",
@@ -286,281 +286,6 @@
               "targetWeightKg": 0,
               "restSeconds": 60,
               "type": "working"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "sessionId": "2026-09-08-martes-pierna-fuerza-controlada",
-      "date": "2026-09-08",
-      "week": 1,
-      "weekday": "martes",
-      "sessionLabel": "Martes - Pierna fuerza controlada",
-      "label": "Pierna fuerza controlada",
-      "estimatedMinutes": 60,
-      "focus": "Sentadilla, bisagra e hip thrust",
-      "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
-      "exercises": [
-        {
-          "exerciseId": "sentadilla-barra",
-          "name": "Sentadilla con barra",
-          "type": "Basico",
-          "block": "A",
-          "phase": "acumulacion",
-          "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, cambiar a multipower o reducir rango.",
-          "target": "4x5 @ 65 kg",
-          "decisionOptions": ["Mantener", "Subir a 67.5 kg", "Bajar a 62.5 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 5,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 5,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 5,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 5,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "type": "Basico",
-          "block": "B",
-          "phase": "acumulacion",
-          "notes": "Cadera atras, espalda neutra y barra pegada.",
-          "target": "4x6 @ 65 kg",
-          "decisionOptions": ["Mantener", "Subir a 67.5 kg", "Bajar a 62.5 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 6,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 6,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 6,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 6,
-              "targetWeightKg": 65,
-              "restSeconds": 150,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "hip-thrust-barra",
-          "name": "Hip thrust / puente con barra",
-          "type": "Basico",
-          "block": "C",
-          "phase": "acumulacion",
-          "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
-          "target": "4x8 @ 90 kg",
-          "decisionOptions": ["Mantener", "Subir a 95 kg", "Bajar a 85 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 8,
-              "targetWeightKg": 90,
-              "restSeconds": 120,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 8,
-              "targetWeightKg": 90,
-              "restSeconds": 120,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 8,
-              "targetWeightKg": 90,
-              "restSeconds": 120,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 8,
-              "targetWeightKg": 90,
-              "restSeconds": 120,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "extension-cuadriceps",
-          "name": "Extension de cuadriceps",
-          "type": "Accesorio",
-          "block": "D1",
-          "phase": "acumulacion",
-          "notes": "No empujar dolor de rodilla por encima de 3/10.",
-          "target": "3x12 @ 32.5 kg",
-          "decisionOptions": ["Mantener", "Subir a 35 kg", "Bajar a 30 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 12,
-              "targetWeightKg": 32.5,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 12,
-              "targetWeightKg": 32.5,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 12,
-              "targetWeightKg": 32.5,
-              "restSeconds": 75,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "curl-femoral-maquina",
-          "name": "Curl femoral maquina",
-          "type": "Accesorio",
-          "block": "D2",
-          "phase": "acumulacion",
-          "notes": "Usar RIR 2 hasta acumular referencia de carga.",
-          "target": "3x11 @ 0 kg",
-          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 11,
-              "targetWeightKg": 0,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 11,
-              "targetWeightKg": 0,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 11,
-              "targetWeightKg": 0,
-              "restSeconds": 75,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "gemelos-pie",
-          "name": "Elevacion de gemelos de pie",
-          "type": "Accesorio",
-          "block": "E",
-          "phase": "acumulacion",
-          "notes": "Pausa 1 s arriba y bajada controlada.",
-          "target": "4x12 @ 50 kg",
-          "decisionOptions": ["Mantener", "Subir a 52.5 kg", "Bajar a 47.5 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "core-plancha-dead-bug",
-          "name": "Plancha o dead bug",
-          "type": "Accesorio",
-          "block": "F",
-          "phase": "acumulacion",
-          "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45s",
-          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 45,
-              "targetWeightKg": 0,
-              "targetDurationSeconds": 45,
-              "restSeconds": 45,
-              "type": "timed"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 45,
-              "targetWeightKg": 0,
-              "targetDurationSeconds": 45,
-              "restSeconds": 45,
-              "type": "timed"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 45,
-              "targetWeightKg": 0,
-              "targetDurationSeconds": 45,
-              "restSeconds": 45,
-              "type": "timed"
             }
           ]
         }
@@ -5212,6 +4937,332 @@
       ]
     },
     {
+      "sessionId": "2026-10-07-viernes-torso-accesorio-posterior",
+      "date": "2026-10-07",
+      "week": 5,
+      "weekday": "miercoles",
+      "sessionLabel": "Miercoles - Torso accesorio + posterior",
+      "label": "Torso accesorio + posterior",
+      "estimatedMinutes": 60,
+      "focus": "Torso accesorio y cadena posterior",
+      "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
+      "exercises": [
+        {
+          "exerciseId": "press-cerrado-multipower",
+          "name": "Press banca agarre cerrado o press en multipower",
+          "type": "Basico",
+          "block": "A",
+          "phase": "intensificacion",
+          "notes": "Rango 6-8 reps. Cuidar muneca.",
+          "target": "5x6 @ 57.5 kg",
+          "decisionOptions": ["Mantener", "Subir a 60 kg", "Bajar a 55 kg"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 4,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 5,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "dominadas-supinas",
+          "name": "Dominadas supinas",
+          "type": "Basico",
+          "block": "B",
+          "phase": "intensificacion",
+          "notes": "Peso corporal o +2.5 kg si sale limpio.",
+          "target": "6x6 @ 0 kg",
+          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 6,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 6,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 6,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 4,
+              "targetReps": 6,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 5,
+              "targetReps": 6,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 6,
+              "targetReps": 6,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "rdl-tecnico",
+          "name": "Peso muerto rumano tecnico",
+          "type": "Basico tecnico",
+          "block": "C",
+          "phase": "intensificacion",
+          "notes": "Tempo 3 s bajada, 1 s pausa, subida firme.",
+          "target": "3x10 @ 60 kg",
+          "decisionOptions": ["Mantener", "Subir a 62.5 kg", "Bajar a 57.5 kg"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 10,
+              "targetWeightKg": 60,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 10,
+              "targetWeightKg": 60,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 10,
+              "targetWeightKg": 60,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "hip-thrust-volumen",
+          "name": "Hip thrust volumen",
+          "type": "Basico",
+          "block": "D",
+          "phase": "intensificacion",
+          "notes": "Rango 10-12 reps. Pausa arriba.",
+          "target": "5x10 @ 85 kg",
+          "decisionOptions": ["Mantener", "Subir a 90 kg", "Bajar a 80 kg"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 10,
+              "targetWeightKg": 85,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 10,
+              "targetWeightKg": 85,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 10,
+              "targetWeightKg": 85,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 4,
+              "targetReps": 10,
+              "targetWeightKg": 85,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 5,
+              "targetReps": 10,
+              "targetWeightKg": 85,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "gemelos-sentado-multipower",
+          "name": "Elevacion de gemelos sentado o en prensa/multipower",
+          "type": "Accesorio",
+          "block": "E",
+          "phase": "intensificacion",
+          "notes": "Usar RIR 2 si la maquina no tiene referencia clara.",
+          "target": "3x15 @ 0 kg",
+          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 15,
+              "targetWeightKg": 0,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 15,
+              "targetWeightKg": 0,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 15,
+              "targetWeightKg": 0,
+              "restSeconds": 60,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "curl-biceps-barra-mancuernas",
+          "name": "Curl biceps barra o mancuernas",
+          "type": "Accesorio",
+          "block": "F1",
+          "phase": "intensificacion",
+          "notes": "Peso por mancuerna si se usan mancuernas.",
+          "target": "3x11 @ 15 kg",
+          "decisionOptions": ["Mantener", "Subir a 17.5 kg", "Bajar a 12.5 kg"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 15,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 15,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 11,
+              "targetWeightKg": 15,
+              "restSeconds": 60,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "extension-triceps-polea",
+          "name": "Extension triceps polea",
+          "type": "Accesorio",
+          "block": "F2",
+          "phase": "intensificacion",
+          "notes": "Rango 10-12 reps con RIR 2.",
+          "target": "3x11 @ 0 kg",
+          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 60,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "elevacion-lateral-mecanica",
+          "name": "Elevacion lateral mecanica",
+          "type": "Accesorio",
+          "block": "G",
+          "phase": "intensificacion",
+          "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
+          "target": "3x28 @ 9 kg",
+          "decisionOptions": ["Mantener", "Subir a 11.5 kg", "Bajar a 6.5 kg"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 28,
+              "targetWeightKg": 9,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 28,
+              "targetWeightKg": 9,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 28,
+              "targetWeightKg": 9,
+              "restSeconds": 60,
+              "type": "working"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "sessionId": "2026-10-08-jueves-torso-volumen-y-potencia",
       "date": "2026-10-08",
       "week": 5,
@@ -5580,270 +5631,197 @@
       ]
     },
     {
-      "sessionId": "2026-10-09-viernes-torso-accesorio-posterior",
-      "date": "2026-10-09",
-      "week": 5,
-      "weekday": "viernes",
-      "sessionLabel": "Viernes - Torso accesorio + posterior",
-      "label": "Torso accesorio + posterior",
+      "sessionId": "2026-10-13-martes-pierna-fuerza-controlada",
+      "date": "2026-10-13",
+      "week": 6,
+      "weekday": "martes",
+      "sessionLabel": "Martes - Pierna fuerza controlada",
+      "label": "Pierna fuerza controlada",
       "estimatedMinutes": 60,
-      "focus": "Torso accesorio y cadena posterior",
+      "focus": "Sentadilla, bisagra e hip thrust",
       "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
       "exercises": [
         {
-          "exerciseId": "press-cerrado-multipower",
-          "name": "Press banca agarre cerrado o press en multipower",
+          "exerciseId": "sentadilla-barra",
+          "name": "Sentadilla con barra",
           "type": "Basico",
           "block": "A",
           "phase": "intensificacion",
-          "notes": "Rango 6-8 reps. Cuidar muneca.",
-          "target": "5x6 @ 57.5 kg",
-          "decisionOptions": ["Mantener", "Subir a 60 kg", "Bajar a 55 kg"],
+          "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, cambiar a multipower o reducir rango.",
+          "target": "5x4 @ 75 kg",
+          "decisionOptions": ["Mantener", "Subir a 77.5 kg", "Bajar a 72.5 kg"],
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 6,
-              "targetWeightKg": 57.5,
+              "targetReps": 4,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 6,
-              "targetWeightKg": 57.5,
+              "targetReps": 4,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 6,
-              "targetWeightKg": 57.5,
+              "targetReps": 4,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 4,
-              "targetReps": 6,
-              "targetWeightKg": 57.5,
+              "targetReps": 4,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 5,
-              "targetReps": 6,
-              "targetWeightKg": 57.5,
+              "targetReps": 4,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             }
           ]
         },
         {
-          "exerciseId": "dominadas-supinas",
-          "name": "Dominadas supinas",
+          "exerciseId": "peso-muerto-rumano-barra",
+          "name": "Peso muerto rumano con barra",
           "type": "Basico",
           "block": "B",
           "phase": "intensificacion",
-          "notes": "Peso corporal o +2.5 kg si sale limpio.",
-          "target": "6x6 @ 0 kg",
-          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
+          "notes": "Cadera atras, espalda neutra y barra pegada.",
+          "target": "5x5 @ 85 kg",
+          "decisionOptions": ["Mantener", "Subir a 87.5 kg", "Bajar a 82.5 kg"],
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 6,
-              "targetWeightKg": 0,
+              "targetReps": 5,
+              "targetWeightKg": 85,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 6,
-              "targetWeightKg": 0,
+              "targetReps": 5,
+              "targetWeightKg": 85,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 6,
-              "targetWeightKg": 0,
+              "targetReps": 5,
+              "targetWeightKg": 85,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 4,
-              "targetReps": 6,
-              "targetWeightKg": 0,
+              "targetReps": 5,
+              "targetWeightKg": 85,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 5,
-              "targetReps": 6,
-              "targetWeightKg": 0,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 6,
-              "targetReps": 6,
-              "targetWeightKg": 0,
+              "targetReps": 5,
+              "targetWeightKg": 85,
               "restSeconds": 150,
               "type": "working"
             }
           ]
         },
         {
-          "exerciseId": "rdl-tecnico",
-          "name": "Peso muerto rumano tecnico",
-          "type": "Basico tecnico",
+          "exerciseId": "hip-thrust-barra",
+          "name": "Hip thrust / puente con barra",
+          "type": "Basico",
           "block": "C",
           "phase": "intensificacion",
-          "notes": "Tempo 3 s bajada, 1 s pausa, subida firme.",
-          "target": "3x10 @ 60 kg",
-          "decisionOptions": ["Mantener", "Subir a 62.5 kg", "Bajar a 57.5 kg"],
+          "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
+          "target": "5x7 @ 110 kg",
+          "decisionOptions": ["Mantener", "Subir a 115 kg", "Bajar a 105 kg"],
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 10,
-              "targetWeightKg": 60,
-              "restSeconds": 90,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 10,
-              "targetWeightKg": 60,
-              "restSeconds": 90,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 10,
-              "targetWeightKg": 60,
-              "restSeconds": 90,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "hip-thrust-volumen",
-          "name": "Hip thrust volumen",
-          "type": "Basico",
-          "block": "D",
-          "phase": "intensificacion",
-          "notes": "Rango 10-12 reps. Pausa arriba.",
-          "target": "5x10 @ 85 kg",
-          "decisionOptions": ["Mantener", "Subir a 90 kg", "Bajar a 80 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 10,
-              "targetWeightKg": 85,
+              "targetReps": 7,
+              "targetWeightKg": 110,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 10,
-              "targetWeightKg": 85,
+              "targetReps": 7,
+              "targetWeightKg": 110,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 10,
-              "targetWeightKg": 85,
+              "targetReps": 7,
+              "targetWeightKg": 110,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 4,
-              "targetReps": 10,
-              "targetWeightKg": 85,
+              "targetReps": 7,
+              "targetWeightKg": 110,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 5,
-              "targetReps": 10,
-              "targetWeightKg": 85,
+              "targetReps": 7,
+              "targetWeightKg": 110,
               "restSeconds": 150,
               "type": "working"
             }
           ]
         },
         {
-          "exerciseId": "gemelos-sentado-multipower",
-          "name": "Elevacion de gemelos sentado o en prensa/multipower",
+          "exerciseId": "extension-cuadriceps",
+          "name": "Extension de cuadriceps",
           "type": "Accesorio",
-          "block": "E",
+          "block": "D1",
           "phase": "intensificacion",
-          "notes": "Usar RIR 2 si la maquina no tiene referencia clara.",
-          "target": "3x15 @ 0 kg",
-          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
+          "notes": "No empujar dolor de rodilla por encima de 3/10.",
+          "target": "3x12 @ 32.5 kg",
+          "decisionOptions": ["Mantener", "Subir a 35 kg", "Bajar a 30 kg"],
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 15,
-              "targetWeightKg": 0,
-              "restSeconds": 60,
+              "targetReps": 12,
+              "targetWeightKg": 32.5,
+              "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 15,
-              "targetWeightKg": 0,
-              "restSeconds": 60,
+              "targetReps": 12,
+              "targetWeightKg": 32.5,
+              "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 15,
-              "targetWeightKg": 0,
-              "restSeconds": 60,
+              "targetReps": 12,
+              "targetWeightKg": 32.5,
+              "restSeconds": 75,
               "type": "working"
             }
           ]
         },
         {
-          "exerciseId": "curl-biceps-barra-mancuernas",
-          "name": "Curl biceps barra o mancuernas",
+          "exerciseId": "curl-femoral-maquina",
+          "name": "Curl femoral maquina",
           "type": "Accesorio",
-          "block": "F1",
+          "block": "D2",
           "phase": "intensificacion",
-          "notes": "Peso por mancuerna si se usan mancuernas.",
-          "target": "3x11 @ 15 kg",
-          "decisionOptions": ["Mantener", "Subir a 17.5 kg", "Bajar a 12.5 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 11,
-              "targetWeightKg": 15,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 11,
-              "targetWeightKg": 15,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 11,
-              "targetWeightKg": 15,
-              "restSeconds": 60,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "extension-triceps-polea",
-          "name": "Extension triceps polea",
-          "type": "Accesorio",
-          "block": "F2",
-          "phase": "intensificacion",
-          "notes": "Rango 10-12 reps con RIR 2.",
+          "notes": "Usar RIR 2 hasta acumular referencia de carga.",
           "target": "3x11 @ 0 kg",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
@@ -5851,66 +5829,109 @@
               "setIndex": 1,
               "targetReps": 11,
               "targetWeightKg": 0,
-              "restSeconds": 60,
+              "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 11,
               "targetWeightKg": 0,
-              "restSeconds": 60,
+              "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 11,
               "targetWeightKg": 0,
+              "restSeconds": 75,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "gemelos-pie",
+          "name": "Elevacion de gemelos de pie",
+          "type": "Accesorio",
+          "block": "E",
+          "phase": "intensificacion",
+          "notes": "Pausa 1 s arriba y bajada controlada.",
+          "target": "4x12 @ 50 kg",
+          "decisionOptions": ["Mantener", "Subir a 52.5 kg", "Bajar a 47.5 kg"],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 12,
+              "targetWeightKg": 50,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 12,
+              "targetWeightKg": 50,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 12,
+              "targetWeightKg": 50,
+              "restSeconds": 60,
+              "type": "working"
+            },
+            {
+              "setIndex": 4,
+              "targetReps": 12,
+              "targetWeightKg": 50,
               "restSeconds": 60,
               "type": "working"
             }
           ]
         },
         {
-          "exerciseId": "elevacion-lateral-mecanica",
-          "name": "Elevacion lateral mecanica",
+          "exerciseId": "core-plancha-dead-bug",
+          "name": "Plancha o dead bug",
           "type": "Accesorio",
-          "block": "G",
+          "block": "F",
           "phase": "intensificacion",
-          "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
-          "target": "3x28 @ 9 kg",
-          "decisionOptions": ["Mantener", "Subir a 11.5 kg", "Bajar a 6.5 kg"],
+          "notes": "Series de 45-60 s sin perder posicion.",
+          "target": "3x45s",
+          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 28,
-              "targetWeightKg": 9,
-              "restSeconds": 60,
-              "type": "working"
+              "targetReps": 45,
+              "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
+              "restSeconds": 45,
+              "type": "timed"
             },
             {
               "setIndex": 2,
-              "targetReps": 28,
-              "targetWeightKg": 9,
-              "restSeconds": 60,
-              "type": "working"
+              "targetReps": 45,
+              "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
+              "restSeconds": 45,
+              "type": "timed"
             },
             {
               "setIndex": 3,
-              "targetReps": 28,
-              "targetWeightKg": 9,
-              "restSeconds": 60,
-              "type": "working"
+              "targetReps": 45,
+              "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
+              "restSeconds": 45,
+              "type": "timed"
             }
           ]
         }
       ]
     },
     {
-      "sessionId": "2026-10-12-lunes-torso-fuerza",
-      "date": "2026-10-12",
+      "sessionId": "2026-10-14-lunes-torso-fuerza",
+      "date": "2026-10-14",
       "week": 6,
-      "weekday": "lunes",
-      "sessionLabel": "Lunes - Torso fuerza",
+      "weekday": "miercoles",
+      "sessionLabel": "Miercoles - Torso fuerza",
       "label": "Torso fuerza",
       "estimatedMinutes": 60,
       "focus": "Press, dominadas y remo pesado",
@@ -6207,302 +6228,6 @@
               "targetWeightKg": 0,
               "restSeconds": 60,
               "type": "working"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "sessionId": "2026-10-13-martes-pierna-fuerza-controlada",
-      "date": "2026-10-13",
-      "week": 6,
-      "weekday": "martes",
-      "sessionLabel": "Martes - Pierna fuerza controlada",
-      "label": "Pierna fuerza controlada",
-      "estimatedMinutes": 60,
-      "focus": "Sentadilla, bisagra e hip thrust",
-      "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
-      "exercises": [
-        {
-          "exerciseId": "sentadilla-barra",
-          "name": "Sentadilla con barra",
-          "type": "Basico",
-          "block": "A",
-          "phase": "intensificacion",
-          "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, cambiar a multipower o reducir rango.",
-          "target": "5x4 @ 75 kg",
-          "decisionOptions": ["Mantener", "Subir a 77.5 kg", "Bajar a 72.5 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 4,
-              "targetWeightKg": 75,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 4,
-              "targetWeightKg": 75,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 4,
-              "targetWeightKg": 75,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 4,
-              "targetWeightKg": 75,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 5,
-              "targetReps": 4,
-              "targetWeightKg": 75,
-              "restSeconds": 150,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "type": "Basico",
-          "block": "B",
-          "phase": "intensificacion",
-          "notes": "Cadera atras, espalda neutra y barra pegada.",
-          "target": "5x5 @ 85 kg",
-          "decisionOptions": ["Mantener", "Subir a 87.5 kg", "Bajar a 82.5 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 5,
-              "targetWeightKg": 85,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 5,
-              "targetWeightKg": 85,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 5,
-              "targetWeightKg": 85,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 5,
-              "targetWeightKg": 85,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 5,
-              "targetReps": 5,
-              "targetWeightKg": 85,
-              "restSeconds": 150,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "hip-thrust-barra",
-          "name": "Hip thrust / puente con barra",
-          "type": "Basico",
-          "block": "C",
-          "phase": "intensificacion",
-          "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
-          "target": "5x7 @ 110 kg",
-          "decisionOptions": ["Mantener", "Subir a 115 kg", "Bajar a 105 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 7,
-              "targetWeightKg": 110,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 7,
-              "targetWeightKg": 110,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 7,
-              "targetWeightKg": 110,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 7,
-              "targetWeightKg": 110,
-              "restSeconds": 150,
-              "type": "working"
-            },
-            {
-              "setIndex": 5,
-              "targetReps": 7,
-              "targetWeightKg": 110,
-              "restSeconds": 150,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "extension-cuadriceps",
-          "name": "Extension de cuadriceps",
-          "type": "Accesorio",
-          "block": "D1",
-          "phase": "intensificacion",
-          "notes": "No empujar dolor de rodilla por encima de 3/10.",
-          "target": "3x12 @ 32.5 kg",
-          "decisionOptions": ["Mantener", "Subir a 35 kg", "Bajar a 30 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 12,
-              "targetWeightKg": 32.5,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 12,
-              "targetWeightKg": 32.5,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 12,
-              "targetWeightKg": 32.5,
-              "restSeconds": 75,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "curl-femoral-maquina",
-          "name": "Curl femoral maquina",
-          "type": "Accesorio",
-          "block": "D2",
-          "phase": "intensificacion",
-          "notes": "Usar RIR 2 hasta acumular referencia de carga.",
-          "target": "3x11 @ 0 kg",
-          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 11,
-              "targetWeightKg": 0,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 11,
-              "targetWeightKg": 0,
-              "restSeconds": 75,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 11,
-              "targetWeightKg": 0,
-              "restSeconds": 75,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "gemelos-pie",
-          "name": "Elevacion de gemelos de pie",
-          "type": "Accesorio",
-          "block": "E",
-          "phase": "intensificacion",
-          "notes": "Pausa 1 s arriba y bajada controlada.",
-          "target": "4x12 @ 50 kg",
-          "decisionOptions": ["Mantener", "Subir a 52.5 kg", "Bajar a 47.5 kg"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            },
-            {
-              "setIndex": 4,
-              "targetReps": 12,
-              "targetWeightKg": 50,
-              "restSeconds": 60,
-              "type": "working"
-            }
-          ]
-        },
-        {
-          "exerciseId": "core-plancha-dead-bug",
-          "name": "Plancha o dead bug",
-          "type": "Accesorio",
-          "block": "F",
-          "phase": "intensificacion",
-          "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45s",
-          "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
-          "sets": [
-            {
-              "setIndex": 1,
-              "targetReps": 45,
-              "targetWeightKg": 0,
-              "targetDurationSeconds": 45,
-              "restSeconds": 45,
-              "type": "timed"
-            },
-            {
-              "setIndex": 2,
-              "targetReps": 45,
-              "targetWeightKg": 0,
-              "targetDurationSeconds": 45,
-              "restSeconds": 45,
-              "type": "timed"
-            },
-            {
-              "setIndex": 3,
-              "targetReps": 45,
-              "targetWeightKg": 0,
-              "targetDurationSeconds": 45,
-              "restSeconds": 45,
-              "type": "timed"
             }
           ]
         }
@@ -12051,9 +11776,1068 @@
       ]
     },
     {
-      "sessionId": "2026-11-16-lunes-torso-fuerza",
-      "date": "2026-11-16",
+      "sessionId": "2026-11-30-lunes-torso-fuerza",
+      "date": "2026-11-30",
       "week": 11,
+      "weekday": "lunes",
+      "sessionLabel": "Lunes - Torso fuerza",
+      "label": "Torso fuerza",
+      "estimatedMinutes": 60,
+      "focus": "Press, dominadas y remo pesado",
+      "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
+      "exercises": [
+        {
+          "exerciseId": "press-banca-barra",
+          "name": "Press banca con barra",
+          "type": "Basico",
+          "block": "A",
+          "phase": "readaptacion",
+          "notes": "Si queda demasiado facil, subir solo 2.5 kg la semana siguiente. Mantener 1-2 RIR en la ultima serie.",
+          "target": "3x5 @ 70 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 72.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 5,
+              "targetWeightKg": 70,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 5,
+              "targetWeightKg": 70,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 5,
+              "targetWeightKg": 70,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "dominadas-lastradas",
+          "name": "Dominadas lastradas",
+          "type": "Basico",
+          "block": "B",
+          "phase": "readaptacion",
+          "notes": "Registrar siempre el lastre exacto. Parar si la barbilla no pasa clara.",
+          "target": "3x5 @ 13 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 15.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 5,
+              "targetWeightKg": 13,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 5,
+              "targetWeightKg": 13,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 5,
+              "targetWeightKg": 13,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "remo-inclinado-barra",
+          "name": "Remo inclinado con barra",
+          "type": "Basico",
+          "block": "C",
+          "phase": "readaptacion",
+          "notes": "Torso firme y mismo angulo en todas las reps.",
+          "target": "3x6 @ 57.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 60 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 6,
+              "targetWeightKg": 57.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "press-militar-pie",
+          "name": "Press militar de pie",
+          "type": "Basico",
+          "block": "D",
+          "phase": "readaptacion",
+          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "target": "3x6 @ 38.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 41 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 6,
+              "targetWeightKg": 38.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 6,
+              "targetWeightKg": 38.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 6,
+              "targetWeightKg": 38.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "elevaciones-laterales",
+          "name": "Elevaciones laterales",
+          "type": "Accesorio",
+          "block": "E1",
+          "phase": "readaptacion",
+          "notes": "Rango 15-20 reps. Peso por mancuerna.",
+          "target": "2x15 @ 7.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 10 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 15,
+              "targetWeightKg": 7.5,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 15,
+              "targetWeightKg": 7.5,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "curl-biceps-alterno",
+          "name": "Curl biceps alterno",
+          "type": "Accesorio",
+          "block": "E2",
+          "phase": "readaptacion",
+          "notes": "Rango 8-10 reps. Peso por mancuerna.",
+          "target": "2x9 @ 13 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 15.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 9,
+              "targetWeightKg": 13,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 9,
+              "targetWeightKg": 13,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "triceps-polea-simple",
+          "name": "Triceps en polea simple",
+          "type": "Accesorio",
+          "block": "F",
+          "phase": "readaptacion",
+          "notes": "Usar RIR 2 hasta acumular historial de polea.",
+          "target": "2x11 @ 0 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sessionId": "2026-12-01-martes-pierna-fuerza-controlada",
+      "date": "2026-12-01",
+      "week": 11,
+      "weekday": "martes",
+      "sessionLabel": "Martes - Pierna fuerza controlada",
+      "label": "Pierna fuerza controlada",
+      "estimatedMinutes": 60,
+      "focus": "Sentadilla, bisagra e hip thrust",
+      "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
+      "exercises": [
+        {
+          "exerciseId": "sentadilla-barra",
+          "name": "Sentadilla con barra",
+          "type": "Basico",
+          "block": "A",
+          "phase": "readaptacion",
+          "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, cambiar a multipower o reducir rango.",
+          "target": "3x5 @ 70 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 72.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 5,
+              "targetWeightKg": 70,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 5,
+              "targetWeightKg": 70,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 5,
+              "targetWeightKg": 70,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "peso-muerto-rumano-barra",
+          "name": "Peso muerto rumano con barra",
+          "type": "Basico",
+          "block": "B",
+          "phase": "readaptacion",
+          "notes": "Cadera atras, espalda neutra y barra pegada.",
+          "target": "3x6 @ 72.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 75 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 6,
+              "targetWeightKg": 72.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 6,
+              "targetWeightKg": 72.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 6,
+              "targetWeightKg": 72.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "hip-thrust-barra",
+          "name": "Hip thrust / puente con barra",
+          "type": "Basico",
+          "block": "C",
+          "phase": "readaptacion",
+          "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
+          "target": "3x8 @ 98 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 103 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 8,
+              "targetWeightKg": 98,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 8,
+              "targetWeightKg": 98,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 8,
+              "targetWeightKg": 98,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "extension-cuadriceps",
+          "name": "Extension de cuadriceps",
+          "type": "Accesorio",
+          "block": "D1",
+          "phase": "readaptacion",
+          "notes": "No empujar dolor de rodilla por encima de 3/10.",
+          "target": "2x12 @ 27.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 30 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 12,
+              "targetWeightKg": 27.5,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 12,
+              "targetWeightKg": 27.5,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "curl-femoral-maquina",
+          "name": "Curl femoral maquina",
+          "type": "Accesorio",
+          "block": "D2",
+          "phase": "readaptacion",
+          "notes": "Usar RIR 2 hasta acumular referencia de carga.",
+          "target": "2x11 @ 0 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "gemelos-pie",
+          "name": "Elevacion de gemelos de pie",
+          "type": "Accesorio",
+          "block": "E",
+          "phase": "readaptacion",
+          "notes": "Pausa 1 s arriba y bajada controlada.",
+          "target": "2x12 @ 42.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 45 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 12,
+              "targetWeightKg": 42.5,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 12,
+              "targetWeightKg": 42.5,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "core-plancha-dead-bug",
+          "name": "Plancha o dead bug",
+          "type": "Accesorio",
+          "block": "F",
+          "phase": "readaptacion",
+          "notes": "Series de 45-60 s sin perder posicion.",
+          "target": "2x45s",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 45,
+              "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
+              "restSeconds": 90,
+              "type": "timed"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 45,
+              "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
+              "restSeconds": 90,
+              "type": "timed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sessionId": "2026-12-03-jueves-torso-volumen-y-potencia",
+      "date": "2026-12-03",
+      "week": 11,
+      "weekday": "jueves",
+      "sessionLabel": "Jueves - Torso volumen y potencia",
+      "label": "Torso volumen y potencia",
+      "estimatedMinutes": 60,
+      "focus": "Volumen de torso y velocidad",
+      "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
+      "exercises": [
+        {
+          "exerciseId": "press-banca-inclinado",
+          "name": "Press banca inclinado con barra o mancuernas",
+          "type": "Basico",
+          "block": "A",
+          "phase": "readaptacion",
+          "notes": "Usar 45-50 kg en barra o 22.5 kg por mancuerna.",
+          "target": "3x8 @ 40.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 43 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 8,
+              "targetWeightKg": 40.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 8,
+              "targetWeightKg": 40.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 8,
+              "targetWeightKg": 40.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "dominadas-peso-corporal",
+          "name": "Dominadas peso corporal",
+          "type": "Basico",
+          "block": "B",
+          "phase": "readaptacion",
+          "notes": "Rango 8-10 reps, dejando 1-2 reps en recamara.",
+          "target": "3x9 @ 0 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 9,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 9,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 9,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "press-militar-velocidad",
+          "name": "Press militar velocidad",
+          "type": "Basico",
+          "block": "C",
+          "phase": "readaptacion",
+          "notes": "La barra debe moverse rapido. Si se ralentiza, bajar 2.5-5 kg.",
+          "target": "3x3 @ 25.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 28 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 3,
+              "targetWeightKg": 25.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 3,
+              "targetWeightKg": 25.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 3,
+              "targetWeightKg": 25.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "remo-barra-multipower",
+          "name": "Remo con barra o remo en multipower",
+          "type": "Basico",
+          "block": "D",
+          "phase": "readaptacion",
+          "notes": "Mantener tension y recorrido estable.",
+          "target": "3x10 @ 44.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 47 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 10,
+              "targetWeightKg": 44.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 10,
+              "targetWeightKg": 44.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 10,
+              "targetWeightKg": 44.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "pullover-mancuerna",
+          "name": "Pull-over con mancuerna",
+          "type": "Accesorio",
+          "block": "E",
+          "phase": "readaptacion",
+          "notes": "Rango 10-12 reps.",
+          "target": "2x11 @ 24.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 27 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 24.5,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 24.5,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "elevaciones-laterales-volumen",
+          "name": "Elevaciones laterales",
+          "type": "Accesorio",
+          "block": "F1",
+          "phase": "readaptacion",
+          "notes": "Rango 15-20 reps. Peso por mancuerna.",
+          "target": "2x15 @ 7.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 10 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 15,
+              "targetWeightKg": 7.5,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 15,
+              "targetWeightKg": 7.5,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "curl-martillo",
+          "name": "Curl martillo",
+          "type": "Accesorio",
+          "block": "F2",
+          "phase": "readaptacion",
+          "notes": "Rango 10-12 reps. Peso por mancuerna.",
+          "target": "2x11 @ 13 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 15.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 13,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 13,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "triceps-polea-volumen",
+          "name": "Triceps en polea simple",
+          "type": "Accesorio",
+          "block": "G",
+          "phase": "readaptacion",
+          "notes": "Rango 12-15 reps con RIR 2.",
+          "target": "2x13 @ 0 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 13,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 13,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sessionId": "2026-12-04-viernes-torso-accesorio-posterior",
+      "date": "2026-12-04",
+      "week": 11,
+      "weekday": "viernes",
+      "sessionLabel": "Viernes - Torso accesorio + posterior",
+      "label": "Torso accesorio + posterior",
+      "estimatedMinutes": 60,
+      "focus": "Torso accesorio y cadena posterior",
+      "source": "/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md",
+      "exercises": [
+        {
+          "exerciseId": "press-cerrado-multipower",
+          "name": "Press banca agarre cerrado o press en multipower",
+          "type": "Basico",
+          "block": "A",
+          "phase": "readaptacion",
+          "notes": "Rango 6-8 reps. Cuidar muneca.",
+          "target": "3x7 @ 49 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 51.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 7,
+              "targetWeightKg": 49,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 7,
+              "targetWeightKg": 49,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 7,
+              "targetWeightKg": 49,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "dominadas-supinas",
+          "name": "Dominadas supinas",
+          "type": "Basico",
+          "block": "B",
+          "phase": "readaptacion",
+          "notes": "Peso corporal o +2.5 kg si sale limpio.",
+          "target": "3x7 @ 0 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 7,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 7,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 7,
+              "targetWeightKg": 0,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "rdl-tecnico",
+          "name": "Peso muerto rumano tecnico",
+          "type": "Basico tecnico",
+          "block": "C",
+          "phase": "readaptacion",
+          "notes": "Tempo 3 s bajada, 1 s pausa, subida firme.",
+          "target": "3x10 @ 51 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 53.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 10,
+              "targetWeightKg": 51,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 10,
+              "targetWeightKg": 51,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 10,
+              "targetWeightKg": 51,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "hip-thrust-volumen",
+          "name": "Hip thrust volumen",
+          "type": "Basico",
+          "block": "D",
+          "phase": "readaptacion",
+          "notes": "Rango 10-12 reps. Pausa arriba.",
+          "target": "3x11 @ 72.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 77.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 72.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 72.5,
+              "restSeconds": 150,
+              "type": "working"
+            },
+            {
+              "setIndex": 3,
+              "targetReps": 11,
+              "targetWeightKg": 72.5,
+              "restSeconds": 150,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "gemelos-sentado-multipower",
+          "name": "Elevacion de gemelos sentado o en prensa/multipower",
+          "type": "Accesorio",
+          "block": "E",
+          "phase": "readaptacion",
+          "notes": "Usar RIR 2 si la maquina no tiene referencia clara.",
+          "target": "2x15 @ 0 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 15,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 15,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "curl-biceps-barra-mancuernas",
+          "name": "Curl biceps barra o mancuernas",
+          "type": "Accesorio",
+          "block": "F1",
+          "phase": "readaptacion",
+          "notes": "Peso por mancuerna si se usan mancuernas.",
+          "target": "2x11 @ 13 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 15.5 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 13,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 13,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "extension-triceps-polea",
+          "name": "Extension triceps polea",
+          "type": "Accesorio",
+          "block": "F2",
+          "phase": "readaptacion",
+          "notes": "Rango 10-12 reps con RIR 2.",
+          "target": "2x11 @ 0 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir reps si facil",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 11,
+              "targetWeightKg": 0,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        },
+        {
+          "exerciseId": "elevacion-lateral-mecanica",
+          "name": "Elevacion lateral mecanica",
+          "type": "Accesorio",
+          "block": "G",
+          "phase": "readaptacion",
+          "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
+          "target": "2x28 @ 7.5 kg",
+          "decisionOptions": [
+            "Mantener suave",
+            "Subir a 10 kg",
+            "Marcar molestia"
+          ],
+          "sets": [
+            {
+              "setIndex": 1,
+              "targetReps": 28,
+              "targetWeightKg": 7.5,
+              "restSeconds": 90,
+              "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetReps": 28,
+              "targetWeightKg": 7.5,
+              "restSeconds": 90,
+              "type": "working"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sessionId": "2026-12-07-lunes-torso-fuerza",
+      "date": "2026-12-07",
+      "week": 12,
       "weekday": "lunes",
       "sessionLabel": "Lunes - Torso fuerza",
       "label": "Torso fuerza",
@@ -12351,11 +13135,11 @@
       ]
     },
     {
-      "sessionId": "2026-11-17-martes-pierna-fuerza-controlada",
-      "date": "2026-11-17",
-      "week": 11,
-      "weekday": "martes",
-      "sessionLabel": "Martes - Pierna fuerza controlada",
+      "sessionId": "2026-12-09-martes-pierna-fuerza-controlada",
+      "date": "2026-12-09",
+      "week": 12,
+      "weekday": "miercoles",
+      "sessionLabel": "Miercoles - Pierna fuerza controlada",
       "label": "Pierna fuerza controlada",
       "estimatedMinutes": 60,
       "focus": "Sentadilla, bisagra e hip thrust",
@@ -12640,9 +13424,9 @@
       ]
     },
     {
-      "sessionId": "2026-11-19-jueves-torso-volumen-y-potencia",
-      "date": "2026-11-19",
-      "week": 11,
+      "sessionId": "2026-12-10-jueves-torso-volumen-y-potencia",
+      "date": "2026-12-10",
+      "week": 12,
       "weekday": "jueves",
       "sessionLabel": "Jueves - Torso volumen y potencia",
       "label": "Torso volumen y potencia",
@@ -13001,9 +13785,9 @@
       ]
     },
     {
-      "sessionId": "2026-11-20-viernes-torso-accesorio-posterior",
-      "date": "2026-11-20",
-      "week": 11,
+      "sessionId": "2026-12-11-viernes-torso-accesorio-posterior",
+      "date": "2026-12-11",
+      "week": 12,
       "weekday": "viernes",
       "sessionLabel": "Viernes - Torso accesorio + posterior",
       "label": "Torso accesorio + posterior",
@@ -13313,9 +14097,9 @@
       ]
     },
     {
-      "sessionId": "2026-11-23-lunes-torso-fuerza",
-      "date": "2026-11-23",
-      "week": 12,
+      "sessionId": "2026-12-14-lunes-torso-fuerza",
+      "date": "2026-12-14",
+      "week": 13,
       "weekday": "lunes",
       "sessionLabel": "Lunes - Torso fuerza",
       "label": "Torso fuerza",
@@ -13532,9 +14316,9 @@
       ]
     },
     {
-      "sessionId": "2026-11-24-martes-pierna-fuerza-controlada",
-      "date": "2026-11-24",
-      "week": 12,
+      "sessionId": "2026-12-15-martes-pierna-fuerza-controlada",
+      "date": "2026-12-15",
+      "week": 13,
       "weekday": "martes",
       "sessionLabel": "Martes - Pierna fuerza controlada",
       "label": "Pierna fuerza controlada",
@@ -13749,9 +14533,9 @@
       ]
     },
     {
-      "sessionId": "2026-11-26-jueves-torso-volumen-y-potencia",
-      "date": "2026-11-26",
-      "week": 12,
+      "sessionId": "2026-12-17-jueves-torso-volumen-y-potencia",
+      "date": "2026-12-17",
+      "week": 13,
       "weekday": "jueves",
       "sessionLabel": "Jueves - Torso volumen y potencia",
       "label": "Torso volumen y potencia",
@@ -13994,9 +14778,9 @@
       ]
     },
     {
-      "sessionId": "2026-11-27-viernes-torso-accesorio-posterior",
-      "date": "2026-11-27",
-      "week": 12,
+      "sessionId": "2026-12-18-viernes-torso-accesorio-posterior",
+      "date": "2026-12-18",
+      "week": 13,
       "weekday": "viernes",
       "sessionLabel": "Viernes - Torso accesorio + posterior",
       "label": "Torso accesorio + posterior",

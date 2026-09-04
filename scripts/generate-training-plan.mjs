@@ -400,18 +400,33 @@ const progressions = {
 };
 
 const sessions = [];
+const skippedDates = new Set(['2026-09-08']);
+const dateOverrides = new Map([
+  ['5:friday', '2026-10-07'],
+  ['6:monday', '2026-10-14'],
+  ['12:tuesday', '2026-12-09'],
+]);
 
-for (let week = 1; week <= 12; week += 1) {
+for (let week = 1; week <= 13; week += 1) {
   for (const weekday of weekdays) {
     const base = baseSessions[weekday.key];
-    const date = addDays(start, (week - 1) * 7 + weekday.offset);
+    const date = plannedDate(week, weekday);
+    const dateIso = isoDate(date);
+
+    if (skippedDates.has(dateIso)) {
+      continue;
+    }
+
     const exercises = base.exercises.map((item) => adaptExercise(item, week));
     sessions.push({
-      sessionId: `${isoDate(date)}-${slug(base.title)}`,
-      date: isoDate(date),
+      sessionId: `${dateIso}-${slug(base.title)}`,
+      date: dateIso,
       week,
-      weekday: weekday.label,
-      sessionLabel: base.title,
+      weekday: weekdayLabel(date),
+      sessionLabel: `${capitalize(weekdayLabel(date))} - ${base.title.replace(
+        /^[^-]+ - /,
+        '',
+      )}`,
       label: base.title.replace(/^[^-]+ - /, ''),
       estimatedMinutes: base.estimatedMinutes,
       focus: base.focus,
@@ -421,6 +436,8 @@ for (let week = 1; week <= 12; week += 1) {
   }
 }
 
+sessions.sort((a, b) => a.date.localeCompare(b.date));
+
 writeFileSync(
   outputPath,
   `${JSON.stringify(
@@ -428,8 +445,8 @@ writeFileSync(
       planId: 'training-plan-2026-q4',
       sourceDocument,
       startsOn: '2026-09-07',
-      endsOn: '2026-11-27',
-      durationWeeks: 12,
+      endsOn: '2026-12-18',
+      durationWeeks: 13,
       sessions,
     },
     null,
@@ -464,8 +481,10 @@ function exercise(
 }
 
 function adaptExercise(item, week) {
-  const deload = week === 4 || week === 8;
-  const test = week === 12;
+  const templateWeek = week > 11 ? week - 1 : week;
+  const postVacationAdaptation = week === 11;
+  const deload = templateWeek === 4 || templateWeek === 8;
+  const test = templateWeek === 12;
   const progression = progressions[item.exerciseId];
   let setCount = item.setCount;
   let reps = item.reps;
@@ -474,22 +493,27 @@ function adaptExercise(item, week) {
   let restSeconds = item.restSeconds;
   let phase = 'acumulacion';
 
-  if (week >= 5 && week <= 7) {
+  if (templateWeek >= 5 && templateWeek <= 7) {
     phase = 'intensificacion';
   }
-  if (week >= 9 && week <= 11) {
+  if (templateWeek >= 9 && templateWeek <= 11) {
     phase = 'realizacion';
   }
 
   if (progression && weightKg > 0) {
-    const loadWeek = week > 8 ? week - 2 : week > 4 ? week - 1 : week;
+    const loadWeek =
+      templateWeek > 8
+        ? templateWeek - 2
+        : templateWeek > 4
+          ? templateWeek - 1
+          : templateWeek;
     weightKg = Math.min(
       item.weightKg + (loadWeek - 1) * progression.step,
       progression.max,
     );
   }
 
-  if (week >= 5 && week <= 7 && item.type === 'Basico') {
+  if (templateWeek >= 5 && templateWeek <= 7 && item.type === 'Basico') {
     setCount = item.exerciseId.includes('dominadas')
       ? 6
       : Math.max(item.setCount, 5);
@@ -497,7 +521,7 @@ function adaptExercise(item, week) {
     restSeconds = Math.max(restSeconds, 150);
   }
 
-  if (week >= 9 && week <= 11 && item.type === 'Basico') {
+  if (templateWeek >= 9 && templateWeek <= 11 && item.type === 'Basico') {
     setCount = item.exerciseId.includes('hip-thrust')
       ? 4
       : Math.max(item.setCount, 5);
@@ -507,6 +531,14 @@ function adaptExercise(item, week) {
         ? 5
         : 3;
     restSeconds = Math.max(restSeconds, 180);
+  }
+
+  if (postVacationAdaptation) {
+    phase = 'readaptacion';
+    setCount = item.type === 'Accesorio' ? 2 : Math.min(3, item.setCount);
+    reps = item.reps;
+    weightKg = roundLoad(weightKg * 0.85);
+    restSeconds = Math.min(Math.max(restSeconds, 90), 150);
   }
 
   if (deload) {
@@ -546,20 +578,28 @@ function adaptExercise(item, week) {
       item.measure === 'duration'
         ? `${setCount}x${durationSeconds}s`
         : `${setCount}x${reps} @ ${formatKg(roundLoad(weightKg))}`,
-    decisionOptions: decisionOptions(item, week, roundLoad(weightKg)),
+    decisionOptions: decisionOptions(item, templateWeek, roundLoad(weightKg), {
+      postVacationAdaptation,
+    }),
     sets,
   };
 }
 
-function decisionOptions(item, week, weightKg) {
+function decisionOptions(item, week, weightKg, options = {}) {
   if (item.weightKg === 0) {
-    return ['Mantener', 'Subir reps', 'Marcar molestia'];
+    return options.postVacationAdaptation
+      ? ['Mantener suave', 'Subir reps si facil', 'Marcar molestia']
+      : ['Mantener', 'Subir reps', 'Marcar molestia'];
   }
 
   const step =
     item.type === 'Basico' && item.name.includes('Hip thrust') ? 5 : 2.5;
   const next = roundLoad(weightKg + step);
   const down = roundLoad(Math.max(0, weightKg - step));
+
+  if (options.postVacationAdaptation) {
+    return ['Mantener suave', `Subir a ${formatKg(next)}`, 'Marcar molestia'];
+  }
 
   if (week === 4 || week === 8) {
     return [
@@ -576,6 +616,18 @@ function decisionOptions(item, week, weightKg) {
   return ['Mantener', `Subir a ${formatKg(next)}`, `Bajar a ${formatKg(down)}`];
 }
 
+function plannedDate(week, weekday) {
+  const override = dateOverrides.get(`${week}:${weekday.key}`);
+
+  if (override) {
+    return new Date(`${override}T12:00:00`);
+  }
+
+  const vacationShiftDays = week >= 11 ? 14 : 0;
+
+  return addDays(start, (week - 1) * 7 + weekday.offset + vacationShiftDays);
+}
+
 function addDays(date, days) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -584,6 +636,22 @@ function addDays(date, days) {
 
 function isoDate(date) {
   return date.toISOString().slice(0, 10);
+}
+
+function weekdayLabel(date) {
+  return [
+    'domingo',
+    'lunes',
+    'martes',
+    'miercoles',
+    'jueves',
+    'viernes',
+    'sabado',
+  ][date.getDay()];
+}
+
+function capitalize(value) {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
 function slug(value) {
