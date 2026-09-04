@@ -191,7 +191,7 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   painKnee: 0,
   painWrist: 0,
   painOther: 0,
-  setNote: '',
+  setNote: 'OK',
 });
 
 const isStoredSetEvent = (value: unknown): value is StoredSetEvent =>
@@ -229,7 +229,7 @@ const normalizeDraft = (
     painKnee: draft.painKnee ?? 0,
     painWrist: draft.painWrist ?? 0,
     painOther: draft.painOther ?? 0,
-    setNote: draft.setNote ?? '',
+    setNote: draft.setNote || 'OK',
   };
 };
 
@@ -294,6 +294,52 @@ const csvEscape = (value: string | number) => {
 
 const formatCsvNumber = (value: number) =>
   Number.isInteger(value) ? String(value) : value.toFixed(1);
+
+type LoadType =
+  | 'total'
+  | 'external'
+  | 'per_dumbbell'
+  | 'machine'
+  | 'bodyweight';
+
+const inferLoadType = (exercise: Exercise | undefined): LoadType => {
+  const text = `${exercise?.name ?? ''} ${exercise?.notes ?? ''}`.toLowerCase();
+
+  if (text.includes('dominadas') && !text.includes('peso corporal')) {
+    return 'external';
+  }
+
+  if (
+    text.includes('mancuerna') ||
+    text.includes('mancuernas') ||
+    text.includes('elevaciones laterales') ||
+    text.includes('elevacion lateral') ||
+    text.includes('curl biceps alterno') ||
+    text.includes('curl martillo') ||
+    text.includes('pull-over')
+  ) {
+    return 'per_dumbbell';
+  }
+
+  if (
+    text.includes('polea') ||
+    text.includes('maquina') ||
+    text.includes('máquina')
+  ) {
+    return 'machine';
+  }
+
+  if ((exercise?.sets[0]?.targetWeightKg ?? 0) === 0) {
+    return 'bodyweight';
+  }
+
+  return 'total';
+};
+
+const formatCsvTarget = (target: string, loadType: LoadType) =>
+  loadType === 'external'
+    ? target.replace(/@\s*(\d+(?:[.,]\d+)?)\s*kg/i, '@ +$1 kg')
+    : target;
 
 export default function Home() {
   const [draft, setDraft] = useState<WorkoutDraft>(() => makeDraft());
@@ -549,7 +595,7 @@ export default function Home() {
         painKnee: 0,
         painWrist: 0,
         painOther: 0,
-        setNote: '',
+        setNote: 'OK',
         isSetTimerRunning: false,
       }));
 
@@ -831,12 +877,10 @@ export default function Home() {
             rir={draft.editedRir}
             painKnee={draft.painKnee}
             painWrist={draft.painWrist}
-            painOther={draft.painOther}
             setNote={draft.setNote}
             onRirChange={(editedRir) => patchDraft({ editedRir })}
             onPainKneeChange={(painKnee) => patchDraft({ painKnee })}
             onPainWristChange={(painWrist) => patchDraft({ painWrist })}
-            onPainOtherChange={(painOther) => patchDraft({ painOther })}
             onSetNoteChange={(setNote) => patchDraft({ setNote })}
             onBack={() => patchDraft({ phase: 'set' })}
             onRegister={() => logCurrentSet('completed')}
@@ -1357,16 +1401,16 @@ function RestScreen({
         </Button>
         <Button
           className="h-14 rounded-[1.75rem] text-lg font-black"
+          onClick={onContinue}
+        >
+          Seguir
+        </Button>
+        <Button
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           variant="secondary"
           onClick={() => onAdjustRest((value) => value + 15)}
         >
           +15s
-        </Button>
-        <Button
-          className="h-14 rounded-[1.75rem] text-lg font-black"
-          onClick={onContinue}
-        >
-          Seguir
         </Button>
       </div>
     </section>
@@ -1382,12 +1426,10 @@ function FeedbackScreen({
   rir,
   painKnee,
   painWrist,
-  painOther,
   setNote,
   onRirChange,
   onPainKneeChange,
   onPainWristChange,
-  onPainOtherChange,
   onSetNoteChange,
   onBack,
   onRegister,
@@ -1400,12 +1442,10 @@ function FeedbackScreen({
   rir: number;
   painKnee: number;
   painWrist: number;
-  painOther: number;
   setNote: string;
   onRirChange: (value: number) => void;
   onPainKneeChange: (value: number) => void;
   onPainWristChange: (value: number) => void;
-  onPainOtherChange: (value: number) => void;
   onSetNoteChange: (value: string) => void;
   onBack: () => void;
   onRegister: () => void;
@@ -1449,12 +1489,10 @@ function FeedbackScreen({
         rir={rir}
         painKnee={painKnee}
         painWrist={painWrist}
-        painOther={painOther}
         setNote={setNote}
         onRirChange={onRirChange}
         onPainKneeChange={onPainKneeChange}
         onPainWristChange={onPainWristChange}
-        onPainOtherChange={onPainOtherChange}
         onSetNoteChange={onSetNoteChange}
       />
 
@@ -1489,23 +1527,19 @@ function SetFeedback({
   rir,
   painKnee,
   painWrist,
-  painOther,
   setNote,
   onRirChange,
   onPainKneeChange,
   onPainWristChange,
-  onPainOtherChange,
   onSetNoteChange,
 }: {
   rir: number;
   painKnee: number;
   painWrist: number;
-  painOther: number;
   setNote: string;
   onRirChange: (value: number) => void;
   onPainKneeChange: (value: number) => void;
   onPainWristChange: (value: number) => void;
-  onPainOtherChange: (value: number) => void;
   onSetNoteChange: (value: string) => void;
 }) {
   return (
@@ -1551,11 +1585,6 @@ function SetFeedback({
         value={painWrist}
         onChange={onPainWristChange}
       />
-      <PainControl
-        label="Otro"
-        value={painOther}
-        onChange={onPainOtherChange}
-      />
 
       <div className="grid grid-cols-4 gap-1.5">
         {noteOptions.map((option) => (
@@ -1567,7 +1596,7 @@ function SetFeedback({
                 : 'border-border bg-secondary text-secondary-foreground'
             }`}
             type="button"
-            onClick={() => onSetNoteChange(setNote === option ? '' : option)}
+            onClick={() => onSetNoteChange(option)}
           >
             {option}
           </button>
@@ -1818,6 +1847,7 @@ function buildWorkoutCsv(
     'target',
     'set_number',
     'load_kg',
+    'load_type',
     'reps',
     'rir',
     'pain_knee',
@@ -1847,6 +1877,9 @@ function buildWorkoutCsv(
     const isLastExerciseRow =
       lastRecordKeyByExercise.get(record.exerciseId) ===
       `${record.exerciseIndex}-${record.setIndex}`;
+    const loadType = inferLoadType(exercise);
+    const isUnknownMachineLoad =
+      loadType === 'machine' && record.actualWeightKg === 0;
     const setNote = isSkipped
       ? ['skipped', record.note].filter(Boolean).join(': ')
       : record.note;
@@ -1857,9 +1890,12 @@ function buildWorkoutCsv(
       session.sessionLabel,
       exercise?.name ?? record.exerciseId,
       exercise?.type ?? '',
-      exercise?.target ?? '',
+      formatCsvTarget(exercise?.target ?? '', loadType),
       record.setIndex + 1,
-      isSkipped ? '' : formatCsvNumber(record.actualWeightKg),
+      isSkipped || isUnknownMachineLoad
+        ? ''
+        : formatCsvNumber(record.actualWeightKg),
+      loadType,
       isSkipped
         ? ''
         : record.actualDurationSeconds !== undefined
