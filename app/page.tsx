@@ -201,9 +201,8 @@ const csvEscape = (value: string | number) => {
 };
 
 export default function Home() {
-  const [draft, setDraft] = useState<WorkoutDraft>(
-    () => loadDraft() ?? makeDraft(),
-  );
+  const [draft, setDraft] = useState<WorkoutDraft>(() => makeDraft());
+  const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const selectedSession =
     trainingPlan.sessions.find(
       (session) => session.sessionId === draft.selectedSessionId,
@@ -236,8 +235,21 @@ export default function Home() {
   );
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDraft(loadDraft() ?? makeDraft());
+      setHasLoadedDraft(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedDraft) {
+      return;
+    }
+
     window.localStorage.setItem(storageKey, JSON.stringify(draft));
-  }, [draft]);
+  }, [draft, hasLoadedDraft]);
 
   useEffect(() => {
     let cancelled = false;
@@ -553,9 +565,9 @@ export default function Home() {
   ]);
 
   return (
-    <main className="h-dvh overflow-hidden bg-background text-foreground">
-      <div className="mx-auto flex h-dvh w-full max-w-[480px] flex-col overflow-hidden px-4 py-3 sm:py-4">
-        <header className="mb-2">
+    <main className="app-screen overflow-hidden bg-background text-foreground">
+      <div className="app-screen mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 py-2 sm:py-4">
+        <header className="mb-1">
           <p className="text-xs font-black uppercase text-muted-foreground">
             Semana {selectedSession.week}
             {draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''}
@@ -563,7 +575,7 @@ export default function Home() {
         </header>
 
         {draft.phase !== 'today' ? (
-          <section className="mb-3">
+          <section className="mb-2">
             <Progress value={progressValue} />
             <p className="mt-1 text-right text-xs font-black text-muted-foreground">
               {attemptedSets}/{totalSets}
@@ -792,7 +804,7 @@ function SetScreen({
   onBack: () => void;
 }) {
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+    <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <div className="flex shrink-0 items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-muted-foreground">
@@ -822,7 +834,7 @@ function SetScreen({
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-rows-2 gap-3">
+      <div className="grid min-h-0 flex-1 grid-rows-2 gap-2">
         <TactileNumber
           label="Reps"
           value={String(reps)}
@@ -832,10 +844,10 @@ function SetScreen({
         <TactileNumber
           label="Peso"
           value={formatWeight(weight)}
-          stepControl={
-            <WeightStepControl
+          centerControl={
+            <WeightStepToggle
               value={weightStep}
-              onChange={onWeightStepChange}
+              onToggle={() => onWeightStepChange(weightStep === 1 ? 0.5 : 1)}
             />
           }
           onMinus={() => onWeightChange(Math.max(0, weight - weightStep))}
@@ -852,18 +864,21 @@ function SetScreen({
         </span>
       </div>
 
-      <div className="grid shrink-0 grid-cols-[auto_1fr_auto] gap-3">
+      <div
+        className="grid shrink-0 gap-3"
+        style={{ gridTemplateColumns: '56px minmax(0, 1fr) 56px' }}
+      >
         <Button
           aria-label="Volver"
-          className="h-16 w-16 rounded-lg"
-          size="icon"
+          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
         >
           <ArrowLeft className="size-5" />
         </Button>
         <Button
-          className="h-16 rounded-lg text-xl font-black"
+          className="h-14 rounded-lg text-lg font-black"
           onClick={onContinue}
         >
           Continuar
@@ -871,8 +886,8 @@ function SetScreen({
         </Button>
         <Button
           aria-label="Saltar serie"
-          className="h-16 w-16 rounded-lg"
-          size="icon"
+          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          style={{ width: '56px' }}
           variant="outline"
           onClick={onSkip}
         >
@@ -967,24 +982,24 @@ function FeedbackScreen({
   onRegister: () => void;
 }) {
   return (
-    <section className="flex flex-1 flex-col gap-3 overflow-hidden">
+    <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <div>
         <p className="text-sm font-semibold text-muted-foreground">
           Feedback serie
         </p>
-        <h2 className="text-3xl font-black leading-tight tracking-normal">
+        <h2 className="text-[1.75rem] font-black leading-tight tracking-normal">
           {exerciseName}
         </h2>
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-lg border bg-card px-3 py-4">
+        <div className="rounded-lg border bg-card px-3 py-2.5">
           <p className="text-sm font-black text-muted-foreground">Reps</p>
-          <p className="text-5xl font-black leading-none">{reps}</p>
+          <p className="text-4xl font-black leading-none">{reps}</p>
         </div>
-        <div className="rounded-lg border bg-card px-3 py-4">
+        <div className="rounded-lg border bg-card px-3 py-2.5">
           <p className="text-sm font-black text-muted-foreground">Peso</p>
-          <p className="text-4xl font-black leading-none">
+          <p className="text-[2rem] font-black leading-none">
             {formatWeight(weight)}
           </p>
         </div>
@@ -1003,18 +1018,21 @@ function FeedbackScreen({
         onSetNoteChange={onSetNoteChange}
       />
 
-      <div className="mt-auto grid grid-cols-[auto_1fr] gap-3">
+      <div
+        className="mt-auto grid shrink-0 gap-3"
+        style={{ gridTemplateColumns: '56px minmax(0, 1fr)' }}
+      >
         <Button
           aria-label="Volver a ajustar serie"
-          className="h-16 w-16 rounded-lg"
-          size="icon"
+          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
         >
           <ArrowLeft className="size-5" />
         </Button>
         <Button
-          className="h-16 rounded-lg text-xl font-black"
+          className="h-14 rounded-lg text-lg font-black"
           onClick={onRegister}
         >
           Registrar serie
@@ -1051,13 +1069,19 @@ function SetFeedback({
   onSetNoteChange: (value: string) => void;
 }) {
   return (
-    <div className="grid gap-2 rounded-lg border bg-card p-3">
-      <div className="grid grid-cols-[1fr_104px] items-center gap-2">
+    <div className="grid shrink-0 gap-1.5 rounded-lg border bg-card p-2">
+      <div
+        className="grid items-center gap-2"
+        style={{ gridTemplateColumns: 'minmax(0, 1fr) 112px' }}
+      >
         <span className="text-sm font-black text-muted-foreground">RIR</span>
-        <div className="grid grid-cols-[40px_1fr_40px] items-center gap-1">
+        <div
+          className="grid items-center gap-1"
+          style={{ gridTemplateColumns: '40px minmax(0, 1fr) 40px' }}
+        >
           <Button
             aria-label="Bajar RIR"
-            className="h-9 w-full rounded-md"
+            className="h-8 w-full rounded-md"
             variant="secondary"
             onClick={() => onRirChange(Math.max(0, rir - 1))}
           >
@@ -1068,7 +1092,7 @@ function SetFeedback({
           </span>
           <Button
             aria-label="Subir RIR"
-            className="h-9 w-full rounded-md"
+            className="h-8 w-full rounded-md"
             variant="secondary"
             onClick={() => onRirChange(Math.min(5, rir + 1))}
           >
@@ -1097,7 +1121,7 @@ function SetFeedback({
         {noteOptions.map((option) => (
           <button
             key={option}
-            className={`h-10 rounded-md border text-sm font-black ${
+            className={`h-9 rounded-md border text-sm font-black ${
               setNote === option
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border bg-secondary text-secondary-foreground'
@@ -1123,12 +1147,15 @@ function PainControl({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_repeat(4,40px)] items-center gap-1.5">
+    <div
+      className="grid items-center gap-1.5"
+      style={{ gridTemplateColumns: 'minmax(0, 1fr) repeat(4, 40px)' }}
+    >
       <span className="text-sm font-black text-muted-foreground">{label}</span>
       {[0, 1, 2, 3].map((level) => (
         <button
           key={level}
-          className={`h-9 rounded-md border text-sm font-black ${
+          className={`h-8 rounded-md border text-sm font-black ${
             value === level
               ? 'border-primary bg-primary text-primary-foreground'
               : 'border-border bg-secondary text-secondary-foreground'
@@ -1245,29 +1272,36 @@ function DoneScreen({
 function TactileNumber({
   label,
   value,
-  stepControl,
+  centerControl,
   onMinus,
   onPlus,
 }: {
   label: string;
   value: string;
-  stepControl?: ReactNode;
+  centerControl?: ReactNode;
   onMinus: () => void;
   onPlus: () => void;
 }) {
   return (
     <div className="grid min-h-0 grid-rows-[1fr_64px] gap-2 rounded-lg border bg-card p-2 shadow-sm">
       <div className="flex min-w-0 flex-col items-center justify-center">
-        <div className="grid min-h-8 w-full grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <span />
+        <div className="grid min-h-8 w-full grid-cols-[1fr_auto_1fr] items-center">
+          <span aria-hidden="true" />
           <p className="text-base font-black text-muted-foreground">{label}</p>
-          <div className="flex justify-end">{stepControl}</div>
+          <span aria-hidden="true" />
         </div>
         <p className="max-w-full text-center text-[clamp(3rem,18vw,5.25rem)] font-black leading-none tracking-normal">
           {value}
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div
+        className="grid gap-2"
+        style={{
+          gridTemplateColumns: centerControl
+            ? 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr)'
+            : 'repeat(2, minmax(0, 1fr))',
+        }}
+      >
         <Button
           aria-label={`Bajar ${label}`}
           className="h-16 w-full rounded-lg"
@@ -1276,6 +1310,7 @@ function TactileNumber({
         >
           <Minus className="size-8" />
         </Button>
+        {centerControl}
         <Button
           aria-label={`Subir ${label}`}
           className="h-16 w-full rounded-lg"
@@ -1289,33 +1324,27 @@ function TactileNumber({
   );
 }
 
-function WeightStepControl({
+function WeightStepToggle({
   value,
-  onChange,
+  onToggle,
 }: {
   value: 1 | 0.5;
-  onChange: (value: 1 | 0.5) => void;
+  onToggle: () => void;
 }) {
   return (
-    <div
-      className="grid h-8 grid-cols-2 overflow-hidden rounded-md border border-border bg-secondary"
-      aria-label="Incremento de peso"
+    <button
+      className="flex h-16 min-w-0 flex-col items-center justify-center rounded-lg border border-border bg-secondary px-1 text-secondary-foreground transition active:scale-[0.98]"
+      type="button"
+      onClick={onToggle}
+      aria-label={`Cambiar incremento de peso, actual ${value} kg`}
     >
-      {([1, 0.5] as const).map((step) => (
-        <button
-          key={step}
-          className={`min-w-10 px-2 text-xs font-black ${
-            value === step
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground'
-          }`}
-          type="button"
-          onClick={() => onChange(step)}
-        >
-          {step}
-        </button>
-      ))}
-    </div>
+      <span className="text-[0.68rem] font-black leading-none text-muted-foreground">
+        kg
+      </span>
+      <span className="text-base font-black leading-tight tabular-nums">
+        {value}
+      </span>
+    </button>
   );
 }
 

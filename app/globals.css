@@ -132,7 +132,25 @@ body {
     @apply font-sans;
   }
 
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
   button {
     touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  .app-screen {
+    height: 100vh;
+  }
+
+  @supports (height: 100svh) {
+    .app-screen {
+      height: 100svh;
+    }
   }
 }
