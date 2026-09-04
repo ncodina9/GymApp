@@ -6,7 +6,10 @@ import {
   Download,
   ArrowLeft,
   Minus,
+  Pause,
+  Play,
   Plus,
+  RotateCcw,
   SkipForward,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -26,10 +29,11 @@ type Phase = 'today' | 'set' | 'feedback' | 'rest' | 'transition' | 'done';
 
 type TrainingSet = {
   setIndex: number;
-  targetReps: number;
+  targetReps?: number;
   targetWeightKg: number;
+  targetDurationSeconds?: number;
   restSeconds: number;
-  type: 'working';
+  type: 'working' | 'timed';
 };
 
 type Exercise = {
@@ -71,7 +75,10 @@ type WorkoutDraft = {
   setIndex: number;
   editedReps: number;
   editedWeight: number;
+  editedDurationSeconds: number;
   weightStep: 1 | 0.5;
+  setTimerRemaining: number;
+  isSetTimerRunning: boolean;
   restRemaining: number;
   records: StoredSetEvent[];
   decisions: Record<string, string>;
@@ -121,9 +128,13 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   selectedSessionId: session.sessionId,
   exerciseIndex: 0,
   setIndex: 0,
-  editedReps: session.exercises[0].sets[0].targetReps,
+  editedReps: session.exercises[0].sets[0].targetReps ?? 0,
   editedWeight: session.exercises[0].sets[0].targetWeightKg,
+  editedDurationSeconds:
+    session.exercises[0].sets[0].targetDurationSeconds ?? 0,
   weightStep: 1,
+  setTimerRemaining: session.exercises[0].sets[0].targetDurationSeconds ?? 0,
+  isSetTimerRunning: false,
   restRemaining: 0,
   records: [],
   decisions: {},
@@ -162,7 +173,10 @@ const normalizeDraft = (
       : [],
     decisions: draft.decisions ?? {},
     editedRir: draft.editedRir ?? 2,
+    editedDurationSeconds: draft.editedDurationSeconds ?? 0,
     weightStep: draft.weightStep ?? 1,
+    setTimerRemaining: draft.setTimerRemaining ?? 0,
+    isSetTimerRunning: draft.isSetTimerRunning ?? false,
     painKnee: draft.painKnee ?? 0,
     painWrist: draft.painWrist ?? 0,
     painOther: draft.painOther ?? 0,
@@ -194,6 +208,14 @@ const formatDate = (date: string) =>
 
 const formatWeight = (weight: number) =>
   `${Number.isInteger(weight) ? weight : weight.toFixed(1)} kg`;
+
+const formatClock = (totalSeconds: number) => {
+  const safeSeconds = Math.max(0, totalSeconds);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = String(safeSeconds % 60).padStart(2, '0');
+
+  return `${minutes}:${seconds}`;
+};
 
 const csvEscape = (value: string | number) => {
   const text = String(value);
@@ -288,6 +310,30 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [draft.phase, draft.restRemaining]);
 
+  useEffect(() => {
+    if (
+      draft.phase !== 'set' ||
+      !draft.isSetTimerRunning ||
+      draft.setTimerRemaining <= 0
+    ) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setDraft((current) => {
+        const nextRemaining = Math.max(0, current.setTimerRemaining - 1);
+
+        return {
+          ...current,
+          setTimerRemaining: nextRemaining,
+          isSetTimerRunning: nextRemaining > 0,
+        };
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [draft.phase, draft.isSetTimerRunning, draft.setTimerRemaining]);
+
   const patchDraft = useCallback((patch: Partial<WorkoutDraft>) => {
     setDraft((current) => ({ ...current, ...patch }));
   }, []);
@@ -309,8 +355,11 @@ export default function Home() {
       const nextSet =
         selectedSession.exercises[nextExerciseIndex].sets[nextSetIndex];
       patchDraft({
-        editedReps: nextSet.targetReps,
+        editedReps: nextSet.targetReps ?? 0,
         editedWeight: nextSet.targetWeightKg,
+        editedDurationSeconds: nextSet.targetDurationSeconds ?? 0,
+        setTimerRemaining: nextSet.targetDurationSeconds ?? 0,
+        isSetTimerRunning: false,
       });
     },
     [patchDraft, selectedSession],
@@ -364,10 +413,15 @@ export default function Home() {
         exerciseId: currentExercise.exerciseId,
         exerciseIndex: draft.exerciseIndex,
         setIndex: draft.setIndex,
-        plannedReps: currentSet.targetReps,
+        plannedReps: currentSet.targetReps ?? 0,
         plannedWeightKg: currentSet.targetWeightKg,
+        plannedDurationSeconds: currentSet.targetDurationSeconds,
         actualReps: draft.editedReps,
         actualWeightKg: draft.editedWeight,
+        actualDurationSeconds:
+          currentSet.type === 'timed'
+            ? draft.editedDurationSeconds - draft.setTimerRemaining
+            : undefined,
         restSecondsPlanned: currentSet.restSeconds,
         restSecondsActual: currentSet.restSeconds,
         status,
@@ -388,6 +442,7 @@ export default function Home() {
         painWrist: 0,
         painOther: 0,
         setNote: '',
+        isSetTimerRunning: false,
       }));
 
       if (status === 'skipped') {
@@ -399,6 +454,7 @@ export default function Home() {
     },
     [
       currentSet,
+      draft.editedDurationSeconds,
       draft.editedReps,
       draft.editedWeight,
       draft.editedRir,
@@ -408,6 +464,7 @@ export default function Home() {
       draft.painWrist,
       draft.setIndex,
       draft.setNote,
+      draft.setTimerRemaining,
       currentExercise,
       moveForward,
       patchDraft,
@@ -600,8 +657,12 @@ export default function Home() {
             exerciseNotes={currentExercise.notes}
             setIndex={draft.setIndex}
             totalExerciseSets={currentExercise.sets.length}
+            setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
+            durationSeconds={draft.editedDurationSeconds}
+            timerRemaining={draft.setTimerRemaining}
+            isTimerRunning={draft.isSetTimerRunning}
             weightStep={draft.weightStep}
             restSeconds={currentSet.restSeconds}
             completedSetIndexes={draft.records
@@ -610,6 +671,21 @@ export default function Home() {
             onRepsChange={(editedReps) => patchDraft({ editedReps })}
             onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
             onWeightStepChange={(weightStep) => patchDraft({ weightStep })}
+            onTimerToggle={() =>
+              patchDraft({
+                isSetTimerRunning: !draft.isSetTimerRunning,
+                setTimerRemaining:
+                  draft.setTimerRemaining > 0
+                    ? draft.setTimerRemaining
+                    : draft.editedDurationSeconds,
+              })
+            }
+            onTimerReset={() =>
+              patchDraft({
+                setTimerRemaining: draft.editedDurationSeconds,
+                isSetTimerRunning: false,
+              })
+            }
             onContinue={() => patchDraft({ phase: 'feedback' })}
             onSkip={() => logCurrentSet('skipped')}
             onBack={() => patchDraft({ phase: 'today' })}
@@ -619,8 +695,14 @@ export default function Home() {
         {draft.phase === 'feedback' && currentSet ? (
           <FeedbackScreen
             exerciseName={currentExercise.name}
+            setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
+            durationSeconds={
+              currentSet.type === 'timed'
+                ? draft.editedDurationSeconds - draft.setTimerRemaining
+                : undefined
+            }
             rir={draft.editedRir}
             painKnee={draft.painKnee}
             painWrist={draft.painWrist}
@@ -639,6 +721,7 @@ export default function Home() {
         {draft.phase === 'rest' ? (
           <RestScreen
             restRemaining={draft.restRemaining}
+            restTotal={currentSet?.restSeconds ?? draft.restRemaining}
             nextLabel={
               draft.setIndex + 1 < currentExercise.sets.length
                 ? `Serie ${draft.setIndex + 2} de ${currentExercise.name}`
@@ -776,13 +859,19 @@ function SetScreen({
   setIndex,
   totalExerciseSets,
   completedSetIndexes,
+  setType,
   reps,
   weight,
+  durationSeconds,
+  timerRemaining,
+  isTimerRunning,
   weightStep,
   restSeconds,
   onRepsChange,
   onWeightChange,
   onWeightStepChange,
+  onTimerToggle,
+  onTimerReset,
   onContinue,
   onSkip,
   onBack,
@@ -792,17 +881,25 @@ function SetScreen({
   setIndex: number;
   totalExerciseSets: number;
   completedSetIndexes: number[];
+  setType: TrainingSet['type'];
   reps: number;
   weight: number;
+  durationSeconds: number;
+  timerRemaining: number;
+  isTimerRunning: boolean;
   weightStep: 1 | 0.5;
   restSeconds: number;
   onRepsChange: (value: number) => void;
   onWeightChange: (value: number) => void;
   onWeightStepChange: (value: 1 | 0.5) => void;
+  onTimerToggle: () => void;
+  onTimerReset: () => void;
   onContinue: () => void;
   onSkip: () => void;
   onBack: () => void;
 }) {
+  const isTimed = setType === 'timed';
+
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <div className="flex shrink-0 items-center justify-between gap-3">
@@ -834,26 +931,36 @@ function SetScreen({
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-rows-2 gap-2">
-        <TactileNumber
-          label="Reps"
-          value={String(reps)}
-          onMinus={() => onRepsChange(Math.max(1, reps - 1))}
-          onPlus={() => onRepsChange(reps + 1)}
+      {isTimed ? (
+        <TimedSetPanel
+          durationSeconds={durationSeconds}
+          isRunning={isTimerRunning}
+          remainingSeconds={timerRemaining}
+          onReset={onTimerReset}
+          onToggle={onTimerToggle}
         />
-        <TactileNumber
-          label="Peso"
-          value={formatWeight(weight)}
-          centerControl={
-            <WeightStepToggle
-              value={weightStep}
-              onToggle={() => onWeightStepChange(weightStep === 1 ? 0.5 : 1)}
-            />
-          }
-          onMinus={() => onWeightChange(Math.max(0, weight - weightStep))}
-          onPlus={() => onWeightChange(weight + weightStep)}
-        />
-      </div>
+      ) : (
+        <div className="grid min-h-0 flex-1 grid-rows-2 gap-2">
+          <TactileNumber
+            label="Reps"
+            value={String(reps)}
+            onMinus={() => onRepsChange(Math.max(1, reps - 1))}
+            onPlus={() => onRepsChange(reps + 1)}
+          />
+          <TactileNumber
+            label="Peso"
+            value={formatWeight(weight)}
+            centerControl={
+              <WeightStepToggle
+                value={weightStep}
+                onToggle={() => onWeightStepChange(weightStep === 1 ? 0.5 : 1)}
+              />
+            }
+            onMinus={() => onWeightChange(Math.max(0, weight - weightStep))}
+            onPlus={() => onWeightChange(weight + weightStep)}
+          />
+        </div>
+      )}
 
       <div className="shrink-0 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground">
         <span className="block overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
@@ -898,27 +1005,149 @@ function SetScreen({
   );
 }
 
+function TimedSetPanel({
+  durationSeconds,
+  remainingSeconds,
+  isRunning,
+  onToggle,
+  onReset,
+}: {
+  durationSeconds: number;
+  remainingSeconds: number;
+  isRunning: boolean;
+  onToggle: () => void;
+  onReset: () => void;
+}) {
+  const isFinished = remainingSeconds === 0;
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-lg border bg-card p-4 shadow-sm">
+      <p className="text-base font-black text-muted-foreground">Tiempo</p>
+      <CountdownCircle
+        label="Tiempo de serie"
+        remainingSeconds={remainingSeconds}
+        totalSeconds={durationSeconds}
+        sizeClassName="my-4 size-52"
+        textClassName="text-[4.5rem]"
+      />
+      <div
+        className="grid w-full gap-3"
+        style={{ gridTemplateColumns: '56px minmax(0, 1fr)' }}
+      >
+        <Button
+          aria-label="Reiniciar timer"
+          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          style={{ width: '56px' }}
+          variant="secondary"
+          onClick={onReset}
+        >
+          <RotateCcw className="size-5" />
+        </Button>
+        <Button
+          className="h-14 rounded-lg text-lg font-black"
+          onClick={onToggle}
+        >
+          {isRunning ? (
+            <>
+              Pausar
+              <Pause className="size-5" />
+            </>
+          ) : (
+            <>
+              {isFinished ? 'Repetir' : 'Iniciar'}
+              <Play className="size-5" />
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function CountdownCircle({
+  label,
+  remainingSeconds,
+  totalSeconds,
+  sizeClassName,
+  textClassName,
+}: {
+  label: string;
+  remainingSeconds: number;
+  totalSeconds: number;
+  sizeClassName: string;
+  textClassName: string;
+}) {
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius;
+  const progress =
+    totalSeconds > 0
+      ? Math.min(1, Math.max(0, remainingSeconds / totalSeconds))
+      : 0;
+  const dashOffset = circumference * (1 - progress);
+
+  return (
+    <div
+      className={`relative grid place-items-center ${sizeClassName}`}
+      aria-label={`${label}: ${formatClock(remainingSeconds)}`}
+    >
+      <svg
+        className="absolute inset-0 size-full -rotate-90"
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+      >
+        <circle
+          className="stroke-border"
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          strokeWidth="6"
+        />
+        <circle
+          className="stroke-primary transition-[stroke-dashoffset] duration-300 ease-linear"
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          strokeLinecap="round"
+          strokeWidth="6"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+        />
+      </svg>
+      <span
+        className={`${textClassName} z-10 font-black leading-none tabular-nums tracking-normal`}
+      >
+        {formatClock(remainingSeconds)}
+      </span>
+    </div>
+  );
+}
+
 function RestScreen({
   restRemaining,
+  restTotal,
   nextLabel,
   onAdjustRest,
   onContinue,
 }: {
   restRemaining: number;
+  restTotal: number;
   nextLabel: string;
   onAdjustRest: (value: number | ((current: number) => number)) => void;
   onContinue: () => void;
 }) {
-  const minutes = Math.floor(restRemaining / 60);
-  const seconds = String(restRemaining % 60).padStart(2, '0');
-
   return (
     <section className="flex flex-1 flex-col justify-between gap-5 py-2">
       <div className="text-center">
         <p className="text-lg font-bold text-muted-foreground">Descanso</p>
-        <p className="mt-5 text-[7rem] font-black leading-none tabular-nums tracking-normal">
-          {minutes}:{seconds}
-        </p>
+        <CountdownCircle
+          label="Descanso"
+          remainingSeconds={restRemaining}
+          totalSeconds={Math.max(restTotal, restRemaining)}
+          sizeClassName="mx-auto mt-5 size-64"
+          textClassName="text-[5rem]"
+        />
         <p className="mt-4 text-xl font-bold">Siguiente: {nextLabel}</p>
       </div>
 
@@ -950,8 +1179,10 @@ function RestScreen({
 
 function FeedbackScreen({
   exerciseName,
+  setType,
   reps,
   weight,
+  durationSeconds,
   rir,
   painKnee,
   painWrist,
@@ -966,8 +1197,10 @@ function FeedbackScreen({
   onRegister,
 }: {
   exerciseName: string;
+  setType: TrainingSet['type'];
   reps: number;
   weight: number;
+  durationSeconds?: number;
   rir: number;
   painKnee: number;
   painWrist: number;
@@ -981,6 +1214,8 @@ function FeedbackScreen({
   onBack: () => void;
   onRegister: () => void;
 }) {
+  const isTimed = setType === 'timed';
+
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <div>
@@ -992,18 +1227,27 @@ function FeedbackScreen({
         </h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-lg border bg-card px-3 py-2.5">
-          <p className="text-sm font-black text-muted-foreground">Reps</p>
-          <p className="text-4xl font-black leading-none">{reps}</p>
-        </div>
-        <div className="rounded-lg border bg-card px-3 py-2.5">
-          <p className="text-sm font-black text-muted-foreground">Peso</p>
-          <p className="text-[2rem] font-black leading-none">
-            {formatWeight(weight)}
+      {isTimed ? (
+        <div className="rounded-lg border bg-card px-3 py-3 text-center">
+          <p className="text-sm font-black text-muted-foreground">Tiempo</p>
+          <p className="text-5xl font-black leading-none">
+            {formatClock(durationSeconds ?? 0)}
           </p>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-lg border bg-card px-3 py-2.5">
+            <p className="text-sm font-black text-muted-foreground">Reps</p>
+            <p className="text-4xl font-black leading-none">{reps}</p>
+          </div>
+          <div className="rounded-lg border bg-card px-3 py-2.5">
+            <p className="text-sm font-black text-muted-foreground">Peso</p>
+            <p className="text-[2rem] font-black leading-none">
+              {formatWeight(weight)}
+            </p>
+          </div>
+        </div>
+      )}
 
       <SetFeedback
         rir={rir}
@@ -1391,7 +1635,9 @@ function buildWorkoutCsv(
       .map((record) =>
         record.status === 'skipped'
           ? 'skipped'
-          : `${record.actualWeightKg}x${record.actualReps}`,
+          : record.actualDurationSeconds !== undefined
+            ? `${record.actualDurationSeconds}s`
+            : `${record.actualWeightKg}x${record.actualReps}`,
       )
       .join(';');
     const topLoad = completed.reduce(

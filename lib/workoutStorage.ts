@@ -9,8 +9,10 @@ export type StoredSetEvent = {
   setIndex: number;
   plannedReps: number;
   plannedWeightKg: number;
+  plannedDurationSeconds?: number;
   actualReps: number;
   actualWeightKg: number;
+  actualDurationSeconds?: number;
   restSecondsPlanned: number;
   restSecondsActual: number;
   status: 'completed' | 'skipped';

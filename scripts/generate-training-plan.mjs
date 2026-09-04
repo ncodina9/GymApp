@@ -191,6 +191,7 @@ const baseSessions = {
         0,
         45,
         ['Series de 45-60 s sin perder posicion.'],
+        { measure: 'duration' },
       ),
     ],
   },
@@ -446,6 +447,7 @@ function exercise(
   weightKg,
   restSeconds,
   notes,
+  options = {},
 ) {
   return {
     exerciseId,
@@ -457,6 +459,7 @@ function exercise(
     weightKg,
     restSeconds,
     notes,
+    measure: options.measure ?? 'reps',
   };
 }
 
@@ -466,6 +469,7 @@ function adaptExercise(item, week) {
   const progression = progressions[item.exerciseId];
   let setCount = item.setCount;
   let reps = item.reps;
+  let durationSeconds = item.reps;
   let weightKg = item.weightKg;
   let restSeconds = item.restSeconds;
   let phase = 'acumulacion';
@@ -525,8 +529,10 @@ function adaptExercise(item, week) {
     setIndex: index + 1,
     targetReps: reps,
     targetWeightKg: roundLoad(weightKg),
+    targetDurationSeconds:
+      item.measure === 'duration' ? durationSeconds : undefined,
     restSeconds,
-    type: 'working',
+    type: item.measure === 'duration' ? 'timed' : 'working',
   }));
 
   return {
@@ -536,7 +542,10 @@ function adaptExercise(item, week) {
     block: item.block,
     phase,
     notes: item.notes.join(' '),
-    target: `${setCount}x${reps} @ ${formatKg(roundLoad(weightKg))}`,
+    target:
+      item.measure === 'duration'
+        ? `${setCount}x${durationSeconds}s`
+        : `${setCount}x${reps} @ ${formatKg(roundLoad(weightKg))}`,
     decisionOptions: decisionOptions(item, week, roundLoad(weightKg)),
     sets,
   };

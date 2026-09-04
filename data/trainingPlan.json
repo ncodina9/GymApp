@@ -535,29 +535,32 @@
           "block": "F",
           "phase": "acumulacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -1724,29 +1727,32 @@
           "block": "F",
           "phase": "acumulacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -2913,29 +2919,32 @@
           "block": "F",
           "phase": "acumulacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -4034,22 +4043,24 @@
           "block": "F",
           "phase": "descarga",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "2x45 @ 0 kg",
+          "target": "2x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -5169,29 +5180,32 @@
           "block": "F",
           "phase": "intensificacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -6463,29 +6477,32 @@
           "block": "F",
           "phase": "intensificacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -7757,29 +7774,32 @@
           "block": "F",
           "phase": "intensificacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -8941,22 +8961,24 @@
           "block": "F",
           "phase": "descarga",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "2x45 @ 0 kg",
+          "target": "2x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -10062,29 +10084,32 @@
           "block": "F",
           "phase": "realizacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -11321,29 +11346,32 @@
           "block": "F",
           "phase": "realizacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -12580,29 +12608,32 @@
           "block": "F",
           "phase": "realizacion",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "3x45 @ 0 kg",
+          "target": "3x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 3,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
@@ -13694,22 +13725,24 @@
           "block": "F",
           "phase": "test",
           "notes": "Series de 45-60 s sin perder posicion.",
-          "target": "2x45 @ 0 kg",
+          "target": "2x45s",
           "decisionOptions": ["Mantener", "Subir reps", "Marcar molestia"],
           "sets": [
             {
               "setIndex": 1,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             },
             {
               "setIndex": 2,
               "targetReps": 45,
               "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
               "restSeconds": 45,
-              "type": "working"
+              "type": "timed"
             }
           ]
         }
