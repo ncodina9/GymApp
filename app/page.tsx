@@ -4,9 +4,9 @@ import {
   Check,
   ChevronRight,
   Download,
+  ArrowLeft,
   Minus,
   Plus,
-  RotateCcw,
   SkipForward,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -453,22 +453,19 @@ export default function Home() {
   return (
     <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 py-4 sm:py-6">
-        <header className="mb-3">
-          <p className="text-sm font-semibold text-muted-foreground">
+        <header className="mb-2">
+          <p className="text-xs font-black uppercase text-muted-foreground">
             Semana {selectedSession.week}
+            {draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''}
           </p>
-          <h1 className="text-2xl font-bold tracking-normal">GymApp</h1>
         </header>
 
         {draft.phase !== 'today' ? (
-          <section className="mb-4">
-            <div className="mb-2 flex items-center justify-between text-sm font-semibold text-muted-foreground">
-              <span>{selectedSession.label}</span>
-              <span>
-                {attemptedSets}/{totalSets}
-              </span>
-            </div>
+          <section className="mb-3">
             <Progress value={progressValue} />
+            <p className="mt-1 text-right text-xs font-black text-muted-foreground">
+              {attemptedSets}/{totalSets}
+            </p>
           </section>
         ) : null}
 
@@ -499,6 +496,7 @@ export default function Home() {
             onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
             onComplete={() => logCurrentSet('completed')}
             onSkip={() => logCurrentSet('skipped')}
+            onBack={() => patchDraft({ phase: 'today' })}
           />
         ) : null}
 
@@ -548,27 +546,6 @@ export default function Home() {
             onExport={exportCsv}
             onRestart={() => resetWorkoutPosition()}
           />
-        ) : null}
-
-        {draft.phase !== 'today' ? (
-          <footer className="mt-4 grid grid-cols-[1fr_auto] gap-2">
-            <Button
-              className="h-12 rounded-lg text-base font-black"
-              variant="secondary"
-              onClick={() => patchDraft({ phase: 'today' })}
-            >
-              Volver
-            </Button>
-            <Button
-              aria-label="Reiniciar entrenamiento"
-              className="h-12 w-12 rounded-lg"
-              size="icon"
-              variant="outline"
-              onClick={() => resetWorkoutPosition()}
-            >
-              <RotateCcw className="size-5" />
-            </Button>
-          </footer>
         ) : null}
       </div>
     </main>
@@ -670,6 +647,7 @@ function SetScreen({
   onWeightChange,
   onComplete,
   onSkip,
+  onBack,
 }: {
   exerciseName: string;
   exerciseNotes: string;
@@ -683,6 +661,7 @@ function SetScreen({
   onWeightChange: (value: number) => void;
   onComplete: () => void;
   onSkip: () => void;
+  onBack: () => void;
 }) {
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -737,7 +716,16 @@ function SetScreen({
         </span>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto] gap-3">
+      <div className="grid grid-cols-[auto_1fr_auto] gap-3">
+        <Button
+          aria-label="Volver"
+          className="h-16 w-16 rounded-lg"
+          size="icon"
+          variant="outline"
+          onClick={onBack}
+        >
+          <ArrowLeft className="size-5" />
+        </Button>
         <Button
           className="h-16 rounded-lg text-xl font-black"
           onClick={onComplete}
@@ -930,8 +918,7 @@ function TactileNumber({
       <div className="grid grid-cols-2 gap-2">
         <Button
           aria-label={`Bajar ${label}`}
-          className="h-16 rounded-lg"
-          size="icon"
+          className="h-16 w-full rounded-lg"
           variant="secondary"
           onClick={onMinus}
         >
@@ -939,8 +926,7 @@ function TactileNumber({
         </Button>
         <Button
           aria-label={`Subir ${label}`}
-          className="h-16 rounded-lg"
-          size="icon"
+          className="h-16 w-full rounded-lg"
           variant="secondary"
           onClick={onPlus}
         >
