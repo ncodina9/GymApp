@@ -21,7 +21,7 @@ import {
   type StoredSetEvent,
 } from '@/lib/workoutStorage';
 
-type Phase = 'today' | 'set' | 'rest' | 'transition' | 'done';
+type Phase = 'today' | 'set' | 'feedback' | 'rest' | 'transition' | 'done';
 
 type TrainingSet = {
   setIndex: number;
@@ -219,6 +219,7 @@ export default function Home() {
     draft.records.length > 0 ||
     draft.exerciseIndex > 0 ||
     draft.setIndex > 0 ||
+    draft.phase === 'feedback' ||
     draft.phase === 'rest' ||
     draft.phase === 'transition';
 
@@ -516,7 +517,7 @@ export default function Home() {
             ? (input as { status?: unknown }).status
             : undefined;
 
-        if (draft.phase !== 'set' || !currentSet) {
+        if (draft.phase !== 'feedback' || !currentSet) {
           throw new Error('No hay una serie activa para registrar.');
         }
 
@@ -548,8 +549,8 @@ export default function Home() {
   ]);
 
   return (
-    <main className="min-h-dvh bg-background text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 py-4 sm:py-6">
+    <main className="h-dvh overflow-hidden bg-background text-foreground">
+      <div className="mx-auto flex h-dvh w-full max-w-[480px] flex-col overflow-hidden px-4 py-3 sm:py-4">
         <header className="mb-2">
           <p className="text-xs font-black uppercase text-muted-foreground">
             Semana {selectedSession.week}
@@ -585,25 +586,35 @@ export default function Home() {
             totalExerciseSets={currentExercise.sets.length}
             reps={draft.editedReps}
             weight={draft.editedWeight}
-            rir={draft.editedRir}
-            painKnee={draft.painKnee}
-            painWrist={draft.painWrist}
-            painOther={draft.painOther}
-            setNote={draft.setNote}
             restSeconds={currentSet.restSeconds}
             completedSetIndexes={draft.records
               .filter((record) => record.exerciseIndex === draft.exerciseIndex)
               .map((record) => record.setIndex)}
             onRepsChange={(editedReps) => patchDraft({ editedReps })}
             onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
+            onContinue={() => patchDraft({ phase: 'feedback' })}
+            onSkip={() => logCurrentSet('skipped')}
+            onBack={() => patchDraft({ phase: 'today' })}
+          />
+        ) : null}
+
+        {draft.phase === 'feedback' && currentSet ? (
+          <FeedbackScreen
+            exerciseName={currentExercise.name}
+            reps={draft.editedReps}
+            weight={draft.editedWeight}
+            rir={draft.editedRir}
+            painKnee={draft.painKnee}
+            painWrist={draft.painWrist}
+            painOther={draft.painOther}
+            setNote={draft.setNote}
             onRirChange={(editedRir) => patchDraft({ editedRir })}
             onPainKneeChange={(painKnee) => patchDraft({ painKnee })}
             onPainWristChange={(painWrist) => patchDraft({ painWrist })}
             onPainOtherChange={(painOther) => patchDraft({ painOther })}
             onSetNoteChange={(setNote) => patchDraft({ setNote })}
-            onComplete={() => logCurrentSet('completed')}
-            onSkip={() => logCurrentSet('skipped')}
-            onBack={() => patchDraft({ phase: 'today' })}
+            onBack={() => patchDraft({ phase: 'set' })}
+            onRegister={() => logCurrentSet('completed')}
           />
         ) : null}
 
@@ -749,20 +760,10 @@ function SetScreen({
   completedSetIndexes,
   reps,
   weight,
-  rir,
-  painKnee,
-  painWrist,
-  painOther,
-  setNote,
   restSeconds,
   onRepsChange,
   onWeightChange,
-  onRirChange,
-  onPainKneeChange,
-  onPainWristChange,
-  onPainOtherChange,
-  onSetNoteChange,
-  onComplete,
+  onContinue,
   onSkip,
   onBack,
 }: {
@@ -773,20 +774,10 @@ function SetScreen({
   completedSetIndexes: number[];
   reps: number;
   weight: number;
-  rir: number;
-  painKnee: number;
-  painWrist: number;
-  painOther: number;
-  setNote: string;
   restSeconds: number;
   onRepsChange: (value: number) => void;
   onWeightChange: (value: number) => void;
-  onRirChange: (value: number) => void;
-  onPainKneeChange: (value: number) => void;
-  onPainWristChange: (value: number) => void;
-  onPainOtherChange: (value: number) => void;
-  onSetNoteChange: (value: string) => void;
-  onComplete: () => void;
+  onContinue: () => void;
   onSkip: () => void;
   onBack: () => void;
 }) {
@@ -843,19 +834,6 @@ function SetScreen({
         </span>
       </div>
 
-      <SetFeedback
-        rir={rir}
-        painKnee={painKnee}
-        painWrist={painWrist}
-        painOther={painOther}
-        setNote={setNote}
-        onRirChange={onRirChange}
-        onPainKneeChange={onPainKneeChange}
-        onPainWristChange={onPainWristChange}
-        onPainOtherChange={onPainOtherChange}
-        onSetNoteChange={onSetNoteChange}
-      />
-
       <div className="grid grid-cols-[auto_1fr_auto] gap-3">
         <Button
           aria-label="Volver"
@@ -868,10 +846,10 @@ function SetScreen({
         </Button>
         <Button
           className="h-16 rounded-lg text-xl font-black"
-          onClick={onComplete}
+          onClick={onContinue}
         >
-          Registrar serie
-          <Check className="size-6" />
+          Continuar
+          <ChevronRight className="size-6" />
         </Button>
         <Button
           aria-label="Saltar serie"
@@ -931,6 +909,98 @@ function RestScreen({
           onClick={onContinue}
         >
           Seguir
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function FeedbackScreen({
+  exerciseName,
+  reps,
+  weight,
+  rir,
+  painKnee,
+  painWrist,
+  painOther,
+  setNote,
+  onRirChange,
+  onPainKneeChange,
+  onPainWristChange,
+  onPainOtherChange,
+  onSetNoteChange,
+  onBack,
+  onRegister,
+}: {
+  exerciseName: string;
+  reps: number;
+  weight: number;
+  rir: number;
+  painKnee: number;
+  painWrist: number;
+  painOther: number;
+  setNote: string;
+  onRirChange: (value: number) => void;
+  onPainKneeChange: (value: number) => void;
+  onPainWristChange: (value: number) => void;
+  onPainOtherChange: (value: number) => void;
+  onSetNoteChange: (value: string) => void;
+  onBack: () => void;
+  onRegister: () => void;
+}) {
+  return (
+    <section className="flex flex-1 flex-col gap-3 overflow-hidden">
+      <div>
+        <p className="text-sm font-semibold text-muted-foreground">
+          Feedback serie
+        </p>
+        <h2 className="text-3xl font-black leading-tight tracking-normal">
+          {exerciseName}
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-center">
+        <div className="rounded-lg border bg-card px-3 py-4">
+          <p className="text-sm font-black text-muted-foreground">Reps</p>
+          <p className="text-5xl font-black leading-none">{reps}</p>
+        </div>
+        <div className="rounded-lg border bg-card px-3 py-4">
+          <p className="text-sm font-black text-muted-foreground">Peso</p>
+          <p className="text-4xl font-black leading-none">
+            {formatWeight(weight)}
+          </p>
+        </div>
+      </div>
+
+      <SetFeedback
+        rir={rir}
+        painKnee={painKnee}
+        painWrist={painWrist}
+        painOther={painOther}
+        setNote={setNote}
+        onRirChange={onRirChange}
+        onPainKneeChange={onPainKneeChange}
+        onPainWristChange={onPainWristChange}
+        onPainOtherChange={onPainOtherChange}
+        onSetNoteChange={onSetNoteChange}
+      />
+
+      <div className="mt-auto grid grid-cols-[auto_1fr] gap-3">
+        <Button
+          aria-label="Volver a ajustar serie"
+          className="h-16 w-16 rounded-lg"
+          size="icon"
+          variant="outline"
+          onClick={onBack}
+        >
+          <ArrowLeft className="size-5" />
+        </Button>
+        <Button
+          className="h-16 rounded-lg text-xl font-black"
+          onClick={onRegister}
+        >
+          Registrar serie
+          <Check className="size-6" />
         </Button>
       </div>
     </section>
