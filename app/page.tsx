@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Settings,
   SkipForward,
+  Trash2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -646,6 +647,27 @@ export default function Home() {
     }));
   };
 
+  const clearAllLocalData = () => {
+    const shouldClear = window.confirm(
+      'Borrar todos los entrenamientos guardados en este dispositivo?',
+    );
+
+    if (!shouldClear) {
+      return;
+    }
+
+    void Promise.all(
+      trainingPlan.sessions.map((session) =>
+        clearSessionEvents(session.sessionId),
+      ),
+    )
+      .catch(() => undefined)
+      .finally(() => {
+        window.localStorage.removeItem(storageKey);
+        setDraft(makeDraft());
+      });
+  };
+
   const exportCsv = async () => {
     const csv = buildWorkoutCsv(
       selectedSession,
@@ -817,7 +839,10 @@ export default function Home() {
         {draft.phase === 'settings' ? (
           <SettingsScreen
             theme={appearanceTheme}
+            selectedSessionLabel={selectedSession.label}
             onThemeChange={setAppearanceTheme}
+            onResetCurrent={() => resetWorkoutPosition(draft.selectedSessionId)}
+            onClearAllData={clearAllLocalData}
             onBack={() => patchDraft({ phase: settingsReturnPhase })}
           />
         ) : null}
@@ -1042,11 +1067,17 @@ function TodayScreen({
 
 function SettingsScreen({
   theme,
+  selectedSessionLabel,
   onThemeChange,
+  onResetCurrent,
+  onClearAllData,
   onBack,
 }: {
   theme: AppearanceTheme;
+  selectedSessionLabel: string;
   onThemeChange: (theme: AppearanceTheme) => void;
+  onResetCurrent: () => void;
+  onClearAllData: () => void;
   onBack: () => void;
 }) {
   return (
@@ -1057,11 +1088,11 @@ function SettingsScreen({
           Apariencia
         </h2>
 
-        <div className="mt-5 grid gap-3">
+        <div className="mt-4 grid gap-2">
           {appearanceThemes.map((option) => (
             <button
               key={option.value}
-              className={`flex h-20 items-center justify-between rounded-[1.75rem] border px-5 text-left text-xl font-black transition active:scale-[0.98] ${
+              className={`flex h-16 items-center justify-between rounded-[1.75rem] border px-5 text-left text-lg font-black transition active:scale-[0.98] ${
                 theme === option.value
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border bg-secondary text-secondary-foreground'
@@ -1080,6 +1111,37 @@ function SettingsScreen({
               />
             </button>
           ))}
+        </div>
+
+        <div className="mt-5">
+          <p className="text-sm font-semibold text-muted-foreground">
+            Datos locales
+          </p>
+          <div className="mt-2 grid gap-2">
+            <Button
+              className="h-16 justify-start rounded-[1.75rem] px-5 text-left font-black"
+              variant="secondary"
+              onClick={onResetCurrent}
+            >
+              <RotateCcw className="size-5" />
+              <span className="min-w-0">
+                <span className="block text-base leading-tight">
+                  Reiniciar entrenamiento
+                </span>
+                <span className="block truncate text-xs font-bold text-muted-foreground">
+                  {selectedSessionLabel}
+                </span>
+              </span>
+            </Button>
+            <Button
+              className="h-14 justify-start rounded-[1.75rem] px-5 text-left font-black"
+              variant="outline"
+              onClick={onClearAllData}
+            >
+              <Trash2 className="size-5" />
+              Borrar todo local
+            </Button>
+          </div>
         </div>
       </div>
 
