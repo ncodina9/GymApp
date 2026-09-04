@@ -23,9 +23,9 @@ El plan cargado por la app esta materializado en `data/trainingPlan.json` y se g
 
 ## Persistencia local
 
-La app esta pensada para correr en local en el iPhone como PWA estatica. De momento guarda el borrador de entrenamiento en `localStorage` despues de cada cambio relevante y permite reanudar desde la pantalla inicial. El siguiente paso sera mover el registro a IndexedDB para guardar eventos por serie con mas robustez.
+La app esta pensada para correr en local en el iPhone como PWA estatica. Guarda el borrador de pantalla en `localStorage` y cada serie registrada como evento en IndexedDB. La pantalla inicial permite reanudar una sesion empezada.
 
-Al terminar, `Guardar CSV` genera un archivo descargable/compartible desde iOS para poder guardarlo manualmente en Archivos, idealmente en la carpeta de exports del sistema de entrenamiento.
+Al terminar, `Guardar CSV` genera un archivo descargable/compartible desde iOS para poder guardarlo manualmente en Archivos, idealmente en la carpeta de exports del sistema de entrenamiento. El CSV sale de los eventos por serie e incluye RIR, molestias y nota rapida.
 
 ## Desarrollo
 

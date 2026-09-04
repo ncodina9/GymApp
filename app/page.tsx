@@ -14,6 +14,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import planData from '@/data/trainingPlan.json';
+import {
+  clearSessionEvents,
+  loadSessionEvents,
+  saveSetEvent,
+  type StoredSetEvent,
+} from '@/lib/workoutStorage';
 
 type Phase = 'today' | 'set' | 'rest' | 'transition' | 'done';
 
@@ -57,14 +63,6 @@ type TrainingPlan = {
   sessions: TrainingSession[];
 };
 
-type RecordedSet = {
-  exerciseIndex: number;
-  setIndex: number;
-  reps: number;
-  weightKg: number;
-  status: 'completed' | 'skipped';
-};
-
 type WorkoutDraft = {
   phase: Phase;
   selectedSessionId: string;
@@ -73,8 +71,13 @@ type WorkoutDraft = {
   editedReps: number;
   editedWeight: number;
   restRemaining: number;
-  records: RecordedSet[];
+  records: StoredSetEvent[];
   decisions: Record<string, string>;
+  editedRir: number;
+  painKnee: number;
+  painWrist: number;
+  painOther: number;
+  setNote: string;
 };
 
 type WebMcpTool = {
@@ -121,7 +124,47 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   restRemaining: 0,
   records: [],
   decisions: {},
+  editedRir: 2,
+  painKnee: 0,
+  painWrist: 0,
+  painOther: 0,
+  setNote: '',
 });
+
+const isStoredSetEvent = (value: unknown): value is StoredSetEvent =>
+  typeof value === 'object' &&
+  value !== null &&
+  'id' in value &&
+  'actualReps' in value &&
+  'actualWeightKg' in value &&
+  'exerciseId' in value;
+
+const normalizeDraft = (
+  draft: Partial<WorkoutDraft> | null,
+): WorkoutDraft | null => {
+  if (!draft?.selectedSessionId) {
+    return null;
+  }
+
+  const session =
+    trainingPlan.sessions.find(
+      (candidate) => candidate.sessionId === draft.selectedSessionId,
+    ) ?? fallbackSession;
+
+  return {
+    ...makeDraft(session),
+    ...draft,
+    records: Array.isArray(draft.records)
+      ? draft.records.filter(isStoredSetEvent)
+      : [],
+    decisions: draft.decisions ?? {},
+    editedRir: draft.editedRir ?? 2,
+    painKnee: draft.painKnee ?? 0,
+    painWrist: draft.painWrist ?? 0,
+    painOther: draft.painOther ?? 0,
+    setNote: draft.setNote ?? '',
+  };
+};
 
 const loadDraft = (): WorkoutDraft | null => {
   if (typeof window === 'undefined') {
@@ -130,7 +173,9 @@ const loadDraft = (): WorkoutDraft | null => {
 
   try {
     const raw = window.localStorage.getItem(storageKey);
-    return raw ? (JSON.parse(raw) as WorkoutDraft) : null;
+    return raw
+      ? normalizeDraft(JSON.parse(raw) as Partial<WorkoutDraft>)
+      : null;
   } catch {
     return null;
   }
@@ -190,6 +235,28 @@ export default function Home() {
   }, [draft]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    void loadSessionEvents(selectedSession.sessionId)
+      .then((events) => {
+        if (cancelled || events.length === 0) {
+          return;
+        }
+
+        setDraft((current) =>
+          current.selectedSessionId === selectedSession.sessionId
+            ? { ...current, records: events }
+            : current,
+        );
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSession.sessionId]);
+
+  useEffect(() => {
     if (draft.phase !== 'rest' || draft.restRemaining <= 0) {
       return;
     }
@@ -214,6 +281,7 @@ export default function Home() {
         trainingPlan.sessions.find(
           (session) => session.sessionId === sessionId,
         ) ?? fallbackSession;
+      void clearSessionEvents(nextSession.sessionId).catch(() => undefined);
       setDraft(makeDraft(nextSession));
     },
     [draft.selectedSessionId],
@@ -270,17 +338,39 @@ export default function Home() {
         return;
       }
 
-      const nextRecord: RecordedSet = {
+      const nextRecord: StoredSetEvent = {
+        id: crypto.randomUUID(),
+        performedAt: new Date().toISOString(),
+        planId: trainingPlan.planId,
+        sessionId: selectedSession.sessionId,
+        sessionDate: selectedSession.date,
+        exerciseId: currentExercise.exerciseId,
         exerciseIndex: draft.exerciseIndex,
         setIndex: draft.setIndex,
-        reps: draft.editedReps,
-        weightKg: draft.editedWeight,
+        plannedReps: currentSet.targetReps,
+        plannedWeightKg: currentSet.targetWeightKg,
+        actualReps: draft.editedReps,
+        actualWeightKg: draft.editedWeight,
+        restSecondsPlanned: currentSet.restSeconds,
+        restSecondsActual: currentSet.restSeconds,
         status,
+        rirLast: draft.editedRir,
+        painKnee: draft.painKnee,
+        painWrist: draft.painWrist,
+        painOther: draft.painOther,
+        note: draft.setNote,
       };
+
+      void saveSetEvent(nextRecord).catch(() => undefined);
 
       setDraft((current) => ({
         ...current,
         records: [...current.records, nextRecord],
+        editedRir: 2,
+        painKnee: 0,
+        painWrist: 0,
+        painOther: 0,
+        setNote: '',
       }));
 
       if (status === 'skipped') {
@@ -294,10 +384,17 @@ export default function Home() {
       currentSet,
       draft.editedReps,
       draft.editedWeight,
+      draft.editedRir,
       draft.exerciseIndex,
+      draft.painKnee,
+      draft.painOther,
+      draft.painWrist,
       draft.setIndex,
+      draft.setNote,
+      currentExercise,
       moveForward,
       patchDraft,
+      selectedSession,
     ],
   );
 
@@ -488,12 +585,22 @@ export default function Home() {
             totalExerciseSets={currentExercise.sets.length}
             reps={draft.editedReps}
             weight={draft.editedWeight}
+            rir={draft.editedRir}
+            painKnee={draft.painKnee}
+            painWrist={draft.painWrist}
+            painOther={draft.painOther}
+            setNote={draft.setNote}
             restSeconds={currentSet.restSeconds}
             completedSetIndexes={draft.records
               .filter((record) => record.exerciseIndex === draft.exerciseIndex)
               .map((record) => record.setIndex)}
             onRepsChange={(editedReps) => patchDraft({ editedReps })}
             onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
+            onRirChange={(editedRir) => patchDraft({ editedRir })}
+            onPainKneeChange={(painKnee) => patchDraft({ painKnee })}
+            onPainWristChange={(painWrist) => patchDraft({ painWrist })}
+            onPainOtherChange={(painOther) => patchDraft({ painOther })}
+            onSetNoteChange={(setNote) => patchDraft({ setNote })}
             onComplete={() => logCurrentSet('completed')}
             onSkip={() => logCurrentSet('skipped')}
             onBack={() => patchDraft({ phase: 'today' })}
@@ -642,9 +749,19 @@ function SetScreen({
   completedSetIndexes,
   reps,
   weight,
+  rir,
+  painKnee,
+  painWrist,
+  painOther,
+  setNote,
   restSeconds,
   onRepsChange,
   onWeightChange,
+  onRirChange,
+  onPainKneeChange,
+  onPainWristChange,
+  onPainOtherChange,
+  onSetNoteChange,
   onComplete,
   onSkip,
   onBack,
@@ -656,9 +773,19 @@ function SetScreen({
   completedSetIndexes: number[];
   reps: number;
   weight: number;
+  rir: number;
+  painKnee: number;
+  painWrist: number;
+  painOther: number;
+  setNote: string;
   restSeconds: number;
   onRepsChange: (value: number) => void;
   onWeightChange: (value: number) => void;
+  onRirChange: (value: number) => void;
+  onPainKneeChange: (value: number) => void;
+  onPainWristChange: (value: number) => void;
+  onPainOtherChange: (value: number) => void;
+  onSetNoteChange: (value: string) => void;
   onComplete: () => void;
   onSkip: () => void;
   onBack: () => void;
@@ -715,6 +842,19 @@ function SetScreen({
           Descanso propuesto: {restSeconds}s
         </span>
       </div>
+
+      <SetFeedback
+        rir={rir}
+        painKnee={painKnee}
+        painWrist={painWrist}
+        painOther={painOther}
+        setNote={setNote}
+        onRirChange={onRirChange}
+        onPainKneeChange={onPainKneeChange}
+        onPainWristChange={onPainWristChange}
+        onPainOtherChange={onPainOtherChange}
+        onSetNoteChange={onSetNoteChange}
+      />
 
       <div className="grid grid-cols-[auto_1fr_auto] gap-3">
         <Button
@@ -794,6 +934,124 @@ function RestScreen({
         </Button>
       </div>
     </section>
+  );
+}
+
+const noteOptions = ['OK', 'Pesado', 'Tecnica', 'Molestia'];
+
+function SetFeedback({
+  rir,
+  painKnee,
+  painWrist,
+  painOther,
+  setNote,
+  onRirChange,
+  onPainKneeChange,
+  onPainWristChange,
+  onPainOtherChange,
+  onSetNoteChange,
+}: {
+  rir: number;
+  painKnee: number;
+  painWrist: number;
+  painOther: number;
+  setNote: string;
+  onRirChange: (value: number) => void;
+  onPainKneeChange: (value: number) => void;
+  onPainWristChange: (value: number) => void;
+  onPainOtherChange: (value: number) => void;
+  onSetNoteChange: (value: string) => void;
+}) {
+  return (
+    <div className="grid gap-2 rounded-lg border bg-card p-3">
+      <div className="grid grid-cols-[1fr_104px] items-center gap-2">
+        <span className="text-sm font-black text-muted-foreground">RIR</span>
+        <div className="grid grid-cols-[40px_1fr_40px] items-center gap-1">
+          <Button
+            aria-label="Bajar RIR"
+            className="h-9 w-full rounded-md"
+            variant="secondary"
+            onClick={() => onRirChange(Math.max(0, rir - 1))}
+          >
+            <Minus className="size-4" />
+          </Button>
+          <span className="text-center text-xl font-black tabular-nums">
+            {rir}
+          </span>
+          <Button
+            aria-label="Subir RIR"
+            className="h-9 w-full rounded-md"
+            variant="secondary"
+            onClick={() => onRirChange(Math.min(5, rir + 1))}
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
+      </div>
+
+      <PainControl
+        label="Rodilla"
+        value={painKnee}
+        onChange={onPainKneeChange}
+      />
+      <PainControl
+        label="Muneca"
+        value={painWrist}
+        onChange={onPainWristChange}
+      />
+      <PainControl
+        label="Otro"
+        value={painOther}
+        onChange={onPainOtherChange}
+      />
+
+      <div className="grid grid-cols-4 gap-1.5">
+        {noteOptions.map((option) => (
+          <button
+            key={option}
+            className={`h-10 rounded-md border text-sm font-black ${
+              setNote === option
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-secondary text-secondary-foreground'
+            }`}
+            type="button"
+            onClick={() => onSetNoteChange(setNote === option ? '' : option)}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PainControl({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-[1fr_repeat(4,40px)] items-center gap-1.5">
+      <span className="text-sm font-black text-muted-foreground">{label}</span>
+      {[0, 1, 2, 3].map((level) => (
+        <button
+          key={level}
+          className={`h-9 rounded-md border text-sm font-black ${
+            value === level
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border bg-secondary text-secondary-foreground'
+          }`}
+          type="button"
+          onClick={() => onChange(level)}
+        >
+          {level}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -948,7 +1206,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function buildWorkoutCsv(
   session: TrainingSession,
-  records: RecordedSet[],
+  records: StoredSetEvent[],
   decisions: Record<string, string>,
 ) {
   const headers = [
@@ -969,9 +1227,9 @@ function buildWorkoutCsv(
     'notes',
   ];
 
-  const rows = session.exercises.map((exercise, exerciseIndex) => {
+  const rows = session.exercises.map((exercise) => {
     const exerciseRecords = records.filter(
-      (record) => record.exerciseIndex === exerciseIndex,
+      (record) => record.exerciseId === exercise.exerciseId,
     );
     const completed = exerciseRecords.filter(
       (record) => record.status === 'completed',
@@ -980,14 +1238,34 @@ function buildWorkoutCsv(
       .map((record) =>
         record.status === 'skipped'
           ? 'skipped'
-          : `${record.weightKg}x${record.reps}`,
+          : `${record.actualWeightKg}x${record.actualReps}`,
       )
       .join(';');
     const topLoad = completed.reduce(
-      (max, record) => Math.max(max, record.weightKg),
+      (max, record) => Math.max(max, record.actualWeightKg),
       0,
     );
-    const totalReps = completed.reduce((sum, record) => sum + record.reps, 0);
+    const totalReps = completed.reduce(
+      (sum, record) => sum + record.actualReps,
+      0,
+    );
+    const lastCompleted = completed.at(-1);
+    const painKnee = Math.max(
+      0,
+      ...exerciseRecords.map((record) => record.painKnee),
+    );
+    const painWrist = Math.max(
+      0,
+      ...exerciseRecords.map((record) => record.painWrist),
+    );
+    const painOther = Math.max(
+      0,
+      ...exerciseRecords.map((record) => record.painOther),
+    );
+    const setNotes = exerciseRecords
+      .map((record) => record.note)
+      .filter(Boolean)
+      .join('; ');
 
     return [
       session.date,
@@ -999,12 +1277,12 @@ function buildWorkoutCsv(
       actual,
       topLoad,
       totalReps,
-      '',
-      0,
-      0,
-      '',
+      lastCompleted?.rirLast ?? '',
+      painKnee,
+      painWrist,
+      painOther || '',
       decisions[exercise.exerciseId] ?? '',
-      exercise.notes,
+      [exercise.notes, setNotes].filter(Boolean).join(' | '),
     ];
   });
 
