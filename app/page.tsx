@@ -9,6 +9,7 @@ import {
   Plus,
   SkipForward,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,7 @@ type WorkoutDraft = {
   setIndex: number;
   editedReps: number;
   editedWeight: number;
+  weightStep: 1 | 0.5;
   restRemaining: number;
   records: StoredSetEvent[];
   decisions: Record<string, string>;
@@ -121,6 +123,7 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   setIndex: 0,
   editedReps: session.exercises[0].sets[0].targetReps,
   editedWeight: session.exercises[0].sets[0].targetWeightKg,
+  weightStep: 1,
   restRemaining: 0,
   records: [],
   decisions: {},
@@ -159,6 +162,7 @@ const normalizeDraft = (
       : [],
     decisions: draft.decisions ?? {},
     editedRir: draft.editedRir ?? 2,
+    weightStep: draft.weightStep ?? 1,
     painKnee: draft.painKnee ?? 0,
     painWrist: draft.painWrist ?? 0,
     painOther: draft.painOther ?? 0,
@@ -586,12 +590,14 @@ export default function Home() {
             totalExerciseSets={currentExercise.sets.length}
             reps={draft.editedReps}
             weight={draft.editedWeight}
+            weightStep={draft.weightStep}
             restSeconds={currentSet.restSeconds}
             completedSetIndexes={draft.records
               .filter((record) => record.exerciseIndex === draft.exerciseIndex)
               .map((record) => record.setIndex)}
             onRepsChange={(editedReps) => patchDraft({ editedReps })}
             onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
+            onWeightStepChange={(weightStep) => patchDraft({ weightStep })}
             onContinue={() => patchDraft({ phase: 'feedback' })}
             onSkip={() => logCurrentSet('skipped')}
             onBack={() => patchDraft({ phase: 'today' })}
@@ -760,9 +766,11 @@ function SetScreen({
   completedSetIndexes,
   reps,
   weight,
+  weightStep,
   restSeconds,
   onRepsChange,
   onWeightChange,
+  onWeightStepChange,
   onContinue,
   onSkip,
   onBack,
@@ -774,21 +782,23 @@ function SetScreen({
   completedSetIndexes: number[];
   reps: number;
   weight: number;
+  weightStep: 1 | 0.5;
   restSeconds: number;
   onRepsChange: (value: number) => void;
   onWeightChange: (value: number) => void;
+  onWeightStepChange: (value: 1 | 0.5) => void;
   onContinue: () => void;
   onSkip: () => void;
   onBack: () => void;
 }) {
   return (
-    <section className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
+    <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-muted-foreground">
             Serie {setIndex + 1} de {totalExerciseSets}
           </p>
-          <h2 className="text-3xl font-black leading-tight tracking-normal">
+          <h2 className="text-[1.65rem] font-black leading-tight tracking-normal">
             {exerciseName}
           </h2>
         </div>
@@ -812,7 +822,7 @@ function SetScreen({
         </div>
       </div>
 
-      <div className="grid flex-1 grid-rows-2 gap-3">
+      <div className="grid min-h-0 flex-1 grid-rows-2 gap-3">
         <TactileNumber
           label="Reps"
           value={String(reps)}
@@ -822,19 +832,27 @@ function SetScreen({
         <TactileNumber
           label="Peso"
           value={formatWeight(weight)}
-          onMinus={() => onWeightChange(Math.max(0, weight - 2.5))}
-          onPlus={() => onWeightChange(weight + 2.5)}
+          stepControl={
+            <WeightStepControl
+              value={weightStep}
+              onChange={onWeightStepChange}
+            />
+          }
+          onMinus={() => onWeightChange(Math.max(0, weight - weightStep))}
+          onPlus={() => onWeightChange(weight + weightStep)}
         />
       </div>
 
-      <div className="rounded-lg bg-secondary px-4 py-3 text-base font-medium text-secondary-foreground">
-        {exerciseNotes}
+      <div className="shrink-0 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground">
+        <span className="block overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+          {exerciseNotes}
+        </span>
         <span className="mt-1 block text-sm text-muted-foreground">
           Descanso propuesto: {restSeconds}s
         </span>
       </div>
 
-      <div className="grid grid-cols-[auto_1fr_auto] gap-3">
+      <div className="grid shrink-0 grid-cols-[auto_1fr_auto] gap-3">
         <Button
           aria-label="Volver"
           className="h-16 w-16 rounded-lg"
@@ -1227,18 +1245,24 @@ function DoneScreen({
 function TactileNumber({
   label,
   value,
+  stepControl,
   onMinus,
   onPlus,
 }: {
   label: string;
   value: string;
+  stepControl?: ReactNode;
   onMinus: () => void;
   onPlus: () => void;
 }) {
   return (
-    <div className="grid grid-rows-[1fr_64px] gap-2 rounded-lg border bg-card p-2 shadow-sm">
+    <div className="grid min-h-0 grid-rows-[1fr_64px] gap-2 rounded-lg border bg-card p-2 shadow-sm">
       <div className="flex min-w-0 flex-col items-center justify-center">
-        <p className="text-base font-black text-muted-foreground">{label}</p>
+        <div className="grid min-h-8 w-full grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <span />
+          <p className="text-base font-black text-muted-foreground">{label}</p>
+          <div className="flex justify-end">{stepControl}</div>
+        </div>
         <p className="max-w-full text-center text-[clamp(3rem,18vw,5.25rem)] font-black leading-none tracking-normal">
           {value}
         </p>
@@ -1261,6 +1285,36 @@ function TactileNumber({
           <Plus className="size-8" />
         </Button>
       </div>
+    </div>
+  );
+}
+
+function WeightStepControl({
+  value,
+  onChange,
+}: {
+  value: 1 | 0.5;
+  onChange: (value: 1 | 0.5) => void;
+}) {
+  return (
+    <div
+      className="grid h-8 grid-cols-2 overflow-hidden rounded-md border border-border bg-secondary"
+      aria-label="Incremento de peso"
+    >
+      {([1, 0.5] as const).map((step) => (
+        <button
+          key={step}
+          className={`min-w-10 px-2 text-xs font-black ${
+            value === step
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground'
+          }`}
+          type="button"
+          onClick={() => onChange(step)}
+        >
+          {step}
+        </button>
+      ))}
     </div>
   );
 }
