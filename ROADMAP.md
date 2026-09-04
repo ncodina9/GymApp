@@ -10,6 +10,7 @@ El plan de entrenamiento no debe ser una plantilla generica de 4 dias repetida. 
 
 - La pantalla principal debe priorizar la accion inmediata del entrenamiento que toca hoy.
 - Los numeros importantes deben ser grandes: ejercicio actual, reps objetivo, peso objetivo y descanso.
+- Algunos ejercicios se miden por tiempo, no por reps y peso. En esos casos la pantalla de serie debe mostrar un timer tactil con cuenta atras visible.
 - La interaccion debe evitar selectores, formularios largos y teclado en mitad del entrenamiento.
 - Los ajustes de peso y reps deben resolverse con controles tactiles directos: botones grandes de sumar/restar, steppers, swipes o ruedas propias.
 - La app debe aprovechar la pantalla del iPhone mejor que una app pensada para Apple Watch, tomando como referencia la fluidez tactil de GymBook Watch.
@@ -60,6 +61,7 @@ Pantalla central del producto. Debe mostrar un ejercicio cada vez:
 - reps objetivo en grande
 - peso objetivo en grande
 - controles tactiles para subir/bajar reps y peso
+- si la serie es temporizada, cuenta atras grande con boton de iniciar/pausar y reinicio
 - boton principal para registrar serie
 - boton secundario pequeno para saltar serie
 
@@ -68,6 +70,7 @@ Pantalla central del producto. Debe mostrar un ejercicio cada vez:
 Pantalla posterior al registro de una serie:
 
 - cuenta atras grande
+- circulo de progreso que se vacia conforme avanza el descanso
 - siguiente accion visible
 - opcion de acortar o alargar descanso con controles tactiles
 - boton para continuar cuando el descanso termine
@@ -115,6 +118,13 @@ Estructura conceptual:
               "targetWeightKg": 62.5,
               "restSeconds": 120,
               "type": "working"
+            },
+            {
+              "setIndex": 2,
+              "targetWeightKg": 0,
+              "targetDurationSeconds": 45,
+              "restSeconds": 45,
+              "type": "timed"
             }
           ]
         }
@@ -135,6 +145,7 @@ Campos que deben existir desde la primera version funcional:
 - `setIndex`
 - `targetReps`
 - `targetWeightKg`
+- `targetDurationSeconds` para series por tiempo
 - `restSeconds`
 - `notes`
 - `decisionOptions`
@@ -153,8 +164,10 @@ Campos minimos:
 - `setIndex`
 - `plannedReps`
 - `plannedWeightKg`
+- `plannedDurationSeconds` si aplica
 - `actualReps`
 - `actualWeightKg`
+- `actualDurationSeconds` si aplica
 - `restSecondsPlanned`
 - `restSecondsActual`
 - `status`: `completed`, `skipped` o `edited`
@@ -315,6 +328,22 @@ Criterio de aceptacion:
 - la app se instala en el iPhone
 - abre sin red despues de haber cargado una vez
 - el flujo de entrenamiento sigue funcionando offline
+
+### Hito 5a: Prueba local en iPhone antes de PWA
+
+Objetivo: validar tacto, altura real de Safari iOS y exportacion antes de invertir en instalacion/offline.
+
+Entregables:
+
+- script `dev:host` para servir la app en la red local
+- guia de prueba en iPhone real
+- checklist de pantallas criticas
+
+Criterio de aceptacion:
+
+- el iPhone abre la app desde `http://IP_DEL_MAC:3000/`
+- las pantallas de serie, feedback, descanso y serie temporizada funcionan sin scroll indeseado
+- se puede validar el guardado/exportacion CSV desde Safari iOS
 
 ### Hito 6: Despliegue privado
 

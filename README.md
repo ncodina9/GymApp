@@ -12,9 +12,10 @@ Incluye:
 - seleccion tactil de entrenamientos de la semana
 - ejecucion serie a serie
 - controles grandes para reps y peso sin teclado
+- series temporizadas con cuenta atras circular
 - progreso por circulos dentro del ejercicio
 - barra de progreso de sesion
-- cuenta atras de descanso
+- cuenta atras circular de descanso
 - transicion entre ejercicios con decisiones pulsables
 - deteccion de entrenamiento empezado y opcion de reanudar
 - exportacion CSV compatible con guardar en Archivos desde iPhone
@@ -33,6 +34,14 @@ Al terminar, `Guardar CSV` genera un archivo descargable/compartible desde iOS p
 npm install
 npm run dev
 ```
+
+Para probar desde un iPhone en la misma Wi-Fi:
+
+```sh
+npm run dev:host
+```
+
+Despues abre `http://IP_DEL_MAC:3000/` desde Safari. Ver [docs/mobile-testing.md](./docs/mobile-testing.md).
 
 ## Regenerar plan
 

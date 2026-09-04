@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "vinext dev",
+    "dev:host": "vinext dev --hostname 0.0.0.0",
     "build": "vinext build",
     "generate:plan": "node scripts/generate-training-plan.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
