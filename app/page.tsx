@@ -292,6 +292,9 @@ const csvEscape = (value: string | number) => {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 
+const formatCsvNumber = (value: number) =>
+  Number.isInteger(value) ? String(value) : value.toFixed(1);
+
 export default function Home() {
   const [draft, setDraft] = useState<WorkoutDraft>(() => makeDraft());
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
@@ -1813,75 +1816,61 @@ function buildWorkoutCsv(
     'exercise',
     'type',
     'target',
-    'actual',
-    'top_load_kg',
-    'total_reps',
-    'rir_last',
+    'set_number',
+    'load_kg',
+    'reps',
+    'rir',
     'pain_knee',
     'pain_wrist',
-    'pain_other',
-    'next_decision',
-    'notes',
+    'set_note',
+    'exercise_decision',
+    'exercise_note',
   ];
 
-  const rows = session.exercises.map((exercise) => {
-    const exerciseRecords = records.filter(
-      (record) => record.exerciseId === exercise.exerciseId,
+  const sortedRecords = [...records].sort(
+    (a, b) => a.exerciseIndex - b.exerciseIndex || a.setIndex - b.setIndex,
+  );
+  const lastRecordKeyByExercise = new Map<string, string>();
+
+  sortedRecords.forEach((record) => {
+    lastRecordKeyByExercise.set(
+      record.exerciseId,
+      `${record.exerciseIndex}-${record.setIndex}`,
     );
-    const completed = exerciseRecords.filter(
-      (record) => record.status === 'completed',
-    );
-    const actual = exerciseRecords
-      .map((record) =>
-        record.status === 'skipped'
-          ? 'skipped'
-          : record.actualDurationSeconds !== undefined
-            ? `${record.actualDurationSeconds}s`
-            : `${record.actualWeightKg}x${record.actualReps}`,
-      )
-      .join(';');
-    const topLoad = completed.reduce(
-      (max, record) => Math.max(max, record.actualWeightKg),
-      0,
-    );
-    const totalReps = completed.reduce(
-      (sum, record) => sum + record.actualReps,
-      0,
-    );
-    const lastCompleted = completed.at(-1);
-    const painKnee = Math.max(
-      0,
-      ...exerciseRecords.map((record) => record.painKnee),
-    );
-    const painWrist = Math.max(
-      0,
-      ...exerciseRecords.map((record) => record.painWrist),
-    );
-    const painOther = Math.max(
-      0,
-      ...exerciseRecords.map((record) => record.painOther),
-    );
-    const setNotes = exerciseRecords
-      .map((record) => record.note)
-      .filter(Boolean)
-      .join('; ');
+  });
+
+  const rows = sortedRecords.map((record) => {
+    const exercise =
+      session.exercises[record.exerciseIndex] ??
+      session.exercises.find((item) => item.exerciseId === record.exerciseId);
+    const isSkipped = record.status === 'skipped';
+    const isLastExerciseRow =
+      lastRecordKeyByExercise.get(record.exerciseId) ===
+      `${record.exerciseIndex}-${record.setIndex}`;
+    const setNote = isSkipped
+      ? ['skipped', record.note].filter(Boolean).join(': ')
+      : record.note;
 
     return [
       session.date,
       session.week,
       session.sessionLabel,
-      exercise.name,
-      exercise.type,
-      exercise.target,
-      actual,
-      topLoad,
-      totalReps,
-      lastCompleted?.rirLast ?? '',
-      painKnee,
-      painWrist,
-      painOther || '',
-      decisions[exercise.exerciseId] ?? '',
-      [exercise.notes, setNotes].filter(Boolean).join(' | '),
+      exercise?.name ?? record.exerciseId,
+      exercise?.type ?? '',
+      exercise?.target ?? '',
+      record.setIndex + 1,
+      isSkipped ? '' : formatCsvNumber(record.actualWeightKg),
+      isSkipped
+        ? ''
+        : record.actualDurationSeconds !== undefined
+          ? `${record.actualDurationSeconds}s`
+          : record.actualReps,
+      isSkipped ? '' : record.rirLast,
+      record.painKnee,
+      record.painWrist,
+      setNote,
+      isLastExerciseRow ? (decisions[record.exerciseId] ?? '') : '',
+      isLastExerciseRow ? (exercise?.notes ?? '') : '',
     ];
   });
 
