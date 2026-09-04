@@ -1,9 +1,12 @@
-const CACHE_NAME = 'gymapp-pwa-v1';
+const CACHE_NAME = 'gymapp-pwa-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/app-icon.svg',
+  '/app-icon.png',
+  '/app-icon-512.png',
+  '/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {

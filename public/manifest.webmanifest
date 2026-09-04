@@ -7,8 +7,20 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f5f7fb",
-  "theme_color": "#0c79d8",
+  "theme_color": "#101619",
   "icons": [
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/app-icon.svg",
       "sizes": "any",

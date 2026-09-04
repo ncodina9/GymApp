@@ -10,6 +10,7 @@ import {
   Play,
   Plus,
   RotateCcw,
+  Settings,
   SkipForward,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -25,7 +26,16 @@ import {
   type StoredSetEvent,
 } from '@/lib/workoutStorage';
 
-type Phase = 'today' | 'set' | 'feedback' | 'rest' | 'transition' | 'done';
+type Phase =
+  | 'today'
+  | 'set'
+  | 'feedback'
+  | 'rest'
+  | 'transition'
+  | 'done'
+  | 'settings';
+
+type AppearanceTheme = 'system' | 'light' | 'dark';
 
 type TrainingSet = {
   setIndex: number;
@@ -109,8 +119,14 @@ type WebMcpDocument = Document & {
 
 const trainingPlan = planData as TrainingPlan;
 const storageKey = `gymapp:${trainingPlan.planId}:draft`;
+const themeStorageKey = 'gymapp:appearance-theme';
 
 const fallbackSession = trainingPlan.sessions[0];
+const appearanceThemes: { value: AppearanceTheme; label: string }[] = [
+  { value: 'system', label: 'Sistema' },
+  { value: 'light', label: 'Claro' },
+  { value: 'dark', label: 'Oscuro' },
+];
 
 const registerServiceWorker = () => {
   if (
@@ -131,6 +147,18 @@ const registerServiceWorker = () => {
   }
 
   window.addEventListener('load', register, { once: true });
+};
+
+const isAppearanceTheme = (value: unknown): value is AppearanceTheme =>
+  value === 'system' || value === 'light' || value === 'dark';
+
+const loadAppearanceTheme = (): AppearanceTheme => {
+  if (typeof window === 'undefined') {
+    return 'system';
+  }
+
+  const stored = window.localStorage.getItem(themeStorageKey);
+  return isAppearanceTheme(stored) ? stored : 'system';
 };
 
 const getRecommendedSession = () => {
@@ -267,6 +295,10 @@ const csvEscape = (value: string | number) => {
 export default function Home() {
   const [draft, setDraft] = useState<WorkoutDraft>(() => makeDraft());
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
+  const [appearanceTheme, setAppearanceTheme] =
+    useState<AppearanceTheme>('system');
+  const [settingsReturnPhase, setSettingsReturnPhase] =
+    useState<Phase>('today');
   const selectedSession =
     trainingPlan.sessions.find(
       (session) => session.sessionId === draft.selectedSessionId,
@@ -301,6 +333,7 @@ export default function Home() {
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       setDraft(loadDraft() ?? makeDraft());
+      setAppearanceTheme(loadAppearanceTheme());
       setHasLoadedDraft(true);
     }, 0);
 
@@ -310,6 +343,32 @@ export default function Home() {
   useEffect(() => {
     registerServiceWorker();
   }, []);
+
+  useEffect(() => {
+    const applyTheme = () => {
+      const systemPrefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)',
+      ).matches;
+      const shouldUseDark =
+        appearanceTheme === 'dark' ||
+        (appearanceTheme === 'system' && systemPrefersDark);
+
+      document.documentElement.classList.toggle('dark', shouldUseDark);
+      document.documentElement.dataset.appearanceTheme = appearanceTheme;
+      window.localStorage.setItem(themeStorageKey, appearanceTheme);
+    };
+
+    applyTheme();
+
+    if (appearanceTheme !== 'system') {
+      return;
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    media.addEventListener('change', applyTheme);
+
+    return () => media.removeEventListener('change', applyTheme);
+  }, [appearanceTheme]);
 
   useEffect(() => {
     if (!hasLoadedDraft) {
@@ -565,6 +624,11 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const openSettings = (returnPhase = draft.phase) => {
+    setSettingsReturnPhase(returnPhase);
+    patchDraft({ phase: 'settings' });
+  };
+
   useEffect(() => {
     const context =
       typeof document === 'undefined'
@@ -672,12 +736,15 @@ export default function Home() {
       <div className="app-screen mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 py-2 sm:py-4">
         <header className="mb-1">
           <p className="text-xs font-black uppercase text-muted-foreground">
-            Semana {selectedSession.week}
-            {draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''}
+            {draft.phase === 'settings'
+              ? 'Ajustes'
+              : `Semana ${selectedSession.week}${
+                  draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''
+                }`}
           </p>
         </header>
 
-        {draft.phase !== 'today' ? (
+        {draft.phase !== 'today' && draft.phase !== 'settings' ? (
           <section className="mb-2">
             <Progress value={progressValue} />
             <p className="mt-1 text-right text-xs font-black text-muted-foreground">
@@ -694,6 +761,15 @@ export default function Home() {
             onChangeSession={changeSession}
             onResume={resume}
             onStart={startNew}
+            onSettings={() => openSettings('today')}
+          />
+        ) : null}
+
+        {draft.phase === 'settings' ? (
+          <SettingsScreen
+            theme={appearanceTheme}
+            onThemeChange={setAppearanceTheme}
+            onBack={() => patchDraft({ phase: settingsReturnPhase })}
           />
         ) : null}
 
@@ -824,6 +900,7 @@ function TodayScreen({
   onChangeSession,
   onResume,
   onStart,
+  onSettings,
 }: {
   selectedSession: TrainingSession;
   weekSessions: TrainingSession[];
@@ -831,6 +908,7 @@ function TodayScreen({
   onChangeSession: (sessionId: string) => void;
   onResume: () => void;
   onStart: () => void;
+  onSettings: () => void;
 }) {
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -889,13 +967,80 @@ function TodayScreen({
         ))}
       </div>
 
-      <Button
-        className="mt-auto h-16 rounded-lg text-xl font-black"
-        variant={hasStarted ? 'secondary' : 'default'}
-        onClick={onStart}
+      <div
+        className="mt-auto grid gap-3"
+        style={{ gridTemplateColumns: '64px minmax(0, 1fr)' }}
       >
-        {hasStarted ? 'Empezar de cero' : 'Empezar'}
-        <ChevronRight className="size-6" />
+        <Button
+          aria-label="Configuracion"
+          className="h-16 w-16 rounded-[1.75rem] p-0"
+          style={{ width: '64px' }}
+          variant="outline"
+          onClick={onSettings}
+        >
+          <Settings className="size-6" />
+        </Button>
+        <Button
+          className="h-16 rounded-[1.75rem] text-xl font-black"
+          variant={hasStarted ? 'secondary' : 'default'}
+          onClick={onStart}
+        >
+          {hasStarted ? 'Empezar de cero' : 'Empezar'}
+          <ChevronRight className="size-6" />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function SettingsScreen({
+  theme,
+  onThemeChange,
+  onBack,
+}: {
+  theme: AppearanceTheme;
+  onThemeChange: (theme: AppearanceTheme) => void;
+  onBack: () => void;
+}) {
+  return (
+    <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+      <div className="min-h-0 flex-1 rounded-lg border bg-card p-4 shadow-sm">
+        <p className="text-sm font-semibold text-muted-foreground">Ajustes</p>
+        <h2 className="mt-1 text-[2rem] font-black leading-tight tracking-normal">
+          Apariencia
+        </h2>
+
+        <div className="mt-5 grid gap-3">
+          {appearanceThemes.map((option) => (
+            <button
+              key={option.value}
+              className={`flex h-20 items-center justify-between rounded-[1.75rem] border px-5 text-left text-xl font-black transition active:scale-[0.98] ${
+                theme === option.value
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-secondary text-secondary-foreground'
+              }`}
+              type="button"
+              onClick={() => onThemeChange(option.value)}
+            >
+              <span>{option.label}</span>
+              <span
+                className={`size-6 rounded-full border-2 ${
+                  theme === option.value
+                    ? 'border-primary-foreground bg-primary-foreground'
+                    : 'border-muted-foreground/45 bg-transparent'
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Button
+        className="h-16 rounded-[1.75rem] text-xl font-black"
+        onClick={onBack}
+      >
+        Volver
       </Button>
     </section>
   );
@@ -1025,7 +1170,7 @@ function SetScreen({
       >
         <Button
           aria-label="Volver"
-          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
@@ -1033,7 +1178,7 @@ function SetScreen({
           <ArrowLeft className="size-5" />
         </Button>
         <Button
-          className="h-14 rounded-lg text-lg font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           onClick={onContinue}
         >
           Continuar
@@ -1041,7 +1186,7 @@ function SetScreen({
         </Button>
         <Button
           aria-label="Saltar serie"
-          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
           style={{ width: '56px' }}
           variant="outline"
           onClick={onSkip}
@@ -1084,7 +1229,7 @@ function TimedSetPanel({
       >
         <Button
           aria-label="Reiniciar timer"
-          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
           style={{ width: '56px' }}
           variant="secondary"
           onClick={onReset}
@@ -1092,7 +1237,7 @@ function TimedSetPanel({
           <RotateCcw className="size-5" />
         </Button>
         <Button
-          className="h-14 rounded-lg text-lg font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           onClick={onToggle}
         >
           {isRunning ? (
@@ -1201,21 +1346,21 @@ function RestScreen({
 
       <div className="grid grid-cols-3 gap-2">
         <Button
-          className="h-14 rounded-lg text-lg font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           variant="secondary"
           onClick={() => onAdjustRest((value) => Math.max(0, value - 15))}
         >
           -15s
         </Button>
         <Button
-          className="h-14 rounded-lg text-lg font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           variant="secondary"
           onClick={() => onAdjustRest((value) => value + 15)}
         >
           +15s
         </Button>
         <Button
-          className="h-14 rounded-lg text-lg font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           onClick={onContinue}
         >
           Seguir
@@ -1316,7 +1461,7 @@ function FeedbackScreen({
       >
         <Button
           aria-label="Volver a ajustar serie"
-          className="h-14 w-14 shrink-0 rounded-lg p-0"
+          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
@@ -1324,7 +1469,7 @@ function FeedbackScreen({
           <ArrowLeft className="size-5" />
         </Button>
         <Button
-          className="h-14 rounded-lg text-lg font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           onClick={onRegister}
         >
           Registrar serie
@@ -1511,7 +1656,7 @@ function TransitionScreen({
       </div>
 
       <Button
-        className="mt-auto h-16 rounded-lg text-xl font-black"
+        className="mt-auto h-16 rounded-[1.75rem] text-xl font-black"
         onClick={onContinue}
       >
         Siguiente ejercicio
@@ -1546,12 +1691,15 @@ function DoneScreen({
         </h2>
         <p className="mt-2 text-lg text-muted-foreground">series completadas</p>
       </div>
-      <Button className="h-14 rounded-lg text-lg font-black" onClick={onExport}>
+      <Button
+        className="h-14 rounded-[1.75rem] text-lg font-black"
+        onClick={onExport}
+      >
         Guardar CSV
         <Download className="size-5" />
       </Button>
       <Button
-        className="h-14 rounded-lg text-lg font-black"
+        className="h-14 rounded-[1.75rem] text-lg font-black"
         variant="secondary"
         onClick={onRestart}
       >
@@ -1596,7 +1744,7 @@ function TactileNumber({
       >
         <Button
           aria-label={`Bajar ${label}`}
-          className="h-16 w-full rounded-lg"
+          className="h-16 w-full rounded-[1.75rem]"
           variant="secondary"
           onClick={onMinus}
         >
@@ -1605,7 +1753,7 @@ function TactileNumber({
         {centerControl}
         <Button
           aria-label={`Subir ${label}`}
-          className="h-16 w-full rounded-lg"
+          className="h-16 w-full rounded-[1.75rem]"
           variant="secondary"
           onClick={onPlus}
         >
@@ -1625,7 +1773,7 @@ function WeightStepToggle({
 }) {
   return (
     <button
-      className="flex h-16 min-w-0 flex-col items-center justify-center rounded-lg border border-border bg-secondary px-1 text-secondary-foreground transition active:scale-[0.98]"
+      className="flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.75rem] border border-border bg-secondary px-1 text-secondary-foreground transition active:scale-[0.98]"
       type="button"
       onClick={onToggle}
       aria-label={`Cambiar incremento de peso, actual ${value} kg`}
