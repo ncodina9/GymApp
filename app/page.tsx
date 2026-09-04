@@ -911,15 +911,15 @@ function TodayScreen({
   onSettings: () => void;
 }) {
   return (
-    <section className="flex flex-1 flex-col gap-4">
-      <div className="flex h-[232px] flex-col rounded-lg border bg-card p-4 shadow-sm">
+    <section className="flex flex-1 flex-col gap-3">
+      <div className="flex h-[280px] flex-col rounded-lg border bg-card p-4 shadow-sm">
         <p className="text-sm font-semibold leading-none text-muted-foreground">
           Hoy toca
         </p>
-        <h2 className="mt-2 h-[70px] overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <h2 className="mt-3 h-[78px] overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.label}
         </h2>
-        <p className="mt-2 h-10 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <p className="mt-3 h-11 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.focus}
         </p>
         <div className="mt-auto grid grid-cols-3 gap-2 text-center">
@@ -949,7 +949,7 @@ function TodayScreen({
         {weekSessions.map((session) => (
           <button
             key={session.sessionId}
-            className={`min-h-24 rounded-lg border p-3 text-left transition active:scale-[0.98] ${
+            className={`min-h-20 rounded-lg border p-3 text-left transition active:scale-[0.98] ${
               session.sessionId === selectedSession.sessionId
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border bg-secondary text-secondary-foreground'
@@ -960,7 +960,7 @@ function TodayScreen({
             <span className="block text-sm font-bold capitalize">
               {session.weekday}
             </span>
-            <span className="mt-1 block text-xl font-black leading-tight">
+            <span className="mt-1 block overflow-hidden text-lg font-black leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
               {session.label}
             </span>
           </button>
@@ -1790,9 +1790,13 @@ function WeightStepToggle({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-secondary px-2 py-3">
-      <p className="text-xs font-bold text-muted-foreground">{label}</p>
-      <p className="mt-1 text-base font-black">{value}</p>
+    <div className="flex h-16 min-w-0 flex-col items-center justify-center rounded-md bg-secondary px-2">
+      <p className="text-xs font-bold leading-none text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 max-w-full text-center text-sm font-black leading-tight">
+        {value}
+      </p>
     </div>
   );
 }
