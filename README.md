@@ -16,12 +16,22 @@ Incluye:
 - barra de progreso de sesion
 - cuenta atras de descanso
 - transicion entre ejercicios con decisiones pulsables
+- deteccion de entrenamiento empezado y opcion de reanudar
+- exportacion CSV compatible con guardar en Archivos desde iPhone
+
+El plan cargado por la app esta materializado en `data/trainingPlan.json` y se genera desde el plan trimestral de Obsidian mediante `scripts/generate-training-plan.mjs`.
 
 ## Desarrollo
 
 ```sh
 npm install
 npm run dev
+```
+
+## Regenerar plan
+
+```sh
+npm run generate:plan
 ```
 
 ## Build

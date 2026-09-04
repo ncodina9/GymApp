@@ -3,6 +3,7 @@
 import {
   Check,
   ChevronRight,
+  Download,
   Minus,
   Plus,
   RotateCcw,
@@ -12,9 +13,49 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { weekSessions } from '@/data/mockPlan';
+import planData from '@/data/trainingPlan.json';
 
 type Phase = 'today' | 'set' | 'rest' | 'transition' | 'done';
+
+type TrainingSet = {
+  setIndex: number;
+  targetReps: number;
+  targetWeightKg: number;
+  restSeconds: number;
+  type: 'working';
+};
+
+type Exercise = {
+  exerciseId: string;
+  name: string;
+  type: string;
+  block: string;
+  phase: string;
+  notes: string;
+  target: string;
+  decisionOptions: string[];
+  sets: TrainingSet[];
+};
+
+type TrainingSession = {
+  sessionId: string;
+  date: string;
+  week: number;
+  weekday: string;
+  sessionLabel: string;
+  label: string;
+  estimatedMinutes: number;
+  focus: string;
+  exercises: Exercise[];
+};
+
+type TrainingPlan = {
+  planId: string;
+  startsOn: string;
+  endsOn: string;
+  durationWeeks: number;
+  sessions: TrainingSession[];
+};
 
 type RecordedSet = {
   exerciseIndex: number;
@@ -22,6 +63,18 @@ type RecordedSet = {
   reps: number;
   weightKg: number;
   status: 'completed' | 'skipped';
+};
+
+type WorkoutDraft = {
+  phase: Phase;
+  selectedSessionId: string;
+  exerciseIndex: number;
+  setIndex: number;
+  editedReps: number;
+  editedWeight: number;
+  restRemaining: number;
+  records: RecordedSet[];
+  decisions: Record<string, string>;
 };
 
 type WebMcpTool = {
@@ -42,6 +95,47 @@ type WebMcpDocument = Document & {
   };
 };
 
+const trainingPlan = planData as TrainingPlan;
+const storageKey = `gymapp:${trainingPlan.planId}:draft`;
+
+const fallbackSession = trainingPlan.sessions[0];
+
+const getRecommendedSession = () => {
+  const today = new Date();
+  const todayIso = today.toISOString().slice(0, 10);
+
+  return (
+    trainingPlan.sessions.find((session) => session.date === todayIso) ??
+    trainingPlan.sessions.find((session) => session.date >= todayIso) ??
+    fallbackSession
+  );
+};
+
+const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
+  phase: 'today',
+  selectedSessionId: session.sessionId,
+  exerciseIndex: 0,
+  setIndex: 0,
+  editedReps: session.exercises[0].sets[0].targetReps,
+  editedWeight: session.exercises[0].sets[0].targetWeightKg,
+  restRemaining: 0,
+  records: [],
+  decisions: {},
+});
+
+const loadDraft = (): WorkoutDraft | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    return raw ? (JSON.parse(raw) as WorkoutDraft) : null;
+  } catch {
+    return null;
+  }
+};
+
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat('es-ES', {
     weekday: 'short',
@@ -50,109 +144,124 @@ const formatDate = (date: string) =>
   }).format(new Date(`${date}T12:00:00`));
 
 const formatWeight = (weight: number) =>
-  weight === 0
-    ? 'Peso corporal'
-    : `${Number.isInteger(weight) ? weight : weight.toFixed(1)} kg`;
+  `${Number.isInteger(weight) ? weight : weight.toFixed(1)} kg`;
+
+const csvEscape = (value: string | number) => {
+  const text = String(value);
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+};
 
 export default function Home() {
-  const [phase, setPhase] = useState<Phase>('today');
-  const [selectedSessionId, setSelectedSessionId] = useState(
-    weekSessions[0].sessionId,
+  const [draft, setDraft] = useState<WorkoutDraft>(
+    () => loadDraft() ?? makeDraft(),
   );
-  const [exerciseIndex, setExerciseIndex] = useState(0);
-  const [setIndex, setSetIndex] = useState(0);
-  const [editedReps, setEditedReps] = useState(
-    weekSessions[0].exercises[0].sets[0].targetReps,
-  );
-  const [editedWeight, setEditedWeight] = useState(
-    weekSessions[0].exercises[0].sets[0].targetWeightKg,
-  );
-  const [restRemaining, setRestRemaining] = useState(0);
-  const [records, setRecords] = useState<RecordedSet[]>([]);
-  const [decision, setDecision] = useState<string | null>(null);
-
-  const selectedSession = useMemo(
-    () =>
-      weekSessions.find((session) => session.sessionId === selectedSessionId) ??
-      weekSessions[0],
-    [selectedSessionId],
-  );
-  const currentExercise = selectedSession.exercises[exerciseIndex];
-  const currentSet = currentExercise?.sets[setIndex];
+  const selectedSession =
+    trainingPlan.sessions.find(
+      (session) => session.sessionId === draft.selectedSessionId,
+    ) ?? fallbackSession;
+  const currentExercise = selectedSession.exercises[draft.exerciseIndex];
+  const currentSet = currentExercise?.sets[draft.setIndex];
   const totalSets = selectedSession.exercises.reduce(
     (sum, exercise) => sum + exercise.sets.length,
     0,
   );
-  const completedSets = records.filter(
+  const completedSets = draft.records.filter(
     (record) => record.status === 'completed',
   ).length;
-  const attemptedSets = records.length;
+  const attemptedSets = draft.records.length;
   const progressValue = Math.round((attemptedSets / totalSets) * 100);
+  const hasStarted =
+    draft.records.length > 0 ||
+    draft.exerciseIndex > 0 ||
+    draft.setIndex > 0 ||
+    draft.phase === 'rest' ||
+    draft.phase === 'transition';
+
+  const weekSessions = useMemo(
+    () =>
+      trainingPlan.sessions.filter(
+        (session) => session.week === selectedSession.week,
+      ),
+    [selectedSession.week],
+  );
 
   useEffect(() => {
-    if (phase !== 'rest' || restRemaining <= 0) {
+    window.localStorage.setItem(storageKey, JSON.stringify(draft));
+  }, [draft]);
+
+  useEffect(() => {
+    if (draft.phase !== 'rest' || draft.restRemaining <= 0) {
       return;
     }
 
     const timer = window.setInterval(() => {
-      setRestRemaining((seconds) => Math.max(0, seconds - 1));
+      setDraft((current) => ({
+        ...current,
+        restRemaining: Math.max(0, current.restRemaining - 1),
+      }));
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [phase, restRemaining]);
+  }, [draft.phase, draft.restRemaining]);
 
-  const resetWorkoutPosition = (sessionId = selectedSessionId) => {
-    const nextSession =
-      weekSessions.find((session) => session.sessionId === sessionId) ??
-      weekSessions[0];
-    setSelectedSessionId(nextSession.sessionId);
-    setExerciseIndex(0);
-    setSetIndex(0);
-    setRecords([]);
-    setDecision(null);
-    setRestRemaining(0);
-    setEditedReps(nextSession.exercises[0].sets[0].targetReps);
-    setEditedWeight(nextSession.exercises[0].sets[0].targetWeightKg);
-    setPhase('today');
-  };
+  const patchDraft = useCallback((patch: Partial<WorkoutDraft>) => {
+    setDraft((current) => ({ ...current, ...patch }));
+  }, []);
+
+  const resetWorkoutPosition = useCallback(
+    (sessionId = draft.selectedSessionId) => {
+      const nextSession =
+        trainingPlan.sessions.find(
+          (session) => session.sessionId === sessionId,
+        ) ?? fallbackSession;
+      setDraft(makeDraft(nextSession));
+    },
+    [draft.selectedSessionId],
+  );
 
   const applyPlannedTargets = useCallback(
     (nextExerciseIndex: number, nextSetIndex: number) => {
       const nextSet =
         selectedSession.exercises[nextExerciseIndex].sets[nextSetIndex];
-      setEditedReps(nextSet.targetReps);
-      setEditedWeight(nextSet.targetWeightKg);
+      patchDraft({
+        editedReps: nextSet.targetReps,
+        editedWeight: nextSet.targetWeightKg,
+      });
     },
-    [selectedSession],
+    [patchDraft, selectedSession],
   );
 
   const moveForward = useCallback(() => {
-    setDecision(null);
-
-    if (setIndex + 1 < currentExercise.sets.length) {
-      const nextSetIndex = setIndex + 1;
-      applyPlannedTargets(exerciseIndex, nextSetIndex);
-      setSetIndex(nextSetIndex);
-      setPhase('set');
+    if (!currentExercise) {
       return;
     }
 
-    if (exerciseIndex + 1 < selectedSession.exercises.length) {
-      const nextExerciseIndex = exerciseIndex + 1;
+    if (draft.setIndex + 1 < currentExercise.sets.length) {
+      const nextSetIndex = draft.setIndex + 1;
+      applyPlannedTargets(draft.exerciseIndex, nextSetIndex);
+      patchDraft({ setIndex: nextSetIndex, phase: 'set' });
+      return;
+    }
+
+    if (draft.exerciseIndex + 1 < selectedSession.exercises.length) {
+      const nextExerciseIndex = draft.exerciseIndex + 1;
       applyPlannedTargets(nextExerciseIndex, 0);
-      setExerciseIndex(nextExerciseIndex);
-      setSetIndex(0);
-      setPhase('transition');
+      patchDraft({
+        exerciseIndex: nextExerciseIndex,
+        setIndex: 0,
+        phase: 'transition',
+      });
       return;
     }
 
-    setPhase('done');
+    patchDraft({ phase: 'done' });
   }, [
     applyPlannedTargets,
     currentExercise,
-    exerciseIndex,
-    selectedSession.exercises,
-    setIndex,
+    draft.exerciseIndex,
+    draft.setIndex,
+    patchDraft,
+    selectedSession.exercises.length,
   ]);
 
   const logCurrentSet = useCallback(
@@ -161,34 +270,83 @@ export default function Home() {
         return;
       }
 
-      setRecords((current) => [
+      const nextRecord: RecordedSet = {
+        exerciseIndex: draft.exerciseIndex,
+        setIndex: draft.setIndex,
+        reps: draft.editedReps,
+        weightKg: draft.editedWeight,
+        status,
+      };
+
+      setDraft((current) => ({
         ...current,
-        {
-          exerciseIndex,
-          setIndex,
-          reps: editedReps,
-          weightKg: editedWeight,
-          status,
-        },
-      ]);
+        records: [...current.records, nextRecord],
+      }));
 
       if (status === 'skipped') {
         moveForward();
         return;
       }
 
-      setRestRemaining(currentSet.restSeconds);
-      setPhase('rest');
+      patchDraft({ restRemaining: currentSet.restSeconds, phase: 'rest' });
     },
     [
       currentSet,
-      editedReps,
-      editedWeight,
-      exerciseIndex,
+      draft.editedReps,
+      draft.editedWeight,
+      draft.exerciseIndex,
+      draft.setIndex,
       moveForward,
-      setIndex,
+      patchDraft,
     ],
   );
+
+  const changeSession = (sessionId: string) => {
+    resetWorkoutPosition(sessionId);
+  };
+
+  const startNew = () => {
+    resetWorkoutPosition(draft.selectedSessionId);
+    patchDraft({ phase: 'set' });
+  };
+
+  const resume = () => {
+    patchDraft({ phase: currentSet ? 'set' : 'today' });
+  };
+
+  const chooseDecision = (exerciseId: string, decision: string) => {
+    setDraft((current) => ({
+      ...current,
+      decisions: { ...current.decisions, [exerciseId]: decision },
+    }));
+  };
+
+  const exportCsv = async () => {
+    const csv = buildWorkoutCsv(
+      selectedSession,
+      draft.records,
+      draft.decisions,
+    );
+    const fileName = `${selectedSession.date}-${selectedSession.label
+      .toLowerCase()
+      .replaceAll(' ', '-')}.csv`;
+    const file = new File([csv], fileName, { type: 'text/csv;charset=utf-8' });
+
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: fileName,
+      });
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     const context =
@@ -218,11 +376,11 @@ export default function Home() {
       inputSchema: { type: 'object', additionalProperties: false },
       annotations: { readOnlyHint: true, untrustedContentHint: false },
       execute: () => ({
-        phase,
+        phase: draft.phase,
         sessionId: selectedSession.sessionId,
-        sessionLabel: selectedSession.label,
+        sessionLabel: selectedSession.sessionLabel,
         exercise: currentExercise?.name,
-        setIndex: setIndex + 1,
+        setIndex: draft.setIndex + 1,
         attemptedSets,
         totalSets,
       }),
@@ -236,7 +394,7 @@ export default function Home() {
       inputSchema: { type: 'object', additionalProperties: false },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: () => {
-        setPhase('set');
+        patchDraft({ phase: 'set' });
         return { phase: 'set', sessionId: selectedSession.sessionId };
       },
     });
@@ -261,7 +419,7 @@ export default function Home() {
             ? (input as { status?: unknown }).status
             : undefined;
 
-        if (phase !== 'set' || !currentSet) {
+        if (draft.phase !== 'set' || !currentSet) {
           throw new Error('No hay una serie activa para registrar.');
         }
 
@@ -272,10 +430,10 @@ export default function Home() {
         logCurrentSet(status);
         return {
           status,
-          reps: editedReps,
-          weightKg: editedWeight,
+          reps: draft.editedReps,
+          weightKg: draft.editedWeight,
           exercise: currentExercise.name,
-          setIndex: setIndex + 1,
+          setIndex: draft.setIndex + 1,
         };
       },
     });
@@ -285,41 +443,24 @@ export default function Home() {
     attemptedSets,
     currentExercise,
     currentSet,
-    editedReps,
-    editedWeight,
+    draft,
     logCurrentSet,
-    phase,
+    patchDraft,
     selectedSession,
-    setIndex,
     totalSets,
   ]);
-
-  const changeSession = (sessionId: string) => {
-    resetWorkoutPosition(sessionId);
-  };
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 py-4 sm:py-6">
-        <header className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-muted-foreground">
-              Semana {selectedSession.week}
-            </p>
-            <h1 className="text-2xl font-bold tracking-normal">GymApp</h1>
-          </div>
-          <Button
-            aria-label="Reiniciar entrenamiento"
-            className="size-11 rounded-full"
-            size="icon"
-            variant="secondary"
-            onClick={() => resetWorkoutPosition()}
-          >
-            <RotateCcw className="size-5" />
-          </Button>
+        <header className="mb-3">
+          <p className="text-sm font-semibold text-muted-foreground">
+            Semana {selectedSession.week}
+          </p>
+          <h1 className="text-2xl font-bold tracking-normal">GymApp</h1>
         </header>
 
-        {phase !== 'today' ? (
+        {draft.phase !== 'today' ? (
           <section className="mb-4">
             <div className="mb-2 flex items-center justify-between text-sm font-semibold text-muted-foreground">
               <span>{selectedSession.label}</span>
@@ -331,64 +472,103 @@ export default function Home() {
           </section>
         ) : null}
 
-        {phase === 'today' ? (
+        {draft.phase === 'today' ? (
           <TodayScreen
-            selectedSessionId={selectedSessionId}
+            selectedSession={selectedSession}
+            weekSessions={weekSessions}
+            hasStarted={hasStarted}
             onChangeSession={changeSession}
-            onStart={() => setPhase('set')}
+            onResume={resume}
+            onStart={startNew}
           />
         ) : null}
 
-        {phase === 'set' && currentSet ? (
+        {draft.phase === 'set' && currentSet ? (
           <SetScreen
             exerciseName={currentExercise.name}
             exerciseNotes={currentExercise.notes}
-            setIndex={setIndex}
+            setIndex={draft.setIndex}
             totalExerciseSets={currentExercise.sets.length}
-            reps={editedReps}
-            weight={editedWeight}
+            reps={draft.editedReps}
+            weight={draft.editedWeight}
             restSeconds={currentSet.restSeconds}
-            completedSetIndexes={records
-              .filter((record) => record.exerciseIndex === exerciseIndex)
+            completedSetIndexes={draft.records
+              .filter((record) => record.exerciseIndex === draft.exerciseIndex)
               .map((record) => record.setIndex)}
-            onRepsChange={setEditedReps}
-            onWeightChange={setEditedWeight}
+            onRepsChange={(editedReps) => patchDraft({ editedReps })}
+            onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
             onComplete={() => logCurrentSet('completed')}
             onSkip={() => logCurrentSet('skipped')}
           />
         ) : null}
 
-        {phase === 'rest' ? (
+        {draft.phase === 'rest' ? (
           <RestScreen
-            restRemaining={restRemaining}
+            restRemaining={draft.restRemaining}
             nextLabel={
-              setIndex + 1 < currentExercise.sets.length
-                ? `Serie ${setIndex + 2} de ${currentExercise.name}`
-                : exerciseIndex + 1 < selectedSession.exercises.length
-                  ? selectedSession.exercises[exerciseIndex + 1].name
+              draft.setIndex + 1 < currentExercise.sets.length
+                ? `Serie ${draft.setIndex + 2} de ${currentExercise.name}`
+                : draft.exerciseIndex + 1 < selectedSession.exercises.length
+                  ? selectedSession.exercises[draft.exerciseIndex + 1].name
                   : 'Cerrar entrenamiento'
             }
-            onAdjustRest={setRestRemaining}
+            onAdjustRest={(updater) => {
+              setDraft((current) => ({
+                ...current,
+                restRemaining:
+                  typeof updater === 'function'
+                    ? updater(current.restRemaining)
+                    : updater,
+              }));
+            }}
             onContinue={moveForward}
           />
         ) : null}
 
-        {phase === 'transition' ? (
+        {draft.phase === 'transition' ? (
           <TransitionScreen
-            completedExercise={selectedSession.exercises[exerciseIndex - 1]}
+            completedExercise={
+              selectedSession.exercises[draft.exerciseIndex - 1]
+            }
             nextExercise={currentExercise}
-            decision={decision}
-            onDecision={setDecision}
-            onContinue={() => setPhase('set')}
+            decision={
+              draft.decisions[
+                selectedSession.exercises[draft.exerciseIndex - 1].exerciseId
+              ] ?? null
+            }
+            onDecision={chooseDecision}
+            onContinue={() => patchDraft({ phase: 'set' })}
           />
         ) : null}
 
-        {phase === 'done' ? (
+        {draft.phase === 'done' ? (
           <DoneScreen
             completedSets={completedSets}
             totalSets={totalSets}
+            onExport={exportCsv}
             onRestart={() => resetWorkoutPosition()}
           />
+        ) : null}
+
+        {draft.phase !== 'today' ? (
+          <footer className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+            <Button
+              className="h-12 rounded-lg text-base font-black"
+              variant="secondary"
+              onClick={() => patchDraft({ phase: 'today' })}
+            >
+              Volver
+            </Button>
+            <Button
+              aria-label="Reiniciar entrenamiento"
+              className="h-12 w-12 rounded-lg"
+              size="icon"
+              variant="outline"
+              onClick={() => resetWorkoutPosition()}
+            >
+              <RotateCcw className="size-5" />
+            </Button>
+          </footer>
         ) : null}
       </div>
     </main>
@@ -396,18 +576,20 @@ export default function Home() {
 }
 
 function TodayScreen({
-  selectedSessionId,
+  selectedSession,
+  weekSessions,
+  hasStarted,
   onChangeSession,
+  onResume,
   onStart,
 }: {
-  selectedSessionId: string;
+  selectedSession: TrainingSession;
+  weekSessions: TrainingSession[];
+  hasStarted: boolean;
   onChangeSession: (sessionId: string) => void;
+  onResume: () => void;
   onStart: () => void;
 }) {
-  const selectedSession =
-    weekSessions.find((session) => session.sessionId === selectedSessionId) ??
-    weekSessions[0];
-
   return (
     <section className="flex flex-1 flex-col gap-4">
       <div className="rounded-lg border bg-card p-4 shadow-sm">
@@ -431,12 +613,22 @@ function TodayScreen({
         </div>
       </div>
 
+      {hasStarted ? (
+        <Button
+          className="h-16 rounded-lg text-xl font-black"
+          onClick={onResume}
+        >
+          Reanudar
+          <ChevronRight className="size-6" />
+        </Button>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-2">
         {weekSessions.map((session) => (
           <button
             key={session.sessionId}
             className={`min-h-24 rounded-lg border p-3 text-left transition active:scale-[0.98] ${
-              session.sessionId === selectedSessionId
+              session.sessionId === selectedSession.sessionId
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border bg-secondary text-secondary-foreground'
             }`}
@@ -455,9 +647,10 @@ function TodayScreen({
 
       <Button
         className="mt-auto h-16 rounded-lg text-xl font-black"
+        variant={hasStarted ? 'secondary' : 'default'}
         onClick={onStart}
       >
-        Empezar
+        {hasStarted ? 'Empezar de cero' : 'Empezar'}
         <ChevronRight className="size-6" />
       </Button>
     </section>
@@ -623,47 +816,47 @@ function TransitionScreen({
   onDecision,
   onContinue,
 }: {
-  completedExercise: { name: string };
-  nextExercise: { name: string; notes: string; decisionOptions: string[] };
+  completedExercise: Exercise;
+  nextExercise: Exercise;
   decision: string | null;
-  onDecision: (value: string) => void;
+  onDecision: (exerciseId: string, value: string) => void;
   onContinue: () => void;
 }) {
   return (
     <section className="flex flex-1 flex-col gap-4">
-      <div>
-        <p className="text-sm font-semibold text-muted-foreground">
-          Completado
-        </p>
-        <h2 className="text-3xl font-black tracking-normal">
+      <div className="rounded-lg border bg-card p-4">
+        <p className="text-sm font-semibold text-muted-foreground">Evaluar</p>
+        <h2 className="mt-1 text-4xl font-black tracking-normal">
           {completedExercise.name}
         </h2>
+        <div className="mt-4 grid gap-2">
+          {completedExercise.decisionOptions.map((option) => (
+            <button
+              key={option}
+              className={`h-14 rounded-lg border px-4 text-left text-lg font-black ${
+                decision === option
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-secondary text-secondary-foreground'
+              }`}
+              type="button"
+              onClick={() => onDecision(completedExercise.exerciseId, option)}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="rounded-lg border bg-card p-4">
-        <p className="text-sm font-semibold text-muted-foreground">Ahora</p>
-        <h3 className="mt-1 text-4xl font-black tracking-normal">
+
+      <div className="rounded-lg bg-secondary px-4 py-3">
+        <p className="text-sm font-semibold text-muted-foreground">Despues</p>
+        <p className="text-2xl font-black tracking-normal">
           {nextExercise.name}
-        </h3>
-        <p className="mt-3 text-lg text-muted-foreground">
+        </p>
+        <p className="mt-1 text-sm font-medium text-muted-foreground">
           {nextExercise.notes}
         </p>
       </div>
-      <div className="grid gap-2">
-        {nextExercise.decisionOptions.map((option) => (
-          <button
-            key={option}
-            className={`h-14 rounded-lg border px-4 text-left text-lg font-black ${
-              decision === option
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-secondary text-secondary-foreground'
-            }`}
-            type="button"
-            onClick={() => onDecision(option)}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
+
       <Button
         className="mt-auto h-16 rounded-lg text-xl font-black"
         onClick={onContinue}
@@ -678,10 +871,12 @@ function TransitionScreen({
 function DoneScreen({
   completedSets,
   totalSets,
+  onExport,
   onRestart,
 }: {
   completedSets: number;
   totalSets: number;
+  onExport: () => void;
   onRestart: () => void;
 }) {
   return (
@@ -698,8 +893,13 @@ function DoneScreen({
         </h2>
         <p className="mt-2 text-lg text-muted-foreground">series completadas</p>
       </div>
+      <Button className="h-14 rounded-lg text-lg font-black" onClick={onExport}>
+        Guardar CSV
+        <Download className="size-5" />
+      </Button>
       <Button
         className="h-14 rounded-lg text-lg font-black"
+        variant="secondary"
         onClick={onRestart}
       >
         Volver a hoy
@@ -720,31 +920,33 @@ function TactileNumber({
   onPlus: () => void;
 }) {
   return (
-    <div className="grid grid-cols-[64px_1fr_64px] items-stretch gap-2 rounded-lg border bg-card p-2 shadow-sm">
-      <Button
-        aria-label={`Bajar ${label}`}
-        className="h-full rounded-lg"
-        size="icon"
-        variant="secondary"
-        onClick={onMinus}
-      >
-        <Minus className="size-7" />
-      </Button>
+    <div className="grid grid-rows-[1fr_64px] gap-2 rounded-lg border bg-card p-2 shadow-sm">
       <div className="flex min-w-0 flex-col items-center justify-center">
         <p className="text-base font-black text-muted-foreground">{label}</p>
         <p className="max-w-full text-center text-[clamp(3rem,18vw,5.25rem)] font-black leading-none tracking-normal">
           {value}
         </p>
       </div>
-      <Button
-        aria-label={`Subir ${label}`}
-        className="h-full rounded-lg"
-        size="icon"
-        variant="secondary"
-        onClick={onPlus}
-      >
-        <Plus className="size-7" />
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          aria-label={`Bajar ${label}`}
+          className="h-16 rounded-lg"
+          size="icon"
+          variant="secondary"
+          onClick={onMinus}
+        >
+          <Minus className="size-8" />
+        </Button>
+        <Button
+          aria-label={`Subir ${label}`}
+          className="h-16 rounded-lg"
+          size="icon"
+          variant="secondary"
+          onClick={onPlus}
+        >
+          <Plus className="size-8" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -756,4 +958,71 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-base font-black">{value}</p>
     </div>
   );
+}
+
+function buildWorkoutCsv(
+  session: TrainingSession,
+  records: RecordedSet[],
+  decisions: Record<string, string>,
+) {
+  const headers = [
+    'date',
+    'week',
+    'session',
+    'exercise',
+    'type',
+    'target',
+    'actual',
+    'top_load_kg',
+    'total_reps',
+    'rir_last',
+    'pain_knee',
+    'pain_wrist',
+    'pain_other',
+    'next_decision',
+    'notes',
+  ];
+
+  const rows = session.exercises.map((exercise, exerciseIndex) => {
+    const exerciseRecords = records.filter(
+      (record) => record.exerciseIndex === exerciseIndex,
+    );
+    const completed = exerciseRecords.filter(
+      (record) => record.status === 'completed',
+    );
+    const actual = exerciseRecords
+      .map((record) =>
+        record.status === 'skipped'
+          ? 'skipped'
+          : `${record.weightKg}x${record.reps}`,
+      )
+      .join(';');
+    const topLoad = completed.reduce(
+      (max, record) => Math.max(max, record.weightKg),
+      0,
+    );
+    const totalReps = completed.reduce((sum, record) => sum + record.reps, 0);
+
+    return [
+      session.date,
+      session.week,
+      session.sessionLabel,
+      exercise.name,
+      exercise.type,
+      exercise.target,
+      actual,
+      topLoad,
+      totalReps,
+      '',
+      0,
+      0,
+      '',
+      decisions[exercise.exerciseId] ?? '',
+      exercise.notes,
+    ];
+  });
+
+  return [headers, ...rows]
+    .map((row) => row.map((value) => csvEscape(value)).join(','))
+    .join('\n');
 }
