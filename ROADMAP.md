@@ -24,21 +24,23 @@ El plan de entrenamiento no debe ser una plantilla generica de 4 dias repetida. 
 1. Abrir la app.
 2. Ver el entrenamiento que teoricamente toca ese dia.
 3. Poder cambiar a cualquier entrenamiento planificado para esa semana.
-4. Entrar en la sesion.
-5. Ver el ejercicio actual con:
+4. Entrar en la previsualizacion del entrenamiento seleccionado.
+5. Revisar ejercicios, series, cargas y descansos para preparar material.
+6. Empezar la sesion.
+7. Ver el ejercicio actual con:
    - nombre del ejercicio
    - serie actual y series totales
    - reps objetivo
    - peso objetivo
    - descanso propuesto
    - notas breves si aplican
-6. Ajustar reps o peso sin teclado.
-7. Registrar la serie.
-8. Lanzar automaticamente una pantalla de cuenta atras del descanso.
-9. Al terminar el descanso, permitir pasar a la siguiente serie.
-10. Al finalizar un ejercicio, mostrar notas y decisiones proximas como opciones pulsables.
-11. Pasar al siguiente ejercicio hasta cerrar la sesion.
-12. Guardar el resultado localmente y preparar exportacion posterior.
+8. Ajustar reps o peso sin teclado.
+9. Registrar la serie.
+10. Lanzar automaticamente una pantalla de cuenta atras del descanso.
+11. Al terminar el descanso, permitir pasar a la siguiente serie.
+12. Al finalizar un ejercicio, mostrar notas y decisiones proximas como opciones pulsables.
+13. Pasar al siguiente ejercicio hasta cerrar la sesion.
+14. Guardar el resultado localmente y preparar exportacion posterior.
 
 ## Pantallas iniciales
 
@@ -50,7 +52,19 @@ Primera pantalla de la app. Debe mostrar:
 - dia del plan y semana del ciclo
 - estado simple: pendiente, en curso o completado
 - acceso a los demas entrenamientos de la semana
-- boton principal para empezar o continuar
+- boton principal para revisar el entrenamiento antes de empezar
+- accion de reanudar si hay un entrenamiento en curso
+
+### Previsualizacion de entrenamiento
+
+Pantalla previa al inicio real de la sesion. Puede tener scroll porque se usa antes de entrenar, no durante una serie.
+
+- resumen del entrenamiento seleccionado
+- listado de ejercicios en orden
+- series previstas por ejercicio
+- reps, tiempos, pesos y descansos previstos
+- notas breves relevantes para preparar material
+- boton principal para empezar entrenamiento
 
 ### Ejecucion de serie
 
@@ -247,6 +261,7 @@ Entregables:
 
 - pantalla Hoy
 - selector simple de entrenamientos de la semana
+- previsualizacion del entrenamiento antes de empezar
 - pantalla de ejecucion de serie
 - circulos de progreso de series
 - controles tactiles de reps y peso
@@ -369,6 +384,13 @@ Criterio de aceptacion:
 - Decidir si los datos se quedan solo en el dispositivo o si habra sincronizacion.
 - Evitar que el countdown de descanso bloquee ajustes utiles entre series.
 - Disenar controles tactiles suficientemente grandes sin convertir la pantalla en una calculadora.
+
+## Backlog futuro
+
+- Layout para movil en horizontal.
+- Colores ligeros para botones secundarios y de control: +, -, volver, saltar, reset, etc. Deben funcionar en ambos temas.
+- Medir duracion real del entrenamiento desde que se pulsa empezar hasta finalizar, mostrar el tiempo tardado y compararlo con el tiempo estimado.
+- Gestion de superseries (prioritario): en una superserie, un ejercicio lleva al siguiente vinculado y el descanso empieza cuando se han completado ambos.
 
 ## Proximo hito recomendado
 

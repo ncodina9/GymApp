@@ -29,6 +29,7 @@ import {
 
 type Phase =
   | 'today'
+  | 'preview'
   | 'set'
   | 'feedback'
   | 'rest'
@@ -342,6 +343,56 @@ const formatCsvTarget = (target: string, loadType: LoadType) =>
     ? target.replace(/@\s*(\d+(?:[.,]\d+)?)\s*kg/i, '@ +$1 kg')
     : target;
 
+const formatPreviewLoad = (weight: number, loadType: LoadType) => {
+  if (loadType === 'external') {
+    return weight > 0 ? `+${formatWeight(weight)}` : '0 kg';
+  }
+
+  if (loadType === 'per_dumbbell') {
+    return `${formatWeight(weight)}/mancuerna`;
+  }
+
+  if (loadType === 'machine' && weight === 0) {
+    return 'maquina';
+  }
+
+  return formatWeight(weight);
+};
+
+const getExercisePreviewTarget = (exercise: Exercise) => {
+  const loadType = inferLoadType(exercise);
+  const rests = Array.from(
+    new Set(exercise.sets.map((set) => set.restSeconds)),
+  );
+  const restLabel =
+    rests.length === 1
+      ? `${rests[0]}s descanso`
+      : `${rests.map((rest) => `${rest}s`).join('/')} descanso`;
+
+  if (exercise.sets.every((set) => set.type === 'timed')) {
+    const durations = Array.from(
+      new Set(
+        exercise.sets.map((set) => formatClock(set.targetDurationSeconds ?? 0)),
+      ),
+    );
+
+    return `${exercise.sets.length} series · ${durations.join('/')} · ${restLabel}`;
+  }
+
+  const reps = Array.from(
+    new Set(exercise.sets.map((set) => set.targetReps ?? 0)),
+  );
+  const loads = Array.from(
+    new Set(
+      exercise.sets.map((set) =>
+        formatPreviewLoad(set.targetWeightKg, loadType),
+      ),
+    ),
+  );
+
+  return `${exercise.sets.length} series · ${reps.join('/')} reps · ${loads.join('/')} · ${restLabel}`;
+};
+
 export default function Home() {
   const [draft, setDraft] = useState<WorkoutDraft>(() => makeDraft());
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
@@ -631,7 +682,11 @@ export default function Home() {
     resetWorkoutPosition(sessionId);
   };
 
-  const startNew = () => {
+  const previewTraining = () => {
+    patchDraft({ phase: 'preview' });
+  };
+
+  const beginTraining = () => {
     resetWorkoutPosition(draft.selectedSessionId);
     patchDraft({ phase: 'set' });
   };
@@ -804,18 +859,22 @@ export default function Home() {
 
   return (
     <main className="app-screen overflow-hidden bg-background text-foreground">
-      <div className="app-screen mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 py-2 sm:py-4">
+      <div className="app-screen mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:py-4">
         <header className="mb-1">
           <p className="text-xs font-black uppercase text-muted-foreground">
             {draft.phase === 'settings'
               ? 'Ajustes'
-              : `Semana ${selectedSession.week}${
-                  draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''
-                }`}
+              : draft.phase === 'preview'
+                ? `Semana ${selectedSession.week} · Vista previa`
+                : `Semana ${selectedSession.week}${
+                    draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''
+                  }`}
           </p>
         </header>
 
-        {draft.phase !== 'today' && draft.phase !== 'settings' ? (
+        {draft.phase !== 'today' &&
+        draft.phase !== 'settings' &&
+        draft.phase !== 'preview' ? (
           <section className="mb-2">
             <Progress value={progressValue} />
             <p className="mt-1 text-right text-xs font-black text-muted-foreground">
@@ -831,8 +890,16 @@ export default function Home() {
             hasStarted={hasStarted}
             onChangeSession={changeSession}
             onResume={resume}
-            onStart={startNew}
+            onStart={previewTraining}
             onSettings={() => openSettings('today')}
+          />
+        ) : null}
+
+        {draft.phase === 'preview' ? (
+          <PreviewScreen
+            session={selectedSession}
+            onBack={() => patchDraft({ phase: 'today' })}
+            onStart={beginTraining}
           />
         ) : null}
 
@@ -1054,10 +1121,90 @@ function TodayScreen({
         </Button>
         <Button
           className="h-16 rounded-[1.75rem] text-xl font-black"
-          variant={hasStarted ? 'secondary' : 'default'}
+          variant="default"
           onClick={onStart}
         >
-          {hasStarted ? 'Empezar de cero' : 'Empezar'}
+          Siguiente
+          <ChevronRight className="size-6" />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function PreviewScreen({
+  session,
+  onBack,
+  onStart,
+}: {
+  session: TrainingSession;
+  onBack: () => void;
+  onStart: () => void;
+}) {
+  return (
+    <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <div className="shrink-0 rounded-lg border bg-card p-4 shadow-sm">
+        <p className="text-sm font-semibold text-muted-foreground">
+          Preparacion
+        </p>
+        <h2 className="mt-1 text-[1.85rem] font-black leading-tight tracking-normal">
+          {session.label}
+        </h2>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <Metric label="Fecha" value={formatDate(session.date)} />
+          <Metric label="Tiempo" value={`${session.estimatedMinutes}m`} />
+          <Metric label="Bloques" value={`${session.exercises.length}`} />
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="grid gap-2 pb-1">
+          {session.exercises.map((exercise, index) => (
+            <div
+              key={exercise.exerciseId}
+              className="rounded-lg border bg-card p-3 shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-secondary-foreground">
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-black leading-tight">
+                    {exercise.name}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-muted-foreground">
+                    {getExercisePreviewTarget(exercise)}
+                  </p>
+                </div>
+              </div>
+              {exercise.notes ? (
+                <p className="mt-2 overflow-hidden text-sm leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                  {exercise.notes}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="grid shrink-0 gap-3"
+        style={{ gridTemplateColumns: '56px minmax(0, 1fr)' }}
+      >
+        <Button
+          aria-label="Volver"
+          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
+          style={{ width: '56px' }}
+          variant="outline"
+          onClick={onBack}
+        >
+          <ArrowLeft className="size-5" />
+        </Button>
+        <Button
+          className="h-14 rounded-[1.75rem] text-lg font-black"
+          onClick={onStart}
+        >
+          Empezar entrenamiento
           <ChevronRight className="size-6" />
         </Button>
       </div>
