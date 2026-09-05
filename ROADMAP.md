@@ -564,6 +564,8 @@ Tareas:
 - mostrar estado simple de guardado local despues de registrar una serie
 - proteger contra doble pulsacion accidental en `Registrar serie`
 - permitir reexportar un entrenamiento terminado sin perder datos
+- listar entrenamientos con datos locales desde Ajustes
+- borrar los datos de una sesion concreta sin borrar todo el historico local
 - definir si se guarda también un resumen por ejercicio además del CSV por serie
 - documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
 - revisar compatibilidad del CSV con el fichero maestro de Obsidian
@@ -575,6 +577,12 @@ Criterio de aceptacion:
 - cada serie registrada queda persistida una sola vez
 - el usuario entiende donde queda el CSV y como moverlo al repositorio personal
 - los campos exportados permiten analizar volumen, carga, RIR, molestias y superseries
+
+Estado parcial:
+
+- historial local visible desde Ajustes, con scroll permitido en esa pantalla
+- exportacion CSV de sesiones con datos sin depender de estar en la pantalla final
+- borrado de una sesion concreta desde Ajustes
 
 ### Hito 14: Duracion real del entrenamiento
 

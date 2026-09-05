@@ -23,7 +23,9 @@ import { Switch } from '@/components/ui/switch';
 import planData from '@/data/trainingPlan.json';
 import packageData from '@/package.json';
 import {
+  clearAllSessionEvents,
   clearSessionEvents,
+  loadAllSessionEvents,
   loadSessionEvents,
   saveSetEvent,
   type StoredSetEvent,
@@ -83,6 +85,16 @@ type TrainingPlan = {
   endsOn: string;
   durationWeeks: number;
   sessions: TrainingSession[];
+};
+
+type SessionHistorySummary = {
+  sessionId: string;
+  sessionDate: string;
+  sessionLabel: string;
+  attemptedSets: number;
+  completedSets: number;
+  firstPerformedAt: string;
+  lastPerformedAt: string;
 };
 
 type WorkoutDraft = {
@@ -385,6 +397,72 @@ const createEventId = () => {
 const csvEscape = (value: string | number) => {
   const text = String(value);
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+};
+
+const slugifyFilePart = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const getWorkoutCsvFileName = (session: TrainingSession) =>
+  `${session.date}-${slugifyFilePart(session.label)}.csv`;
+
+const getDecisionFallbacks = (
+  records: StoredSetEvent[],
+  currentDecisions: Record<string, string>,
+) => {
+  const decisions: Record<string, string> = {};
+
+  records.forEach((record) => {
+    if (currentDecisions[record.exerciseId]) {
+      decisions[record.exerciseId] = currentDecisions[record.exerciseId];
+    }
+  });
+
+  return decisions;
+};
+
+const getSessionHistorySummaries = (
+  sessions: TrainingSession[],
+  events: StoredSetEvent[],
+): SessionHistorySummary[] => {
+  const eventsBySession = new Map<string, StoredSetEvent[]>();
+
+  events.forEach((event) => {
+    const sessionEvents = eventsBySession.get(event.sessionId) ?? [];
+    sessionEvents.push(event);
+    eventsBySession.set(event.sessionId, sessionEvents);
+  });
+
+  return sessions
+    .map((session) => {
+      const sessionEvents = eventsBySession.get(session.sessionId) ?? [];
+
+      if (sessionEvents.length === 0) {
+        return undefined;
+      }
+
+      const sortedEvents = [...sessionEvents].sort((a, b) =>
+        a.performedAt.localeCompare(b.performedAt),
+      );
+
+      return {
+        sessionId: session.sessionId,
+        sessionDate: session.date,
+        sessionLabel: session.label,
+        attemptedSets: sortedEvents.length,
+        completedSets: sortedEvents.filter(
+          (event) => event.status === 'completed',
+        ).length,
+        firstPerformedAt: sortedEvents[0].performedAt,
+        lastPerformedAt: sortedEvents[sortedEvents.length - 1].performedAt,
+      };
+    })
+    .filter((summary): summary is SessionHistorySummary => Boolean(summary))
+    .sort((a, b) => b.lastPerformedAt.localeCompare(a.lastPerformedAt));
 };
 
 const formatDecimal = (value: number) => {
@@ -789,6 +867,10 @@ export default function Home() {
   const [wakeLockStatus, setWakeLockStatus] = useState<WakeLockStatus>('off');
   const [settingsReturnPhase, setSettingsReturnPhase] =
     useState<Phase>('today');
+  const [sessionHistory, setSessionHistory] = useState<SessionHistorySummary[]>(
+    [],
+  );
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const keepScreenAwakeRef = useRef(false);
   const selectedSession =
@@ -831,6 +913,21 @@ export default function Home() {
       ),
     [selectedSession.week],
   );
+
+  const refreshSessionHistory = useCallback(async () => {
+    setIsLoadingHistory(true);
+
+    try {
+      const events = await loadAllSessionEvents();
+      setSessionHistory(
+        getSessionHistorySummaries(trainingPlan.sessions, events),
+      );
+    } catch {
+      setSessionHistory([]);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, []);
 
   useEffect(() => {
     keepScreenAwakeRef.current = keepScreenAwake;
@@ -934,6 +1031,12 @@ export default function Home() {
 
     window.localStorage.setItem(storageKey, JSON.stringify(draft));
   }, [draft, hasLoadedDraft]);
+
+  useEffect(() => {
+    if (draft.phase === 'settings') {
+      queueMicrotask(() => void refreshSessionHistory());
+    }
+  }, [draft.phase, refreshSessionHistory]);
 
   useEffect(() => {
     if (!hasLoadedDraft) {
@@ -1043,8 +1146,12 @@ export default function Home() {
         trainingPlan.sessions.find(
           (session) => session.sessionId === sessionId,
         ) ?? fallbackSession;
-      void clearSessionEvents(nextSession.sessionId).catch(() => undefined);
+      const clearEvents = clearSessionEvents(nextSession.sessionId).catch(
+        () => undefined,
+      );
       setDraft(makeDraft(nextSession));
+
+      return clearEvents;
     },
     [draft.selectedSessionId],
   );
@@ -1191,7 +1298,7 @@ export default function Home() {
   );
 
   const changeSession = (sessionId: string) => {
-    resetWorkoutPosition(sessionId);
+    void resetWorkoutPosition(sessionId);
   };
 
   const previewTraining = () => {
@@ -1199,7 +1306,7 @@ export default function Home() {
   };
 
   const beginTraining = () => {
-    resetWorkoutPosition(draft.selectedSessionId);
+    void resetWorkoutPosition(draft.selectedSessionId);
     patchDraft({ phase: 'set' });
   };
 
@@ -1223,27 +1330,22 @@ export default function Home() {
       return;
     }
 
-    void Promise.all(
-      trainingPlan.sessions.map((session) =>
-        clearSessionEvents(session.sessionId),
-      ),
-    )
+    void clearAllSessionEvents()
       .catch(() => undefined)
       .finally(() => {
         window.localStorage.removeItem(storageKey);
         setDraft(makeDraft());
+        void refreshSessionHistory();
       });
   };
 
-  const exportCsv = async () => {
-    const csv = buildWorkoutCsv(
-      selectedSession,
-      draft.records,
-      draft.decisions,
-    );
-    const fileName = `${selectedSession.date}-${selectedSession.label
-      .toLowerCase()
-      .replaceAll(' ', '-')}.csv`;
+  const exportWorkoutCsv = async (
+    session: TrainingSession,
+    records: StoredSetEvent[],
+    decisions: Record<string, string>,
+  ) => {
+    const csv = buildWorkoutCsv(session, records, decisions);
+    const fileName = getWorkoutCsvFileName(session);
     const file = new File([csv], fileName, { type: 'text/csv;charset=utf-8' });
 
     if (navigator.canShare?.({ files: [file] })) {
@@ -1260,6 +1362,44 @@ export default function Home() {
     link.download = fileName;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportCsv = async () => {
+    await exportWorkoutCsv(selectedSession, draft.records, draft.decisions);
+  };
+
+  const exportHistorySession = async (sessionId: string) => {
+    const session =
+      trainingPlan.sessions.find((item) => item.sessionId === sessionId) ??
+      fallbackSession;
+    const records = await loadSessionEvents(session.sessionId);
+    await exportWorkoutCsv(
+      session,
+      records,
+      getDecisionFallbacks(records, draft.decisions),
+    );
+  };
+
+  const deleteHistorySession = (sessionId: string) => {
+    const session =
+      trainingPlan.sessions.find((item) => item.sessionId === sessionId) ??
+      fallbackSession;
+    const shouldDelete = window.confirm(
+      `Borrar los datos locales de ${session.label}?`,
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    void clearSessionEvents(session.sessionId)
+      .catch(() => undefined)
+      .finally(() => {
+        if (session.sessionId === draft.selectedSessionId) {
+          setDraft((current) => ({ ...current, records: [] }));
+        }
+        void refreshSessionHistory();
+      });
   };
 
   const openSettings = (returnPhase = draft.phase) => {
@@ -1421,6 +1561,8 @@ export default function Home() {
             keepScreenAwake={keepScreenAwake}
             wakeLockStatus={wakeLockStatus}
             selectedSessionLabel={selectedSession.label}
+            sessionHistory={sessionHistory}
+            isLoadingHistory={isLoadingHistory}
             onThemeChange={setAppearanceTheme}
             onKeepScreenAwakeChange={(enabled) => {
               setKeepScreenAwake(enabled);
@@ -1430,8 +1572,14 @@ export default function Home() {
                 releaseScreenWakeLock();
               }
             }}
-            onResetCurrent={() => resetWorkoutPosition(draft.selectedSessionId)}
+            onResetCurrent={() => {
+              void resetWorkoutPosition(draft.selectedSessionId).finally(
+                refreshSessionHistory,
+              );
+            }}
             onClearAllData={clearAllLocalData}
+            onExportHistorySession={exportHistorySession}
+            onDeleteHistorySession={deleteHistorySession}
             onBack={() => patchDraft({ phase: settingsReturnPhase })}
           />
         ) : null}
@@ -1770,25 +1918,33 @@ function SettingsScreen({
   keepScreenAwake,
   wakeLockStatus,
   selectedSessionLabel,
+  sessionHistory,
+  isLoadingHistory,
   onThemeChange,
   onKeepScreenAwakeChange,
   onResetCurrent,
   onClearAllData,
+  onExportHistorySession,
+  onDeleteHistorySession,
   onBack,
 }: {
   theme: AppearanceTheme;
   keepScreenAwake: boolean;
   wakeLockStatus: WakeLockStatus;
   selectedSessionLabel: string;
+  sessionHistory: SessionHistorySummary[];
+  isLoadingHistory: boolean;
   onThemeChange: (theme: AppearanceTheme) => void;
   onKeepScreenAwakeChange: (enabled: boolean) => void;
   onResetCurrent: () => void;
   onClearAllData: () => void;
+  onExportHistorySession: (sessionId: string) => void;
+  onDeleteHistorySession: (sessionId: string) => void;
   onBack: () => void;
 }) {
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-      <div className="min-h-0 flex-1 rounded-lg border bg-card p-4 shadow-sm">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border bg-card p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-[1.6rem] font-black leading-tight tracking-normal">
             Ajustes
@@ -1875,6 +2031,64 @@ function SettingsScreen({
               <Trash2 className="size-5" />
               Borrar todo local
             </Button>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm font-semibold text-muted-foreground">
+            Historial local
+          </p>
+          <div className="mt-2 grid gap-2">
+            {isLoadingHistory ? (
+              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+                Cargando sesiones...
+              </div>
+            ) : null}
+
+            {!isLoadingHistory && sessionHistory.length === 0 ? (
+              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+                Sin entrenamientos registrados en este dispositivo.
+              </div>
+            ) : null}
+
+            {sessionHistory.map((summary) => (
+              <div
+                key={summary.sessionId}
+                className="rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black">
+                      {summary.sessionLabel}
+                    </p>
+                    <p className="mt-0.5 text-xs font-bold text-muted-foreground">
+                      {formatDate(summary.sessionDate)} ·{' '}
+                      {summary.completedSets}/{summary.attemptedSets} series
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
+                    {summary.attemptedSets}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_48px] gap-2">
+                  <Button
+                    className="h-11 rounded-[1.4rem] font-black"
+                    onClick={() => onExportHistorySession(summary.sessionId)}
+                  >
+                    Exportar CSV
+                    <Download className="size-4" />
+                  </Button>
+                  <Button
+                    aria-label={`Borrar ${summary.sessionLabel}`}
+                    className={`h-11 w-12 rounded-[1.4rem] p-0 ${actionStyles.delete}`}
+                    variant="outline"
+                    onClick={() => onDeleteHistorySession(summary.sessionId)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

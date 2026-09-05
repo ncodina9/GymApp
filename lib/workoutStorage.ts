@@ -78,6 +78,22 @@ export async function loadSessionEvents(sessionId: string) {
   return events.sort((a, b) => a.performedAt.localeCompare(b.performedAt));
 }
 
+export async function loadAllSessionEvents() {
+  const db = await openDatabase();
+
+  const events = await new Promise<StoredSetEvent[]>((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readonly');
+    const request = transaction.objectStore(storeName).getAll();
+
+    request.onsuccess = () => resolve(request.result as StoredSetEvent[]);
+    request.onerror = () => reject(request.error);
+  });
+
+  db.close();
+
+  return events.sort((a, b) => a.performedAt.localeCompare(b.performedAt));
+}
+
 export async function clearSessionEvents(sessionId: string) {
   const db = await openDatabase();
 
@@ -87,6 +103,19 @@ export async function clearSessionEvents(sessionId: string) {
     const transaction = db.transaction(storeName, 'readwrite');
     const store = transaction.objectStore(storeName);
     events.forEach((event) => store.delete(event.id));
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+
+  db.close();
+}
+
+export async function clearAllSessionEvents() {
+  const db = await openDatabase();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readwrite');
+    transaction.objectStore(storeName).clear();
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
