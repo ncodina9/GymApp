@@ -505,6 +505,8 @@ Criterio de aceptacion:
 - en navegadores compatibles la pantalla se mantiene encendida
 - en navegadores no compatibles la app sigue funcionando normalmente
 
+Estado: cerrado tras prueba real en iPhone. El ajuste muestra `Activa en este dispositivo` y evita el bloqueo durante el entrenamiento.
+
 ### Hito 11: Validación real en iPhone
 
 Objetivo: probar la app como se usara en el gimnasio y corregir fricciones de uso real.
@@ -713,16 +715,14 @@ Criterio de aceptacion:
 
 ## Proximo hito recomendado
 
-Empezar por el Hito 11: validación real en iPhone.
+Continuar con el Hito 12: Pulido táctil y visual de controles.
 
 Checklist minima de la siguiente iteracion:
 
-1. Instalar la app desde Vercel en el iPhone.
-2. Reiniciar datos locales desde Ajustes.
-3. Empezar una sesion real o simulada con superserie.
-4. Confirmar que no aparece descanso entre ejercicios vinculados.
-5. Confirmar que aparece descanso al cerrar la ronda.
-6. Exportar CSV y guardar en Archivos.
-7. Anotar fricciones de tamano, scroll, textos cortados o pulsaciones incomodas.
+1. Revisar tema claro y oscuro en iPhone real.
+2. Cerrar el color principal definitivo de cada tema.
+3. Homogeneizar botones de navegación y acciones secundarias.
+4. Revisar contraste de textos e iconos en botones primarios.
+5. Anotar fricciones de tamano, scroll, textos cortados o pulsaciones incomodas.
 
-Despues de esa prueba, priorizar Hito 12 si el problema principal es tactil/visual, o Hito 13 si el problema principal es fiabilidad de datos/exportacion.
+Despues de esa prueba, priorizar Hito 13 si el problema principal es fiabilidad de datos/exportacion.
