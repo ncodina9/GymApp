@@ -27,8 +27,12 @@ import {
   clearSessionEvents,
   loadAllSessionEvents,
   loadSessionEvents,
+  loadSessionMetadata,
+  markSessionExported,
+  purgeExportedSessionsOlderThan,
   saveSetEvent,
   type StoredSetEvent,
+  type StoredSessionMetadata,
 } from '@/lib/workoutStorage';
 
 type Phase =
@@ -93,6 +97,8 @@ type SessionHistorySummary = {
   sessionLabel: string;
   attemptedSets: number;
   completedSets: number;
+  totalSets: number;
+  exportedAt?: string;
   firstPerformedAt: string;
   lastPerformedAt: string;
 };
@@ -156,6 +162,7 @@ const appVersion = packageData.version;
 const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 const themeStorageKey = 'gymapp:appearance-theme';
 const wakeLockStorageKey = 'gymapp:keep-screen-awake';
+const exportedSessionRetentionDays = 30;
 
 const barbellWeightKg = 20;
 const dumbbellLoadsKg = [
@@ -428,8 +435,12 @@ const getDecisionFallbacks = (
 const getSessionHistorySummaries = (
   sessions: TrainingSession[],
   events: StoredSetEvent[],
+  metadata: StoredSessionMetadata[],
 ): SessionHistorySummary[] => {
   const eventsBySession = new Map<string, StoredSetEvent[]>();
+  const metadataBySession = new Map(
+    metadata.map((item) => [item.sessionId, item]),
+  );
 
   events.forEach((event) => {
     const sessionEvents = eventsBySession.get(event.sessionId) ?? [];
@@ -438,30 +449,36 @@ const getSessionHistorySummaries = (
   });
 
   return sessions
-    .map((session) => {
+    .flatMap((session) => {
       const sessionEvents = eventsBySession.get(session.sessionId) ?? [];
 
       if (sessionEvents.length === 0) {
-        return undefined;
+        return [];
       }
 
       const sortedEvents = [...sessionEvents].sort((a, b) =>
         a.performedAt.localeCompare(b.performedAt),
       );
+      const sessionMetadata = metadataBySession.get(session.sessionId);
 
-      return {
-        sessionId: session.sessionId,
-        sessionDate: session.date,
-        sessionLabel: session.label,
-        attemptedSets: sortedEvents.length,
-        completedSets: sortedEvents.filter(
-          (event) => event.status === 'completed',
-        ).length,
-        firstPerformedAt: sortedEvents[0].performedAt,
-        lastPerformedAt: sortedEvents[sortedEvents.length - 1].performedAt,
-      };
+      return [
+        {
+          sessionId: session.sessionId,
+          sessionDate: session.date,
+          sessionLabel: session.label,
+          attemptedSets: sortedEvents.length,
+          completedSets: sortedEvents.filter(
+            (event) => event.status === 'completed',
+          ).length,
+          totalSets: buildExecutionSteps(session).length,
+          ...(sessionMetadata?.exportedAt
+            ? { exportedAt: sessionMetadata.exportedAt }
+            : {}),
+          firstPerformedAt: sortedEvents[0].performedAt,
+          lastPerformedAt: sortedEvents[sortedEvents.length - 1].performedAt,
+        },
+      ];
     })
-    .filter((summary): summary is SessionHistorySummary => Boolean(summary))
     .sort((a, b) => b.lastPerformedAt.localeCompare(a.lastPerformedAt));
 };
 
@@ -918,9 +935,11 @@ export default function Home() {
     setIsLoadingHistory(true);
 
     try {
+      await purgeExportedSessionsOlderThan(exportedSessionRetentionDays);
       const events = await loadAllSessionEvents();
+      const metadata = await loadSessionMetadata();
       setSessionHistory(
-        getSessionHistorySummaries(trainingPlan.sessions, events),
+        getSessionHistorySummaries(trainingPlan.sessions, events, metadata),
       );
     } catch {
       setSessionHistory([]);
@@ -1366,6 +1385,11 @@ export default function Home() {
 
   const exportCsv = async () => {
     await exportWorkoutCsv(selectedSession, draft.records, draft.decisions);
+    await markSessionExported(
+      selectedSession.sessionId,
+      new Date().toISOString(),
+    );
+    await refreshSessionHistory();
   };
 
   const exportHistorySession = async (sessionId: string) => {
@@ -1378,6 +1402,8 @@ export default function Home() {
       records,
       getDecisionFallbacks(records, draft.decisions),
     );
+    await markSessionExported(session.sessionId, new Date().toISOString());
+    await refreshSessionHistory();
   };
 
   const deleteHistorySession = (sessionId: string) => {
@@ -1405,6 +1431,11 @@ export default function Home() {
   const openSettings = (returnPhase = draft.phase) => {
     setSettingsReturnPhase(returnPhase);
     patchDraft({ phase: 'settings' });
+  };
+
+  const returnToTodayAfterDone = () => {
+    window.localStorage.removeItem(storageKey);
+    setDraft(makeDraft());
   };
 
   useEffect(() => {
@@ -1696,7 +1727,7 @@ export default function Home() {
             completedSets={completedSets}
             totalSets={totalSets}
             onExport={exportCsv}
-            onRestart={() => resetWorkoutPosition()}
+            onRestart={returnToTodayAfterDone}
           />
         ) : null}
       </div>
@@ -2052,44 +2083,17 @@ function SettingsScreen({
             ) : null}
 
             {sessionHistory.map((summary) => (
-              <div
+              <HistorySessionCard
                 key={summary.sessionId}
-                className="rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground"
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-black">
-                      {summary.sessionLabel}
-                    </p>
-                    <p className="mt-0.5 text-xs font-bold text-muted-foreground">
-                      {formatDate(summary.sessionDate)} ·{' '}
-                      {summary.completedSets}/{summary.attemptedSets} series
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
-                    {summary.attemptedSets}
-                  </span>
-                </div>
-                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_48px] gap-2">
-                  <Button
-                    className="h-11 rounded-[1.4rem] font-black"
-                    onClick={() => onExportHistorySession(summary.sessionId)}
-                  >
-                    Exportar CSV
-                    <Download className="size-4" />
-                  </Button>
-                  <Button
-                    aria-label={`Borrar ${summary.sessionLabel}`}
-                    className={`h-11 w-12 rounded-[1.4rem] p-0 ${actionStyles.delete}`}
-                    variant="outline"
-                    onClick={() => onDeleteHistorySession(summary.sessionId)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
+                summary={summary}
+                onDeleteHistorySession={onDeleteHistorySession}
+                onExportHistorySession={onExportHistorySession}
+              />
             ))}
           </div>
+          <p className="mt-2 text-xs font-bold leading-tight text-muted-foreground">
+            Las sesiones exportadas se purgan automáticamente tras 30 días.
+          </p>
         </div>
       </div>
 
@@ -2101,6 +2105,57 @@ function SettingsScreen({
         Volver
       </Button>
     </section>
+  );
+}
+
+function HistorySessionCard({
+  summary,
+  onExportHistorySession,
+  onDeleteHistorySession,
+}: {
+  summary: SessionHistorySummary;
+  onExportHistorySession: (sessionId: string) => void;
+  onDeleteHistorySession: (sessionId: string) => void;
+}) {
+  const isComplete = summary.attemptedSets >= summary.totalSets;
+  const statusLabel = summary.exportedAt
+    ? 'Exportado'
+    : isComplete
+      ? 'Completo'
+      : 'En curso';
+
+  return (
+    <div className="rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black">{summary.sessionLabel}</p>
+          <p className="mt-0.5 text-xs font-bold text-muted-foreground">
+            {formatDate(summary.sessionDate)} · {summary.attemptedSets}/
+            {summary.totalSets} series
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
+          {statusLabel}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_48px] gap-2">
+        <Button
+          className="h-11 rounded-[1.4rem] font-black"
+          onClick={() => onExportHistorySession(summary.sessionId)}
+        >
+          Exportar CSV
+          <Download className="size-4" />
+        </Button>
+        <Button
+          aria-label={`Borrar ${summary.sessionLabel}`}
+          className={`h-11 w-12 rounded-[1.4rem] p-0 ${actionStyles.delete}`}
+          variant="outline"
+          onClick={() => onDeleteHistorySession(summary.sessionId)}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+    </div>
   );
 }
 

@@ -566,6 +566,11 @@ Tareas:
 - permitir reexportar un entrenamiento terminado sin perder datos
 - listar entrenamientos con datos locales desde Ajustes
 - borrar los datos de una sesion concreta sin borrar todo el historico local
+- marcar sesiones exportadas con `exportedAt`
+- purgar automaticamente sesiones exportadas cuando cumplan el periodo de retencion local
+- no purgar sesiones sin exportar para evitar perdida silenciosa de datos
+- mostrar progreso de historial como series registradas / series planificadas
+- sustituir chips numericos ambiguos por estado: en curso, completo o exportado
 - definir si se guarda también un resumen por ejercicio además del CSV por serie
 - documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
 - revisar compatibilidad del CSV con el fichero maestro de Obsidian
@@ -583,6 +588,11 @@ Estado parcial:
 - historial local visible desde Ajustes, con scroll permitido en esa pantalla
 - exportacion CSV de sesiones con datos sin depender de estar en la pantalla final
 - borrado de una sesion concreta desde Ajustes
+- al cerrar un entrenamiento y volver a hoy, se conserva la sesion finalizada para exportarla despues
+- sesiones exportadas marcadas en IndexedDB con `exportedAt`
+- purga automatica de sesiones exportadas con mas de 30 dias de antiguedad
+- las tarjetas de historial muestran `series registradas / series planificadas`
+- chip de historial cambiado a estado legible: en curso, completo o exportado
 
 ### Hito 14: Duracion real del entrenamiento
 
