@@ -12,7 +12,6 @@ import {
   Plus,
   RotateCcw,
   Settings,
-  SkipForward,
   Trash2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -174,6 +173,33 @@ const actionStyles = {
   plus: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)] hover:bg-[var(--action-plus-hover)]',
   rest: 'border-[var(--action-rest-border)] bg-[var(--action-rest)] text-[var(--action-rest-foreground)] hover:bg-[var(--action-rest-hover)]',
 };
+
+function SkipSetIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle cx="12" cy="16.25" fill="currentColor" r="2.35" />
+      <path
+        d="M4.8 14.1C6.7 8.5 11 6.35 17.15 8.8"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2.25"
+      />
+      <path
+        d="M15.1 5.8l3.65 3.85-4.95 1.15"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2.25"
+      />
+    </svg>
+  );
+}
 
 const registerServiceWorker = () => {
   if (
@@ -1955,7 +1981,7 @@ function SetScreen({
           variant="outline"
           onClick={onSkip}
         >
-          <SkipForward className="size-5" />
+          <SkipSetIcon className="size-6" />
         </Button>
       </div>
     </section>
