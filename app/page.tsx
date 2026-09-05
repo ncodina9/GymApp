@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Download,
   ArrowLeft,
+  House,
   Minus,
   Pause,
   Play,
@@ -1642,13 +1643,13 @@ function PreviewScreen({
         style={{ gridTemplateColumns: '56px minmax(0, 1fr)' }}
       >
         <Button
-          aria-label="Volver"
+          aria-label="Ir a pantalla principal"
           className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.back}`}
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
         >
-          <ArrowLeft className="size-5" />
+          <House className="size-5" />
         </Button>
         <Button
           className="h-14 rounded-[1.75rem] text-lg font-black"
@@ -1932,13 +1933,13 @@ function SetScreen({
         style={{ gridTemplateColumns: '56px minmax(0, 1fr) 56px' }}
       >
         <Button
-          aria-label="Volver"
+          aria-label="Ir a pantalla principal"
           className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.back}`}
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
         >
-          <ArrowLeft className="size-5" />
+          <House className="size-5" />
         </Button>
         <Button
           className="h-14 rounded-[1.75rem] text-lg font-black"
@@ -2463,6 +2464,7 @@ function DoneScreen({
         variant="secondary"
         onClick={onRestart}
       >
+        <House className="size-5" />
         Volver a hoy
       </Button>
     </section>
