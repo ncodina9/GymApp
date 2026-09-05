@@ -15,7 +15,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -39,6 +39,7 @@ type Phase =
   | 'settings';
 
 type AppearanceTheme = 'system' | 'light' | 'dark';
+type WakeLockStatus = 'off' | 'active' | 'unsupported' | 'blocked';
 
 type TrainingSet = {
   setIndex: number;
@@ -106,7 +107,8 @@ type WorkoutDraft = {
   setNote: string;
 };
 
-type WakeLockSentinel = {
+type WakeLockSentinel = EventTarget & {
+  released?: boolean;
   release: () => Promise<void>;
 };
 
@@ -172,6 +174,13 @@ const actionStyles = {
     'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)] hover:bg-[var(--action-minus-hover)]',
   plus: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)] hover:bg-[var(--action-plus-hover)]',
   rest: 'border-[var(--action-rest-border)] bg-[var(--action-rest)] text-[var(--action-rest-foreground)] hover:bg-[var(--action-rest-hover)]',
+};
+
+const wakeLockStatusLabels: Record<WakeLockStatus, string> = {
+  off: 'Desactivada',
+  active: 'Activa en este dispositivo',
+  unsupported: 'No compatible aquí',
+  blocked: 'No concedida por el navegador',
 };
 
 function SkipSetIcon({ className }: { className?: string }) {
@@ -775,8 +784,11 @@ export default function Home() {
   const [appearanceTheme, setAppearanceTheme] =
     useState<AppearanceTheme>('system');
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
+  const [wakeLockStatus, setWakeLockStatus] = useState<WakeLockStatus>('off');
   const [settingsReturnPhase, setSettingsReturnPhase] =
     useState<Phase>('today');
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const keepScreenAwakeRef = useRef(false);
   const selectedSession =
     trainingPlan.sessions.find(
       (session) => session.sessionId === draft.selectedSessionId,
@@ -817,6 +829,60 @@ export default function Home() {
       ),
     [selectedSession.week],
   );
+
+  useEffect(() => {
+    keepScreenAwakeRef.current = keepScreenAwake;
+  }, [keepScreenAwake]);
+
+  const releaseScreenWakeLock = useCallback(() => {
+    const lock = wakeLockRef.current;
+    wakeLockRef.current = null;
+    setWakeLockStatus('off');
+
+    if (lock && lock.released !== true) {
+      void lock.release().catch(() => undefined);
+    }
+  }, []);
+
+  const requestScreenWakeLock = useCallback(async () => {
+    if (typeof navigator === 'undefined') {
+      setWakeLockStatus('unsupported');
+      return false;
+    }
+
+    const wakeLock = (navigator as WakeLockNavigator).wakeLock;
+
+    if (!wakeLock) {
+      setWakeLockStatus('unsupported');
+      return false;
+    }
+
+    if (document.visibilityState !== 'visible') {
+      setWakeLockStatus('blocked');
+      return false;
+    }
+
+    try {
+      const lock = await wakeLock.request('screen');
+      wakeLockRef.current = lock;
+      setWakeLockStatus('active');
+      lock.addEventListener(
+        'release',
+        () => {
+          if (wakeLockRef.current === lock) {
+            wakeLockRef.current = null;
+            setWakeLockStatus(keepScreenAwakeRef.current ? 'blocked' : 'off');
+          }
+        },
+        { once: true },
+      );
+      return true;
+    } catch {
+      wakeLockRef.current = null;
+      setWakeLockStatus('blocked');
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -876,46 +942,33 @@ export default function Home() {
   }, [hasLoadedDraft, keepScreenAwake]);
 
   useEffect(() => {
-    if (!keepScreenAwake || typeof navigator === 'undefined') {
+    if (!keepScreenAwake) {
+      queueMicrotask(releaseScreenWakeLock);
       return;
     }
-
-    const wakeLock = (navigator as WakeLockNavigator).wakeLock;
-
-    if (!wakeLock) {
-      return;
-    }
-
-    let released = false;
-    let lock: WakeLockSentinel | null = null;
-
-    const requestWakeLock = async () => {
-      if (released || document.visibilityState !== 'visible') {
-        return;
-      }
-
-      try {
-        lock = await wakeLock.request('screen');
-      } catch {
-        lock = null;
-      }
-    };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        void requestWakeLock();
+        void requestScreenWakeLock();
+      }
+    };
+    const handleUserInteraction = () => {
+      if (!wakeLockRef.current) {
+        void requestScreenWakeLock();
       }
     };
 
-    void requestWakeLock();
+    queueMicrotask(() => void requestScreenWakeLock());
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('pointerdown', handleUserInteraction, {
+      passive: true,
+    });
 
     return () => {
-      released = true;
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      void lock?.release().catch(() => undefined);
+      document.removeEventListener('pointerdown', handleUserInteraction);
     };
-  }, [keepScreenAwake]);
+  }, [keepScreenAwake, releaseScreenWakeLock, requestScreenWakeLock]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1364,9 +1417,17 @@ export default function Home() {
           <SettingsScreen
             theme={appearanceTheme}
             keepScreenAwake={keepScreenAwake}
+            wakeLockStatus={wakeLockStatus}
             selectedSessionLabel={selectedSession.label}
             onThemeChange={setAppearanceTheme}
-            onKeepScreenAwakeChange={setKeepScreenAwake}
+            onKeepScreenAwakeChange={(enabled) => {
+              setKeepScreenAwake(enabled);
+              if (enabled) {
+                void requestScreenWakeLock();
+              } else {
+                releaseScreenWakeLock();
+              }
+            }}
             onResetCurrent={() => resetWorkoutPosition(draft.selectedSessionId)}
             onClearAllData={clearAllLocalData}
             onBack={() => patchDraft({ phase: settingsReturnPhase })}
@@ -1705,6 +1766,7 @@ function PreviewMetric({ label, value }: { label: string; value: string }) {
 function SettingsScreen({
   theme,
   keepScreenAwake,
+  wakeLockStatus,
   selectedSessionLabel,
   onThemeChange,
   onKeepScreenAwakeChange,
@@ -1714,6 +1776,7 @@ function SettingsScreen({
 }: {
   theme: AppearanceTheme;
   keepScreenAwake: boolean;
+  wakeLockStatus: WakeLockStatus;
   selectedSessionLabel: string;
   onThemeChange: (theme: AppearanceTheme) => void;
   onKeepScreenAwakeChange: (enabled: boolean) => void;
@@ -1764,7 +1827,7 @@ function SettingsScreen({
                 Pantalla siempre encendida
               </span>
               <span className="mt-0.5 block text-xs font-bold leading-tight text-muted-foreground">
-                Evita el bloqueo si el iPhone lo permite.
+                {wakeLockStatusLabels[wakeLockStatus]}
               </span>
             </span>
             <Switch
