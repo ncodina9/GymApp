@@ -748,6 +748,8 @@ Pendiente futuro: documentar el flujo de forzar refresco de PWA en iPhone si Saf
 
 Objetivo: adaptar la app a iPhone en horizontal sin degradar el flujo vertical.
 
+Estado previo: hasta acometer este hito, la app queda bloqueada en vertical. El manifest declara `orientation: portrait`, la app intenta solicitar bloqueo nativo cuando el navegador lo permite y se muestra una pantalla de aviso si el iPhone se gira en horizontal.
+
 Tareas:
 
 - definir distribucion horizontal para pantalla de serie

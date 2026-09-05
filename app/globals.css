@@ -204,6 +204,12 @@ body {
     height: 100vh;
   }
 
+  @media (orientation: landscape) and (max-height: 560px) {
+    .orientation-lock {
+      display: block;
+    }
+  }
+
   @supports (height: 100svh) {
     .app-screen {
       height: 100svh;

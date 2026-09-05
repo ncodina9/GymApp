@@ -183,6 +183,13 @@ type WakeLockNavigator = Navigator & {
   };
 };
 
+type OrientationScreen = Screen & {
+  orientation?: ScreenOrientation & {
+    lock?: (orientation: OrientationLockType) => Promise<void>;
+    unlock?: () => void;
+  };
+};
+
 type WebMcpTool = {
   name: string;
   title: string;
@@ -310,6 +317,15 @@ const canUseServiceWorker = () => {
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
   );
+};
+
+const requestPortraitOrientation = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const orientation = (window.screen as OrientationScreen).orientation;
+  void orientation?.lock?.('portrait').catch(() => undefined);
 };
 
 const readServiceWorkerInfo = (worker: ServiceWorker) =>
@@ -1526,6 +1542,10 @@ export default function Home() {
     });
   }, []);
 
+  useEffect(() => {
+    requestPortraitOrientation();
+  }, []);
+
   const checkOffline = useCallback(() => {
     setOfflineStatus('checking');
     void checkOfflineReadiness().then((result) => {
@@ -2129,6 +2149,7 @@ export default function Home() {
 
   return (
     <main className="app-screen overflow-hidden bg-background text-foreground">
+      <OrientationLockOverlay />
       <div className="app-screen mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:py-4">
         {draft.phase !== 'settings' ? (
           <header className="mb-1">
@@ -2346,6 +2367,29 @@ export default function Home() {
         ) : null}
       </div>
     </main>
+  );
+}
+
+function OrientationLockOverlay() {
+  return (
+    <dialog
+      className="orientation-lock fixed inset-0 z-50 hidden h-full max-h-none w-full max-w-none bg-background px-8 text-center text-foreground"
+      open
+      aria-modal="true"
+      aria-label="Gira el iPhone"
+    >
+      <div className="mx-auto flex h-full max-w-sm flex-col items-center justify-center gap-4">
+        <div className="rounded-[2rem] border bg-card p-5 shadow-sm">
+          <RotateCcw className="mx-auto size-10 text-primary" />
+          <p className="mt-4 text-2xl font-black tracking-normal">
+            Gira el iPhone
+          </p>
+          <p className="mt-2 text-sm font-bold leading-snug text-muted-foreground">
+            De momento la app está bloqueada en vertical.
+          </p>
+        </div>
+      </div>
+    </dialog>
   );
 }
 
