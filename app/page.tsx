@@ -344,37 +344,41 @@ const formatCsvTarget = (target: string, loadType: LoadType) =>
     : target;
 
 const formatPreviewLoad = (weight: number, loadType: LoadType) => {
+  const compactWeight = formatCsvNumber(weight);
+
   if (loadType === 'external') {
-    return weight > 0 ? `+${formatWeight(weight)}` : '0 kg';
+    return weight > 0 ? `+${compactWeight}` : '0';
   }
 
   if (loadType === 'per_dumbbell') {
-    return `${formatWeight(weight)}/mancuerna`;
+    return compactWeight;
   }
 
   if (loadType === 'machine' && weight === 0) {
+    return '-';
+  }
+
+  return compactWeight;
+};
+
+const getPreviewLoadLabel = (loadType: LoadType) => {
+  if (loadType === 'external') {
+    return 'lastre';
+  }
+
+  if (loadType === 'per_dumbbell') {
+    return 'kg/manc.';
+  }
+
+  if (loadType === 'machine') {
     return 'maquina';
   }
 
-  return formatWeight(weight);
+  return 'kg';
 };
 
-const getExercisePreviewTarget = (exercise: Exercise) => {
+const getExercisePreviewMetrics = (exercise: Exercise) => {
   const loadType = inferLoadType(exercise);
-
-  if (exercise.sets.every((set) => set.type === 'timed')) {
-    const durations = Array.from(
-      new Set(
-        exercise.sets.map((set) => formatClock(set.targetDurationSeconds ?? 0)),
-      ),
-    );
-
-    return `${exercise.sets.length} series · ${durations.join('/')}`;
-  }
-
-  const reps = Array.from(
-    new Set(exercise.sets.map((set) => set.targetReps ?? 0)),
-  );
   const loads = Array.from(
     new Set(
       exercise.sets.map((set) =>
@@ -383,7 +387,33 @@ const getExercisePreviewTarget = (exercise: Exercise) => {
     ),
   );
 
-  return `${exercise.sets.length} series · ${reps.join('/')} reps · ${loads.join('/')}`;
+  if (exercise.sets.every((set) => set.type === 'timed')) {
+    const durations = Array.from(
+      new Set(
+        exercise.sets.map((set) => formatClock(set.targetDurationSeconds ?? 0)),
+      ),
+    );
+
+    return {
+      sets: String(exercise.sets.length),
+      work: durations.join('/'),
+      workLabel: 'tiempo',
+      load: loads.join('/'),
+      loadLabel: getPreviewLoadLabel(loadType),
+    };
+  }
+
+  const reps = Array.from(
+    new Set(exercise.sets.map((set) => set.targetReps ?? 0)),
+  );
+
+  return {
+    sets: String(exercise.sets.length),
+    work: reps.join('/'),
+    workLabel: 'reps',
+    load: loads.join('/'),
+    loadLabel: getPreviewLoadLabel(loadType),
+  };
 };
 
 export default function Home() {
@@ -1152,26 +1182,37 @@ function PreviewScreen({
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         <div className="grid gap-2 pb-1">
-          {session.exercises.map((exercise, index) => (
-            <div
-              key={exercise.exerciseId}
-              className="rounded-lg border bg-card p-3 shadow-sm"
-            >
-              <div className="flex items-start gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-secondary-foreground">
-                  {index + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-base font-black leading-tight">
+          {session.exercises.map((exercise, index) => {
+            const metrics = getExercisePreviewMetrics(exercise);
+
+            return (
+              <div
+                key={exercise.exerciseId}
+                className="grid min-h-24 grid-cols-[minmax(0,1fr)_168px] gap-3 rounded-lg border bg-card p-3 shadow-sm"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-secondary-foreground">
+                    {index + 1}
+                  </span>
+                  <p className="min-w-0 text-base font-black leading-tight">
                     {exercise.name}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-muted-foreground">
-                    {getExercisePreviewTarget(exercise)}
-                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5 text-center">
+                  <PreviewMetric label="series" value={metrics.sets} />
+                  <PreviewMetric
+                    label={metrics.workLabel}
+                    value={metrics.work}
+                  />
+                  <PreviewMetric
+                    label={metrics.loadLabel}
+                    value={metrics.load}
+                  />
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -1197,6 +1238,19 @@ function PreviewScreen({
         </Button>
       </div>
     </section>
+  );
+}
+
+function PreviewMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 flex-col items-center justify-center rounded-md bg-secondary px-1.5 py-2">
+      <p className="max-w-full truncate text-[0.62rem] font-black uppercase leading-none text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 max-w-full truncate text-lg font-black leading-none tabular-nums">
+        {value}
+      </p>
+    </div>
   );
 }
 
