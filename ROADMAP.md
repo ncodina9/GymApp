@@ -62,8 +62,8 @@ Pantalla previa al inicio real de la sesion. Puede tener scroll porque se usa an
 - resumen del entrenamiento seleccionado
 - listado de ejercicios en orden
 - series previstas por ejercicio
-- reps, tiempos, pesos y descansos previstos
-- notas breves relevantes para preparar material
+- reps, tiempos y pesos previstos
+- indicacion clara de superseries y orden dentro del bloque
 - boton principal para empezar entrenamiento
 
 ### Ejecucion de serie
@@ -176,6 +176,9 @@ Campos minimos:
 - `sessionId`
 - `exerciseId`
 - `setIndex`
+- `supersetId` si aplica
+- `supersetOrder` si aplica
+- `roundNumber` si aplica
 - `plannedReps`
 - `plannedWeightKg`
 - `plannedDurationSeconds` si aplica
@@ -184,10 +187,14 @@ Campos minimos:
 - `actualDurationSeconds` si aplica
 - `restSecondsPlanned`
 - `restSecondsActual`
-- `status`: `completed`, `skipped` o `edited`
+- `status`: `completed` o `skipped`
+- `rirLast`
+- `painKnee`
+- `painWrist`
+- `painOther`
 - `note`
 
-Mas adelante se podran anadir RIR, dolor/molestia, calidad tecnica, tempo o velocidad percibida.
+Mas adelante se podran anadir calidad tecnica, tempo, velocidad percibida o notas estructuradas por ejercicio.
 
 ## Entrenamiento base
 
@@ -234,6 +241,39 @@ Stack inicial recomendado:
 La app debe poder alojarse como sitio estatico. No hace falta Northflank para la primera version si no hay backend. Un alojamiento estatico con soporte HTTPS es suficiente para instalarla como PWA en iPhone. Si despues necesitamos sincronizacion multi-dispositivo, cuentas de usuario o backups automaticos, se reevaluara backend.
 
 ## Hitos
+
+### Estado actual
+
+Ya esta implementada una primera version funcional de la app:
+
+- proyecto versionado en GitHub y conectado con Vercel
+- app React/Vinext con UI tactil orientada a iPhone
+- pantalla Hoy con recomendacion de entrenamiento y seleccion semanal
+- reanudacion de entrenamiento iniciado
+- previsualizacion previa con ejercicios, series, reps/tiempo y pesos
+- pantalla de serie sin teclado, con controles grandes de reps/peso
+- incremento de peso con paso configurable de `1 kg` o `0.5 kg`
+- soporte para ejercicios temporizados con cuenta atras circular
+- feedback despues de cada serie, antes del descanso
+- descanso con cuenta atras circular y ajuste de `-15s` / `+15s`
+- persistencia local con IndexedDB y recuperacion del borrador desde `localStorage`
+- ajustes con selector de tema, reset de entrenamiento y borrado local
+- temas claro y oscuro minimalistas
+- iconos PWA y manifest para instalacion en iPhone
+- service worker basico
+- exportacion CSV por serie
+- plan trimestral real en `data/trainingPlan.json`
+- generador del plan en `scripts/generate-training-plan.mjs`
+- superseries v1 mediante bloques `E1/E2`, `F1/F2`, etc.
+
+Validaciones habituales antes de publicar:
+
+```bash
+npm --cache /private/tmp/gymapp-npm-cache run format
+npm --cache /private/tmp/gymapp-npm-cache run lint
+npm --cache /private/tmp/gymapp-npm-cache run build
+npm --cache /private/tmp/gymapp-npm-cache run build:vercel
+```
 
 ### Hito 0: Repositorio y base de proyecto
 
@@ -397,6 +437,184 @@ Criterio de aceptacion:
 - al cerrar la ultima ronda se pueden registrar decisiones para los ejercicios vinculados
 - el CSV conserva el orden real de registro y permite reconstruir la superserie
 
+## Siguientes hitos
+
+### Hito 8: Validacion real en iPhone
+
+Objetivo: probar la app como se usara en el gimnasio y corregir fricciones de uso real.
+
+Tareas:
+
+- instalar la PWA desde la URL de Vercel en el iPhone
+- completar una sesion normal de principio a fin
+- completar una sesion con superserie de principio a fin
+- probar cierre y reapertura durante una sesion iniciada
+- probar uso con poca o ninguna cobertura despues de haber cargado la app
+- exportar un CSV desde iPhone y guardarlo en Archivos
+- revisar altura disponible en Safari/PWA instalada
+- anotar pantallas donde aparezca scroll no deseado durante serie, feedback o descanso
+
+Criterio de aceptacion:
+
+- se puede entrenar sin depender del Mac
+- no se pierde el progreso al cerrar la app
+- la exportacion CSV se puede guardar desde el iPhone
+- el flujo de superseries se entiende sin tener que pensarlo
+
+### Hito 9: Pulido tactil y visual de controles
+
+Objetivo: que la app se sienta mas comoda en mano durante el entrenamiento.
+
+Tareas:
+
+- homogeneizar alturas y radios de todos los botones inferiores
+- revisar separacion respecto al borde inferior y `safe-area-inset-bottom`
+- aplicar colores ligeros diferenciados para acciones secundarias: volver, saltar, reset, `+`, `-`, `+15s`, `-15s`
+- asegurar que esos colores funcionan en tema claro y oscuro
+- revisar tamanos de fuente de reps, peso y timers en iPhone real
+- mejorar estados activos/pulsados para que el tacto sea evidente
+- evitar truncado de pesos con decimales en preview y pantalla de serie
+
+Criterio de aceptacion:
+
+- todos los botones principales y secundarios tienen una jerarquia clara
+- los controles son faciles de pulsar con una mano
+- no hay texto importante cortado en iPhone
+
+### Hito 10: Robustez de persistencia y exportacion
+
+Objetivo: hacer mas fiable el ciclo registro local -> CSV -> Obsidian/Archivos.
+
+Tareas:
+
+- mostrar estado simple de guardado local despues de registrar una serie
+- proteger contra doble pulsacion accidental en `Registrar serie`
+- permitir reexportar un entrenamiento terminado sin perder datos
+- definir si se guarda tambien un resumen por ejercicio ademas del CSV por serie
+- documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
+- revisar compatibilidad del CSV con el fichero maestro de Obsidian
+- decidir si el CSV debe incluir version de esquema
+- valorar importacion o concatenacion posterior de varios CSV
+
+Criterio de aceptacion:
+
+- cada serie registrada queda persistida una sola vez
+- el usuario entiende donde queda el CSV y como moverlo al repositorio personal
+- los campos exportados permiten analizar volumen, carga, RIR, molestias y superseries
+
+### Hito 11: Duracion real del entrenamiento
+
+Objetivo: medir cuanto dura una sesion y compararlo con la estimacion del plan.
+
+Tareas:
+
+- guardar `startedAt` al pulsar `Empezar entrenamiento`
+- guardar `finishedAt` al cerrar la sesion
+- mostrar duracion real al finalizar
+- comparar duracion real contra `estimatedMinutes`
+- incluir duracion real en el CSV o en un futuro resumen de sesion
+- decidir si las pausas manuales o interrupciones cuentan dentro del tiempo total
+
+Criterio de aceptacion:
+
+- al terminar se ve el tiempo real invertido
+- la app indica si la sesion fue mas corta, similar o mas larga que lo previsto
+- la informacion queda disponible para revision posterior
+
+### Hito 12: Superseries v2
+
+Objetivo: mejorar la primera version de superseries para cubrir casos menos regulares.
+
+Tareas:
+
+- decidir politica para superseries con distinto numero de series
+- mostrar mejor en la pantalla de serie que se esta dentro de una superserie
+- mostrar progreso de ronda: por ejemplo `Ronda 2/4`
+- revisar si conviene una transicion breve entre ejercicios vinculados o avance directo
+- permitir descanso propio de superserie si difiere del descanso de cada ejercicio
+- validar que decisiones de ejercicios vinculados no ocupan demasiado en movil
+- incluir tests unitarios del secuenciador con casos normales, superseries y casos limite
+
+Criterio de aceptacion:
+
+- la app representa claramente ejercicio, orden y ronda dentro de la superserie
+- los casos irregulares estan definidos y no generan comportamiento ambiguo
+- el secuenciador queda protegido con tests
+
+### Hito 13: Plan y progresion asistida
+
+Objetivo: usar los registros para facilitar decisiones futuras sin automatizar demasiado pronto.
+
+Tareas:
+
+- revisar decisiones registradas por ejercicio: mantener, subir, bajar, molestia
+- generar una vista simple de recomendaciones para la proxima exposicion del ejercicio
+- detectar ejercicios con molestias repetidas
+- detectar series sistematicamente saltadas
+- preparar una exportacion resumida por ejercicio y sesion
+- decidir si el plan JSON se modifica manualmente o si se genera una nueva version desde registros
+
+Criterio de aceptacion:
+
+- despues de varias sesiones se puede ver que ejercicios conviene subir, mantener o revisar
+- las molestias y saltos quedan visibles sin analizar el CSV a mano
+- el plan sigue siendo explicito por fecha, sin calculos ocultos en la UI
+
+### Hito 14: Instalacion/offline mas solida
+
+Objetivo: reducir riesgos de uso en gimnasio sin red.
+
+Tareas:
+
+- revisar estrategia de cache del service worker
+- mostrar version/build visible en ajustes
+- anadir boton de comprobacion offline o estado de app instalada
+- documentar como forzar actualizacion de la PWA en iPhone
+- validar que `trainingPlan.json`, iconos y assets quedan cacheados
+- decidir si hace falta aviso cuando hay una version nueva disponible
+
+Criterio de aceptacion:
+
+- la app abre y funciona sin conexion despues de haber cargado una vez
+- el usuario puede comprobar que version esta usando
+- actualizar la app no borra datos locales
+
+### Hito 15: Layout movil horizontal
+
+Objetivo: adaptar la app a iPhone en horizontal sin degradar el flujo vertical.
+
+Tareas:
+
+- definir distribucion horizontal para pantalla de serie
+- colocar ejercicio/progreso y controles en columnas sin scroll
+- adaptar pantalla de descanso para que el circulo y botones respiren
+- revisar feedback en horizontal
+- probar iPhone normal y Pro Max
+
+Criterio de aceptacion:
+
+- girar el movil no rompe el layout
+- los controles siguen siendo tactiles y legibles
+- no se introduce scroll durante serie, feedback o descanso
+
+### Hito 16: Historial dentro de la app
+
+Objetivo: consultar sesiones anteriores sin depender del CSV exportado.
+
+Tareas:
+
+- listar sesiones guardadas en el dispositivo
+- permitir ver resumen simple de una sesion terminada
+- permitir exportar de nuevo una sesion anterior
+- permitir borrar una sesion concreta
+- distinguir sesion en curso, completada y abandonada
+
+Criterio de aceptacion:
+
+- se puede recuperar un entrenamiento anterior desde ajustes o una pantalla dedicada
+- exportar no depende de estar justo en la pantalla final
+- borrar datos es deliberado y claro
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
@@ -406,20 +624,33 @@ Criterio de aceptacion:
 - Evitar que el countdown de descanso bloquee ajustes utiles entre series.
 - Disenar controles tactiles suficientemente grandes sin convertir la pantalla en una calculadora.
 - Definir mas adelante como tratar superseries con distinto numero de series por ejercicio.
+- Decidir si el plan tendra correcciones manuales despues de cada semana o versiones generadas.
+- Decidir si el historico local debe quedarse solo en IndexedDB o si conviene una copia exportable mas directa.
 
 ## Backlog futuro
 
-- Layout para movil en horizontal.
-- Colores ligeros para botones secundarios y de control: +, -, volver, saltar, reset, etc. Deben funcionar en ambos temas.
-- Medir duracion real del entrenamiento desde que se pulsa empezar hasta finalizar, mostrar el tiempo tardado y compararlo con el tiempo estimado.
+- Integracion opcional con Atajos de iOS.
+- Exportacion Markdown por sesion, si aporta valor frente al CSV.
+- Vista de volumen semanal por grupo muscular.
+- Vista de progresion por ejercicio.
+- Modo de edicion manual del plan desde la propia app.
+- Gestion de calentamientos o aproximaciones antes de series efectivas.
+- Soporte para notas libres con dictado, si no rompe la filosofia tactil.
+- Sincronizacion multi-dispositivo, solo si el uso local se queda corto.
+- Autenticacion, solo si aparece backend o sincronizacion.
 
 ## Proximo hito recomendado
 
-Empezar por el Hito 0 y una parte acotada del Hito 1:
+Empezar por el Hito 8: validacion real en iPhone.
 
-1. Inicializar el proyecto React/Vite.
-2. Crear una sesion mock con 2 ejercicios y 3 series.
-3. Construir el flujo tactil completo sin persistencia real.
-4. Probarlo en viewport de iPhone.
+Checklist minima de la siguiente iteracion:
 
-Este hito es pequeno, valida la decision mas importante de producto y deja para despues el trabajo mas delicado: generar el JSON trimestral completo con cargas ajustadas.
+1. Instalar la app desde Vercel en el iPhone.
+2. Reiniciar datos locales desde Ajustes.
+3. Empezar una sesion real o simulada con superserie.
+4. Confirmar que no aparece descanso entre ejercicios vinculados.
+5. Confirmar que aparece descanso al cerrar la ronda.
+6. Exportar CSV y guardar en Archivos.
+7. Anotar fricciones de tamano, scroll, textos cortados o pulsaciones incomodas.
+
+Despues de esa prueba, priorizar Hito 9 si el problema principal es tactil/visual, o Hito 10 si el problema principal es fiabilidad de datos/exportacion.
