@@ -1188,7 +1188,7 @@ function PreviewScreen({
             return (
               <div
                 key={exercise.exerciseId}
-                className="grid min-h-24 grid-cols-[minmax(0,1fr)_168px] gap-3 rounded-lg border bg-card p-3 shadow-sm"
+                className="grid gap-3 rounded-lg border bg-card p-3 shadow-sm"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-secondary-foreground">
@@ -1199,7 +1199,7 @@ function PreviewScreen({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1.5 text-center">
+                <div className="grid grid-cols-3 gap-2 text-center">
                   <PreviewMetric label="series" value={metrics.sets} />
                   <PreviewMetric
                     label={metrics.workLabel}
@@ -1243,11 +1243,11 @@ function PreviewScreen({
 
 function PreviewMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex min-w-0 flex-col items-center justify-center rounded-md bg-secondary px-1.5 py-2">
+    <div className="flex min-w-0 flex-col items-center justify-center rounded-md bg-secondary px-2 py-2.5">
       <p className="max-w-full truncate text-[0.62rem] font-black uppercase leading-none text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 max-w-full truncate text-lg font-black leading-none tabular-nums">
+      <p className="mt-1 max-w-full truncate text-xl font-black leading-none tabular-nums">
         {value}
       </p>
     </div>
