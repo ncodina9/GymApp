@@ -164,8 +164,8 @@ const appearanceThemes: { value: AppearanceTheme; label: string }[] = [
   { value: 'dark', label: 'Oscuro' },
 ];
 const actionStyles = {
-  back: 'border-[var(--action-back-border)] bg-[var(--action-back)] text-[var(--action-back-foreground)] hover:bg-[var(--action-back-hover)]',
-  skip: 'border-[var(--action-skip-border)] bg-[var(--action-skip)] text-[var(--action-skip-foreground)] hover:bg-[var(--action-skip-hover)]',
+  back: 'border-[var(--action-back-border)] bg-[var(--action-back)] text-[var(--action-back-foreground)] hover:bg-[var(--action-back-hover)] dark:border-[var(--action-back-border)] dark:bg-[var(--action-back)] dark:text-[var(--action-back-foreground)] dark:hover:bg-[var(--action-back-hover)]',
+  skip: 'border-[var(--action-skip-border)] bg-[var(--action-skip)] text-[var(--action-skip-foreground)] hover:bg-[var(--action-skip-hover)] dark:border-[var(--action-skip-border)] dark:bg-[var(--action-skip)] dark:text-[var(--action-skip-foreground)] dark:hover:bg-[var(--action-skip-hover)]',
   reset:
     'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)] hover:bg-[var(--action-reset-hover)]',
   delete:
@@ -173,7 +173,7 @@ const actionStyles = {
   minus:
     'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)] hover:bg-[var(--action-minus-hover)]',
   plus: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)] hover:bg-[var(--action-plus-hover)]',
-  rest: 'border-[var(--action-rest-border)] bg-[var(--action-rest)] text-[var(--action-rest-foreground)] hover:bg-[var(--action-rest-hover)]',
+  rest: 'border-[var(--action-rest-border)] bg-[var(--action-rest)] text-[var(--action-rest-foreground)] hover:bg-[var(--action-rest-hover)] dark:border-[var(--action-rest-border)] dark:bg-[var(--action-rest)] dark:text-[var(--action-rest-foreground)] dark:hover:bg-[var(--action-rest-hover)]',
 };
 
 const wakeLockStatusLabels: Record<WakeLockStatus, string> = {
@@ -1370,17 +1370,17 @@ export default function Home() {
   return (
     <main className="app-screen overflow-hidden bg-background text-foreground">
       <div className="app-screen mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:py-4">
-        <header className="mb-1">
-          <p className="text-xs font-black uppercase text-muted-foreground">
-            {draft.phase === 'settings'
-              ? 'Ajustes'
-              : draft.phase === 'preview'
+        {draft.phase !== 'settings' ? (
+          <header className="mb-1">
+            <p className="text-xs font-black uppercase text-muted-foreground">
+              {draft.phase === 'preview'
                 ? `Semana ${selectedSession.week} · Vista previa`
                 : `Semana ${selectedSession.week}${
                     draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''
                   }`}
-          </p>
-        </header>
+            </p>
+          </header>
+        ) : null}
 
         {draft.phase !== 'today' &&
         draft.phase !== 'settings' &&
@@ -1785,18 +1785,20 @@ function SettingsScreen({
   onBack: () => void;
 }) {
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+    <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
       <div className="min-h-0 flex-1 rounded-lg border bg-card p-4 shadow-sm">
-        <p className="text-sm font-semibold text-muted-foreground">Ajustes</p>
-        <h2 className="mt-1 text-[2rem] font-black leading-tight tracking-normal">
-          Apariencia
+        <h2 className="text-[1.6rem] font-black leading-tight tracking-normal">
+          Ajustes
         </h2>
 
-        <div className="mt-4 grid gap-2">
+        <p className="mt-4 text-sm font-semibold text-muted-foreground">
+          Apariencia
+        </p>
+        <div className="mt-2 grid gap-1.5">
           {appearanceThemes.map((option) => (
             <button
               key={option.value}
-              className={`flex h-16 items-center justify-between rounded-[1.75rem] border px-5 text-left text-lg font-black transition active:scale-[0.98] ${
+              className={`flex h-12 items-center justify-between rounded-[1.4rem] border px-4 text-left text-base font-black transition active:scale-[0.98] ${
                 theme === option.value
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border bg-secondary text-secondary-foreground'
@@ -1806,7 +1808,7 @@ function SettingsScreen({
             >
               <span>{option.label}</span>
               <span
-                className={`size-6 rounded-full border-2 ${
+                className={`size-4 rounded-full border-2 ${
                   theme === option.value
                     ? 'border-primary-foreground bg-primary-foreground'
                     : 'border-muted-foreground/45 bg-transparent'
@@ -1817,7 +1819,7 @@ function SettingsScreen({
           ))}
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4">
           <p className="text-sm font-semibold text-muted-foreground">
             Entrenamiento
           </p>
@@ -1838,7 +1840,7 @@ function SettingsScreen({
           </div>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4">
           <p className="text-sm font-semibold text-muted-foreground">
             Datos locales
           </p>
