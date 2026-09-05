@@ -269,6 +269,7 @@ Ya esta implementada una primera version funcional de la app:
 - cargas del plan ajustadas al material disponible: mancuernas, discos y polea
 - textos visibles de la app con acentos y eñes
 - ajuste opcional para mantener la pantalla encendida cuando el navegador lo soporte
+- colores ligeros por tipo de acción secundaria en controles táctiles
 
 Validaciones habituales antes de publicar:
 

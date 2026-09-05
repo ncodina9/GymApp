@@ -161,6 +161,18 @@ const appearanceThemes: { value: AppearanceTheme; label: string }[] = [
   { value: 'light', label: 'Claro' },
   { value: 'dark', label: 'Oscuro' },
 ];
+const actionStyles = {
+  back: 'border-[var(--action-back-border)] bg-[var(--action-back)] text-[var(--action-back-foreground)] hover:bg-[var(--action-back-hover)]',
+  skip: 'border-[var(--action-skip-border)] bg-[var(--action-skip)] text-[var(--action-skip-foreground)] hover:bg-[var(--action-skip-hover)]',
+  reset:
+    'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)] hover:bg-[var(--action-reset-hover)]',
+  delete:
+    'border-[var(--action-delete-border)] bg-[var(--action-delete)] text-[var(--action-delete-foreground)] hover:bg-[var(--action-delete-hover)]',
+  minus:
+    'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)] hover:bg-[var(--action-minus-hover)]',
+  plus: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)] hover:bg-[var(--action-plus-hover)]',
+  rest: 'border-[var(--action-rest-border)] bg-[var(--action-rest)] text-[var(--action-rest-foreground)] hover:bg-[var(--action-rest-hover)]',
+};
 
 const registerServiceWorker = () => {
   if (
@@ -1534,7 +1546,7 @@ function TodayScreen({
       >
         <Button
           aria-label="Configuración"
-          className="h-14 w-14 rounded-[1.75rem] p-0"
+          className={`h-14 w-14 rounded-[1.75rem] p-0 ${actionStyles.back}`}
           style={{ width: '56px' }}
           variant="outline"
           onClick={onSettings}
@@ -1631,7 +1643,7 @@ function PreviewScreen({
       >
         <Button
           aria-label="Volver"
-          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
+          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.back}`}
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
@@ -1742,7 +1754,7 @@ function SettingsScreen({
           </p>
           <div className="mt-2 grid gap-2">
             <Button
-              className="h-16 justify-start rounded-[1.75rem] px-5 text-left font-black"
+              className={`h-16 justify-start rounded-[1.75rem] px-5 text-left font-black ${actionStyles.reset}`}
               variant="secondary"
               onClick={onResetCurrent}
             >
@@ -1757,7 +1769,7 @@ function SettingsScreen({
               </span>
             </Button>
             <Button
-              className="h-14 justify-start rounded-[1.75rem] px-5 text-left font-black"
+              className={`h-14 justify-start rounded-[1.75rem] px-5 text-left font-black ${actionStyles.delete}`}
               variant="outline"
               onClick={onClearAllData}
             >
@@ -1769,7 +1781,8 @@ function SettingsScreen({
       </div>
 
       <Button
-        className="h-14 rounded-[1.75rem] text-lg font-black"
+        className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.back}`}
+        variant="outline"
         onClick={onBack}
       >
         Volver
@@ -1872,12 +1885,16 @@ function SetScreen({
           <TactileNumber
             label="Reps"
             value={String(reps)}
+            minusClassName={actionStyles.minus}
+            plusClassName={actionStyles.plus}
             onMinus={() => onRepsChange(Math.max(1, reps - 1))}
             onPlus={() => onRepsChange(reps + 1)}
           />
           <TactileNumber
             label="Peso"
             value={formatWeight(weight)}
+            minusClassName={actionStyles.minus}
+            plusClassName={actionStyles.plus}
             centerControl={
               loadType === 'per_dumbbell' ? undefined : (
                 <WeightStepControl
@@ -1916,7 +1933,7 @@ function SetScreen({
       >
         <Button
           aria-label="Volver"
-          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
+          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.back}`}
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
@@ -1932,7 +1949,7 @@ function SetScreen({
         </Button>
         <Button
           aria-label="Saltar serie"
-          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
+          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.skip}`}
           style={{ width: '56px' }}
           variant="outline"
           onClick={onSkip}
@@ -1975,7 +1992,7 @@ function TimedSetPanel({
       >
         <Button
           aria-label="Reiniciar timer"
-          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
+          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.reset}`}
           style={{ width: '56px' }}
           variant="secondary"
           onClick={onReset}
@@ -2092,7 +2109,7 @@ function RestScreen({
 
       <div className="grid grid-cols-3 gap-2">
         <Button
-          className="h-14 rounded-[1.75rem] text-lg font-black"
+          className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.rest}`}
           variant="secondary"
           onClick={() => onAdjustRest((value) => Math.max(0, value - 15))}
         >
@@ -2105,7 +2122,7 @@ function RestScreen({
           Seguir
         </Button>
         <Button
-          className="h-14 rounded-[1.75rem] text-lg font-black"
+          className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.rest}`}
           variant="secondary"
           onClick={() => onAdjustRest((value) => value + 15)}
         >
@@ -2201,7 +2218,7 @@ function FeedbackScreen({
       >
         <Button
           aria-label="Volver a ajustar serie"
-          className="h-14 w-14 shrink-0 rounded-[1.75rem] p-0"
+          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.back}`}
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
@@ -2220,7 +2237,7 @@ function FeedbackScreen({
   );
 }
 
-const noteOptions = ['OK', 'Pesado', 'Tecnica', 'Molestia'];
+const noteOptions = ['OK', 'Pesado', 'Técnica', 'Molestia'];
 
 function SetFeedback({
   rir,
@@ -2254,7 +2271,7 @@ function SetFeedback({
         >
           <Button
             aria-label="Bajar RIR"
-            className="h-10 w-full rounded-md"
+            className={`h-10 w-full rounded-md ${actionStyles.minus}`}
             variant="secondary"
             onClick={() => onRirChange(Math.max(0, rir - 1))}
           >
@@ -2265,7 +2282,7 @@ function SetFeedback({
           </span>
           <Button
             aria-label="Subir RIR"
-            className="h-10 w-full rounded-md"
+            className={`h-10 w-full rounded-md ${actionStyles.plus}`}
             variant="secondary"
             onClick={() => onRirChange(Math.min(5, rir + 1))}
           >
@@ -2442,7 +2459,7 @@ function DoneScreen({
         <Download className="size-5" />
       </Button>
       <Button
-        className="h-14 rounded-[1.75rem] text-lg font-black"
+        className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.back}`}
         variant="secondary"
         onClick={onRestart}
       >
@@ -2456,12 +2473,16 @@ function TactileNumber({
   label,
   value,
   centerControl,
+  minusClassName,
+  plusClassName,
   onMinus,
   onPlus,
 }: {
   label: string;
   value: string;
   centerControl?: ReactNode;
+  minusClassName?: string;
+  plusClassName?: string;
   onMinus: () => void;
   onPlus: () => void;
 }) {
@@ -2487,7 +2508,7 @@ function TactileNumber({
       >
         <Button
           aria-label={`Bajar ${label}`}
-          className="h-16 w-full rounded-[1.75rem]"
+          className={`h-16 w-full rounded-[1.75rem] ${minusClassName ?? ''}`}
           variant="secondary"
           onClick={onMinus}
         >
@@ -2496,7 +2517,7 @@ function TactileNumber({
         {centerControl}
         <Button
           aria-label={`Subir ${label}`}
-          className="h-16 w-full rounded-[1.75rem]"
+          className={`h-16 w-full rounded-[1.75rem] ${plusClassName ?? ''}`}
           variant="secondary"
           onClick={onPlus}
         >
