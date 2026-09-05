@@ -11,6 +11,7 @@
     "build": "vinext build",
     "build:vercel": "NITRO_PRESET=vercel vite build",
     "generate:plan": "node scripts/generate-training-plan.mjs",
+    "sync:obsidian": "node scripts/sync-obsidian-gym-data.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint app data",
     "format": "oxfmt"

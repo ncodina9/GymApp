@@ -535,7 +535,7 @@ Tareas:
 - ajustar el selector de incremento de peso según el tipo de carga del ejercicio
 - en barra/multipower, cambiar peso usando discos por lado: `1.25`, `2.5` o `5 kg`
 - en lastre, cambiar peso con discos sueltos: `1.25`, `2.5` o `5 kg`
-- en mancuernas, mantener selector compacto `1 kg` / `0.5 kg`, pero aterrizando siempre en mancuernas disponibles
+- en mancuernas, ocultar selector central y saltar directamente a la siguiente mancuerna disponible
 - en polea, usar saltos fijos de `5 kg`
 - homogeneizar alturas y radios de todos los botones inferiores
 - revisar separación respecto al borde inferior y `safe-area-inset-bottom`

@@ -1879,11 +1879,13 @@ function SetScreen({
             label="Peso"
             value={formatWeight(weight)}
             centerControl={
-              <WeightStepControl
-                loadType={loadType}
-                value={normalizedWeightStep}
-                onChange={onWeightStepChange}
-              />
+              loadType === 'per_dumbbell' ? undefined : (
+                <WeightStepControl
+                  loadType={loadType}
+                  value={normalizedWeightStep}
+                  onChange={onWeightStepChange}
+                />
+              )
             }
             onMinus={() =>
               onWeightChange(

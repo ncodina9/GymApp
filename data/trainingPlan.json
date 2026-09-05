@@ -151,12 +151,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "acumulacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "4x6 @ 35 kg",
           "decisionOptions": ["Mantener", "Subir a 37.5 kg", "Bajar a 32.5 kg"],
           "sets": [
@@ -387,12 +387,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "acumulacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x3 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -1080,12 +1080,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "acumulacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "4x6 @ 37.5 kg",
           "decisionOptions": ["Mantener", "Subir a 40 kg", "Bajar a 35 kg"],
           "sets": [
@@ -1595,12 +1595,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "acumulacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x3 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -2292,12 +2292,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "acumulacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "4x6 @ 40 kg",
           "decisionOptions": ["Mantener", "Subir a 42.5 kg", "Bajar a 37.5 kg"],
           "sets": [
@@ -2811,12 +2811,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "acumulacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x3 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -3481,12 +3481,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "descarga",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "3x6 @ 37.5 kg",
           "decisionOptions": [
             "Cerrar descarga",
@@ -3933,12 +3933,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "descarga",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "3x6 @ 27.5 kg",
           "decisionOptions": [
             "Cerrar descarga",
@@ -4565,12 +4565,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "intensificacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "5x5 @ 42.5 kg",
           "decisionOptions": ["Mantener", "Subir a 45 kg", "Bajar a 40 kg"],
           "sets": [
@@ -5477,12 +5477,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "intensificacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x4 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -6204,12 +6204,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "intensificacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "5x5 @ 45 kg",
           "decisionOptions": ["Mantener", "Subir a 47.5 kg", "Bajar a 42.5 kg"],
           "sets": [
@@ -6468,12 +6468,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "intensificacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x4 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -7235,12 +7235,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "intensificacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "5x5 @ 45 kg",
           "decisionOptions": ["Mantener", "Subir a 47.5 kg", "Bajar a 42.5 kg"],
           "sets": [
@@ -7803,12 +7803,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "intensificacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x4 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -8529,12 +8529,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "descarga",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "3x6 @ 40 kg",
           "decisionOptions": [
             "Cerrar descarga",
@@ -8981,12 +8981,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "descarga",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "3x6 @ 27.5 kg",
           "decisionOptions": [
             "Cerrar descarga",
@@ -9606,12 +9606,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "realizacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "5x3 @ 45 kg",
           "decisionOptions": ["Mantener", "Subir a 47.5 kg", "Bajar a 42.5 kg"],
           "sets": [
@@ -10160,12 +10160,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "realizacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x3 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -10906,12 +10906,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "realizacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "5x3 @ 45 kg",
           "decisionOptions": ["Mantener", "Subir a 47.5 kg", "Bajar a 42.5 kg"],
           "sets": [
@@ -11460,12 +11460,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "realizacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x3 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -12172,12 +12172,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "readaptacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "3x6 @ 37.5 kg",
           "decisionOptions": [
             "Mantener suave",
@@ -12640,12 +12640,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "readaptacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "3x3 @ 25 kg",
           "decisionOptions": [
             "Mantener suave",
@@ -13281,12 +13281,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "realizacion",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "5x3 @ 45 kg",
           "decisionOptions": ["Mantener", "Subir a 47.5 kg", "Bajar a 42.5 kg"],
           "sets": [
@@ -13835,12 +13835,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "realizacion",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "6x3 @ 30 kg",
           "decisionOptions": ["Mantener", "Subir a 32.5 kg", "Bajar a 27.5 kg"],
           "sets": [
@@ -14526,12 +14526,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-pie",
-          "name": "Press militar de pie",
+          "exerciseId": "press-militar-sentado",
+          "name": "Press militar sentado en banco",
           "type": "Básico",
           "block": "D",
           "phase": "test",
-          "notes": "Bloquear abdomen antes de despegar la barra.",
+          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "2x6 @ 45 kg",
           "decisionOptions": [
             "Consolidar marca",
@@ -14936,12 +14936,12 @@
           ]
         },
         {
-          "exerciseId": "press-militar-velocidad",
-          "name": "Press militar velocidad",
+          "exerciseId": "press-militar-sentado-velocidad",
+          "name": "Press militar sentado velocidad",
           "type": "Básico",
           "block": "C",
           "phase": "test",
-          "notes": "La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
+          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "2x3 @ 30 kg",
           "decisionOptions": [
             "Consolidar marca",
