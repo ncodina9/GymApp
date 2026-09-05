@@ -7,6 +7,9 @@ export type StoredSetEvent = {
   exerciseId: string;
   exerciseIndex: number;
   setIndex: number;
+  supersetId?: string;
+  supersetOrder?: number;
+  roundNumber?: number;
   plannedReps: number;
   plannedWeightKg: number;
   plannedDurationSeconds?: number;

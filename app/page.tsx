@@ -53,6 +53,8 @@ type Exercise = {
   name: string;
   type: string;
   block: string;
+  supersetId?: string;
+  supersetOrder?: number;
   phase: string;
   notes: string;
   target: string;
@@ -94,6 +96,8 @@ type WorkoutDraft = {
   restRemaining: number;
   records: StoredSetEvent[];
   decisions: Record<string, string>;
+  transitionExerciseIds: string[];
+  transitionNextPhase: 'set' | 'done';
   editedRir: number;
   painKnee: number;
   painWrist: number;
@@ -189,6 +193,8 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   restRemaining: 0,
   records: [],
   decisions: {},
+  transitionExerciseIds: [],
+  transitionNextPhase: 'set',
   editedRir: 2,
   painKnee: 0,
   painWrist: 0,
@@ -223,6 +229,8 @@ const normalizeDraft = (
       ? draft.records.filter(isStoredSetEvent)
       : [],
     decisions: draft.decisions ?? {},
+    transitionExerciseIds: draft.transitionExerciseIds ?? [],
+    transitionNextPhase: draft.transitionNextPhase ?? 'set',
     editedRir: draft.editedRir ?? 2,
     editedDurationSeconds: draft.editedDurationSeconds ?? 0,
     weightStep: draft.weightStep ?? 1,
@@ -416,6 +424,134 @@ const getExercisePreviewMetrics = (exercise: Exercise) => {
   };
 };
 
+type ExecutionStep = {
+  exerciseIndex: number;
+  setIndex: number;
+  roundNumber: number;
+  supersetId?: string;
+  supersetOrder?: number;
+  completesExercise: boolean;
+  completesSuperset: boolean;
+};
+
+const getSupersetMembers = (session: TrainingSession, supersetId: string) =>
+  session.exercises
+    .map((exercise, exerciseIndex) => ({ exercise, exerciseIndex }))
+    .filter((item) => item.exercise.supersetId === supersetId)
+    .sort(
+      (a, b) =>
+        (a.exercise.supersetOrder ?? a.exerciseIndex) -
+        (b.exercise.supersetOrder ?? b.exerciseIndex),
+    );
+
+const buildExecutionSteps = (session: TrainingSession): ExecutionStep[] => {
+  const visitedSupersets = new Set<string>();
+  const steps: ExecutionStep[] = [];
+
+  session.exercises.forEach((exercise, exerciseIndex) => {
+    if (!exercise.supersetId) {
+      exercise.sets.forEach((_, setIndex) => {
+        steps.push({
+          exerciseIndex,
+          setIndex,
+          roundNumber: setIndex + 1,
+          completesExercise: setIndex === exercise.sets.length - 1,
+          completesSuperset: false,
+        });
+      });
+      return;
+    }
+
+    if (visitedSupersets.has(exercise.supersetId)) {
+      return;
+    }
+
+    visitedSupersets.add(exercise.supersetId);
+
+    const members = getSupersetMembers(session, exercise.supersetId);
+    const roundCount = Math.max(
+      ...members.map((member) => member.exercise.sets.length),
+    );
+
+    Array.from({ length: roundCount }).forEach((_, setIndex) => {
+      members.forEach((member, memberIndex) => {
+        if (!member.exercise.sets[setIndex]) {
+          return;
+        }
+
+        steps.push({
+          exerciseIndex: member.exerciseIndex,
+          setIndex,
+          roundNumber: setIndex + 1,
+          supersetId: exercise.supersetId,
+          supersetOrder: member.exercise.supersetOrder,
+          completesExercise: setIndex === member.exercise.sets.length - 1,
+          completesSuperset:
+            setIndex === roundCount - 1 && memberIndex === members.length - 1,
+        });
+      });
+    });
+  });
+
+  return steps;
+};
+
+const getStepIndex = (
+  steps: ExecutionStep[],
+  exerciseIndex: number,
+  setIndex: number,
+) =>
+  steps.findIndex(
+    (step) =>
+      step.exerciseIndex === exerciseIndex && step.setIndex === setIndex,
+  );
+
+const getCompletedExerciseIds = (
+  session: TrainingSession,
+  step: ExecutionStep | undefined,
+) => {
+  if (!step) {
+    return [];
+  }
+
+  if (step.supersetId && step.completesSuperset) {
+    return getSupersetMembers(session, step.supersetId).map(
+      (member) => member.exercise.exerciseId,
+    );
+  }
+
+  if (step.supersetId || !step.completesExercise) {
+    return [];
+  }
+
+  return [session.exercises[step.exerciseIndex].exerciseId];
+};
+
+const getNextStepLabel = (
+  session: TrainingSession,
+  currentStep: ExecutionStep | undefined,
+  nextStep: ExecutionStep | undefined,
+) => {
+  if (!nextStep) {
+    return 'Cerrar entrenamiento';
+  }
+
+  const nextExercise = session.exercises[nextStep.exerciseIndex];
+
+  if (
+    currentStep?.supersetId &&
+    currentStep.supersetId === nextStep.supersetId
+  ) {
+    return `${nextExercise.name} · ronda ${nextStep.roundNumber}`;
+  }
+
+  if (currentStep?.exerciseIndex === nextStep.exerciseIndex) {
+    return `Serie ${nextStep.setIndex + 1} de ${nextExercise.name}`;
+  }
+
+  return nextExercise.name;
+};
+
 export default function Home() {
   const [draft, setDraft] = useState<WorkoutDraft>(() => makeDraft());
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
@@ -427,12 +563,22 @@ export default function Home() {
     trainingPlan.sessions.find(
       (session) => session.sessionId === draft.selectedSessionId,
     ) ?? fallbackSession;
+  const executionSteps = useMemo(
+    () => buildExecutionSteps(selectedSession),
+    [selectedSession],
+  );
   const currentExercise = selectedSession.exercises[draft.exerciseIndex];
   const currentSet = currentExercise?.sets[draft.setIndex];
-  const totalSets = selectedSession.exercises.reduce(
-    (sum, exercise) => sum + exercise.sets.length,
-    0,
+  const currentStepIndex = getStepIndex(
+    executionSteps,
+    draft.exerciseIndex,
+    draft.setIndex,
   );
+  const currentStep =
+    currentStepIndex >= 0 ? executionSteps[currentStepIndex] : undefined;
+  const nextStep =
+    currentStepIndex >= 0 ? executionSteps[currentStepIndex + 1] : undefined;
+  const totalSets = executionSteps.length;
   const completedSets = draft.records.filter(
     (record) => record.status === 'completed',
   ).length;
@@ -595,37 +741,51 @@ export default function Home() {
   );
 
   const moveForward = useCallback(() => {
-    if (!currentExercise) {
+    if (!currentExercise || !currentStep) {
       return;
     }
 
-    if (draft.setIndex + 1 < currentExercise.sets.length) {
-      const nextSetIndex = draft.setIndex + 1;
-      applyPlannedTargets(draft.exerciseIndex, nextSetIndex);
-      patchDraft({ setIndex: nextSetIndex, phase: 'set' });
+    const completedExerciseIds = getCompletedExerciseIds(
+      selectedSession,
+      currentStep,
+    );
+
+    if (!nextStep) {
+      patchDraft(
+        completedExerciseIds.length > 0
+          ? {
+              phase: 'transition',
+              transitionExerciseIds: completedExerciseIds,
+              transitionNextPhase: 'done',
+            }
+          : { phase: 'done' },
+      );
       return;
     }
 
-    if (draft.exerciseIndex + 1 < selectedSession.exercises.length) {
-      const nextExerciseIndex = draft.exerciseIndex + 1;
-      applyPlannedTargets(nextExerciseIndex, 0);
-      patchDraft({
-        exerciseIndex: nextExerciseIndex,
-        setIndex: 0,
-        phase: 'transition',
-      });
-      return;
-    }
-
-    patchDraft({ phase: 'done' });
+    applyPlannedTargets(nextStep.exerciseIndex, nextStep.setIndex);
+    patchDraft({
+      exerciseIndex: nextStep.exerciseIndex,
+      setIndex: nextStep.setIndex,
+      phase: completedExerciseIds.length > 0 ? 'transition' : 'set',
+      transitionExerciseIds: completedExerciseIds,
+      transitionNextPhase: 'set',
+    });
   }, [
     applyPlannedTargets,
     currentExercise,
-    draft.exerciseIndex,
-    draft.setIndex,
+    currentStep,
+    nextStep,
     patchDraft,
-    selectedSession.exercises.length,
+    selectedSession,
   ]);
+
+  const shouldRestAfterCurrentStep =
+    currentStep !== undefined &&
+    nextStep !== undefined &&
+    (!currentStep.supersetId ||
+      currentStep.supersetId !== nextStep.supersetId ||
+      nextStep.roundNumber !== currentStep.roundNumber);
 
   const logCurrentSet = useCallback(
     (status: 'completed' | 'skipped') => {
@@ -642,6 +802,9 @@ export default function Home() {
         exerciseId: currentExercise.exerciseId,
         exerciseIndex: draft.exerciseIndex,
         setIndex: draft.setIndex,
+        supersetId: currentStep?.supersetId,
+        supersetOrder: currentStep?.supersetOrder,
+        roundNumber: currentStep?.roundNumber ?? draft.setIndex + 1,
         plannedReps: currentSet.targetReps ?? 0,
         plannedWeightKg: currentSet.targetWeightKg,
         plannedDurationSeconds: currentSet.targetDurationSeconds,
@@ -674,7 +837,7 @@ export default function Home() {
         isSetTimerRunning: false,
       }));
 
-      if (status === 'skipped') {
+      if (!shouldRestAfterCurrentStep || status === 'skipped') {
         moveForward();
         return;
       }
@@ -683,6 +846,7 @@ export default function Home() {
     },
     [
       currentSet,
+      currentStep,
       draft.editedDurationSeconds,
       draft.editedReps,
       draft.editedWeight,
@@ -698,6 +862,7 @@ export default function Home() {
       moveForward,
       patchDraft,
       selectedSession,
+      shouldRestAfterCurrentStep,
     ],
   );
 
@@ -1006,13 +1171,7 @@ export default function Home() {
           <RestScreen
             restRemaining={draft.restRemaining}
             restTotal={currentSet?.restSeconds ?? draft.restRemaining}
-            nextLabel={
-              draft.setIndex + 1 < currentExercise.sets.length
-                ? `Serie ${draft.setIndex + 2} de ${currentExercise.name}`
-                : draft.exerciseIndex + 1 < selectedSession.exercises.length
-                  ? selectedSession.exercises[draft.exerciseIndex + 1].name
-                  : 'Cerrar entrenamiento'
-            }
+            nextLabel={getNextStepLabel(selectedSession, currentStep, nextStep)}
             onAdjustRest={(updater) => {
               setDraft((current) => ({
                 ...current,
@@ -1028,17 +1187,24 @@ export default function Home() {
 
         {draft.phase === 'transition' ? (
           <TransitionScreen
-            completedExercise={
-              selectedSession.exercises[draft.exerciseIndex - 1]
+            completedExercises={draft.transitionExerciseIds
+              .map((exerciseId) =>
+                selectedSession.exercises.find(
+                  (exercise) => exercise.exerciseId === exerciseId,
+                ),
+              )
+              .filter((exercise): exercise is Exercise => Boolean(exercise))}
+            nextExercise={
+              draft.transitionNextPhase === 'set' ? currentExercise : undefined
             }
-            nextExercise={currentExercise}
-            decision={
-              draft.decisions[
-                selectedSession.exercises[draft.exerciseIndex - 1].exerciseId
-              ] ?? null
-            }
+            decisions={draft.decisions}
             onDecision={chooseDecision}
-            onContinue={() => patchDraft({ phase: 'set' })}
+            onContinue={() =>
+              patchDraft({
+                phase: draft.transitionNextPhase,
+                transitionExerciseIds: [],
+              })
+            }
           />
         ) : null}
 
@@ -1184,6 +1350,9 @@ function PreviewScreen({
         <div className="grid gap-2 pb-1">
           {session.exercises.map((exercise, index) => {
             const metrics = getExercisePreviewMetrics(exercise);
+            const supersetSize = exercise.supersetId
+              ? getSupersetMembers(session, exercise.supersetId).length
+              : 0;
 
             return (
               <div
@@ -1194,9 +1363,16 @@ function PreviewScreen({
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-secondary-foreground">
                     {index + 1}
                   </span>
-                  <p className="min-w-0 text-base font-black leading-tight">
-                    {exercise.name}
-                  </p>
+                  <div className="min-w-0">
+                    {exercise.supersetId ? (
+                      <p className="mb-1 text-[0.68rem] font-black uppercase leading-none text-primary">
+                        Superserie {exercise.supersetOrder}/{supersetSize}
+                      </p>
+                    ) : null}
+                    <p className="min-w-0 text-base font-black leading-tight">
+                      {exercise.name}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
@@ -1891,58 +2067,70 @@ function PainControl({
 }
 
 function TransitionScreen({
-  completedExercise,
+  completedExercises,
   nextExercise,
-  decision,
+  decisions,
   onDecision,
   onContinue,
 }: {
-  completedExercise: Exercise;
-  nextExercise: Exercise;
-  decision: string | null;
+  completedExercises: Exercise[];
+  nextExercise?: Exercise;
+  decisions: Record<string, string>;
   onDecision: (exerciseId: string, value: string) => void;
   onContinue: () => void;
 }) {
+  const isSuperset = completedExercises.length > 1;
+
   return (
     <section className="flex flex-1 flex-col gap-4">
       <div className="rounded-lg border bg-card p-4">
-        <p className="text-sm font-semibold text-muted-foreground">Evaluar</p>
-        <h2 className="mt-1 text-4xl font-black tracking-normal">
-          {completedExercise.name}
-        </h2>
-        <div className="mt-4 grid gap-2">
-          {completedExercise.decisionOptions.map((option) => (
-            <button
-              key={option}
-              className={`h-14 rounded-lg border px-4 text-left text-lg font-black ${
-                decision === option
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-secondary text-secondary-foreground'
-              }`}
-              type="button"
-              onClick={() => onDecision(completedExercise.exerciseId, option)}
-            >
-              {option}
-            </button>
+        <p className="text-sm font-semibold text-muted-foreground">
+          {isSuperset ? 'Evaluar superserie' : 'Evaluar'}
+        </p>
+        <div className="mt-2 grid gap-4">
+          {completedExercises.map((exercise) => (
+            <div key={exercise.exerciseId}>
+              <h2 className="text-[1.55rem] font-black leading-tight tracking-normal">
+                {exercise.name}
+              </h2>
+              <div className="mt-2 grid gap-2">
+                {exercise.decisionOptions.map((option) => (
+                  <button
+                    key={option}
+                    className={`h-12 rounded-lg border px-4 text-left text-base font-black ${
+                      decisions[exercise.exerciseId] === option
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-secondary text-secondary-foreground'
+                    }`}
+                    type="button"
+                    onClick={() => onDecision(exercise.exerciseId, option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-lg bg-secondary px-4 py-3">
-        <p className="text-sm font-semibold text-muted-foreground">Despues</p>
-        <p className="text-2xl font-black tracking-normal">
-          {nextExercise.name}
-        </p>
-        <p className="mt-1 text-sm font-medium text-muted-foreground">
-          {nextExercise.notes}
-        </p>
-      </div>
+      {nextExercise ? (
+        <div className="rounded-lg bg-secondary px-4 py-3">
+          <p className="text-sm font-semibold text-muted-foreground">Despues</p>
+          <p className="text-2xl font-black tracking-normal">
+            {nextExercise.name}
+          </p>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
+            {nextExercise.notes}
+          </p>
+        </div>
+      ) : null}
 
       <Button
         className="mt-auto h-14 rounded-[1.75rem] text-lg font-black"
         onClick={onContinue}
       >
-        Siguiente ejercicio
+        {nextExercise ? 'Siguiente ejercicio' : 'Cerrar entrenamiento'}
         <ChevronRight className="size-6" />
       </Button>
     </section>
@@ -2097,19 +2285,24 @@ function buildWorkoutCsv(
     'type',
     'target',
     'set_number',
+    'status',
     'load_kg',
     'load_type',
     'reps',
     'rir',
     'pain_knee',
     'pain_wrist',
+    'pain_other',
     'set_note',
     'exercise_decision',
     'exercise_note',
+    'superset_id',
+    'superset_order',
+    'round_number',
   ];
 
-  const sortedRecords = [...records].sort(
-    (a, b) => a.exerciseIndex - b.exerciseIndex || a.setIndex - b.setIndex,
+  const sortedRecords = [...records].sort((a, b) =>
+    a.performedAt.localeCompare(b.performedAt),
   );
   const lastRecordKeyByExercise = new Map<string, string>();
 
@@ -2143,6 +2336,7 @@ function buildWorkoutCsv(
       exercise?.type ?? '',
       formatCsvTarget(exercise?.target ?? '', loadType),
       record.setIndex + 1,
+      record.status === 'completed' ? 'done' : 'skipped',
       isSkipped || isUnknownMachineLoad
         ? ''
         : formatCsvNumber(record.actualWeightKg),
@@ -2155,9 +2349,13 @@ function buildWorkoutCsv(
       isSkipped ? '' : record.rirLast,
       record.painKnee,
       record.painWrist,
+      record.painOther,
       setNote,
       isLastExerciseRow ? (decisions[record.exerciseId] ?? '') : '',
       isLastExerciseRow ? (exercise?.notes ?? '') : '',
+      record.supersetId ?? exercise?.supersetId ?? '',
+      record.supersetOrder ?? exercise?.supersetOrder ?? '',
+      record.roundNumber ?? record.setIndex + 1,
     ];
   });
 

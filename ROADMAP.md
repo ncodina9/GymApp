@@ -376,6 +376,27 @@ Criterio de aceptacion:
 - se puede instalar como PWA
 - el plan y el registro local funcionan en el dispositivo
 
+### Hito 7: Superseries v1
+
+Objetivo: permitir bloques vinculados en los que un ejercicio lleva al siguiente y el descanso se inicia al completar la ronda.
+
+Entregables:
+
+- deteccion de superseries desde bloques `E1/E2`, `F1/F2`, etc.
+- secuenciador de entrenamiento por pasos, compatible con ejercicios normales y superseries
+- avance alterno dentro de una superserie: `A1 serie 1 -> A2 serie 1 -> descanso -> A1 serie 2`
+- pantalla de preview con indicacion de superserie y orden dentro del bloque
+- pantalla de decision compatible con varios ejercicios al cerrar una superserie
+- exportacion CSV con `superset_id`, `superset_order` y `round_number`
+
+Criterio de aceptacion:
+
+- los entrenamientos sin superseries mantienen el flujo actual
+- al terminar el primer ejercicio de una superserie no aparece descanso
+- al terminar el ultimo ejercicio de la ronda aparece el descanso
+- al cerrar la ultima ronda se pueden registrar decisiones para los ejercicios vinculados
+- el CSV conserva el orden real de registro y permite reconstruir la superserie
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
@@ -384,13 +405,13 @@ Criterio de aceptacion:
 - Decidir si los datos se quedan solo en el dispositivo o si habra sincronizacion.
 - Evitar que el countdown de descanso bloquee ajustes utiles entre series.
 - Disenar controles tactiles suficientemente grandes sin convertir la pantalla en una calculadora.
+- Definir mas adelante como tratar superseries con distinto numero de series por ejercicio.
 
 ## Backlog futuro
 
 - Layout para movil en horizontal.
 - Colores ligeros para botones secundarios y de control: +, -, volver, saltar, reset, etc. Deben funcionar en ambos temas.
 - Medir duracion real del entrenamiento desde que se pulsa empezar hasta finalizar, mostrar el tiempo tardado y compararlo con el tiempo estimado.
-- Gestion de superseries (prioritario): en una superserie, un ejercicio lleva al siguiente vinculado y el descanso empieza cuando se han completado ambos.
 
 ## Proximo hito recomendado
 

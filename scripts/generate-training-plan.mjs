@@ -466,17 +466,34 @@ function exercise(
   notes,
   options = {},
 ) {
+  const superset = getSupersetFromBlock(block);
+
   return {
     exerciseId,
     name,
     type,
     block,
+    supersetId: options.supersetId ?? superset?.id,
+    supersetOrder: options.supersetOrder ?? superset?.order,
     setCount,
     reps,
     weightKg,
     restSeconds,
     notes,
     measure: options.measure ?? 'reps',
+  };
+}
+
+function getSupersetFromBlock(block) {
+  const match = /^([A-Z])(\d+)$/.exec(block);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    id: `superset-${match[1].toLowerCase()}`,
+    order: Number(match[2]),
   };
 }
 
@@ -572,6 +589,8 @@ function adaptExercise(item, week) {
     name: item.name,
     type: item.type,
     block: item.block,
+    supersetId: item.supersetId,
+    supersetOrder: item.supersetOrder,
     phase,
     notes: item.notes.join(' '),
     target:
