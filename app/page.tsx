@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import planData from '@/data/trainingPlan.json';
+import packageData from '@/package.json';
 import {
   clearSessionEvents,
   loadSessionEvents,
@@ -139,6 +140,7 @@ type WebMcpDocument = Document & {
 type WeightStep = 0.5 | 1 | 1.25 | 2.5 | 5;
 
 const trainingPlan = planData as TrainingPlan;
+const appVersion = packageData.version;
 const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 const themeStorageKey = 'gymapp:appearance-theme';
 const wakeLockStorageKey = 'gymapp:keep-screen-awake';
@@ -1787,9 +1789,14 @@ function SettingsScreen({
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
       <div className="min-h-0 flex-1 rounded-lg border bg-card p-4 shadow-sm">
-        <h2 className="text-[1.6rem] font-black leading-tight tracking-normal">
-          Ajustes
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-[1.6rem] font-black leading-tight tracking-normal">
+            Ajustes
+          </h2>
+          <span className="shrink-0 rounded-full border bg-secondary px-3 py-1 text-xs font-black text-muted-foreground">
+            v{appVersion}
+          </span>
+        </div>
 
         <p className="mt-4 text-sm font-semibold text-muted-foreground">
           Apariencia
