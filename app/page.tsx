@@ -91,7 +91,7 @@ type WorkoutDraft = {
   editedReps: number;
   editedWeight: number;
   editedDurationSeconds: number;
-  weightStep: 1 | 0.5;
+  weightStep: WeightStep;
   setTimerRemaining: number;
   isSetTimerRunning: boolean;
   restRemaining: number;
@@ -134,10 +134,26 @@ type WebMcpDocument = Document & {
   };
 };
 
+type WeightStep = 0.5 | 1 | 1.25 | 2.5 | 5;
+
 const trainingPlan = planData as TrainingPlan;
 const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 const themeStorageKey = 'gymapp:appearance-theme';
 const wakeLockStorageKey = 'gymapp:keep-screen-awake';
+
+const barbellWeightKg = 20;
+const dumbbellLoadsKg = [
+  5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30,
+];
+const plateInventoryKg = [
+  { weight: 1.25, count: 4 },
+  { weight: 2.5, count: 4 },
+  { weight: 5, count: 12 },
+  { weight: 10, count: 12 },
+  { weight: 15, count: 2 },
+  { weight: 20, count: 4 },
+];
+const cableLoadsKg = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
 
 const fallbackSession = trainingPlan.sessions[0];
 const appearanceThemes: { value: AppearanceTheme; label: string }[] = [
@@ -253,7 +269,7 @@ const normalizeDraft = (
     transitionNextPhase: draft.transitionNextPhase ?? 'set',
     editedRir: draft.editedRir ?? 2,
     editedDurationSeconds: draft.editedDurationSeconds ?? 0,
-    weightStep: draft.weightStep ?? 1,
+    weightStep: isWeightStep(draft.weightStep) ? draft.weightStep : 1,
     setTimerRemaining: draft.setTimerRemaining ?? 0,
     isSetTimerRunning: draft.isSetTimerRunning ?? false,
     painKnee: draft.painKnee ?? 0,
@@ -285,8 +301,7 @@ const formatDate = (date: string) =>
     month: 'short',
   }).format(new Date(`${date}T12:00:00`));
 
-const formatWeight = (weight: number) =>
-  `${Number.isInteger(weight) ? weight : weight.toFixed(1)} kg`;
+const formatWeight = (weight: number) => `${formatDecimal(weight)} kg`;
 
 const formatClock = (totalSeconds: number) => {
   const safeSeconds = Math.max(0, totalSeconds);
@@ -322,8 +337,15 @@ const csvEscape = (value: string | number) => {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 
-const formatCsvNumber = (value: number) =>
-  Number.isInteger(value) ? String(value) : value.toFixed(1);
+const formatDecimal = (value: number) => {
+  if (Number.isInteger(value)) {
+    return String(value);
+  }
+
+  return Number(value.toFixed(2)).toString();
+};
+
+const formatCsvNumber = (value: number) => formatDecimal(value);
 
 type LoadType =
   | 'total'
@@ -337,6 +359,10 @@ const inferLoadType = (exercise: Exercise | undefined): LoadType => {
 
   if (text.includes('dominadas') && !text.includes('peso corporal')) {
     return 'external';
+  }
+
+  if (text.includes('press banca inclinado con barra o mancuernas')) {
+    return 'total';
   }
 
   if (
@@ -389,6 +415,136 @@ const formatPreviewLoad = (weight: number, loadType: LoadType) => {
   }
 
   return compactWeight;
+};
+
+const roundEquipmentLoad = (value: number) => Math.round(value * 100) / 100;
+
+const buildSidePlateLoads = () => {
+  const pairs = plateInventoryKg.map((plate) => ({
+    weight: plate.weight,
+    count: Math.floor(plate.count / 2),
+  }));
+  const loads = new Set([0]);
+
+  pairs.forEach((plate) => {
+    const existing = Array.from(loads);
+
+    existing.forEach((load) => {
+      Array.from({ length: plate.count }).forEach((_, index) => {
+        loads.add(roundEquipmentLoad(load + plate.weight * (index + 1)));
+      });
+    });
+  });
+
+  return Array.from(loads);
+};
+
+const buildPlateCombinationLoads = () => {
+  const loads = new Set([0]);
+
+  plateInventoryKg.forEach((plate) => {
+    const existing = Array.from(loads);
+
+    existing.forEach((load) => {
+      Array.from({ length: plate.count }).forEach((_, index) => {
+        loads.add(roundEquipmentLoad(load + plate.weight * (index + 1)));
+      });
+    });
+  });
+
+  return Array.from(loads)
+    .filter((load) => load > 0)
+    .sort((a, b) => a - b);
+};
+
+const barbellLoadsKg = Array.from(
+  new Set(
+    buildSidePlateLoads().map(
+      (sideLoad) => Math.round((barbellWeightKg + sideLoad * 2) * 2) / 2,
+    ),
+  ),
+).sort((a, b) => a - b);
+const externalLoadsKg = buildPlateCombinationLoads();
+
+const isWeightStep = (value: unknown): value is WeightStep =>
+  value === 0.5 ||
+  value === 1 ||
+  value === 1.25 ||
+  value === 2.5 ||
+  value === 5;
+
+const getWeightStepOptions = (loadType: LoadType): WeightStep[] => {
+  if (loadType === 'total' || loadType === 'external') {
+    return [1.25, 2.5, 5];
+  }
+
+  if (loadType === 'machine') {
+    return [5];
+  }
+
+  if (loadType === 'bodyweight') {
+    return [1];
+  }
+
+  return [1, 0.5];
+};
+
+const normalizeWeightStep = (
+  value: WeightStep,
+  loadType: LoadType,
+): WeightStep => {
+  const options = getWeightStepOptions(loadType);
+  return options.includes(value) ? value : options[0];
+};
+
+const getAvailableLoadsForType = (loadType: LoadType) => {
+  if (loadType === 'per_dumbbell') {
+    return dumbbellLoadsKg;
+  }
+
+  if (loadType === 'machine') {
+    return cableLoadsKg;
+  }
+
+  if (loadType === 'total') {
+    return barbellLoadsKg;
+  }
+
+  if (loadType === 'external') {
+    return externalLoadsKg;
+  }
+
+  return [0];
+};
+
+const getWeightDelta = (loadType: LoadType, step: WeightStep) =>
+  loadType === 'total' ? step * 2 : step;
+
+const getAdjustedWeight = (
+  loadType: LoadType,
+  currentWeight: number,
+  step: WeightStep,
+  direction: -1 | 1,
+) => {
+  if (loadType === 'bodyweight') {
+    return 0;
+  }
+
+  const normalizedStep = normalizeWeightStep(step, loadType);
+  const target =
+    currentWeight + getWeightDelta(loadType, normalizedStep) * direction;
+  const loads = getAvailableLoadsForType(loadType);
+
+  if (direction > 0) {
+    return (
+      loads.find((load) => load >= target) ?? loads.at(-1) ?? currentWeight
+    );
+  }
+
+  return (
+    [...loads].reverse().find((load) => load <= Math.max(0, target)) ??
+    (loadType === 'machine' || loadType === 'per_dumbbell' ? 0 : currentWeight)
+  );
 };
 
 const getPreviewLoadLabel = (loadType: LoadType) => {
@@ -1187,6 +1343,7 @@ export default function Home() {
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
+            loadType={inferLoadType(currentExercise)}
             durationSeconds={draft.editedDurationSeconds}
             timerRemaining={draft.setTimerRemaining}
             isTimerRunning={draft.isSetTimerRunning}
@@ -1630,6 +1787,7 @@ function SetScreen({
   setType,
   reps,
   weight,
+  loadType,
   durationSeconds,
   timerRemaining,
   isTimerRunning,
@@ -1652,14 +1810,15 @@ function SetScreen({
   setType: TrainingSet['type'];
   reps: number;
   weight: number;
+  loadType: LoadType;
   durationSeconds: number;
   timerRemaining: number;
   isTimerRunning: boolean;
-  weightStep: 1 | 0.5;
+  weightStep: WeightStep;
   restSeconds: number;
   onRepsChange: (value: number) => void;
   onWeightChange: (value: number) => void;
-  onWeightStepChange: (value: 1 | 0.5) => void;
+  onWeightStepChange: (value: WeightStep) => void;
   onTimerToggle: () => void;
   onTimerReset: () => void;
   onContinue: () => void;
@@ -1667,6 +1826,7 @@ function SetScreen({
   onBack: () => void;
 }) {
   const isTimed = setType === 'timed';
+  const normalizedWeightStep = normalizeWeightStep(weightStep, loadType);
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
@@ -1719,13 +1879,22 @@ function SetScreen({
             label="Peso"
             value={formatWeight(weight)}
             centerControl={
-              <WeightStepToggle
-                value={weightStep}
-                onToggle={() => onWeightStepChange(weightStep === 1 ? 0.5 : 1)}
+              <WeightStepControl
+                loadType={loadType}
+                value={normalizedWeightStep}
+                onChange={onWeightStepChange}
               />
             }
-            onMinus={() => onWeightChange(Math.max(0, weight - weightStep))}
-            onPlus={() => onWeightChange(weight + weightStep)}
+            onMinus={() =>
+              onWeightChange(
+                getAdjustedWeight(loadType, weight, normalizedWeightStep, -1),
+              )
+            }
+            onPlus={() =>
+              onWeightChange(
+                getAdjustedWeight(loadType, weight, normalizedWeightStep, 1),
+              )
+            }
           />
         </div>
       )}
@@ -2336,25 +2505,57 @@ function TactileNumber({
   );
 }
 
-function WeightStepToggle({
+function WeightStepControl({
+  loadType,
   value,
-  onToggle,
+  onChange,
 }: {
-  value: 1 | 0.5;
-  onToggle: () => void;
+  loadType: LoadType;
+  value: WeightStep;
+  onChange: (value: WeightStep) => void;
 }) {
+  const options = getWeightStepOptions(loadType);
+  const isFixed = options.length === 1;
+  const label =
+    loadType === 'total'
+      ? 'lado'
+      : loadType === 'machine'
+        ? 'kg'
+        : loadType === 'bodyweight'
+          ? 'fijo'
+          : 'kg';
+
+  if (isFixed) {
+    return (
+      <div className="flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.75rem] border border-border bg-secondary px-1 text-secondary-foreground">
+        <span className="text-[0.68rem] font-black leading-none text-muted-foreground">
+          {label}
+        </span>
+        <span className="text-base font-black leading-tight tabular-nums">
+          {loadType === 'bodyweight' ? '0' : formatDecimal(value)}
+        </span>
+      </div>
+    );
+  }
+
+  const selectedIndex = options.indexOf(value);
+  const currentIndex = selectedIndex >= 0 ? selectedIndex : 0;
+  const nextValue = options[(currentIndex + 1) % options.length];
+
   return (
     <button
       className="flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.75rem] border border-border bg-secondary px-1 text-secondary-foreground transition active:scale-[0.98]"
       type="button"
-      onClick={onToggle}
-      aria-label={`Cambiar incremento de peso, actual ${value} kg`}
+      onClick={() => onChange(nextValue)}
+      aria-label={`Cambiar incremento de peso, actual ${formatDecimal(
+        value,
+      )} ${label}`}
     >
       <span className="text-[0.68rem] font-black leading-none text-muted-foreground">
-        kg
+        {label}
       </span>
       <span className="text-base font-black leading-tight tabular-nums">
-        {value}
+        {formatDecimal(value)}
       </span>
     </button>
   );

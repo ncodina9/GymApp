@@ -526,25 +526,31 @@ Criterio de aceptacion:
 - la exportacion CSV se puede guardar desde el iPhone
 - el flujo de superseries se entiende sin tener que pensarlo
 
-### Hito 12: Pulido tactil y visual de controles
+### Hito 12: Pulido táctil y visual de controles
 
-Objetivo: que la app se sienta mas comoda en mano durante el entrenamiento.
+Objetivo: que la app se sienta más cómoda en mano durante el entrenamiento.
 
 Tareas:
 
+- ajustar el selector de incremento de peso según el tipo de carga del ejercicio
+- en barra/multipower, cambiar peso usando discos por lado: `1.25`, `2.5` o `5 kg`
+- en lastre, cambiar peso con discos sueltos: `1.25`, `2.5` o `5 kg`
+- en mancuernas, mantener selector compacto `1 kg` / `0.5 kg`, pero aterrizando siempre en mancuernas disponibles
+- en polea, usar saltos fijos de `5 kg`
 - homogeneizar alturas y radios de todos los botones inferiores
-- revisar separacion respecto al borde inferior y `safe-area-inset-bottom`
+- revisar separación respecto al borde inferior y `safe-area-inset-bottom`
 - aplicar colores ligeros diferenciados para acciones secundarias: volver, saltar, reset, `+`, `-`, `+15s`, `-15s`
 - asegurar que esos colores funcionan en tema claro y oscuro
-- revisar tamanos de fuente de reps, peso y timers en iPhone real
+- revisar tamaños de fuente de reps, peso y timers en iPhone real
 - mejorar estados activos/pulsados para que el tacto sea evidente
 - evitar truncado de pesos con decimales en preview y pantalla de serie
 
 Criterio de aceptacion:
 
-- todos los botones principales y secundarios tienen una jerarquia clara
-- los controles son faciles de pulsar con una mano
+- todos los botones principales y secundarios tienen una jerarquía clara
+- los controles son fáciles de pulsar con una mano
 - no hay texto importante cortado en iPhone
+- los cambios de peso propuestos durante la serie respetan el material disponible
 
 ### Hito 13: Robustez de persistencia y exportacion
 
