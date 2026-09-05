@@ -740,6 +740,10 @@ Criterio de aceptacion:
 - el usuario puede comprobar que version esta usando
 - actualizar la app no borra datos locales
 
+Estado: v1 implementada. El service worker cachea la ruta principal, manifest e iconos base, limpia caches antiguas y responde con version/cache para que Ajustes pueda mostrar el estado de uso sin conexion. La pantalla de Ajustes incluye comprobacion manual de caché, version del worker, recursos base y boton de actualizacion cuando hay una version esperando. En `localhost` se permite registrar el worker para pruebas; en una URL `http://IP-del-Mac:3000` iOS no lo tratara como contexto seguro, por lo que la prueba real de gimnasio debe hacerse desde la URL HTTPS de Vercel instalada en pantalla de inicio.
+
+Pendiente futuro: documentar el flujo de forzar refresco de PWA en iPhone si Safari mantiene una version antigua.
+
 ### Hito 18: Layout movil horizontal
 
 Objetivo: adaptar la app a iPhone en horizontal sin degradar el flujo vertical.

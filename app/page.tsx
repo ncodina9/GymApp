@@ -50,6 +50,21 @@ type Phase =
 
 type AppearanceTheme = 'system' | 'light' | 'dark';
 type WakeLockStatus = 'off' | 'active' | 'unsupported' | 'blocked';
+type OfflineStatus =
+  | 'checking'
+  | 'ready'
+  | 'update-available'
+  | 'missing'
+  | 'unsupported'
+  | 'insecure'
+  | 'error';
+
+type OfflineInfo = {
+  swVersion?: string;
+  cacheName?: string;
+  cachedUrls?: number;
+  checkedAt?: string;
+};
 
 type TrainingSet = {
   setIndex: number;
@@ -248,6 +263,15 @@ const wakeLockStatusLabels: Record<WakeLockStatus, string> = {
   unsupported: 'No compatible aquí',
   blocked: 'No concedida por el navegador',
 };
+const offlineStatusLabels: Record<OfflineStatus, string> = {
+  checking: 'Comprobando caché',
+  ready: 'Lista para uso sin conexión',
+  'update-available': 'Actualización disponible',
+  missing: 'Abre la app con conexión',
+  unsupported: 'No compatible aquí',
+  insecure: 'Necesita HTTPS',
+  error: 'No se pudo comprobar',
+};
 
 function SkipSetIcon({ className }: { className?: string }) {
   return (
@@ -276,17 +300,129 @@ function SkipSetIcon({ className }: { className?: string }) {
   );
 }
 
-const registerServiceWorker = () => {
+const canUseServiceWorker = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return (
+    window.location.protocol === 'https:' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  );
+};
+
+const readServiceWorkerInfo = (worker: ServiceWorker) =>
+  new Promise<OfflineInfo>((resolve) => {
+    const channel = new MessageChannel();
+    const timeout = window.setTimeout(() => resolve({}), 1200);
+
+    channel.port1.onmessage = (event) => {
+      window.clearTimeout(timeout);
+      const data = event.data as Partial<{
+        type: string;
+        version: string;
+        cacheName: string;
+        precacheUrls: string[];
+      }>;
+
+      if (data.type !== 'GYMAPP_SW_STATUS') {
+        resolve({});
+        return;
+      }
+
+      resolve({
+        swVersion: data.version,
+        cacheName: data.cacheName,
+        cachedUrls: data.precacheUrls?.length,
+      });
+    };
+
+    worker.postMessage({ type: 'GYMAPP_GET_SW_STATUS' }, [channel.port2]);
+  });
+
+const checkOfflineReadiness = async (): Promise<{
+  status: OfflineStatus;
+  info: OfflineInfo;
+}> => {
   if (
     typeof window === 'undefined' ||
     !('serviceWorker' in navigator) ||
-    window.location.protocol === 'http:'
+    !('caches' in window)
   ) {
+    return { status: 'unsupported', info: {} };
+  }
+
+  if (!canUseServiceWorker()) {
+    return { status: 'insecure', info: {} };
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration('/');
+    const worker =
+      registration?.waiting ?? registration?.active ?? registration?.installing;
+    const cachedRoot = await caches.match('/');
+    const info = worker ? await readServiceWorkerInfo(worker) : {};
+
+    return {
+      status: registration?.waiting
+        ? 'update-available'
+        : registration?.active && cachedRoot
+          ? 'ready'
+          : 'missing',
+      info: { ...info, checkedAt: new Date().toISOString() },
+    };
+  } catch {
+    return { status: 'error', info: { checkedAt: new Date().toISOString() } };
+  }
+};
+
+const registerServiceWorker = ({
+  onStatus,
+  onInfo,
+}: {
+  onStatus: (status: OfflineStatus) => void;
+  onInfo: (info: OfflineInfo) => void;
+}) => {
+  if (
+    typeof window === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !canUseServiceWorker()
+  ) {
+    onStatus(
+      typeof window !== 'undefined' && !canUseServiceWorker()
+        ? 'insecure'
+        : 'unsupported',
+    );
     return;
   }
 
   const register = () => {
-    void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+    void navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        onStatus(registration.waiting ? 'update-available' : 'ready');
+        registration.addEventListener('updatefound', () => {
+          const nextWorker = registration.installing;
+
+          nextWorker?.addEventListener('statechange', () => {
+            if (nextWorker.state === 'installed') {
+              onStatus(
+                navigator.serviceWorker.controller
+                  ? 'update-available'
+                  : 'ready',
+              );
+            }
+          });
+        });
+
+        return checkOfflineReadiness();
+      })
+      .then((result) => {
+        onStatus(result.status);
+        onInfo(result.info);
+      })
+      .catch(() => onStatus('error'));
   };
 
   if (document.readyState === 'complete') {
@@ -1215,6 +1351,8 @@ export default function Home() {
     useState<AppearanceTheme>('system');
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const [wakeLockStatus, setWakeLockStatus] = useState<WakeLockStatus>('off');
+  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus>('checking');
+  const [offlineInfo, setOfflineInfo] = useState<OfflineInfo>({});
   const [settingsReturnPhase, setSettingsReturnPhase] =
     useState<Phase>('today');
   const [sessionHistory, setSessionHistory] = useState<SessionHistorySummary[]>(
@@ -1382,8 +1520,35 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    registerServiceWorker();
+    registerServiceWorker({
+      onStatus: setOfflineStatus,
+      onInfo: setOfflineInfo,
+    });
   }, []);
+
+  const checkOffline = useCallback(() => {
+    setOfflineStatus('checking');
+    void checkOfflineReadiness().then((result) => {
+      setOfflineStatus(result.status);
+      setOfflineInfo(result.info);
+    });
+  }, []);
+
+  const updateOfflineVersion = useCallback(() => {
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
+    void navigator.serviceWorker.getRegistration('/').then((registration) => {
+      if (!registration?.waiting) {
+        checkOffline();
+        return;
+      }
+
+      registration.waiting.postMessage({ type: 'GYMAPP_SKIP_WAITING' });
+      window.setTimeout(() => window.location.reload(), 500);
+    });
+  }, [checkOffline]);
 
   useEffect(() => {
     const applyTheme = () => {
@@ -2015,6 +2180,8 @@ export default function Home() {
             theme={appearanceTheme}
             keepScreenAwake={keepScreenAwake}
             wakeLockStatus={wakeLockStatus}
+            offlineStatus={offlineStatus}
+            offlineInfo={offlineInfo}
             selectedSessionLabel={selectedSession.label}
             sessionHistory={sessionHistory}
             exerciseInsights={exerciseInsights}
@@ -2028,6 +2195,8 @@ export default function Home() {
                 releaseScreenWakeLock();
               }
             }}
+            onCheckOffline={checkOffline}
+            onUpdateOfflineVersion={updateOfflineVersion}
             onResetCurrent={() => {
               void resetWorkoutPosition(draft.selectedSessionId).finally(
                 refreshSessionHistory,
@@ -2430,12 +2599,16 @@ function SettingsScreen({
   theme,
   keepScreenAwake,
   wakeLockStatus,
+  offlineStatus,
+  offlineInfo,
   selectedSessionLabel,
   sessionHistory,
   exerciseInsights,
   isLoadingHistory,
   onThemeChange,
   onKeepScreenAwakeChange,
+  onCheckOffline,
+  onUpdateOfflineVersion,
   onResetCurrent,
   onClearAllData,
   onExportHistorySession,
@@ -2445,12 +2618,16 @@ function SettingsScreen({
   theme: AppearanceTheme;
   keepScreenAwake: boolean;
   wakeLockStatus: WakeLockStatus;
+  offlineStatus: OfflineStatus;
+  offlineInfo: OfflineInfo;
   selectedSessionLabel: string;
   sessionHistory: SessionHistorySummary[];
   exerciseInsights: ExerciseProgressInsight[];
   isLoadingHistory: boolean;
   onThemeChange: (theme: AppearanceTheme) => void;
   onKeepScreenAwakeChange: (enabled: boolean) => void;
+  onCheckOffline: () => void;
+  onUpdateOfflineVersion: () => void;
   onResetCurrent: () => void;
   onClearAllData: () => void;
   onExportHistorySession: (sessionId: string) => void;
@@ -2515,6 +2692,54 @@ function SettingsScreen({
               onCheckedChange={onKeepScreenAwakeChange}
               aria-label="Mantener pantalla encendida"
             />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm font-semibold text-muted-foreground">
+            Instalación
+          </p>
+          <div className="mt-2 rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+            <div className="flex items-start justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block text-base font-black leading-tight">
+                  Uso sin conexión
+                </span>
+                <span className="mt-0.5 block text-xs font-bold leading-tight text-muted-foreground">
+                  {offlineStatusLabels[offlineStatus]}
+                </span>
+              </span>
+              <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
+                {offlineInfo.swVersion
+                  ? `sw ${offlineInfo.swVersion}`
+                  : `v${appVersion}`}
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_112px] gap-2">
+              <div className="min-w-0 rounded-[1.1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+                <span className="block truncate">
+                  {offlineInfo.cacheName ?? 'Caché pendiente'}
+                </span>
+                <span className="mt-0.5 block">
+                  {offlineInfo.cachedUrls !== undefined
+                    ? `${offlineInfo.cachedUrls} recursos base`
+                    : 'Carga una vez con conexión'}
+                </span>
+              </div>
+              <Button
+                className="h-full rounded-[1.1rem] text-sm font-black"
+                variant="outline"
+                onClick={
+                  offlineStatus === 'update-available'
+                    ? onUpdateOfflineVersion
+                    : onCheckOffline
+                }
+              >
+                {offlineStatus === 'update-available'
+                  ? 'Actualizar'
+                  : 'Comprobar'}
+              </Button>
+            </div>
           </div>
         </div>
 
