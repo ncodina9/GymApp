@@ -571,6 +571,8 @@ Tareas:
 - no purgar sesiones sin exportar para evitar perdida silenciosa de datos
 - mostrar progreso de historial como series registradas / series planificadas
 - sustituir chips numericos ambiguos por estado: en curso, completo o exportado
+- guardar metadata basica de sesion: `schemaVersion`, `startedAt`, `finishedAt`, `exportedAt`
+- bloquear el registro mientras se guarda una serie para evitar doble pulsacion
 - definir si se guarda también un resumen por ejercicio además del CSV por serie
 - documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
 - revisar compatibilidad del CSV con el fichero maestro de Obsidian
@@ -593,6 +595,8 @@ Estado parcial:
 - purga automatica de sesiones exportadas con mas de 30 dias de antiguedad
 - las tarjetas de historial muestran `series registradas / series planificadas`
 - chip de historial cambiado a estado legible: en curso, completo o exportado
+- registro de serie protegido contra doble pulsacion con bloqueo visual y bloqueo interno
+- metadata local de sesion ampliada con `schemaVersion`, `startedAt`, `finishedAt` y `exportedAt`
 
 ### Hito 14: Duracion real del entrenamiento
 
@@ -612,6 +616,12 @@ Criterio de aceptacion:
 - al terminar se ve el tiempo real invertido
 - la app indica si la sesion fue mas corta, similar o mas larga que lo previsto
 - la informacion queda disponible para revision posterior
+
+Estado parcial:
+
+- `startedAt` se guarda al empezar entrenamiento
+- `finishedAt` se guarda al cerrar entrenamiento
+- queda pendiente mostrar la duracion real y compararla visualmente con `estimatedMinutes`
 
 ### Hito 15: Superseries v2
 

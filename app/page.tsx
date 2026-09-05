@@ -29,6 +29,8 @@ import {
   loadSessionEvents,
   loadSessionMetadata,
   markSessionExported,
+  markSessionFinished,
+  markSessionStarted,
   purgeExportedSessionsOlderThan,
   saveSetEvent,
   type StoredSetEvent,
@@ -98,6 +100,9 @@ type SessionHistorySummary = {
   attemptedSets: number;
   completedSets: number;
   totalSets: number;
+  schemaVersion?: number;
+  startedAt?: string;
+  finishedAt?: string;
   exportedAt?: string;
   firstPerformedAt: string;
   lastPerformedAt: string;
@@ -117,6 +122,8 @@ type WorkoutDraft = {
   restRemaining: number;
   records: StoredSetEvent[];
   decisions: Record<string, string>;
+  startedAt?: string;
+  finishedAt?: string;
   transitionExerciseIds: string[];
   transitionNextPhase: 'set' | 'done';
   editedRir: number;
@@ -334,6 +341,8 @@ const normalizeDraft = (
       ? draft.records.filter(isStoredSetEvent)
       : [],
     decisions: draft.decisions ?? {},
+    ...(draft.startedAt ? { startedAt: draft.startedAt } : {}),
+    ...(draft.finishedAt ? { finishedAt: draft.finishedAt } : {}),
     transitionExerciseIds: draft.transitionExerciseIds ?? [],
     transitionNextPhase: draft.transitionNextPhase ?? 'set',
     editedRir: draft.editedRir ?? 2,
@@ -471,6 +480,15 @@ const getSessionHistorySummaries = (
             (event) => event.status === 'completed',
           ).length,
           totalSets: buildExecutionSteps(session).length,
+          ...(sessionMetadata?.schemaVersion
+            ? { schemaVersion: sessionMetadata.schemaVersion }
+            : {}),
+          ...(sessionMetadata?.startedAt
+            ? { startedAt: sessionMetadata.startedAt }
+            : {}),
+          ...(sessionMetadata?.finishedAt
+            ? { finishedAt: sessionMetadata.finishedAt }
+            : {}),
           ...(sessionMetadata?.exportedAt
             ? { exportedAt: sessionMetadata.exportedAt }
             : {}),
@@ -888,6 +906,8 @@ export default function Home() {
     [],
   );
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isRegisteringSet, setIsRegisteringSet] = useState(false);
+  const isRegisteringSetRef = useRef(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const keepScreenAwakeRef = useRef(false);
   const selectedSession =
@@ -1190,6 +1210,19 @@ export default function Home() {
     [patchDraft, selectedSession],
   );
 
+  const completeWorkout = useCallback(() => {
+    const finishedAt = new Date().toISOString();
+    patchDraft({
+      phase: 'done',
+      finishedAt,
+      transitionExerciseIds: [],
+      transitionNextPhase: 'set',
+    });
+    void markSessionFinished(selectedSession.sessionId, finishedAt).catch(
+      () => undefined,
+    );
+  }, [patchDraft, selectedSession.sessionId]);
+
   const moveForward = useCallback(() => {
     if (!currentExercise || !currentStep) {
       return;
@@ -1201,15 +1234,15 @@ export default function Home() {
     );
 
     if (!nextStep) {
-      patchDraft(
-        completedExerciseIds.length > 0
-          ? {
-              phase: 'transition',
-              transitionExerciseIds: completedExerciseIds,
-              transitionNextPhase: 'done',
-            }
-          : { phase: 'done' },
-      );
+      if (completedExerciseIds.length > 0) {
+        patchDraft({
+          phase: 'transition',
+          transitionExerciseIds: completedExerciseIds,
+          transitionNextPhase: 'done',
+        });
+      } else {
+        completeWorkout();
+      }
       return;
     }
 
@@ -1225,6 +1258,7 @@ export default function Home() {
     applyPlannedTargets,
     currentExercise,
     currentStep,
+    completeWorkout,
     nextStep,
     patchDraft,
     selectedSession,
@@ -1238,10 +1272,13 @@ export default function Home() {
       nextStep.roundNumber !== currentStep.roundNumber);
 
   const logCurrentSet = useCallback(
-    (status: 'completed' | 'skipped') => {
-      if (!currentSet) {
+    async (status: 'completed' | 'skipped') => {
+      if (!currentSet || isRegisteringSetRef.current) {
         return;
       }
+
+      isRegisteringSetRef.current = true;
+      setIsRegisteringSet(true);
 
       const nextRecord: StoredSetEvent = {
         id: createEventId(),
@@ -1274,7 +1311,16 @@ export default function Home() {
         note: draft.setNote,
       };
 
-      void saveSetEvent(nextRecord).catch(() => undefined);
+      try {
+        await saveSetEvent(nextRecord);
+      } catch {
+        window.alert(
+          'No se ha podido guardar la serie en este dispositivo. Inténtalo de nuevo.',
+        );
+        isRegisteringSetRef.current = false;
+        setIsRegisteringSet(false);
+        return;
+      }
 
       setDraft((current) => ({
         ...current,
@@ -1289,10 +1335,14 @@ export default function Home() {
 
       if (!shouldRestAfterCurrentStep || status === 'skipped') {
         moveForward();
+        isRegisteringSetRef.current = false;
+        setIsRegisteringSet(false);
         return;
       }
 
       patchDraft({ restRemaining: currentSet.restSeconds, phase: 'rest' });
+      isRegisteringSetRef.current = false;
+      setIsRegisteringSet(false);
     },
     [
       currentSet,
@@ -1324,10 +1374,19 @@ export default function Home() {
     patchDraft({ phase: 'preview' });
   };
 
-  const beginTraining = () => {
-    void resetWorkoutPosition(draft.selectedSessionId);
-    patchDraft({ phase: 'set' });
-  };
+  const beginTraining = useCallback(() => {
+    const startedAt = new Date().toISOString();
+    const nextDraft = makeDraft(selectedSession);
+
+    setDraft({ ...nextDraft, phase: 'set', startedAt });
+    void clearSessionEvents(selectedSession.sessionId)
+      .catch(() => undefined)
+      .finally(() => {
+        void markSessionStarted(selectedSession.sessionId, startedAt).catch(
+          () => undefined,
+        );
+      });
+  }, [selectedSession]);
 
   const resume = () => {
     patchDraft({ phase: currentSet ? 'set' : 'today' });
@@ -1484,7 +1543,7 @@ export default function Home() {
       inputSchema: { type: 'object', additionalProperties: false },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: () => {
-        patchDraft({ phase: 'set' });
+        beginTraining();
         return { phase: 'set', sessionId: selectedSession.sessionId };
       },
     });
@@ -1517,7 +1576,7 @@ export default function Home() {
           throw new Error('status debe ser completed o skipped.');
         }
 
-        logCurrentSet(status);
+        void logCurrentSet(status);
         return {
           status,
           reps: draft.editedReps,
@@ -1531,6 +1590,7 @@ export default function Home() {
     return () => lifecycle.abort();
   }, [
     attemptedSets,
+    beginTraining,
     currentExercise,
     currentSet,
     draft,
@@ -1652,8 +1712,9 @@ export default function Home() {
               })
             }
             onContinue={() => patchDraft({ phase: 'feedback' })}
-            onSkip={() => logCurrentSet('skipped')}
+            onSkip={() => void logCurrentSet('skipped')}
             onBack={() => patchDraft({ phase: 'today' })}
+            isRegistering={isRegisteringSet}
           />
         ) : null}
 
@@ -1677,7 +1738,8 @@ export default function Home() {
             onPainWristChange={(painWrist) => patchDraft({ painWrist })}
             onSetNoteChange={(setNote) => patchDraft({ setNote })}
             onBack={() => patchDraft({ phase: 'set' })}
-            onRegister={() => logCurrentSet('completed')}
+            onRegister={() => void logCurrentSet('completed')}
+            isRegistering={isRegisteringSet}
           />
         ) : null}
 
@@ -1713,12 +1775,17 @@ export default function Home() {
             }
             decisions={draft.decisions}
             onDecision={chooseDecision}
-            onContinue={() =>
+            onContinue={() => {
+              if (draft.transitionNextPhase === 'done') {
+                completeWorkout();
+                return;
+              }
+
               patchDraft({
                 phase: draft.transitionNextPhase,
                 transitionExerciseIds: [],
-              })
-            }
+              });
+            }}
           />
         ) : null}
 
@@ -2117,7 +2184,8 @@ function HistorySessionCard({
   onExportHistorySession: (sessionId: string) => void;
   onDeleteHistorySession: (sessionId: string) => void;
 }) {
-  const isComplete = summary.attemptedSets >= summary.totalSets;
+  const isComplete =
+    Boolean(summary.finishedAt) || summary.attemptedSets >= summary.totalSets;
   const statusLabel = summary.exportedAt
     ? 'Exportado'
     : isComplete
@@ -2182,6 +2250,7 @@ function SetScreen({
   onContinue,
   onSkip,
   onBack,
+  isRegistering,
 }: {
   exerciseName: string;
   exerciseNotes: string;
@@ -2205,6 +2274,7 @@ function SetScreen({
   onContinue: () => void;
   onSkip: () => void;
   onBack: () => void;
+  isRegistering: boolean;
 }) {
   const isTimed = setType === 'timed';
   const normalizedWeightStep = normalizeWeightStep(weightStep, loadType);
@@ -2321,6 +2391,7 @@ function SetScreen({
           style={{ width: '56px' }}
           variant="outline"
           onClick={onSkip}
+          disabled={isRegistering}
         >
           <SkipSetIcon className="size-6" />
         </Button>
@@ -2517,6 +2588,7 @@ function FeedbackScreen({
   onSetNoteChange,
   onBack,
   onRegister,
+  isRegistering,
 }: {
   exerciseName: string;
   setType: TrainingSet['type'];
@@ -2533,6 +2605,7 @@ function FeedbackScreen({
   onSetNoteChange: (value: string) => void;
   onBack: () => void;
   onRegister: () => void;
+  isRegistering: boolean;
 }) {
   const isTimed = setType === 'timed';
 
@@ -2590,14 +2663,16 @@ function FeedbackScreen({
           style={{ width: '56px' }}
           variant="outline"
           onClick={onBack}
+          disabled={isRegistering}
         >
           <ArrowLeft className="size-5" />
         </Button>
         <Button
           className="h-14 rounded-[1.75rem] text-lg font-black"
           onClick={onRegister}
+          disabled={isRegistering}
         >
-          Registrar serie
+          {isRegistering ? 'Guardando' : 'Registrar serie'}
           <Check className="size-6" />
         </Button>
       </div>

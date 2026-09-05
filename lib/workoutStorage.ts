@@ -28,6 +28,9 @@ export type StoredSetEvent = {
 
 export type StoredSessionMetadata = {
   sessionId: string;
+  schemaVersion?: number;
+  startedAt?: string;
+  finishedAt?: string;
   exportedAt?: string;
 };
 
@@ -168,22 +171,60 @@ export async function loadSessionMetadata() {
   return metadata;
 }
 
-export async function markSessionExported(
+async function updateSessionMetadata(
   sessionId: string,
-  exportedAt: string,
+  patch: Omit<StoredSessionMetadata, 'sessionId'>,
 ) {
   const db = await openDatabase();
 
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(sessionMetadataStoreName, 'readwrite');
-    transaction
-      .objectStore(sessionMetadataStoreName)
-      .put({ sessionId, exportedAt });
+    const store = transaction.objectStore(sessionMetadataStoreName);
+    const request = store.get(sessionId);
+
+    request.onsuccess = () => {
+      store.put({
+        ...((request.result as StoredSessionMetadata | undefined) ?? {
+          sessionId,
+        }),
+        ...patch,
+      });
+    };
+    request.onerror = () => reject(request.error);
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
 
   db.close();
+}
+
+export async function markSessionStarted(sessionId: string, startedAt: string) {
+  await updateSessionMetadata(sessionId, {
+    schemaVersion: 1,
+    startedAt,
+    finishedAt: undefined,
+    exportedAt: undefined,
+  });
+}
+
+export async function markSessionFinished(
+  sessionId: string,
+  finishedAt: string,
+) {
+  await updateSessionMetadata(sessionId, {
+    schemaVersion: 1,
+    finishedAt,
+  });
+}
+
+export async function markSessionExported(
+  sessionId: string,
+  exportedAt: string,
+) {
+  await updateSessionMetadata(sessionId, {
+    schemaVersion: 1,
+    exportedAt,
+  });
 }
 
 export async function purgeExportedSessionsOlderThan(days: number) {
