@@ -361,13 +361,6 @@ const formatPreviewLoad = (weight: number, loadType: LoadType) => {
 
 const getExercisePreviewTarget = (exercise: Exercise) => {
   const loadType = inferLoadType(exercise);
-  const rests = Array.from(
-    new Set(exercise.sets.map((set) => set.restSeconds)),
-  );
-  const restLabel =
-    rests.length === 1
-      ? `${rests[0]}s descanso`
-      : `${rests.map((rest) => `${rest}s`).join('/')} descanso`;
 
   if (exercise.sets.every((set) => set.type === 'timed')) {
     const durations = Array.from(
@@ -376,7 +369,7 @@ const getExercisePreviewTarget = (exercise: Exercise) => {
       ),
     );
 
-    return `${exercise.sets.length} series · ${durations.join('/')} · ${restLabel}`;
+    return `${exercise.sets.length} series · ${durations.join('/')}`;
   }
 
   const reps = Array.from(
@@ -390,7 +383,7 @@ const getExercisePreviewTarget = (exercise: Exercise) => {
     ),
   );
 
-  return `${exercise.sets.length} series · ${reps.join('/')} reps · ${loads.join('/')} · ${restLabel}`;
+  return `${exercise.sets.length} series · ${reps.join('/')} reps · ${loads.join('/')}`;
 };
 
 export default function Home() {
@@ -1076,7 +1069,7 @@ function TodayScreen({
 
       {hasStarted ? (
         <Button
-          className="h-16 rounded-lg text-xl font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           onClick={onResume}
         >
           Reanudar
@@ -1108,19 +1101,19 @@ function TodayScreen({
 
       <div
         className="mt-auto grid gap-3"
-        style={{ gridTemplateColumns: '64px minmax(0, 1fr)' }}
+        style={{ gridTemplateColumns: '56px minmax(0, 1fr)' }}
       >
         <Button
           aria-label="Configuracion"
-          className="h-16 w-16 rounded-[1.75rem] p-0"
-          style={{ width: '64px' }}
+          className="h-14 w-14 rounded-[1.75rem] p-0"
+          style={{ width: '56px' }}
           variant="outline"
           onClick={onSettings}
         >
           <Settings className="size-6" />
         </Button>
         <Button
-          className="h-16 rounded-[1.75rem] text-xl font-black"
+          className="h-14 rounded-[1.75rem] text-lg font-black"
           variant="default"
           onClick={onStart}
         >
@@ -1177,11 +1170,6 @@ function PreviewScreen({
                   </p>
                 </div>
               </div>
-              {exercise.notes ? (
-                <p className="mt-2 overflow-hidden text-sm leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-                  {exercise.notes}
-                </p>
-              ) : null}
             </div>
           ))}
         </div>
@@ -1293,7 +1281,7 @@ function SettingsScreen({
       </div>
 
       <Button
-        className="h-16 rounded-[1.75rem] text-xl font-black"
+        className="h-14 rounded-[1.75rem] text-lg font-black"
         onClick={onBack}
       >
         Volver
@@ -1897,7 +1885,7 @@ function TransitionScreen({
       </div>
 
       <Button
-        className="mt-auto h-16 rounded-[1.75rem] text-xl font-black"
+        className="mt-auto h-14 rounded-[1.75rem] text-lg font-black"
         onClick={onContinue}
       >
         Siguiente ejercicio
