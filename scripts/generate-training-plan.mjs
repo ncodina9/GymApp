@@ -46,7 +46,7 @@ const baseSessions = {
         5,
         5,
         65,
-        150,
+        135,
         [
           'Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente.',
           'Mantener 1-2 RIR en la última serie.',
@@ -60,7 +60,7 @@ const baseSessions = {
         5,
         5,
         5,
-        150,
+        135,
         [
           'Registrar siempre el lastre exacto.',
           'Parar si la barbilla no pasa clara.',
@@ -82,10 +82,10 @@ const baseSessions = {
         'Press militar sentado en banco',
         'Básico',
         'D',
-        4,
+        3,
         6,
         35,
-        120,
+        90,
         [
           'Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.',
         ],
@@ -117,7 +117,7 @@ const baseSessions = {
         'Tríceps en polea simple',
         'Accesorio',
         'F',
-        3,
+        2,
         11,
         0,
         60,
@@ -160,7 +160,7 @@ const baseSessions = {
         'Hip thrust / puente con barra',
         'Básico',
         'C',
-        4,
+        3,
         8,
         90,
         120,
@@ -193,7 +193,7 @@ const baseSessions = {
         'Elevación de gemelos de pie',
         'Accesorio',
         'E',
-        4,
+        3,
         12,
         50,
         60,
@@ -204,7 +204,7 @@ const baseSessions = {
         'Plancha o dead bug',
         'Accesorio',
         'F',
-        3,
+        2,
         60,
         0,
         45,
@@ -245,10 +245,10 @@ const baseSessions = {
         'Press militar sentado velocidad',
         'Básico',
         'C',
-        6,
+        4,
         3,
         30,
-        75,
+        60,
         [
           'Sentado en banco para proteger la espalda.',
           'La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.',
@@ -270,10 +270,10 @@ const baseSessions = {
         'Pull-over con mancuerna',
         'Accesorio',
         'E',
-        3,
+        2,
         11,
         28.75,
-        75,
+        60,
         ['Rango 10-12 reps.'],
       ),
       exercise(
@@ -281,10 +281,10 @@ const baseSessions = {
         'Elevaciones laterales',
         'Accesorio',
         'F1',
-        4,
+        3,
         15,
         9,
-        60,
+        45,
         ['Rango 15-20 reps. Peso por mancuerna.'],
       ),
       exercise(
@@ -292,10 +292,10 @@ const baseSessions = {
         'Curl martillo',
         'Accesorio',
         'F2',
-        4,
+        3,
         11,
         15,
-        60,
+        45,
         ['Rango 10-12 reps. Peso por mancuerna.'],
       ),
       exercise(
@@ -303,10 +303,10 @@ const baseSessions = {
         'Tríceps en polea simple',
         'Accesorio',
         'G',
-        4,
+        2,
         13,
         0,
-        60,
+        45,
         ['Rango 12-15 reps con RIR 2.'],
       ),
     ],
@@ -332,7 +332,7 @@ const baseSessions = {
         'Dominadas supinas',
         'Básico',
         'B',
-        4,
+        3,
         7,
         0,
         120,
@@ -365,7 +365,7 @@ const baseSessions = {
         'Elevación de gemelos sentado o en prensa/multipower',
         'Accesorio',
         'E',
-        3,
+        2,
         15,
         0,
         60,
@@ -376,7 +376,7 @@ const baseSessions = {
         'Curl bíceps barra o mancuernas',
         'Accesorio',
         'F1',
-        3,
+        2,
         11,
         15,
         60,
@@ -387,7 +387,7 @@ const baseSessions = {
         'Extensión tríceps polea',
         'Accesorio',
         'F2',
-        3,
+        2,
         11,
         0,
         60,
@@ -398,7 +398,7 @@ const baseSessions = {
         'Elevación lateral mecánica',
         'Accesorio',
         'G',
-        3,
+        2,
         28,
         9,
         60,
@@ -552,23 +552,15 @@ function adaptExercise(item, week) {
   }
 
   if (templateWeek >= 5 && templateWeek <= 7 && isBasic(item)) {
-    setCount = item.exerciseId.includes('dominadas')
-      ? 6
-      : Math.max(item.setCount, 5);
-    reps = Math.max(4, item.reps - 1);
-    restSeconds = Math.max(restSeconds, 150);
+    setCount = getIntensificationSetCount(item);
+    reps = getIntensificationReps(item);
+    restSeconds = getIntensificationRest(item, restSeconds);
   }
 
   if (templateWeek >= 9 && templateWeek <= 11 && isBasic(item)) {
-    setCount = item.exerciseId.includes('hip-thrust')
-      ? 4
-      : Math.max(item.setCount, 5);
-    reps =
-      item.exerciseId.includes('hip-thrust') ||
-      item.exerciseId.includes('rumano')
-        ? 5
-        : 3;
-    restSeconds = Math.max(restSeconds, 180);
+    setCount = getRealizationSetCount(item);
+    reps = getRealizationReps(item);
+    restSeconds = getRealizationRest(item, restSeconds);
   }
 
   if (postVacationAdaptation) {
@@ -628,6 +620,121 @@ function adaptExercise(item, week) {
     }),
     sets,
   };
+}
+
+function getIntensificationSetCount(item) {
+  if (item.exerciseId === 'dominadas-lastradas') {
+    return 4;
+  }
+
+  if (
+    item.exerciseId === 'press-militar-sentado' ||
+    item.exerciseId === 'press-militar-sentado-velocidad'
+  ) {
+    return 4;
+  }
+
+  if (
+    item.exerciseId === 'rdl-tecnico' ||
+    item.exerciseId === 'hip-thrust-volumen'
+  ) {
+    return 3;
+  }
+
+  if (
+    item.exerciseId === 'press-cerrado-multipower' ||
+    item.exerciseId === 'dominadas-supinas'
+  ) {
+    return 4;
+  }
+
+  return Math.min(Math.max(item.setCount, 4), 4);
+}
+
+function getIntensificationReps(item) {
+  if (item.exerciseId === 'press-militar-sentado-velocidad') {
+    return 3;
+  }
+
+  if (
+    item.exerciseId.includes('hip-thrust') ||
+    item.exerciseId.includes('rumano')
+  ) {
+    return Math.max(5, item.reps - 1);
+  }
+
+  return Math.max(4, item.reps - 1);
+}
+
+function getIntensificationRest(item, fallbackRestSeconds) {
+  if (
+    item.exerciseId === 'press-banca-inclinado' ||
+    item.exerciseId === 'dominadas-peso-corporal' ||
+    item.exerciseId === 'remo-barra-multipower'
+  ) {
+    return Math.max(fallbackRestSeconds, 105);
+  }
+
+  if (item.exerciseId === 'press-militar-sentado-velocidad') {
+    return Math.max(fallbackRestSeconds, 75);
+  }
+
+  if (
+    item.exerciseId === 'press-militar-sentado' ||
+    item.exerciseId === 'rdl-tecnico' ||
+    item.exerciseId === 'hip-thrust-volumen'
+  ) {
+    return Math.max(fallbackRestSeconds, 120);
+  }
+
+  return Math.max(fallbackRestSeconds, 135);
+}
+
+function getRealizationSetCount(item) {
+  if (
+    item.exerciseId === 'press-banca-barra' ||
+    item.exerciseId === 'dominadas-lastradas' ||
+    item.exerciseId === 'sentadilla-barra'
+  ) {
+    return 4;
+  }
+
+  if (
+    item.exerciseId === 'press-militar-sentado-velocidad' ||
+    item.exerciseId === 'rdl-tecnico' ||
+    item.exerciseId === 'hip-thrust-volumen'
+  ) {
+    return 3;
+  }
+
+  return Math.min(item.setCount, 3);
+}
+
+function getRealizationReps(item) {
+  if (
+    item.exerciseId.includes('hip-thrust') ||
+    item.exerciseId.includes('rumano')
+  ) {
+    return 5;
+  }
+
+  if (item.exerciseId === 'press-militar-sentado-velocidad') {
+    return 3;
+  }
+
+  return 3;
+}
+
+function getRealizationRest(item, fallbackRestSeconds) {
+  if (
+    item.exerciseId === 'press-banca-barra' ||
+    item.exerciseId === 'dominadas-lastradas' ||
+    item.exerciseId === 'sentadilla-barra'
+  ) {
+    return Math.max(fallbackRestSeconds, 150);
+  }
+
+  return Math.max(fallbackRestSeconds, 120);
 }
 
 function decisionOptions(item, week, weightKg, options = {}) {

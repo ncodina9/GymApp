@@ -648,6 +648,30 @@ Auditoria inicial del plan actual con esta formula:
 
 Estado: cerrado para la app. Queda como decision futura si la duracion total debe anadirse tambien al CSV por serie o a un resumen independiente de sesion. Las sesiones estimadas por encima de 75 min deben revisarse porque probablemente no caben en una hora real de gimnasio.
 
+### Hito 14b: Ajuste del planning a 60-70 minutos
+
+Objetivo: revisar el plan como entrenador personal para que las sesiones quepan en 60-70 min reales, incluyendo 8-10 min de movilidad previa, ejecucion, descansos, feedback y cambios entre ejercicios.
+
+Tareas:
+
+- mantener la estructura principal definida en `Plan entrenamiento 3 meses.md`
+- conservar los básicos principales como prioridad de cada dia
+- recortar primero accesorios y cardio opcional
+- usar superseries de accesorios para compactar sin perder estimulo
+- evitar que intensificacion y realizacion aumenten de forma automatica todas las series de todos los básicos
+- regenerar `data/trainingPlan.json` desde `scripts/generate-training-plan.mjs`
+- auditar todas las sesiones con la estimacion derivada
+- actualizar el documento fuente de Obsidian para que coincida con el JSON
+
+Criterio de aceptacion:
+
+- ninguna sesion queda por encima de 70 min estimados
+- las semanas de descarga/test pueden quedar por debajo de 60 min
+- el foco de cada dia se mantiene reconocible
+- el plan sigue respetando molestias de rodilla y preferencia de torso
+
+Estado: cerrado. El plan generado queda con 51 sesiones: 17 por debajo de 60 min, 34 entre 60 y 70 min, 0 por encima de 70 min. La sesion mas larga queda en 70 min estimados.
+
 ### Hito 15: Superseries v2
 
 Objetivo: mejorar la primera version de superseries para cubrir casos menos regulares.
