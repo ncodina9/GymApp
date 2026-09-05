@@ -927,6 +927,14 @@ const getSupersetMembers = (session: TrainingSession, supersetId: string) =>
         (b.exercise.supersetOrder ?? b.exerciseIndex),
     );
 
+const getSupersetRoundCount = (session: TrainingSession, supersetId: string) =>
+  Math.max(
+    0,
+    ...getSupersetMembers(session, supersetId).map(
+      (member) => member.exercise.sets.length,
+    ),
+  );
+
 const buildExecutionSteps = (session: TrainingSession): ExecutionStep[] => {
   const visitedSupersets = new Set<string>();
   const steps: ExecutionStep[] = [];
@@ -1075,6 +1083,24 @@ export default function Home() {
     currentStepIndex >= 0 ? executionSteps[currentStepIndex] : undefined;
   const nextStep =
     currentStepIndex >= 0 ? executionSteps[currentStepIndex + 1] : undefined;
+  const supersetMembers =
+    currentStep?.supersetId !== undefined
+      ? getSupersetMembers(selectedSession, currentStep.supersetId)
+      : [];
+  const supersetRoundCount =
+    currentStep?.supersetId !== undefined
+      ? getSupersetRoundCount(selectedSession, currentStep.supersetId)
+      : undefined;
+  const nextLinkedStep =
+    currentStep?.supersetId !== undefined &&
+    nextStep?.supersetId === currentStep.supersetId &&
+    nextStep.roundNumber === currentStep.roundNumber
+      ? nextStep
+      : undefined;
+  const nextLinkedExercise =
+    nextLinkedStep !== undefined
+      ? selectedSession.exercises[nextLinkedStep.exerciseIndex]
+      : undefined;
   const totalSets = executionSteps.length;
   const completedSets = draft.records.filter(
     (record) => record.status === 'completed',
@@ -1833,6 +1859,15 @@ export default function Home() {
             exerciseNotes={currentExercise.notes}
             setIndex={draft.setIndex}
             totalExerciseSets={currentExercise.sets.length}
+            supersetPosition={currentStep?.supersetOrder}
+            supersetSize={
+              supersetMembers.length > 0 ? supersetMembers.length : undefined
+            }
+            supersetRound={
+              currentStep?.supersetId ? currentStep.roundNumber : undefined
+            }
+            supersetRoundCount={supersetRoundCount}
+            nextLinkedExerciseName={nextLinkedExercise?.name}
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
@@ -2434,6 +2469,11 @@ function SetScreen({
   exerciseNotes,
   setIndex,
   totalExerciseSets,
+  supersetPosition,
+  supersetSize,
+  supersetRound,
+  supersetRoundCount,
+  nextLinkedExerciseName,
   completedSetIndexes,
   setType,
   reps,
@@ -2458,6 +2498,11 @@ function SetScreen({
   exerciseNotes: string;
   setIndex: number;
   totalExerciseSets: number;
+  supersetPosition?: number | undefined;
+  supersetSize?: number | undefined;
+  supersetRound?: number | undefined;
+  supersetRoundCount?: number | undefined;
+  nextLinkedExerciseName?: string | undefined;
   completedSetIndexes: number[];
   setType: TrainingSet['type'];
   reps: number;
@@ -2480,17 +2525,37 @@ function SetScreen({
 }) {
   const isTimed = setType === 'timed';
   const normalizedWeightStep = normalizeWeightStep(weightStep, loadType);
+  const isSuperset =
+    supersetPosition !== undefined &&
+    supersetSize !== undefined &&
+    supersetRound !== undefined &&
+    supersetRoundCount !== undefined;
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <div className="flex shrink-0 items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-muted-foreground">
-            Serie {setIndex + 1} de {totalExerciseSets}
-          </p>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+            <span>
+              Serie {setIndex + 1} de {totalExerciseSets}
+            </span>
+            {isSuperset ? (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-black text-primary">
+                Superserie {supersetPosition}/{supersetSize}
+              </span>
+            ) : null}
+          </div>
           <h2 className="text-[1.65rem] font-black leading-tight tracking-normal">
             {exerciseName}
           </h2>
+          {isSuperset ? (
+            <p className="mt-1 truncate text-sm font-semibold text-muted-foreground">
+              Ronda {supersetRound}/{supersetRoundCount}
+              {nextLinkedExerciseName
+                ? ` · Sigue: ${nextLinkedExerciseName}`
+                : ' · Después, descanso'}
+            </p>
+          ) : null}
         </div>
         <div className="flex gap-1.5" aria-label="Progreso de series">
           {Array.from({ length: totalExerciseSets }).map((_, index) => {

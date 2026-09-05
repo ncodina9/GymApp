@@ -684,13 +684,19 @@ Tareas:
 - revisar si conviene una transicion breve entre ejercicios vinculados o avance directo
 - permitir descanso propio de superserie si difiere del descanso de cada ejercicio
 - validar que decisiones de ejercicios vinculados no ocupan demasiado en movil
-- incluir tests unitarios del secuenciador con casos normales, superseries y casos limite
+- incluir validacion automatica del secuenciador con casos normales, superseries y casos limite
 
 Criterio de aceptacion:
 
 - la app representa claramente ejercicio, orden y ronda dentro de la superserie
 - los casos irregulares estan definidos y no generan comportamiento ambiguo
-- el secuenciador queda protegido con tests
+- el secuenciador queda protegido con validacion automatica reproducible
+
+Estado: cerrado como v2 funcional. La pantalla de serie muestra si el ejercicio pertenece a una superserie, su posicion dentro del bloque, la ronda actual y el siguiente ejercicio vinculado cuando no toca descanso. Se anade `scripts/validate-training-plan.mjs` y `npm run validate:plan` para comprobar que el plan genera el numero correcto de pasos, que las superseries respetan orden por ronda, que no se introduce descanso entre ejercicios vinculados de la misma ronda, que las planchas mantienen 60 s y que ninguna sesion supera 70 min estimados.
+
+Decision actual para casos irregulares: si dos ejercicios vinculados tienen distinto numero de series, el secuenciador ejecuta las rondas comunes de forma alterna y despues completa las series restantes del ejercicio que tenga mas series, descansando al dejar de existir pareja en esa ronda. No se usara de forma habitual en el plan, pero queda definido para evitar comportamiento ambiguo.
+
+Pendiente futuro: si una superserie necesita un descanso propio distinto al descanso de sus ejercicios, anadir el campo al JSON del plan y usarlo al cerrar la ronda.
 
 ### Hito 16: Plan y progresion asistida
 
