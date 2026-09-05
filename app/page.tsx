@@ -389,6 +389,53 @@ const formatClock = (totalSeconds: number) => {
   return `${minutes}:${seconds}`;
 };
 
+const getDurationMinutes = (startedAt?: string, finishedAt?: string) => {
+  if (!startedAt || !finishedAt) {
+    return undefined;
+  }
+
+  const startedTime = new Date(startedAt).getTime();
+  const finishedTime = new Date(finishedAt).getTime();
+
+  if (!Number.isFinite(startedTime) || !Number.isFinite(finishedTime)) {
+    return undefined;
+  }
+
+  const elapsedMs = finishedTime - startedTime;
+
+  if (elapsedMs < 0) {
+    return undefined;
+  }
+
+  return Math.max(1, Math.round(elapsedMs / 60000));
+};
+
+const formatDurationMinutes = (minutes: number) => {
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+
+  return remainder > 0 ? `${hours} h ${remainder} min` : `${hours} h`;
+};
+
+const getDurationDeltaLabel = (
+  actualMinutes: number,
+  estimatedMinutes: number,
+) => {
+  const delta = actualMinutes - estimatedMinutes;
+
+  if (Math.abs(delta) <= 5) {
+    return 'En tiempo';
+  }
+
+  return delta > 0
+    ? `+${delta} min sobre lo previsto`
+    : `${Math.abs(delta)} min más rápido`;
+};
+
 const createEventId = () => {
   if (
     typeof crypto !== 'undefined' &&
@@ -934,6 +981,10 @@ export default function Home() {
     (record) => record.status === 'completed',
   ).length;
   const attemptedSets = draft.records.length;
+  const workoutDurationMinutes = getDurationMinutes(
+    draft.startedAt,
+    draft.finishedAt,
+  );
   const progressValue = Math.round((attemptedSets / totalSets) * 100);
   const hasStarted =
     draft.records.length > 0 ||
@@ -1793,6 +1844,10 @@ export default function Home() {
           <DoneScreen
             completedSets={completedSets}
             totalSets={totalSets}
+            estimatedMinutes={selectedSession.estimatedMinutes}
+            {...(workoutDurationMinutes !== undefined
+              ? { durationMinutes: workoutDurationMinutes }
+              : {})}
             onExport={exportCsv}
             onRestart={returnToTodayAfterDone}
           />
@@ -2191,6 +2246,15 @@ function HistorySessionCard({
     : isComplete
       ? 'Completo'
       : 'En curso';
+  const durationMinutes = getDurationMinutes(
+    summary.startedAt,
+    summary.finishedAt,
+  );
+  const detailParts = [
+    formatDate(summary.sessionDate),
+    `${summary.attemptedSets}/${summary.totalSets} series`,
+    durationMinutes ? formatDurationMinutes(durationMinutes) : undefined,
+  ].filter(Boolean);
 
   return (
     <div className="rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground">
@@ -2198,8 +2262,7 @@ function HistorySessionCard({
         <div className="min-w-0">
           <p className="truncate text-sm font-black">{summary.sessionLabel}</p>
           <p className="mt-0.5 text-xs font-bold text-muted-foreground">
-            {formatDate(summary.sessionDate)} · {summary.attemptedSets}/
-            {summary.totalSets} series
+            {detailParts.join(' · ')}
           </p>
         </div>
         <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
@@ -2872,16 +2935,25 @@ function TransitionScreen({
 function DoneScreen({
   completedSets,
   totalSets,
+  durationMinutes,
+  estimatedMinutes,
   onExport,
   onRestart,
 }: {
   completedSets: number;
   totalSets: number;
+  durationMinutes?: number;
+  estimatedMinutes: number;
   onExport: () => void;
   onRestart: () => void;
 }) {
+  const durationDeltaLabel =
+    durationMinutes !== undefined
+      ? getDurationDeltaLabel(durationMinutes, estimatedMinutes)
+      : undefined;
+
   return (
-    <section className="flex flex-1 flex-col justify-center gap-5 text-center">
+    <section className="flex flex-1 flex-col justify-center gap-4 text-center">
       <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-primary text-primary-foreground">
         <Check className="size-10" />
       </div>
@@ -2894,6 +2966,25 @@ function DoneScreen({
         </h2>
         <p className="mt-2 text-lg text-muted-foreground">series completadas</p>
       </div>
+      {durationMinutes !== undefined ? (
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-lg border bg-card px-3 py-3">
+            <p className="text-sm font-black text-muted-foreground">Tiempo</p>
+            <p className="mt-1 text-3xl font-black leading-none">
+              {formatDurationMinutes(durationMinutes)}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card px-3 py-3">
+            <p className="text-sm font-black text-muted-foreground">Estimado</p>
+            <p className="mt-1 text-3xl font-black leading-none">
+              {estimatedMinutes} min
+            </p>
+          </div>
+          <div className="col-span-2 rounded-lg bg-secondary px-3 py-2 text-sm font-black text-secondary-foreground">
+            {durationDeltaLabel}
+          </div>
+        </div>
+      ) : null}
       <Button
         className="h-14 rounded-[1.75rem] text-lg font-black"
         onClick={onExport}

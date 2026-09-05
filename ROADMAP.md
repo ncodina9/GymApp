@@ -621,7 +621,10 @@ Estado parcial:
 
 - `startedAt` se guarda al empezar entrenamiento
 - `finishedAt` se guarda al cerrar entrenamiento
-- queda pendiente mostrar la duracion real y compararla visualmente con `estimatedMinutes`
+- al finalizar se muestra la duracion real, el tiempo estimado y la diferencia
+- el historial muestra la duracion de las sesiones cerradas cuando existe metadata suficiente
+
+Estado: cerrado para la app. Queda como decision futura si la duracion total debe anadirse tambien al CSV por serie o a un resumen independiente de sesion.
 
 ### Hito 15: Superseries v2
 
