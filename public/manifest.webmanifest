@@ -1,7 +1,7 @@
 {
   "name": "GymApp",
   "short_name": "GymApp",
-  "description": "Companion app tactil para ejecutar entrenamientos serie a serie.",
+  "description": "Companion app táctil para ejecutar entrenamientos serie a serie.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

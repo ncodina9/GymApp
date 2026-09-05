@@ -265,6 +265,10 @@ Ya esta implementada una primera version funcional de la app:
 - plan trimestral real en `data/trainingPlan.json`
 - generador del plan en `scripts/generate-training-plan.mjs`
 - superseries v1 mediante bloques `E1/E2`, `F1/F2`, etc.
+- planchas ajustadas a series de 60 s
+- cargas del plan ajustadas al material disponible: mancuernas, discos y polea
+- textos visibles de la app con acentos y eñes
+- ajuste opcional para mantener la pantalla encendida cuando el navegador lo soporte
 
 Validaciones habituales antes de publicar:
 
@@ -439,7 +443,68 @@ Criterio de aceptacion:
 
 ## Siguientes hitos
 
-### Hito 8: Validacion real en iPhone
+### Hito 8: Planning ajustado a material real
+
+Prioridad: 1.
+
+Objetivo: que el plan que ve la app use cargas realmente montables con el material disponible.
+
+Tareas:
+
+- fijar las planchas a duraciones de 60 s siempre
+- redondear mancuernas a la lista disponible: `5`, `6`, `7.5`, `8`, `9`, `10`, `12.5`, `15`, `17.5`, `20`, `22.5`, `25`, `27.5`, `30`
+- redondear barra/multipower a combinaciones simétricas de barra de 20 kg y discos disponibles
+- redondear lastre a combinaciones de discos disponibles
+- redondear polea a saltos de 5 kg hasta 100 kg cuando haya carga conocida
+- regenerar `data/trainingPlan.json` desde `scripts/generate-training-plan.mjs`
+- validar que no quedan pesos no montables ni planchas de 45 s
+
+Criterio de aceptacion:
+
+- todas las planchas del JSON muestran `60s`
+- todo `targetWeightKg` no nulo corresponde a una carga disponible
+- las opciones de subir/bajar carga proponen también pesos disponibles
+
+### Hito 9: Textos completos en español
+
+Prioridad: 2.
+
+Objetivo: que los textos visibles de la app y del plan usen acentos y eñes correctamente.
+
+Tareas:
+
+- revisar labels de la app: configuración, preparación, después, muñeca, máquina, etc.
+- revisar nombres y notas generados en el plan
+- revisar metadatos y manifest de la PWA
+- mantener slugs e ids sin acentos cuando deban ser estables o técnicos
+
+Criterio de aceptacion:
+
+- no quedan textos visibles sin acento por limitacion tecnica inexistente
+- ids, rutas y claves siguen siendo estables y ASCII cuando conviene
+
+### Hito 10: Pantalla siempre encendida
+
+Prioridad: 3.
+
+Objetivo: permitir que el iPhone no se bloquee durante el entrenamiento cuando el navegador lo soporte.
+
+Tareas:
+
+- añadir una preferencia en Ajustes para mantener pantalla encendida
+- guardar la preferencia localmente
+- solicitar `screen wake lock` mientras la app está visible
+- liberar el bloqueo al desactivar la preferencia o cerrar la app
+- degradar sin error si Safari/iOS no soporta la API
+
+Criterio de aceptacion:
+
+- el ajuste aparece en la pantalla de configuración
+- activar o desactivar el ajuste no interrumpe el entrenamiento
+- en navegadores compatibles la pantalla se mantiene encendida
+- en navegadores no compatibles la app sigue funcionando normalmente
+
+### Hito 11: Validación real en iPhone
 
 Objetivo: probar la app como se usara en el gimnasio y corregir fricciones de uso real.
 
@@ -461,7 +526,7 @@ Criterio de aceptacion:
 - la exportacion CSV se puede guardar desde el iPhone
 - el flujo de superseries se entiende sin tener que pensarlo
 
-### Hito 9: Pulido tactil y visual de controles
+### Hito 12: Pulido tactil y visual de controles
 
 Objetivo: que la app se sienta mas comoda en mano durante el entrenamiento.
 
@@ -481,7 +546,7 @@ Criterio de aceptacion:
 - los controles son faciles de pulsar con una mano
 - no hay texto importante cortado en iPhone
 
-### Hito 10: Robustez de persistencia y exportacion
+### Hito 13: Robustez de persistencia y exportacion
 
 Objetivo: hacer mas fiable el ciclo registro local -> CSV -> Obsidian/Archivos.
 
@@ -490,7 +555,7 @@ Tareas:
 - mostrar estado simple de guardado local despues de registrar una serie
 - proteger contra doble pulsacion accidental en `Registrar serie`
 - permitir reexportar un entrenamiento terminado sin perder datos
-- definir si se guarda tambien un resumen por ejercicio ademas del CSV por serie
+- definir si se guarda también un resumen por ejercicio además del CSV por serie
 - documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
 - revisar compatibilidad del CSV con el fichero maestro de Obsidian
 - decidir si el CSV debe incluir version de esquema
@@ -502,7 +567,7 @@ Criterio de aceptacion:
 - el usuario entiende donde queda el CSV y como moverlo al repositorio personal
 - los campos exportados permiten analizar volumen, carga, RIR, molestias y superseries
 
-### Hito 11: Duracion real del entrenamiento
+### Hito 14: Duracion real del entrenamiento
 
 Objetivo: medir cuanto dura una sesion y compararlo con la estimacion del plan.
 
@@ -521,7 +586,7 @@ Criterio de aceptacion:
 - la app indica si la sesion fue mas corta, similar o mas larga que lo previsto
 - la informacion queda disponible para revision posterior
 
-### Hito 12: Superseries v2
+### Hito 15: Superseries v2
 
 Objetivo: mejorar la primera version de superseries para cubrir casos menos regulares.
 
@@ -541,7 +606,7 @@ Criterio de aceptacion:
 - los casos irregulares estan definidos y no generan comportamiento ambiguo
 - el secuenciador queda protegido con tests
 
-### Hito 13: Plan y progresion asistida
+### Hito 16: Plan y progresion asistida
 
 Objetivo: usar los registros para facilitar decisiones futuras sin automatizar demasiado pronto.
 
@@ -560,7 +625,7 @@ Criterio de aceptacion:
 - las molestias y saltos quedan visibles sin analizar el CSV a mano
 - el plan sigue siendo explicito por fecha, sin calculos ocultos en la UI
 
-### Hito 14: Instalacion/offline mas solida
+### Hito 17: Instalacion/offline mas solida
 
 Objetivo: reducir riesgos de uso en gimnasio sin red.
 
@@ -579,7 +644,7 @@ Criterio de aceptacion:
 - el usuario puede comprobar que version esta usando
 - actualizar la app no borra datos locales
 
-### Hito 15: Layout movil horizontal
+### Hito 18: Layout movil horizontal
 
 Objetivo: adaptar la app a iPhone en horizontal sin degradar el flujo vertical.
 
@@ -597,7 +662,7 @@ Criterio de aceptacion:
 - los controles siguen siendo tactiles y legibles
 - no se introduce scroll durante serie, feedback o descanso
 
-### Hito 16: Historial dentro de la app
+### Hito 19: Historial dentro de la app
 
 Objetivo: consultar sesiones anteriores sin depender del CSV exportado.
 
@@ -641,7 +706,7 @@ Criterio de aceptacion:
 
 ## Proximo hito recomendado
 
-Empezar por el Hito 8: validacion real en iPhone.
+Empezar por el Hito 11: validación real en iPhone.
 
 Checklist minima de la siguiente iteracion:
 
@@ -653,4 +718,4 @@ Checklist minima de la siguiente iteracion:
 6. Exportar CSV y guardar en Archivos.
 7. Anotar fricciones de tamano, scroll, textos cortados o pulsaciones incomodas.
 
-Despues de esa prueba, priorizar Hito 9 si el problema principal es tactil/visual, o Hito 10 si el problema principal es fiabilidad de datos/exportacion.
+Despues de esa prueba, priorizar Hito 12 si el problema principal es tactil/visual, o Hito 13 si el problema principal es fiabilidad de datos/exportacion.

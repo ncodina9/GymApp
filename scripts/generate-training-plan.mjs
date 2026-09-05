@@ -16,6 +16,22 @@ const weekdays = [
 const sourceDocument =
   '/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md';
 
+const barbellWeightKg = 20;
+const dumbbellLoadsKg = [
+  5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30,
+];
+const plateInventoryKg = [
+  { weight: 1.25, count: 4 },
+  { weight: 2.5, count: 4 },
+  { weight: 5, count: 12 },
+  { weight: 10, count: 12 },
+  { weight: 15, count: 2 },
+  { weight: 20, count: 4 },
+];
+const barbellLoadsKg = buildBarbellLoads();
+const externalLoadsKg = buildPlateCombinationLoads();
+const cableLoadsKg = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
+
 const baseSessions = {
   monday: {
     title: 'Lunes - Torso fuerza',
@@ -25,21 +41,21 @@ const baseSessions = {
       exercise(
         'press-banca-barra',
         'Press banca con barra',
-        'Basico',
+        'Básico',
         'A',
         5,
         5,
         65,
         150,
         [
-          'Si queda demasiado facil, subir solo 2.5 kg la semana siguiente.',
-          'Mantener 1-2 RIR en la ultima serie.',
+          'Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente.',
+          'Mantener 1-2 RIR en la última serie.',
         ],
       ),
       exercise(
         'dominadas-lastradas',
         'Dominadas lastradas',
-        'Basico',
+        'Básico',
         'B',
         5,
         5,
@@ -53,18 +69,18 @@ const baseSessions = {
       exercise(
         'remo-inclinado-barra',
         'Remo inclinado con barra',
-        'Basico',
+        'Básico',
         'C',
         4,
         6,
         57.5,
         120,
-        ['Torso firme y mismo angulo en todas las reps.'],
+        ['Torso firme y mismo ángulo en todas las reps.'],
       ),
       exercise(
         'press-militar-pie',
         'Press militar de pie',
-        'Basico',
+        'Básico',
         'D',
         4,
         6,
@@ -85,7 +101,7 @@ const baseSessions = {
       ),
       exercise(
         'curl-biceps-alterno',
-        'Curl biceps alterno',
+        'Curl bíceps alterno',
         'Accesorio',
         'E2',
         3,
@@ -96,7 +112,7 @@ const baseSessions = {
       ),
       exercise(
         'triceps-polea-simple',
-        'Triceps en polea simple',
+        'Tríceps en polea simple',
         'Accesorio',
         'F',
         3,
@@ -115,7 +131,7 @@ const baseSessions = {
       exercise(
         'sentadilla-barra',
         'Sentadilla con barra',
-        'Basico',
+        'Básico',
         'A',
         4,
         5,
@@ -129,18 +145,18 @@ const baseSessions = {
       exercise(
         'peso-muerto-rumano-barra',
         'Peso muerto rumano con barra',
-        'Basico',
+        'Básico',
         'B',
         4,
         6,
         65,
         150,
-        ['Cadera atras, espalda neutra y barra pegada.'],
+        ['Cadera atrás, espalda neutra y barra pegada.'],
       ),
       exercise(
         'hip-thrust-barra',
         'Hip thrust / puente con barra',
-        'Basico',
+        'Básico',
         'C',
         4,
         8,
@@ -150,7 +166,7 @@ const baseSessions = {
       ),
       exercise(
         'extension-cuadriceps',
-        'Extension de cuadriceps',
+        'Extensión de cuádriceps',
         'Accesorio',
         'D1',
         3,
@@ -161,7 +177,7 @@ const baseSessions = {
       ),
       exercise(
         'curl-femoral-maquina',
-        'Curl femoral maquina',
+        'Curl femoral máquina',
         'Accesorio',
         'D2',
         3,
@@ -172,7 +188,7 @@ const baseSessions = {
       ),
       exercise(
         'gemelos-pie',
-        'Elevacion de gemelos de pie',
+        'Elevación de gemelos de pie',
         'Accesorio',
         'E',
         4,
@@ -187,10 +203,10 @@ const baseSessions = {
         'Accesorio',
         'F',
         3,
-        45,
+        60,
         0,
         45,
-        ['Series de 45-60 s sin perder posicion.'],
+        ['Series de 60 s sin perder posición.'],
         { measure: 'duration' },
       ),
     ],
@@ -203,7 +219,7 @@ const baseSessions = {
       exercise(
         'press-banca-inclinado',
         'Press banca inclinado con barra o mancuernas',
-        'Basico',
+        'Básico',
         'A',
         4,
         8,
@@ -214,35 +230,35 @@ const baseSessions = {
       exercise(
         'dominadas-peso-corporal',
         'Dominadas peso corporal',
-        'Basico',
+        'Básico',
         'B',
         4,
         9,
         0,
         90,
-        ['Rango 8-10 reps, dejando 1-2 reps en recamara.'],
+        ['Rango 8-10 reps, dejando 1-2 reps en recámara.'],
       ),
       exercise(
         'press-militar-velocidad',
         'Press militar velocidad',
-        'Basico',
+        'Básico',
         'C',
         6,
         3,
         30,
         75,
-        ['La barra debe moverse rapido. Si se ralentiza, bajar 2.5-5 kg.'],
+        ['La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.'],
       ),
       exercise(
         'remo-barra-multipower',
         'Remo con barra o remo en multipower',
-        'Basico',
+        'Básico',
         'D',
         4,
         10,
         52.5,
         90,
-        ['Mantener tension y recorrido estable.'],
+        ['Mantener tensión y recorrido estable.'],
       ),
       exercise(
         'pullover-mancuerna',
@@ -279,7 +295,7 @@ const baseSessions = {
       ),
       exercise(
         'triceps-polea-volumen',
-        'Triceps en polea simple',
+        'Tríceps en polea simple',
         'Accesorio',
         'G',
         4,
@@ -298,18 +314,18 @@ const baseSessions = {
       exercise(
         'press-cerrado-multipower',
         'Press banca agarre cerrado o press en multipower',
-        'Basico',
+        'Básico',
         'A',
         4,
         7,
         57.5,
         120,
-        ['Rango 6-8 reps. Cuidar muneca.'],
+        ['Rango 6-8 reps. Cuidar muñeca.'],
       ),
       exercise(
         'dominadas-supinas',
         'Dominadas supinas',
-        'Basico',
+        'Básico',
         'B',
         4,
         7,
@@ -319,8 +335,8 @@ const baseSessions = {
       ),
       exercise(
         'rdl-tecnico',
-        'Peso muerto rumano tecnico',
-        'Basico tecnico',
+        'Peso muerto rumano técnico',
+        'Básico técnico',
         'C',
         3,
         10,
@@ -331,7 +347,7 @@ const baseSessions = {
       exercise(
         'hip-thrust-volumen',
         'Hip thrust volumen',
-        'Basico',
+        'Básico',
         'D',
         3,
         11,
@@ -341,18 +357,18 @@ const baseSessions = {
       ),
       exercise(
         'gemelos-sentado-multipower',
-        'Elevacion de gemelos sentado o en prensa/multipower',
+        'Elevación de gemelos sentado o en prensa/multipower',
         'Accesorio',
         'E',
         3,
         15,
         0,
         60,
-        ['Usar RIR 2 si la maquina no tiene referencia clara.'],
+        ['Usar RIR 2 si la máquina no tiene referencia clara.'],
       ),
       exercise(
         'curl-biceps-barra-mancuernas',
-        'Curl biceps barra o mancuernas',
+        'Curl bíceps barra o mancuernas',
         'Accesorio',
         'F1',
         3,
@@ -363,7 +379,7 @@ const baseSessions = {
       ),
       exercise(
         'extension-triceps-polea',
-        'Extension triceps polea',
+        'Extensión tríceps polea',
         'Accesorio',
         'F2',
         3,
@@ -374,7 +390,7 @@ const baseSessions = {
       ),
       exercise(
         'elevacion-lateral-mecanica',
-        'Elevacion lateral mecanica',
+        'Elevación lateral mecánica',
         'Accesorio',
         'G',
         3,
@@ -530,7 +546,7 @@ function adaptExercise(item, week) {
     );
   }
 
-  if (templateWeek >= 5 && templateWeek <= 7 && item.type === 'Basico') {
+  if (templateWeek >= 5 && templateWeek <= 7 && isBasic(item)) {
     setCount = item.exerciseId.includes('dominadas')
       ? 6
       : Math.max(item.setCount, 5);
@@ -538,7 +554,7 @@ function adaptExercise(item, week) {
     restSeconds = Math.max(restSeconds, 150);
   }
 
-  if (templateWeek >= 9 && templateWeek <= 11 && item.type === 'Basico') {
+  if (templateWeek >= 9 && templateWeek <= 11 && isBasic(item)) {
     setCount = item.exerciseId.includes('hip-thrust')
       ? 4
       : Math.max(item.setCount, 5);
@@ -568,16 +584,21 @@ function adaptExercise(item, week) {
 
   if (test) {
     phase = 'test';
-    setCount = item.type === 'Basico' ? 2 : Math.min(2, item.setCount);
-    reps = item.type === 'Basico' ? Math.max(3, item.reps) : item.reps;
-    restSeconds =
-      item.type === 'Basico' ? Math.max(180, restSeconds) : restSeconds;
+    setCount = isBasic(item) ? 2 : Math.min(2, item.setCount);
+    reps = isBasic(item) ? Math.max(3, item.reps) : item.reps;
+    restSeconds = isBasic(item) ? Math.max(180, restSeconds) : restSeconds;
   }
+
+  if (item.measure === 'duration') {
+    durationSeconds = 60;
+  }
+
+  weightKg = getAvailableLoad(item, weightKg);
 
   const sets = Array.from({ length: setCount }, (_, index) => ({
     setIndex: index + 1,
     targetReps: reps,
-    targetWeightKg: roundLoad(weightKg),
+    targetWeightKg: weightKg,
     targetDurationSeconds:
       item.measure === 'duration' ? durationSeconds : undefined,
     restSeconds,
@@ -596,8 +617,8 @@ function adaptExercise(item, week) {
     target:
       item.measure === 'duration'
         ? `${setCount}x${durationSeconds}s`
-        : `${setCount}x${reps} @ ${formatKg(roundLoad(weightKg))}`,
-    decisionOptions: decisionOptions(item, templateWeek, roundLoad(weightKg), {
+        : `${setCount}x${reps} @ ${formatKg(weightKg)}`,
+    decisionOptions: decisionOptions(item, templateWeek, weightKg, {
       postVacationAdaptation,
     }),
     sets,
@@ -607,14 +628,12 @@ function adaptExercise(item, week) {
 function decisionOptions(item, week, weightKg, options = {}) {
   if (item.weightKg === 0) {
     return options.postVacationAdaptation
-      ? ['Mantener suave', 'Subir reps si facil', 'Marcar molestia']
+      ? ['Mantener suave', 'Subir reps si fácil', 'Marcar molestia']
       : ['Mantener', 'Subir reps', 'Marcar molestia'];
   }
 
-  const step =
-    item.type === 'Basico' && item.name.includes('Hip thrust') ? 5 : 2.5;
-  const next = roundLoad(weightKg + step);
-  const down = roundLoad(Math.max(0, weightKg - step));
+  const next = getNextAvailableLoad(item, weightKg);
+  const down = getPreviousAvailableLoad(item, weightKg);
 
   if (options.postVacationAdaptation) {
     return ['Mantener suave', `Subir a ${formatKg(next)}`, 'Marcar molestia'];
@@ -623,7 +642,7 @@ function decisionOptions(item, week, weightKg, options = {}) {
   if (week === 4 || week === 8) {
     return [
       'Cerrar descarga',
-      `Volver a ${formatKg(item.weightKg)}`,
+      `Volver a ${formatKg(getAvailableLoad(item, item.weightKg))}`,
       'Marcar molestia',
     ];
   }
@@ -662,10 +681,10 @@ function weekdayLabel(date) {
     'domingo',
     'lunes',
     'martes',
-    'miercoles',
+    'miércoles',
     'jueves',
     'viernes',
-    'sabado',
+    'sábado',
   ][date.getDay()];
 }
 
@@ -686,6 +705,183 @@ function roundLoad(value) {
   return Math.round(value * 2) / 2;
 }
 
+function roundPlateLoad(value) {
+  return Math.round(value * 100) / 100;
+}
+
+function getAvailableLoad(item, value) {
+  if (value <= 0) {
+    return 0;
+  }
+
+  const loadKind = getLoadKind(item);
+
+  if (loadKind === 'dumbbell') {
+    return nearestAvailable(value, dumbbellLoadsKg);
+  }
+
+  if (loadKind === 'machine') {
+    return nearestAvailable(value, cableLoadsKg);
+  }
+
+  if (loadKind === 'external') {
+    return nearestAvailable(value, externalLoadsKg);
+  }
+
+  return nearestAvailable(value, barbellLoadsKg);
+}
+
+function getNextAvailableLoad(item, value) {
+  return getAdjacentAvailableLoad(item, value, 1);
+}
+
+function getPreviousAvailableLoad(item, value) {
+  return getAdjacentAvailableLoad(item, value, -1);
+}
+
+function getAdjacentAvailableLoad(item, value, direction) {
+  if (value <= 0) {
+    return 0;
+  }
+
+  const loads = getAvailableLoads(item);
+  const currentIndex = loads.findIndex((load) => load === value);
+  const index =
+    currentIndex >= 0
+      ? currentIndex
+      : loads.findIndex((load) => load === nearestAvailable(value, loads));
+  const nextIndex = Math.min(loads.length - 1, Math.max(0, index + direction));
+
+  return loads[nextIndex] ?? value;
+}
+
+function getAvailableLoads(item) {
+  const loadKind = getLoadKind(item);
+
+  if (loadKind === 'dumbbell') {
+    return dumbbellLoadsKg;
+  }
+
+  if (loadKind === 'machine') {
+    return cableLoadsKg;
+  }
+
+  if (loadKind === 'external') {
+    return externalLoadsKg;
+  }
+
+  return barbellLoadsKg;
+}
+
+function getLoadKind(item) {
+  const text =
+    `${item.exerciseId} ${item.name} ${item.notes.join(' ')}`.toLowerCase();
+
+  if (item.measure === 'duration' || item.weightKg === 0) {
+    return 'bodyweight';
+  }
+
+  if (text.includes('dominadas-lastradas')) {
+    return 'external';
+  }
+
+  if (
+    text.includes('peso por mancuerna') ||
+    text.includes('elevaciones laterales') ||
+    text.includes('elevación lateral') ||
+    text.includes('curl martillo') ||
+    text.includes('curl bíceps') ||
+    (text.includes('mancuerna') && !text.includes('barra o mancuernas'))
+  ) {
+    return 'dumbbell';
+  }
+
+  if (
+    text.includes('polea') ||
+    (text.includes('máquina') && !text.includes('multipower'))
+  ) {
+    return 'machine';
+  }
+
+  return 'barbell';
+}
+
+function isBasic(item) {
+  return item.type
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .startsWith('basico');
+}
+
+function nearestAvailable(value, loads) {
+  return loads.reduce((best, candidate) => {
+    const bestDistance = Math.abs(best - value);
+    const candidateDistance = Math.abs(candidate - value);
+
+    if (candidateDistance < bestDistance) {
+      return candidate;
+    }
+
+    if (candidateDistance === bestDistance && candidate < best) {
+      return candidate;
+    }
+
+    return best;
+  }, loads[0]);
+}
+
+function buildBarbellLoads() {
+  const sideLoads = buildSidePlateLoads();
+  return Array.from(
+    new Set(
+      sideLoads.map((sideLoad) => roundLoad(barbellWeightKg + sideLoad * 2)),
+    ),
+  ).sort((a, b) => a - b);
+}
+
+function buildSidePlateLoads() {
+  const pairs = plateInventoryKg.map((plate) => ({
+    weight: plate.weight,
+    count: Math.floor(plate.count / 2),
+  }));
+  const loads = new Set([0]);
+
+  pairs.forEach((plate) => {
+    const existing = Array.from(loads);
+
+    existing.forEach((load) => {
+      Array.from({ length: plate.count }).forEach((_, index) => {
+        loads.add(roundPlateLoad(load + plate.weight * (index + 1)));
+      });
+    });
+  });
+
+  return Array.from(loads);
+}
+
+function buildPlateCombinationLoads() {
+  const loads = new Set([0]);
+
+  plateInventoryKg.forEach((plate) => {
+    const existing = Array.from(loads);
+
+    existing.forEach((load) => {
+      Array.from({ length: plate.count }).forEach((_, index) => {
+        loads.add(roundPlateLoad(load + plate.weight * (index + 1)));
+      });
+    });
+  });
+
+  return Array.from(loads)
+    .filter((load) => load > 0)
+    .sort((a, b) => a - b);
+}
+
 function formatKg(value) {
-  return `${Number.isInteger(value) ? value : value.toFixed(1)} kg`;
+  if (Number.isInteger(value)) {
+    return `${value} kg`;
+  }
+
+  return `${value.toFixed(value * 2 === Math.round(value * 2) ? 1 : 2)} kg`;
 }

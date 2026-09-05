@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import planData from '@/data/trainingPlan.json';
 import {
   clearSessionEvents,
@@ -105,6 +106,16 @@ type WorkoutDraft = {
   setNote: string;
 };
 
+type WakeLockSentinel = {
+  release: () => Promise<void>;
+};
+
+type WakeLockNavigator = Navigator & {
+  wakeLock?: {
+    request: (type: 'screen') => Promise<WakeLockSentinel>;
+  };
+};
+
 type WebMcpTool = {
   name: string;
   title: string;
@@ -126,6 +137,7 @@ type WebMcpDocument = Document & {
 const trainingPlan = planData as TrainingPlan;
 const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 const themeStorageKey = 'gymapp:appearance-theme';
+const wakeLockStorageKey = 'gymapp:keep-screen-awake';
 
 const fallbackSession = trainingPlan.sessions[0];
 const appearanceThemes: { value: AppearanceTheme; label: string }[] = [
@@ -165,6 +177,14 @@ const loadAppearanceTheme = (): AppearanceTheme => {
 
   const stored = window.localStorage.getItem(themeStorageKey);
   return isAppearanceTheme(stored) ? stored : 'system';
+};
+
+const loadKeepScreenAwake = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return window.localStorage.getItem(wakeLockStorageKey) === 'true';
 };
 
 const getRecommendedSession = () => {
@@ -324,7 +344,9 @@ const inferLoadType = (exercise: Exercise | undefined): LoadType => {
     text.includes('mancuernas') ||
     text.includes('elevaciones laterales') ||
     text.includes('elevacion lateral') ||
+    text.includes('elevación lateral') ||
     text.includes('curl biceps alterno') ||
+    text.includes('curl bíceps alterno') ||
     text.includes('curl martillo') ||
     text.includes('pull-over')
   ) {
@@ -379,7 +401,7 @@ const getPreviewLoadLabel = (loadType: LoadType) => {
   }
 
   if (loadType === 'machine') {
-    return 'maquina';
+    return 'máquina';
   }
 
   return 'kg';
@@ -557,6 +579,7 @@ export default function Home() {
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const [appearanceTheme, setAppearanceTheme] =
     useState<AppearanceTheme>('system');
+  const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const [settingsReturnPhase, setSettingsReturnPhase] =
     useState<Phase>('today');
   const selectedSession =
@@ -604,6 +627,7 @@ export default function Home() {
     const timeout = window.setTimeout(() => {
       setDraft(loadDraft() ?? makeDraft());
       setAppearanceTheme(loadAppearanceTheme());
+      setKeepScreenAwake(loadKeepScreenAwake());
       setHasLoadedDraft(true);
     }, 0);
 
@@ -647,6 +671,56 @@ export default function Home() {
 
     window.localStorage.setItem(storageKey, JSON.stringify(draft));
   }, [draft, hasLoadedDraft]);
+
+  useEffect(() => {
+    if (!hasLoadedDraft) {
+      return;
+    }
+
+    window.localStorage.setItem(wakeLockStorageKey, String(keepScreenAwake));
+  }, [hasLoadedDraft, keepScreenAwake]);
+
+  useEffect(() => {
+    if (!keepScreenAwake || typeof navigator === 'undefined') {
+      return;
+    }
+
+    const wakeLock = (navigator as WakeLockNavigator).wakeLock;
+
+    if (!wakeLock) {
+      return;
+    }
+
+    let released = false;
+    let lock: WakeLockSentinel | null = null;
+
+    const requestWakeLock = async () => {
+      if (released || document.visibilityState !== 'visible') {
+        return;
+      }
+
+      try {
+        lock = await wakeLock.request('screen');
+      } catch {
+        lock = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void requestWakeLock();
+      }
+    };
+
+    void requestWakeLock();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      released = true;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      void lock?.release().catch(() => undefined);
+    };
+  }, [keepScreenAwake]);
 
   useEffect(() => {
     let cancelled = false;
@@ -967,7 +1041,7 @@ export default function Home() {
     register({
       name: 'get_training_state',
       title: 'Leer entrenamiento',
-      description: 'Devuelve la sesion, fase y serie visibles en GymApp.',
+      description: 'Devuelve la sesión, fase y serie visibles en GymApp.',
       inputSchema: { type: 'object', additionalProperties: false },
       annotations: { readOnlyHint: true, untrustedContentHint: false },
       execute: () => ({
@@ -983,9 +1057,9 @@ export default function Home() {
 
     register({
       name: 'start_current_training_session',
-      title: 'Empezar sesion',
+      title: 'Empezar sesión',
       description:
-        'Abre la pantalla de la primera serie de la sesion seleccionada.',
+        'Abre la pantalla de la primera serie de la sesión seleccionada.',
       inputSchema: { type: 'object', additionalProperties: false },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: () => {
@@ -1094,8 +1168,10 @@ export default function Home() {
         {draft.phase === 'settings' ? (
           <SettingsScreen
             theme={appearanceTheme}
+            keepScreenAwake={keepScreenAwake}
             selectedSessionLabel={selectedSession.label}
             onThemeChange={setAppearanceTheme}
+            onKeepScreenAwakeChange={setKeepScreenAwake}
             onResetCurrent={() => resetWorkoutPosition(draft.selectedSessionId)}
             onClearAllData={clearAllLocalData}
             onBack={() => patchDraft({ phase: settingsReturnPhase })}
@@ -1300,7 +1376,7 @@ function TodayScreen({
         style={{ gridTemplateColumns: '56px minmax(0, 1fr)' }}
       >
         <Button
-          aria-label="Configuracion"
+          aria-label="Configuración"
           className="h-14 w-14 rounded-[1.75rem] p-0"
           style={{ width: '56px' }}
           variant="outline"
@@ -1334,7 +1410,7 @@ function PreviewScreen({
     <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
       <div className="shrink-0 rounded-lg border bg-card p-4 shadow-sm">
         <p className="text-sm font-semibold text-muted-foreground">
-          Preparacion
+          Preparación
         </p>
         <h2 className="mt-1 text-[1.85rem] font-black leading-tight tracking-normal">
           {session.label}
@@ -1432,15 +1508,19 @@ function PreviewMetric({ label, value }: { label: string; value: string }) {
 
 function SettingsScreen({
   theme,
+  keepScreenAwake,
   selectedSessionLabel,
   onThemeChange,
+  onKeepScreenAwakeChange,
   onResetCurrent,
   onClearAllData,
   onBack,
 }: {
   theme: AppearanceTheme;
+  keepScreenAwake: boolean;
   selectedSessionLabel: string;
   onThemeChange: (theme: AppearanceTheme) => void;
+  onKeepScreenAwakeChange: (enabled: boolean) => void;
   onResetCurrent: () => void;
   onClearAllData: () => void;
   onBack: () => void;
@@ -1476,6 +1556,27 @@ function SettingsScreen({
               />
             </button>
           ))}
+        </div>
+
+        <div className="mt-5">
+          <p className="text-sm font-semibold text-muted-foreground">
+            Entrenamiento
+          </p>
+          <div className="mt-2 flex min-h-16 w-full items-center justify-between gap-4 rounded-[1.75rem] border bg-secondary px-5 py-3 text-left text-secondary-foreground">
+            <span className="min-w-0">
+              <span className="block text-base font-black leading-tight">
+                Pantalla siempre encendida
+              </span>
+              <span className="mt-0.5 block text-xs font-bold leading-tight text-muted-foreground">
+                Evita el bloqueo si el iPhone lo permite.
+              </span>
+            </span>
+            <Switch
+              checked={keepScreenAwake}
+              onCheckedChange={onKeepScreenAwakeChange}
+              aria-label="Mantener pantalla encendida"
+            />
+          </div>
         </div>
 
         <div className="mt-5">
@@ -2008,7 +2109,7 @@ function SetFeedback({
         onChange={onPainKneeChange}
       />
       <PainControl
-        label="Muneca"
+        label="Muñeca"
         value={painWrist}
         onChange={onPainWristChange}
       />
@@ -2116,7 +2217,7 @@ function TransitionScreen({
 
       {nextExercise ? (
         <div className="rounded-lg bg-secondary px-4 py-3">
-          <p className="text-sm font-semibold text-muted-foreground">Despues</p>
+          <p className="text-sm font-semibold text-muted-foreground">Después</p>
           <p className="text-2xl font-black tracking-normal">
             {nextExercise.name}
           </p>
