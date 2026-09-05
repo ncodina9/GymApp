@@ -608,6 +608,8 @@ Tareas:
 - guardar `finishedAt` al cerrar la sesion
 - mostrar duracion real al finalizar
 - comparar duracion real contra `estimatedMinutes`
+- calcular una estimacion derivada desde el plan con movilidad previa, ejecucion de series, descansos, feedback y cambios entre ejercicios
+- mostrar en la preview si la sesion parece ajustada o si conviene revisar el planning
 - incluir duracion real en el CSV o en un futuro resumen de sesion
 - decidir si las pausas manuales o interrupciones cuentan dentro del tiempo total
 
@@ -623,8 +625,28 @@ Estado parcial:
 - `finishedAt` se guarda al cerrar entrenamiento
 - al finalizar se muestra la duracion real, el tiempo estimado y la diferencia
 - el historial muestra la duracion de las sesiones cerradas cuando existe metadata suficiente
+- la estimacion operativa ya no depende solo del campo manual `estimatedMinutes`
+- la preview desglosa movilidad, trabajo, cambios/feedback y marca sesiones que superan claramente el objetivo de 60 min
 
-Estado: cerrado para la app. Queda como decision futura si la duracion total debe anadirse tambien al CSV por serie o a un resumen independiente de sesion.
+Formula actual de estimacion derivada:
+
+- movilidad previa: 9 min
+- ejecucion de serie temporizada: duracion objetivo de la serie
+- ejecucion de serie por reps: `max(20 s, reps objetivo x 4 s)`
+- feedback por serie: 8 s
+- descanso: descansos planificados del secuenciador, sin descanso entre ejercicios vinculados de una misma ronda de superserie
+- cambio entre ejercicios independientes: 45 s
+- transicion interna dentro de superserie: 15 s
+
+Auditoria inicial del plan actual con esta formula:
+
+- sesiones totales: 51
+- sesiones estimadas en 65 min o menos: 14
+- sesiones estimadas por encima de 65 min: 37
+- sesiones estimadas por encima de 75 min: 30
+- peor caso detectado: `2026-12-10 Torso volumen y potencia`, 115 min estimados, 36 series
+
+Estado: cerrado para la app. Queda como decision futura si la duracion total debe anadirse tambien al CSV por serie o a un resumen independiente de sesion. Las sesiones estimadas por encima de 75 min deben revisarse porque probablemente no caben en una hora real de gimnasio.
 
 ### Hito 15: Superseries v2
 

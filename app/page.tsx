@@ -97,6 +97,8 @@ type SessionHistorySummary = {
   sessionId: string;
   sessionDate: string;
   sessionLabel: string;
+  estimatedMinutes: number;
+  derivedEstimatedMinutes: number;
   attemptedSets: number;
   completedSets: number;
   totalSets: number;
@@ -164,12 +166,26 @@ type WebMcpDocument = Document & {
 
 type WeightStep = 0.5 | 1 | 1.25 | 2.5 | 5;
 
+type SessionDurationEstimate = {
+  totalMinutes: number;
+  mobilityMinutes: number;
+  executionMinutes: number;
+  restMinutes: number;
+  changeoverMinutes: number;
+  feedbackMinutes: number;
+  targetMinutes: number;
+};
+
 const trainingPlan = planData as TrainingPlan;
 const appVersion = packageData.version;
 const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 const themeStorageKey = 'gymapp:appearance-theme';
 const wakeLockStorageKey = 'gymapp:keep-screen-awake';
 const exportedSessionRetentionDays = 30;
+const warmupMobilityMinutes = 9;
+const feedbackSecondsPerSet = 8;
+const exerciseChangeSeconds = 45;
+const supersetTransitionSeconds = 15;
 
 const barbellWeightKg = 20;
 const dumbbellLoadsKg = [
@@ -436,6 +452,82 @@ const getDurationDeltaLabel = (
     : `${Math.abs(delta)} min más rápido`;
 };
 
+const getSetExecutionSeconds = (set: TrainingSet) => {
+  if (set.type === 'timed') {
+    return set.targetDurationSeconds ?? 60;
+  }
+
+  return Math.max(20, (set.targetReps ?? 8) * 4);
+};
+
+const estimateSessionDuration = (
+  session: TrainingSession,
+): SessionDurationEstimate => {
+  const steps = buildExecutionSteps(session);
+  let executionSeconds = 0;
+  let restSeconds = 0;
+  let changeoverSeconds = 0;
+  const feedbackSeconds = steps.length * feedbackSecondsPerSet;
+
+  steps.forEach((step, index) => {
+    const currentSet =
+      session.exercises[step.exerciseIndex].sets[step.setIndex];
+    const nextStep = steps[index + 1];
+    executionSeconds += getSetExecutionSeconds(currentSet);
+
+    if (!nextStep) {
+      return;
+    }
+
+    const isSameSupersetRound =
+      step.supersetId !== undefined &&
+      step.supersetId === nextStep.supersetId &&
+      step.roundNumber === nextStep.roundNumber;
+
+    if (!isSameSupersetRound) {
+      restSeconds += currentSet.restSeconds;
+    }
+
+    if (step.exerciseIndex !== nextStep.exerciseIndex) {
+      changeoverSeconds += isSameSupersetRound
+        ? supersetTransitionSeconds
+        : exerciseChangeSeconds;
+    }
+  });
+
+  const mobilitySeconds = warmupMobilityMinutes * 60;
+  const totalSeconds =
+    mobilitySeconds +
+    executionSeconds +
+    restSeconds +
+    changeoverSeconds +
+    feedbackSeconds;
+
+  return {
+    totalMinutes: Math.round(totalSeconds / 60),
+    mobilityMinutes: warmupMobilityMinutes,
+    executionMinutes: Math.round(executionSeconds / 60),
+    restMinutes: Math.round(restSeconds / 60),
+    changeoverMinutes: Math.round(changeoverSeconds / 60),
+    feedbackMinutes: Math.round(feedbackSeconds / 60),
+    targetMinutes: session.estimatedMinutes,
+  };
+};
+
+const getDurationEstimateStatus = (estimate: SessionDurationEstimate) => {
+  const delta = estimate.totalMinutes - estimate.targetMinutes;
+
+  if (delta <= 5) {
+    return 'Dentro del objetivo';
+  }
+
+  if (delta <= 15) {
+    return `Ajustada: +${delta} min`;
+  }
+
+  return `Revisar planning: +${delta} min`;
+};
+
 const createEventId = () => {
   if (
     typeof crypto !== 'undefined' &&
@@ -522,6 +614,9 @@ const getSessionHistorySummaries = (
           sessionId: session.sessionId,
           sessionDate: session.date,
           sessionLabel: session.label,
+          estimatedMinutes: session.estimatedMinutes,
+          derivedEstimatedMinutes:
+            estimateSessionDuration(session).totalMinutes,
           attemptedSets: sortedEvents.length,
           completedSets: sortedEvents.filter(
             (event) => event.status === 'completed',
@@ -961,6 +1056,10 @@ export default function Home() {
     trainingPlan.sessions.find(
       (session) => session.sessionId === draft.selectedSessionId,
     ) ?? fallbackSession;
+  const selectedSessionDurationEstimate = useMemo(
+    () => estimateSessionDuration(selectedSession),
+    [selectedSession],
+  );
   const executionSteps = useMemo(
     () => buildExecutionSteps(selectedSession),
     [selectedSession],
@@ -1680,6 +1779,7 @@ export default function Home() {
         {draft.phase === 'today' ? (
           <TodayScreen
             selectedSession={selectedSession}
+            durationEstimate={selectedSessionDurationEstimate}
             weekSessions={weekSessions}
             hasStarted={hasStarted}
             onChangeSession={changeSession}
@@ -1692,6 +1792,7 @@ export default function Home() {
         {draft.phase === 'preview' ? (
           <PreviewScreen
             session={selectedSession}
+            durationEstimate={selectedSessionDurationEstimate}
             onBack={() => patchDraft({ phase: 'today' })}
             onStart={beginTraining}
           />
@@ -1844,7 +1945,7 @@ export default function Home() {
           <DoneScreen
             completedSets={completedSets}
             totalSets={totalSets}
-            estimatedMinutes={selectedSession.estimatedMinutes}
+            estimatedMinutes={selectedSessionDurationEstimate.totalMinutes}
             {...(workoutDurationMinutes !== undefined
               ? { durationMinutes: workoutDurationMinutes }
               : {})}
@@ -1859,6 +1960,7 @@ export default function Home() {
 
 function TodayScreen({
   selectedSession,
+  durationEstimate,
   weekSessions,
   hasStarted,
   onChangeSession,
@@ -1867,6 +1969,7 @@ function TodayScreen({
   onSettings,
 }: {
   selectedSession: TrainingSession;
+  durationEstimate: SessionDurationEstimate;
   weekSessions: TrainingSession[];
   hasStarted: boolean;
   onChangeSession: (sessionId: string) => void;
@@ -1889,8 +1992,8 @@ function TodayScreen({
         <div className="mt-auto grid grid-cols-3 gap-2 text-center">
           <Metric label="Fecha" value={formatDate(selectedSession.date)} />
           <Metric
-            label="Tiempo"
-            value={`${selectedSession.estimatedMinutes}m`}
+            label="Estimado"
+            value={`${durationEstimate.totalMinutes}m`}
           />
           <Metric
             label="Bloques"
@@ -1959,13 +2062,17 @@ function TodayScreen({
 
 function PreviewScreen({
   session,
+  durationEstimate,
   onBack,
   onStart,
 }: {
   session: TrainingSession;
+  durationEstimate: SessionDurationEstimate;
   onBack: () => void;
   onStart: () => void;
 }) {
+  const durationStatus = getDurationEstimateStatus(durationEstimate);
+
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
       <div className="shrink-0 rounded-lg border bg-card p-4 shadow-sm">
@@ -1977,9 +2084,40 @@ function PreviewScreen({
         </h2>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <Metric label="Fecha" value={formatDate(session.date)} />
-          <Metric label="Tiempo" value={`${session.estimatedMinutes}m`} />
+          <Metric
+            label="Estimado"
+            value={`${durationEstimate.totalMinutes}m`}
+          />
           <Metric label="Bloques" value={`${session.exercises.length}`} />
         </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <Metric
+            label="Movilidad"
+            value={`${durationEstimate.mobilityMinutes}m`}
+          />
+          <Metric
+            label="Trabajo"
+            value={`${
+              durationEstimate.executionMinutes + durationEstimate.restMinutes
+            }m`}
+          />
+          <Metric
+            label="Cambios"
+            value={`${
+              durationEstimate.changeoverMinutes +
+              durationEstimate.feedbackMinutes
+            }m`}
+          />
+        </div>
+        <p
+          className={`mt-3 rounded-lg px-3 py-2 text-center text-sm font-black ${
+            durationEstimate.totalMinutes - durationEstimate.targetMinutes > 15
+              ? 'bg-[var(--action-reset)] text-[var(--action-reset-foreground)]'
+              : 'bg-secondary text-secondary-foreground'
+          }`}
+        >
+          {durationStatus}
+        </p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
@@ -2253,6 +2391,7 @@ function HistorySessionCard({
   const detailParts = [
     formatDate(summary.sessionDate),
     `${summary.attemptedSets}/${summary.totalSets} series`,
+    `est. ${summary.derivedEstimatedMinutes}m`,
     durationMinutes ? formatDurationMinutes(durationMinutes) : undefined,
   ].filter(Boolean);
 
