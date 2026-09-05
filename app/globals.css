@@ -59,7 +59,7 @@ body {
   --card-foreground: oklch(0.15 0.02 255);
   --popover: oklch(0.995 0.002 245);
   --popover-foreground: oklch(0.15 0.02 255);
-  --primary: oklch(0.28 0.025 255);
+  --primary: oklch(0.34 0.025 255);
   --primary-foreground: oklch(0.99 0.002 245);
   --secondary: oklch(0.925 0.01 245);
   --secondary-foreground: oklch(0.2 0.024 255);
@@ -70,8 +70,8 @@ body {
   --destructive: oklch(0.58 0.22 27);
   --border: oklch(0.85 0.012 245);
   --input: oklch(0.85 0.012 245);
-  --ring: oklch(0.42 0.035 255);
-  --chart-1: oklch(0.28 0.025 255);
+  --ring: oklch(0.48 0.035 255);
+  --chart-1: oklch(0.34 0.025 255);
   --chart-2: oklch(0.76 0.16 155);
   --chart-3: oklch(0.58 0.12 220);
   --chart-4: oklch(0.67 0.14 35);
@@ -79,11 +79,11 @@ body {
   --action-back: var(--primary);
   --action-back-foreground: var(--primary-foreground);
   --action-back-border: var(--primary);
-  --action-back-hover: oklch(0.34 0.03 255);
+  --action-back-hover: oklch(0.4 0.03 255);
   --action-skip: var(--primary);
   --action-skip-foreground: var(--primary-foreground);
   --action-skip-border: var(--primary);
-  --action-skip-hover: oklch(0.34 0.03 255);
+  --action-skip-hover: oklch(0.4 0.03 255);
   --action-reset: oklch(0.93 0.055 70);
   --action-reset-foreground: oklch(0.34 0.08 70);
   --action-reset-border: oklch(0.79 0.08 70);
@@ -103,16 +103,16 @@ body {
   --action-rest: var(--primary);
   --action-rest-foreground: var(--primary-foreground);
   --action-rest-border: var(--primary);
-  --action-rest-hover: oklch(0.34 0.03 255);
+  --action-rest-hover: oklch(0.4 0.03 255);
   --radius: 0.5rem;
   --sidebar: oklch(0.995 0.002 245);
   --sidebar-foreground: oklch(0.15 0.02 255);
-  --sidebar-primary: oklch(0.28 0.025 255);
+  --sidebar-primary: oklch(0.34 0.025 255);
   --sidebar-primary-foreground: oklch(0.99 0.002 245);
   --sidebar-accent: oklch(0.925 0.01 245);
   --sidebar-accent-foreground: oklch(0.2 0.024 255);
   --sidebar-border: oklch(0.85 0.012 245);
-  --sidebar-ring: oklch(0.42 0.035 255);
+  --sidebar-ring: oklch(0.48 0.035 255);
 }
 
 .dark {
@@ -122,7 +122,7 @@ body {
   --card-foreground: oklch(0.97 0.004 245);
   --popover: oklch(0.205 0.014 255);
   --popover-foreground: oklch(0.97 0.004 245);
-  --primary: oklch(0.56 0.145 250);
+  --primary: oklch(0.5 0.145 250);
   --primary-foreground: oklch(0.99 0.002 245);
   --secondary: oklch(0.255 0.018 255);
   --secondary-foreground: oklch(0.94 0.006 245);
@@ -133,8 +133,8 @@ body {
   --destructive: oklch(0.69 0.2 25);
   --border: oklch(1 0 0 / 13%);
   --input: oklch(1 0 0 / 17%);
-  --ring: oklch(0.56 0.145 250);
-  --chart-1: oklch(0.56 0.145 250);
+  --ring: oklch(0.5 0.145 250);
+  --chart-1: oklch(0.5 0.145 250);
   --chart-2: oklch(0.72 0.11 220);
   --chart-3: oklch(0.79 0.13 75);
   --chart-4: oklch(0.68 0.15 25);
@@ -142,11 +142,11 @@ body {
   --action-back: var(--primary);
   --action-back-foreground: var(--primary-foreground);
   --action-back-border: var(--primary);
-  --action-back-hover: oklch(0.5 0.15 250);
+  --action-back-hover: oklch(0.44 0.15 250);
   --action-skip: var(--primary);
   --action-skip-foreground: var(--primary-foreground);
   --action-skip-border: var(--primary);
-  --action-skip-hover: oklch(0.5 0.15 250);
+  --action-skip-hover: oklch(0.44 0.15 250);
   --action-reset: oklch(0.31 0.055 70);
   --action-reset-foreground: oklch(0.9 0.06 75);
   --action-reset-border: oklch(0.5 0.075 75);
@@ -166,15 +166,15 @@ body {
   --action-rest: var(--primary);
   --action-rest-foreground: var(--primary-foreground);
   --action-rest-border: var(--primary);
-  --action-rest-hover: oklch(0.5 0.15 250);
+  --action-rest-hover: oklch(0.44 0.15 250);
   --sidebar: oklch(0.205 0.014 255);
   --sidebar-foreground: oklch(0.97 0.004 245);
-  --sidebar-primary: oklch(0.56 0.145 250);
+  --sidebar-primary: oklch(0.5 0.145 250);
   --sidebar-primary-foreground: oklch(0.99 0.002 245);
   --sidebar-accent: oklch(0.255 0.018 255);
   --sidebar-accent-foreground: oklch(0.94 0.006 245);
   --sidebar-border: oklch(1 0 0 / 13%);
-  --sidebar-ring: oklch(0.56 0.145 250);
+  --sidebar-ring: oklch(0.5 0.145 250);
 }
 
 @layer base {
