@@ -32,6 +32,7 @@ export type StoredSessionMetadata = {
   startedAt?: string;
   finishedAt?: string;
   exportedAt?: string;
+  decisions?: Record<string, string>;
 };
 
 const dbName = 'gymapp-local-training';
@@ -204,6 +205,7 @@ export async function markSessionStarted(sessionId: string, startedAt: string) {
     startedAt,
     finishedAt: undefined,
     exportedAt: undefined,
+    decisions: {},
   });
 }
 
@@ -224,6 +226,23 @@ export async function markSessionExported(
   await updateSessionMetadata(sessionId, {
     schemaVersion: 1,
     exportedAt,
+  });
+}
+
+export async function markSessionExerciseDecision(
+  sessionId: string,
+  exerciseId: string,
+  decision: string,
+) {
+  const metadata = await loadSessionMetadata();
+  const current = metadata.find((item) => item.sessionId === sessionId);
+
+  await updateSessionMetadata(sessionId, {
+    schemaVersion: 1,
+    decisions: {
+      ...(current?.decisions ?? {}),
+      [exerciseId]: decision,
+    },
   });
 }
 

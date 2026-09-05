@@ -717,6 +717,10 @@ Criterio de aceptacion:
 - las molestias y saltos quedan visibles sin analizar el CSV a mano
 - el plan sigue siendo explicito por fecha, sin calculos ocultos en la UI
 
+Estado: v1 implementada. La app guarda las decisiones por ejercicio en los metadatos locales de sesion y muestra en Ajustes una seccion de `Progresion` con recomendaciones conservadoras por ejercicio registrado. La recomendacion combina decision marcada, series completadas/saltadas, molestias recientes, ultima carga/reps/RIR y proxima exposicion planificada. No modifica `trainingPlan.json`; el plan sigue siendo explicito por fecha.
+
+Pendiente futuro: convertir estas senales en una vista de revision semanal y preparar una exportacion resumida por ejercicio/sesion para Obsidian.
+
 ### Hito 17: Instalacion/offline mas solida
 
 Objetivo: reducir riesgos de uso en gimnasio sin red.

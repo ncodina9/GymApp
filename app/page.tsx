@@ -29,6 +29,7 @@ import {
   loadSessionEvents,
   loadSessionMetadata,
   markSessionExported,
+  markSessionExerciseDecision,
   markSessionFinished,
   markSessionStarted,
   purgeExportedSessionsOlderThan,
@@ -108,6 +109,27 @@ type SessionHistorySummary = {
   exportedAt?: string;
   firstPerformedAt: string;
   lastPerformedAt: string;
+};
+
+type ExerciseProgressInsight = {
+  exerciseId: string;
+  exerciseName: string;
+  lastDate: string;
+  nextDate?: string;
+  nextSessionLabel?: string;
+  target: string;
+  lastLoadKg?: number;
+  lastReps?: number;
+  lastDurationSeconds?: number;
+  lastRir?: number;
+  lastDecision?: string;
+  completedSets: number;
+  attemptedSets: number;
+  plannedSets: number;
+  skippedSets: number;
+  painHits: number;
+  recommendation: string;
+  tone: 'neutral' | 'up' | 'down' | 'warning';
 };
 
 type WorkoutDraft = {
@@ -642,6 +664,149 @@ const getSessionHistorySummaries = (
     .sort((a, b) => b.lastPerformedAt.localeCompare(a.lastPerformedAt));
 };
 
+const getTodayIso = () => new Date().toISOString().slice(0, 10);
+
+const getExerciseProgressInsights = (
+  sessions: TrainingSession[],
+  events: StoredSetEvent[],
+  metadata: StoredSessionMetadata[],
+): ExerciseProgressInsight[] => {
+  const metadataBySession = new Map(
+    metadata.map((item) => [item.sessionId, item]),
+  );
+  const eventsByExercise = new Map<string, StoredSetEvent[]>();
+
+  events.forEach((event) => {
+    const exerciseEvents = eventsByExercise.get(event.exerciseId) ?? [];
+    exerciseEvents.push(event);
+    eventsByExercise.set(event.exerciseId, exerciseEvents);
+  });
+
+  const todayIso = getTodayIso();
+
+  return Array.from(eventsByExercise.entries())
+    .map(([exerciseId, exerciseEvents]) => {
+      const sortedEvents = [...exerciseEvents].sort((a, b) =>
+        a.performedAt.localeCompare(b.performedAt),
+      );
+      const lastEvent = sortedEvents[sortedEvents.length - 1];
+      const lastSession =
+        sessions.find((session) => session.sessionId === lastEvent.sessionId) ??
+        sessions.find((session) =>
+          session.exercises.some(
+            (exercise) => exercise.exerciseId === exerciseId,
+          ),
+        );
+      const lastExercise = lastSession?.exercises.find(
+        (exercise) => exercise.exerciseId === exerciseId,
+      );
+      const nextSession = sessions
+        .filter((session) => session.date >= todayIso)
+        .find((session) =>
+          session.exercises.some(
+            (exercise) => exercise.exerciseId === exerciseId,
+          ),
+        );
+      const nextExercise = nextSession?.exercises.find(
+        (exercise) => exercise.exerciseId === exerciseId,
+      );
+      const completedEvents = sortedEvents.filter(
+        (event) => event.status === 'completed',
+      );
+      const skippedSets = sortedEvents.filter(
+        (event) => event.status === 'skipped',
+      ).length;
+      const recentEvents = sortedEvents.slice(-12);
+      const painHits = recentEvents.filter(
+        (event) =>
+          event.painKnee > 0 || event.painWrist > 0 || event.painOther > 0,
+      ).length;
+      const sessionEvents = sortedEvents.filter(
+        (event) => event.sessionId === lastEvent.sessionId,
+      );
+      const completedSets = sessionEvents.filter(
+        (event) => event.status === 'completed',
+      ).length;
+      const attemptedSets = sessionEvents.length;
+      const plannedSets = lastExercise?.sets.length ?? attemptedSets;
+      const lastCompletedEvent = completedEvents.at(-1);
+      const lastDecision = metadataBySession.get(lastEvent.sessionId)
+        ?.decisions?.[exerciseId];
+      const decisionText = lastDecision?.toLowerCase() ?? '';
+      const avgRecentRir =
+        completedEvents.length > 0
+          ? completedEvents
+              .slice(-Math.min(3, completedEvents.length))
+              .reduce((total, event) => total + event.rirLast, 0) /
+            Math.min(3, completedEvents.length)
+          : 0;
+
+      let tone: ExerciseProgressInsight['tone'] = 'neutral';
+      let recommendation = 'Mantener y observar';
+
+      if (painHits >= 2 || decisionText.includes('molestia')) {
+        tone = 'warning';
+        recommendation = 'Revisar técnica o carga';
+      } else if (decisionText.includes('bajar')) {
+        tone = 'down';
+        recommendation = lastDecision ?? 'Bajar carga';
+      } else if (decisionText.includes('subir')) {
+        tone = 'up';
+        recommendation = lastDecision ?? 'Subir carga';
+      } else if (skippedSets >= 2 || completedSets < plannedSets) {
+        tone = 'warning';
+        recommendation = 'Mantener hasta completar series';
+      } else if (avgRecentRir >= 2.5 && completedSets >= plannedSets) {
+        tone = 'up';
+        recommendation = 'Candidato a subir';
+      }
+
+      return {
+        exerciseId,
+        exerciseName: nextExercise?.name ?? lastExercise?.name ?? exerciseId,
+        lastDate: lastEvent.sessionDate,
+        ...(nextSession
+          ? {
+              nextDate: nextSession.date,
+              nextSessionLabel: nextSession.label,
+            }
+          : {}),
+        target: formatCsvTarget(
+          nextExercise?.target ?? lastExercise?.target ?? '',
+          inferLoadType(nextExercise ?? lastExercise),
+        ),
+        ...(lastCompletedEvent
+          ? {
+              lastLoadKg: lastCompletedEvent.actualWeightKg,
+              ...(lastCompletedEvent.actualDurationSeconds !== undefined
+                ? {
+                    lastDurationSeconds:
+                      lastCompletedEvent.actualDurationSeconds,
+                  }
+                : { lastReps: lastCompletedEvent.actualReps }),
+              lastRir: lastCompletedEvent.rirLast,
+            }
+          : {}),
+        ...(lastDecision ? { lastDecision } : {}),
+        completedSets,
+        attemptedSets,
+        plannedSets,
+        skippedSets,
+        painHits,
+        recommendation,
+        tone,
+      };
+    })
+    .sort((a, b) => {
+      const toneOrder = { warning: 0, up: 1, down: 2, neutral: 3 };
+      return (
+        toneOrder[a.tone] - toneOrder[b.tone] ||
+        (a.nextDate ?? '9999-12-31').localeCompare(b.nextDate ?? '9999-12-31')
+      );
+    })
+    .slice(0, 8);
+};
+
 const formatDecimal = (value: number) => {
   if (Number.isInteger(value)) {
     return String(value);
@@ -1055,6 +1220,9 @@ export default function Home() {
   const [sessionHistory, setSessionHistory] = useState<SessionHistorySummary[]>(
     [],
   );
+  const [exerciseInsights, setExerciseInsights] = useState<
+    ExerciseProgressInsight[]
+  >([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isRegisteringSet, setIsRegisteringSet] = useState(false);
   const isRegisteringSetRef = useRef(false);
@@ -1137,8 +1305,12 @@ export default function Home() {
       setSessionHistory(
         getSessionHistorySummaries(trainingPlan.sessions, events, metadata),
       );
+      setExerciseInsights(
+        getExerciseProgressInsights(trainingPlan.sessions, events, metadata),
+      );
     } catch {
       setSessionHistory([]);
+      setExerciseInsights([]);
     } finally {
       setIsLoadingHistory(false);
     }
@@ -1573,6 +1745,13 @@ export default function Home() {
       ...current,
       decisions: { ...current.decisions, [exerciseId]: decision },
     }));
+    void markSessionExerciseDecision(
+      selectedSession.sessionId,
+      exerciseId,
+      decision,
+    )
+      .catch(() => undefined)
+      .finally(refreshSessionHistory);
   };
 
   const clearAllLocalData = () => {
@@ -1632,10 +1811,17 @@ export default function Home() {
       trainingPlan.sessions.find((item) => item.sessionId === sessionId) ??
       fallbackSession;
     const records = await loadSessionEvents(session.sessionId);
+    const metadata = await loadSessionMetadata();
+    const sessionDecisions =
+      metadata.find((item) => item.sessionId === session.sessionId)
+        ?.decisions ?? {};
     await exportWorkoutCsv(
       session,
       records,
-      getDecisionFallbacks(records, draft.decisions),
+      getDecisionFallbacks(records, {
+        ...sessionDecisions,
+        ...draft.decisions,
+      }),
     );
     await markSessionExported(session.sessionId, new Date().toISOString());
     await refreshSessionHistory();
@@ -1831,6 +2017,7 @@ export default function Home() {
             wakeLockStatus={wakeLockStatus}
             selectedSessionLabel={selectedSession.label}
             sessionHistory={sessionHistory}
+            exerciseInsights={exerciseInsights}
             isLoadingHistory={isLoadingHistory}
             onThemeChange={setAppearanceTheme}
             onKeepScreenAwakeChange={(enabled) => {
@@ -2245,6 +2432,7 @@ function SettingsScreen({
   wakeLockStatus,
   selectedSessionLabel,
   sessionHistory,
+  exerciseInsights,
   isLoadingHistory,
   onThemeChange,
   onKeepScreenAwakeChange,
@@ -2259,6 +2447,7 @@ function SettingsScreen({
   wakeLockStatus: WakeLockStatus;
   selectedSessionLabel: string;
   sessionHistory: SessionHistorySummary[];
+  exerciseInsights: ExerciseProgressInsight[];
   isLoadingHistory: boolean;
   onThemeChange: (theme: AppearanceTheme) => void;
   onKeepScreenAwakeChange: (enabled: boolean) => void;
@@ -2362,6 +2551,29 @@ function SettingsScreen({
 
         <div className="mt-4">
           <p className="text-sm font-semibold text-muted-foreground">
+            Progresión
+          </p>
+          <div className="mt-2 grid gap-2">
+            {isLoadingHistory ? (
+              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+                Revisando registros...
+              </div>
+            ) : null}
+
+            {!isLoadingHistory && exerciseInsights.length === 0 ? (
+              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+                Aún no hay series suficientes para recomendar ajustes.
+              </div>
+            ) : null}
+
+            {exerciseInsights.map((insight) => (
+              <ExerciseInsightCard key={insight.exerciseId} insight={insight} />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm font-semibold text-muted-foreground">
             Historial local
           </p>
           <div className="mt-2 grid gap-2">
@@ -2400,6 +2612,75 @@ function SettingsScreen({
         Volver
       </Button>
     </section>
+  );
+}
+
+function ExerciseInsightCard({
+  insight,
+}: {
+  insight: ExerciseProgressInsight;
+}) {
+  const toneClassName = {
+    neutral: 'border-border bg-secondary text-secondary-foreground',
+    up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
+    down: 'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
+    warning:
+      'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
+  }[insight.tone];
+  const detailParts = [
+    insight.nextDate ? `Próx. ${formatDate(insight.nextDate)}` : undefined,
+    insight.nextSessionLabel,
+    insight.target,
+  ].filter(Boolean);
+  const lastParts = [
+    `${insight.completedSets}/${insight.plannedSets} series`,
+    insight.lastLoadKg !== undefined
+      ? `${formatCsvNumber(insight.lastLoadKg)} kg`
+      : undefined,
+    insight.lastReps !== undefined ? `${insight.lastReps} reps` : undefined,
+    insight.lastDurationSeconds !== undefined
+      ? formatClock(insight.lastDurationSeconds)
+      : undefined,
+    insight.lastRir !== undefined ? `RIR ${insight.lastRir}` : undefined,
+  ].filter(Boolean);
+  const alertParts = [
+    insight.skippedSets > 0 ? `${insight.skippedSets} saltadas` : undefined,
+    insight.painHits > 0 ? `${insight.painHits} molestias` : undefined,
+  ].filter(Boolean);
+
+  return (
+    <div className="rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black">{insight.exerciseName}</p>
+          <p className="mt-0.5 overflow-hidden text-xs font-bold leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            {detailParts.join(' · ')}
+          </p>
+        </div>
+        <span
+          className={`max-w-[42%] shrink-0 truncate rounded-full border px-2.5 py-1 text-xs font-black ${toneClassName}`}
+        >
+          {insight.recommendation}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-black">
+        <div className="rounded-[1rem] border bg-card px-3 py-2">
+          <span className="block text-muted-foreground">Última</span>
+          <span className="mt-0.5 block truncate">
+            {formatDate(insight.lastDate)}
+          </span>
+        </div>
+        <div className="rounded-[1rem] border bg-card px-3 py-2">
+          <span className="block text-muted-foreground">Registro</span>
+          <span className="mt-0.5 block truncate">{lastParts.join(' · ')}</span>
+        </div>
+      </div>
+      {insight.lastDecision || alertParts.length > 0 ? (
+        <p className="mt-2 text-xs font-bold leading-tight text-muted-foreground">
+          {[insight.lastDecision, ...alertParts].filter(Boolean).join(' · ')}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
