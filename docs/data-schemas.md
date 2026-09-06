@@ -227,6 +227,7 @@ Notas:
 - `events` se ordena por `performedAt`.
 - Al completar la exportación JSON, las sesiones incluidas se marcan con `exportedAt`.
 - Este archivo debe ser el formato preferente para migración/importación en Swift.
+- El alcance inicial de la app nativa y su flujo de importacion estan descritos en `docs/ios-native-plan.md`.
 
 ## CSV por serie
 

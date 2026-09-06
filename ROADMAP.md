@@ -836,6 +836,7 @@ Estado parcial:
 - la logica de exportacion CSV/JSON, nombres de archivo e inferencia de tipo de carga vive en `lib/sessionExport.ts`
 - el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
 - la estimacion derivada de duracion vive en `lib/sessionDuration.js` y se comparte entre la PWA y `npm run validate:plan`
+- `docs/ios-native-plan.md` define alcance v1 SwiftUI, mapa de pantallas, persistencia inicial con SwiftData e importacion desde backup JSON
 - las nuevas decisiones de desarrollo y diseno deben tratar la PWA como prototipo validado y la app nativa de iPhone como destino final
 
 Capacidades iOS candidatas para fases posteriores:
@@ -861,7 +862,7 @@ Capacidades iOS candidatas para fases posteriores:
 - Decidir si el plan tendra correcciones manuales despues de cada semana o versiones generadas.
 - Decidir si el historico local debe quedarse solo en IndexedDB o si conviene una copia exportable mas directa.
 - Decidir cuando iniciar el prototipo SwiftUI: despues de validar el flujo principal en gimnasio o antes para probar ventajas nativas concretas.
-- Decidir si la primera app iOS debe usar SwiftData, Core Data, SQLite o archivos JSON locales.
+- Revisar la decision inicial de SwiftData si aparecen requisitos fuertes de portabilidad o control manual de base de datos.
 - Definir que datos deben sincronizarse por iCloud y cuales pueden quedarse solo en el dispositivo.
 
 ## Backlog futuro
