@@ -834,6 +834,7 @@ Estado parcial:
 - el JSON exportado incluye `schemaName`, `schemaVersion`, `exportedAt`, version de app, plan completo, ajustes relevantes, sesion activa, metadata, decisiones y eventos de series ordenados
 - las sesiones incluidas en el backup JSON se marcan con `exportedAt`
 - la logica de exportacion CSV/JSON, nombres de archivo e inferencia de tipo de carga vive en `lib/sessionExport.ts`
+- el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
 - las nuevas decisiones de desarrollo y diseno deben tratar la PWA como prototipo validado y la app nativa de iPhone como destino final
 
 Capacidades iOS candidatas para fases posteriores:
