@@ -451,6 +451,7 @@ for (let week = 1; week <= 13; week += 1) {
       label: base.title.replace(/^[^-]+ - /, ''),
       estimatedMinutes: base.estimatedMinutes,
       focus: base.focus,
+      weekFocus: getWeekFocus(week),
       source: sourceDocument,
       exercises,
     });
@@ -620,6 +621,30 @@ function adaptExercise(item, week) {
     }),
     sets,
   };
+}
+
+function getWeekFocus(week) {
+  if (week >= 1 && week <= 3) {
+    return 'Acumulación técnica: volumen alto-moderado con RIR 2-3.';
+  }
+
+  if (week === 4 || week === 8) {
+    return 'Descarga: menos carga y menos series para salir fresco.';
+  }
+
+  if (week >= 5 && week <= 7) {
+    return 'Intensificación: cargas más altas, volumen moderado y RIR 1-2.';
+  }
+
+  if (week === 11) {
+    return 'Readaptación: recuperar ritmo y técnica antes del tramo final.';
+  }
+
+  if (week >= 9 && week <= 12) {
+    return 'Realización: top sets controlados, sin fallo técnico.';
+  }
+
+  return 'Test y consolidación: marcas útiles dejando una repetición en recámara.';
 }
 
 function getIntensificationSetCount(item) {

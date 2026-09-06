@@ -3,15 +3,20 @@
 import {
   Check,
   ChevronRight,
+  Database,
   Download,
   ArrowLeft,
+  History,
   House,
   Minus,
   Pause,
+  Palette,
   Play,
   Plus,
   RotateCcw,
   Settings,
+  Smartphone,
+  TrendingUp,
   Trash2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -50,6 +55,14 @@ type Phase =
 
 type AppearanceTheme = 'system' | 'light' | 'dark';
 type WakeLockStatus = 'off' | 'active' | 'unsupported' | 'blocked';
+type SettingsSection =
+  | 'index'
+  | 'appearance'
+  | 'training'
+  | 'installation'
+  | 'local-data'
+  | 'progression'
+  | 'history';
 type OfflineStatus =
   | 'checking'
   | 'ready'
@@ -98,6 +111,7 @@ type TrainingSession = {
   label: string;
   estimatedMinutes: number;
   focus: string;
+  weekFocus: string;
   exercises: Exercise[];
 };
 
@@ -1371,6 +1385,8 @@ export default function Home() {
   const [offlineInfo, setOfflineInfo] = useState<OfflineInfo>({});
   const [settingsReturnPhase, setSettingsReturnPhase] =
     useState<Phase>('today');
+  const [settingsSection, setSettingsSection] =
+    useState<SettingsSection>('index');
   const [sessionHistory, setSessionHistory] = useState<SessionHistorySummary[]>(
     [],
   );
@@ -2036,6 +2052,7 @@ export default function Home() {
 
   const openSettings = (returnPhase = draft.phase) => {
     setSettingsReturnPhase(returnPhase);
+    setSettingsSection('index');
     patchDraft({ phase: 'settings' });
   };
 
@@ -2198,6 +2215,7 @@ export default function Home() {
 
         {draft.phase === 'settings' ? (
           <SettingsScreen
+            section={settingsSection}
             theme={appearanceTheme}
             keepScreenAwake={keepScreenAwake}
             wakeLockStatus={wakeLockStatus}
@@ -2207,6 +2225,7 @@ export default function Home() {
             sessionHistory={sessionHistory}
             exerciseInsights={exerciseInsights}
             isLoadingHistory={isLoadingHistory}
+            onSectionChange={setSettingsSection}
             onThemeChange={setAppearanceTheme}
             onKeepScreenAwakeChange={(enabled) => {
               setKeepScreenAwake(enabled);
@@ -2418,10 +2437,13 @@ function TodayScreen({
         <p className="text-sm font-semibold leading-none text-muted-foreground">
           Hoy toca
         </p>
+        <p className="mt-2 min-h-8 overflow-hidden rounded-[1rem] bg-secondary px-3 py-1 text-xs font-black leading-tight text-secondary-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+          Semana {selectedSession.week}: {selectedSession.weekFocus}
+        </p>
         <h2 className="mt-3 h-[78px] overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.label}
         </h2>
-        <p className="mt-3 h-11 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <p className="mt-2 h-10 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.focus}
         </p>
         <div className="mt-auto grid grid-cols-3 gap-2 text-center">
@@ -2640,6 +2662,7 @@ function PreviewMetric({ label, value }: { label: string; value: string }) {
 }
 
 function SettingsScreen({
+  section,
   theme,
   keepScreenAwake,
   wakeLockStatus,
@@ -2649,6 +2672,7 @@ function SettingsScreen({
   sessionHistory,
   exerciseInsights,
   isLoadingHistory,
+  onSectionChange,
   onThemeChange,
   onKeepScreenAwakeChange,
   onCheckOffline,
@@ -2659,6 +2683,7 @@ function SettingsScreen({
   onDeleteHistorySession,
   onBack,
 }: {
+  section: SettingsSection;
   theme: AppearanceTheme;
   keepScreenAwake: boolean;
   wakeLockStatus: WakeLockStatus;
@@ -2668,6 +2693,7 @@ function SettingsScreen({
   sessionHistory: SessionHistorySummary[];
   exerciseInsights: ExerciseProgressInsight[];
   isLoadingHistory: boolean;
+  onSectionChange: (section: SettingsSection) => void;
   onThemeChange: (theme: AppearanceTheme) => void;
   onKeepScreenAwakeChange: (enabled: boolean) => void;
   onCheckOffline: () => void;
@@ -2678,51 +2704,131 @@ function SettingsScreen({
   onDeleteHistorySession: (sessionId: string) => void;
   onBack: () => void;
 }) {
+  const sectionTitle = {
+    index: 'Ajustes',
+    appearance: 'Apariencia',
+    training: 'Entrenamiento',
+    installation: 'Instalación',
+    'local-data': 'Datos locales',
+    progression: 'Progresión',
+    history: 'Historial local',
+  }[section];
+  const sectionItems: {
+    section: Exclude<SettingsSection, 'index'>;
+    title: string;
+    detail: string;
+    icon: ReactNode;
+  }[] = [
+    {
+      section: 'appearance',
+      title: 'Apariencia',
+      detail: 'Tema claro, oscuro o sistema',
+      icon: <Palette className="size-5" />,
+    },
+    {
+      section: 'training',
+      title: 'Entrenamiento',
+      detail: wakeLockStatusLabels[wakeLockStatus],
+      icon: <Smartphone className="size-5" />,
+    },
+    {
+      section: 'installation',
+      title: 'Instalación',
+      detail: offlineStatusLabels[offlineStatus],
+      icon: <Download className="size-5" />,
+    },
+    {
+      section: 'local-data',
+      title: 'Datos locales',
+      detail: selectedSessionLabel,
+      icon: <Database className="size-5" />,
+    },
+    {
+      section: 'progression',
+      title: 'Progresión',
+      detail: exerciseInsights.length
+        ? `${exerciseInsights.length} señales disponibles`
+        : 'Sin señales todavía',
+      icon: <TrendingUp className="size-5" />,
+    },
+    {
+      section: 'history',
+      title: 'Historial local',
+      detail: sessionHistory.length
+        ? `${sessionHistory.length} sesiones guardadas`
+        : 'Sin sesiones guardadas',
+      icon: <History className="size-5" />,
+    },
+  ];
+  const goBack = section === 'index' ? onBack : () => onSectionChange('index');
+
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border bg-card p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-[1.6rem] font-black leading-tight tracking-normal">
-            Ajustes
+            {sectionTitle}
           </h2>
           <span className="shrink-0 rounded-full border bg-secondary px-3 py-1 text-xs font-black text-muted-foreground">
             v{appVersion}
           </span>
         </div>
 
-        <p className="mt-4 text-sm font-semibold text-muted-foreground">
-          Apariencia
-        </p>
-        <div className="mt-2 grid gap-1.5">
-          {appearanceThemes.map((option) => (
-            <button
-              key={option.value}
-              className={`flex h-12 items-center justify-between rounded-[1.4rem] border px-4 text-left text-base font-black transition active:scale-[0.98] ${
-                theme === option.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-secondary text-secondary-foreground'
-              }`}
-              type="button"
-              onClick={() => onThemeChange(option.value)}
-            >
-              <span>{option.label}</span>
-              <span
-                className={`size-4 rounded-full border-2 ${
-                  theme === option.value
-                    ? 'border-primary-foreground bg-primary-foreground'
-                    : 'border-muted-foreground/45 bg-transparent'
-                }`}
-                aria-hidden="true"
-              />
-            </button>
-          ))}
-        </div>
+        {section === 'index' ? (
+          <div className="mt-4 grid gap-2">
+            {sectionItems.map((item) => (
+              <button
+                key={item.section}
+                className="flex h-16 items-center gap-3 rounded-[1.75rem] border bg-secondary px-4 text-left text-secondary-foreground transition active:scale-[0.98]"
+                type="button"
+                onClick={() => onSectionChange(item.section)}
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                  {item.icon}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-black leading-tight">
+                    {item.title}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs font-bold leading-tight text-muted-foreground">
+                    {item.detail}
+                  </span>
+                </span>
+                <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+          </div>
+        ) : null}
 
-        <div className="mt-4">
-          <p className="text-sm font-semibold text-muted-foreground">
-            Entrenamiento
-          </p>
-          <div className="mt-2 flex min-h-16 w-full items-center justify-between gap-4 rounded-[1.75rem] border bg-secondary px-5 py-3 text-left text-secondary-foreground">
+        {section === 'appearance' ? (
+          <div className="mt-4 grid gap-1.5">
+            {appearanceThemes.map((option) => (
+              <button
+                key={option.value}
+                className={`flex h-11 items-center justify-between rounded-[1.35rem] border px-4 text-left text-sm font-black transition active:scale-[0.98] ${
+                  theme === option.value
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-secondary text-secondary-foreground'
+                }`}
+                type="button"
+                onClick={() => onThemeChange(option.value)}
+              >
+                <span>{option.label}</span>
+                <span
+                  className={`size-4 rounded-full border-2 ${
+                    theme === option.value
+                      ? 'border-primary-foreground bg-primary-foreground'
+                      : 'border-muted-foreground/45 bg-transparent'
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {section === 'training' ? (
+          <div className="mt-4 flex min-h-16 w-full items-center justify-between gap-4 rounded-[1.75rem] border bg-secondary px-5 py-3 text-left text-secondary-foreground">
             <span className="min-w-0">
               <span className="block text-base font-black leading-tight">
                 Pantalla siempre encendida
@@ -2737,13 +2843,10 @@ function SettingsScreen({
               aria-label="Mantener pantalla encendida"
             />
           </div>
-        </div>
+        ) : null}
 
-        <div className="mt-4">
-          <p className="text-sm font-semibold text-muted-foreground">
-            Instalación
-          </p>
-          <div className="mt-2 rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        {section === 'installation' ? (
+          <div className="mt-4 rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
             <div className="flex items-start justify-between gap-3">
               <span className="min-w-0">
                 <span className="block text-base font-black leading-tight">
@@ -2785,13 +2888,10 @@ function SettingsScreen({
               </Button>
             </div>
           </div>
-        </div>
+        ) : null}
 
-        <div className="mt-4">
-          <p className="text-sm font-semibold text-muted-foreground">
-            Datos locales
-          </p>
-          <div className="mt-2 grid gap-2">
+        {section === 'local-data' ? (
+          <div className="mt-4 grid gap-2">
             <Button
               className={`h-16 justify-start rounded-[1.75rem] px-5 text-left font-black ${actionStyles.reset}`}
               variant="secondary"
@@ -2816,13 +2916,10 @@ function SettingsScreen({
               Borrar todo local
             </Button>
           </div>
-        </div>
+        ) : null}
 
-        <div className="mt-4">
-          <p className="text-sm font-semibold text-muted-foreground">
-            Progresión
-          </p>
-          <div className="mt-2 grid gap-2">
+        {section === 'progression' ? (
+          <div className="mt-4 grid gap-2">
             {isLoadingHistory ? (
               <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
                 Revisando registros...
@@ -2839,46 +2936,45 @@ function SettingsScreen({
               <ExerciseInsightCard key={insight.exerciseId} insight={insight} />
             ))}
           </div>
-        </div>
+        ) : null}
 
-        <div className="mt-4">
-          <p className="text-sm font-semibold text-muted-foreground">
-            Historial local
-          </p>
-          <div className="mt-2 grid gap-2">
-            {isLoadingHistory ? (
-              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
-                Cargando sesiones...
-              </div>
-            ) : null}
+        {section === 'history' ? (
+          <div className="mt-4">
+            <div className="grid gap-2">
+              {isLoadingHistory ? (
+                <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+                  Cargando sesiones...
+                </div>
+              ) : null}
 
-            {!isLoadingHistory && sessionHistory.length === 0 ? (
-              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
-                Sin entrenamientos registrados en este dispositivo.
-              </div>
-            ) : null}
+              {!isLoadingHistory && sessionHistory.length === 0 ? (
+                <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+                  Sin entrenamientos registrados en este dispositivo.
+                </div>
+              ) : null}
 
-            {sessionHistory.map((summary) => (
-              <HistorySessionCard
-                key={summary.sessionId}
-                summary={summary}
-                onDeleteHistorySession={onDeleteHistorySession}
-                onExportHistorySession={onExportHistorySession}
-              />
-            ))}
+              {sessionHistory.map((summary) => (
+                <HistorySessionCard
+                  key={summary.sessionId}
+                  summary={summary}
+                  onDeleteHistorySession={onDeleteHistorySession}
+                  onExportHistorySession={onExportHistorySession}
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-xs font-bold leading-tight text-muted-foreground">
+              Las sesiones exportadas se purgan automáticamente tras 30 días.
+            </p>
           </div>
-          <p className="mt-2 text-xs font-bold leading-tight text-muted-foreground">
-            Las sesiones exportadas se purgan automáticamente tras 30 días.
-          </p>
-        </div>
+        ) : null}
       </div>
 
       <Button
         className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.back}`}
         variant="outline"
-        onClick={onBack}
+        onClick={goBack}
       >
-        Volver
+        {section === 'index' ? 'Volver' : 'Ajustes'}
       </Button>
     </section>
   );
