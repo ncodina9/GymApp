@@ -111,6 +111,7 @@ type TrainingSession = {
   label: string;
   estimatedMinutes: number;
   focus: string;
+  weekFocusLabel: string;
   weekFocus: string;
   exercises: Exercise[];
 };
@@ -2172,8 +2173,8 @@ export default function Home() {
           <header className="mb-1">
             <p className="text-xs font-black uppercase text-muted-foreground">
               {draft.phase === 'preview'
-                ? `Semana ${selectedSession.week} · Vista previa`
-                : `Semana ${selectedSession.week}${
+                ? `Semana ${selectedSession.week} · ${selectedSession.weekFocusLabel} · Vista previa`
+                : `Semana ${selectedSession.week} · ${selectedSession.weekFocusLabel}${
                     draft.phase !== 'today' ? ` · ${selectedSession.label}` : ''
                   }`}
             </p>
@@ -2437,13 +2438,10 @@ function TodayScreen({
         <p className="text-sm font-semibold leading-none text-muted-foreground">
           Hoy toca
         </p>
-        <p className="mt-2 min-h-8 overflow-hidden rounded-[1rem] bg-secondary px-3 py-1 text-xs font-black leading-tight text-secondary-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-          Semana {selectedSession.week}: {selectedSession.weekFocus}
-        </p>
-        <h2 className="mt-3 h-[78px] overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <h2 className="mt-3 h-[92px] overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.label}
         </h2>
-        <p className="mt-2 h-10 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <p className="mt-2 h-12 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.focus}
         </p>
         <div className="mt-auto grid grid-cols-3 gap-2 text-center">

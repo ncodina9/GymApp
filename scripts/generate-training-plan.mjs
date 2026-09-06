@@ -451,6 +451,7 @@ for (let week = 1; week <= 13; week += 1) {
       label: base.title.replace(/^[^-]+ - /, ''),
       estimatedMinutes: base.estimatedMinutes,
       focus: base.focus,
+      weekFocusLabel: getWeekFocusLabel(week),
       weekFocus: getWeekFocus(week),
       source: sourceDocument,
       exercises,
@@ -645,6 +646,30 @@ function getWeekFocus(week) {
   }
 
   return 'Test y consolidación: marcas útiles dejando una repetición en recámara.';
+}
+
+function getWeekFocusLabel(week) {
+  if (week >= 1 && week <= 3) {
+    return 'Acumulación técnica';
+  }
+
+  if (week === 4 || week === 8) {
+    return 'Descarga';
+  }
+
+  if (week >= 5 && week <= 7) {
+    return 'Intensificación';
+  }
+
+  if (week === 11) {
+    return 'Readaptación';
+  }
+
+  if (week >= 9 && week <= 12) {
+    return 'Realización';
+  }
+
+  return 'Test y consolidación';
 }
 
 function getIntensificationSetCount(item) {

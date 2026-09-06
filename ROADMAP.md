@@ -248,7 +248,8 @@ Ya esta implementada una primera version funcional de la app:
 
 - proyecto versionado en GitHub y conectado con Vercel
 - app React/Vinext con UI tactil orientada a iPhone
-- pantalla Hoy con recomendacion de entrenamiento, foco semanal del bloque y seleccion semanal
+- cabecera compacta con semana y foco semanal del bloque
+- pantalla Hoy con recomendacion de entrenamiento y seleccion semanal
 - reanudacion de entrenamiento iniciado
 - previsualizacion previa con ejercicios, series, reps/tiempo y pesos
 - pantalla de serie sin teclado, con controles grandes de reps/peso
