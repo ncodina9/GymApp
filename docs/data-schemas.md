@@ -173,6 +173,7 @@ Notas:
 Schema actual: `gymapp.full-training-data-export`, version `1`.
 
 La PWA exporta un backup completo desde `Ajustes > Datos locales > Exportar backup JSON`.
+La implementación portable vive en `lib/sessionExport.ts`.
 
 ```ts
 type FullTrainingDataExport = {
@@ -228,6 +229,7 @@ Notas:
 ## CSV por serie
 
 El CSV sigue siendo el formato práctico para Obsidian y análisis manual. No debe usarse como fuente principal para migrar a Swift porque pierde estructura.
+La construcción del CSV vive en `lib/sessionExport.ts` para mantenerla fuera de la UI React.
 
 Campos actuales:
 

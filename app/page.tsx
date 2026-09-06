@@ -28,6 +28,16 @@ import { Switch } from '@/components/ui/switch';
 import planData from '@/data/trainingPlan.json';
 import packageData from '@/package.json';
 import {
+  buildFullTrainingDataExport,
+  buildWorkoutCsv,
+  formatExportTarget,
+  getFullJsonExportFileName,
+  getWorkoutCsvFileName,
+  inferLoadType,
+  type ExportPhase,
+  type LoadType,
+} from '@/lib/sessionExport';
+import {
   clearAllSessionEvents,
   clearSessionEvents,
   loadAllSessionEvents,
@@ -233,43 +243,6 @@ type SessionDurationEstimate = {
   changeoverMinutes: number;
   feedbackMinutes: number;
   targetMinutes: number;
-};
-
-type FullTrainingDataExport = {
-  schemaName: 'gymapp.full-training-data-export';
-  schemaVersion: 1;
-  exportedAt: string;
-  app: {
-    name: string;
-    version: string;
-  };
-  source: {
-    platform: 'pwa';
-    localStores: string[];
-  };
-  plan: TrainingPlan;
-  settings: {
-    appearanceTheme: AppearanceTheme;
-    keepScreenAwake: boolean;
-  };
-  activeWorkout: {
-    selectedSessionId: string;
-    phase: Phase;
-    exerciseIndex: number;
-    setIndex: number;
-    startedAt?: string;
-    finishedAt?: string;
-  };
-  sessions: {
-    sessionId: string;
-    sessionDate: string;
-    sessionLabel: string;
-    planSession: TrainingSession;
-    summary: SessionHistorySummary;
-    metadata?: StoredSessionMetadata;
-    decisions: Record<string, string>;
-    events: StoredSetEvent[];
-  }[];
 };
 
 const trainingPlan = planData as TrainingPlan;
@@ -775,11 +748,6 @@ const createEventId = () => {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 };
 
-const csvEscape = (value: string | number) => {
-  const text = String(value);
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-};
-
 const shareOrDownloadFile = async (file: File, fileName: string) => {
   if (navigator.canShare?.({ files: [file] })) {
     await navigator.share({
@@ -797,21 +765,7 @@ const shareOrDownloadFile = async (file: File, fileName: string) => {
   URL.revokeObjectURL(url);
 };
 
-const slugifyFilePart = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-const getWorkoutCsvFileName = (session: TrainingSession) =>
-  `${session.date}-${slugifyFilePart(session.label)}.csv`;
-
 const getTodayIso = () => new Date().toISOString().slice(0, 10);
-
-const getFullJsonExportFileName = () =>
-  `${getTodayIso()}-${slugifyFilePart(trainingPlan.planId)}-backup.json`;
 
 const getDecisionFallbacks = (
   records: StoredSetEvent[],
@@ -888,129 +842,6 @@ const getSessionHistorySummaries = (
       ];
     })
     .sort((a, b) => b.lastPerformedAt.localeCompare(a.lastPerformedAt));
-};
-
-const buildFullTrainingDataExport = ({
-  events,
-  metadata,
-  exportedAt,
-  appearanceTheme,
-  keepScreenAwake,
-  draft,
-}: {
-  events: StoredSetEvent[];
-  metadata: StoredSessionMetadata[];
-  exportedAt: string;
-  appearanceTheme: AppearanceTheme;
-  keepScreenAwake: boolean;
-  draft: WorkoutDraft;
-}): FullTrainingDataExport => {
-  const eventsBySession = new Map<string, StoredSetEvent[]>();
-  const metadataBySession = new Map(
-    metadata.map((item) => [item.sessionId, item]),
-  );
-
-  events.forEach((event) => {
-    const sessionEvents = eventsBySession.get(event.sessionId) ?? [];
-    sessionEvents.push(event);
-    eventsBySession.set(event.sessionId, sessionEvents);
-  });
-
-  const localSessionIds = Array.from(
-    new Set([
-      ...events.map((event) => event.sessionId),
-      ...metadata.map((item) => item.sessionId),
-    ]),
-  ).sort();
-  const summariesBySession = new Map(
-    getSessionHistorySummaries(trainingPlan.sessions, events, metadata).map(
-      (summary) => [summary.sessionId, summary],
-    ),
-  );
-
-  return {
-    schemaName: 'gymapp.full-training-data-export',
-    schemaVersion: 1,
-    exportedAt,
-    app: {
-      name: packageData.name,
-      version: appVersion,
-    },
-    source: {
-      platform: 'pwa',
-      localStores: ['IndexedDB:setEvents', 'IndexedDB:sessionMetadata'],
-    },
-    plan: trainingPlan,
-    settings: {
-      appearanceTheme,
-      keepScreenAwake,
-    },
-    activeWorkout: {
-      selectedSessionId: draft.selectedSessionId,
-      phase: draft.phase,
-      exerciseIndex: draft.exerciseIndex,
-      setIndex: draft.setIndex,
-      ...(draft.startedAt ? { startedAt: draft.startedAt } : {}),
-      ...(draft.finishedAt ? { finishedAt: draft.finishedAt } : {}),
-    },
-    sessions: localSessionIds.flatMap((sessionId) => {
-      const planSession =
-        trainingPlan.sessions.find(
-          (session) => session.sessionId === sessionId,
-        ) ?? fallbackSession;
-      const sessionEvents = [...(eventsBySession.get(sessionId) ?? [])].sort(
-        (a, b) => a.performedAt.localeCompare(b.performedAt),
-      );
-      const metadataItem = metadataBySession.get(sessionId);
-      const summary =
-        summariesBySession.get(sessionId) ??
-        ({
-          sessionId,
-          sessionDate: planSession.date,
-          sessionLabel: planSession.label,
-          estimatedMinutes: planSession.estimatedMinutes,
-          derivedEstimatedMinutes:
-            estimateSessionDuration(planSession).totalMinutes,
-          attemptedSets: sessionEvents.length,
-          completedSets: sessionEvents.filter(
-            (event) => event.status === 'completed',
-          ).length,
-          totalSets: buildExecutionSteps(planSession).length,
-          ...(metadataItem?.schemaVersion
-            ? { schemaVersion: metadataItem.schemaVersion }
-            : {}),
-          ...(metadataItem?.startedAt
-            ? { startedAt: metadataItem.startedAt }
-            : {}),
-          ...(metadataItem?.finishedAt
-            ? { finishedAt: metadataItem.finishedAt }
-            : {}),
-          ...(metadataItem?.exportedAt
-            ? { exportedAt: metadataItem.exportedAt }
-            : {}),
-          firstPerformedAt:
-            sessionEvents[0]?.performedAt ?? metadataItem?.startedAt ?? '',
-          lastPerformedAt:
-            sessionEvents.at(-1)?.performedAt ??
-            metadataItem?.finishedAt ??
-            metadataItem?.startedAt ??
-            '',
-        } satisfies SessionHistorySummary);
-
-      return [
-        {
-          sessionId,
-          sessionDate: planSession.date,
-          sessionLabel: planSession.sessionLabel,
-          planSession,
-          summary,
-          ...(metadataItem ? { metadata: metadataItem } : {}),
-          decisions: metadataItem?.decisions ?? {},
-          events: sessionEvents,
-        },
-      ];
-    }),
-  };
 };
 
 const getExerciseProgressInsights = (
@@ -1118,7 +949,7 @@ const getExerciseProgressInsights = (
               nextSessionLabel: nextSession.label,
             }
           : {}),
-        target: formatCsvTarget(
+        target: formatExportTarget(
           nextExercise?.target ?? lastExercise?.target ?? '',
           inferLoadType(nextExercise ?? lastExercise),
         ),
@@ -1163,58 +994,6 @@ const formatDecimal = (value: number) => {
 };
 
 const formatCsvNumber = (value: number) => formatDecimal(value);
-
-type LoadType =
-  | 'total'
-  | 'external'
-  | 'per_dumbbell'
-  | 'machine'
-  | 'bodyweight';
-
-const inferLoadType = (exercise: Exercise | undefined): LoadType => {
-  const text = `${exercise?.name ?? ''} ${exercise?.notes ?? ''}`.toLowerCase();
-
-  if (text.includes('dominadas') && !text.includes('peso corporal')) {
-    return 'external';
-  }
-
-  if (text.includes('press banca inclinado con barra o mancuernas')) {
-    return 'total';
-  }
-
-  if (
-    text.includes('mancuerna') ||
-    text.includes('mancuernas') ||
-    text.includes('elevaciones laterales') ||
-    text.includes('elevacion lateral') ||
-    text.includes('elevación lateral') ||
-    text.includes('curl biceps alterno') ||
-    text.includes('curl bíceps alterno') ||
-    text.includes('curl martillo') ||
-    text.includes('pull-over')
-  ) {
-    return 'per_dumbbell';
-  }
-
-  if (
-    text.includes('polea') ||
-    text.includes('maquina') ||
-    text.includes('máquina')
-  ) {
-    return 'machine';
-  }
-
-  if ((exercise?.sets[0]?.targetWeightKg ?? 0) === 0) {
-    return 'bodyweight';
-  }
-
-  return 'total';
-};
-
-const formatCsvTarget = (target: string, loadType: LoadType) =>
-  loadType === 'external'
-    ? target.replace(/@\s*(\d+(?:[.,]\d+)?)\s*kg/i, '@ +$1 kg')
-    : target;
 
 const formatPreviewLoad = (weight: number, loadType: LoadType) => {
   const compactWeight = formatCsvNumber(weight);
@@ -2173,14 +1952,33 @@ export default function Home() {
     ]);
     const exportedAt = new Date().toISOString();
     const fullExport = buildFullTrainingDataExport({
+      plan: trainingPlan,
       events,
       metadata,
+      summaries: getSessionHistorySummaries(
+        trainingPlan.sessions,
+        events,
+        metadata,
+      ),
       exportedAt,
-      appearanceTheme,
-      keepScreenAwake,
-      draft,
+      app: {
+        name: packageData.name,
+        version: appVersion,
+      },
+      settings: {
+        appearanceTheme,
+        keepScreenAwake,
+      },
+      activeWorkout: {
+        selectedSessionId: draft.selectedSessionId,
+        phase: draft.phase as ExportPhase,
+        exerciseIndex: draft.exerciseIndex,
+        setIndex: draft.setIndex,
+        ...(draft.startedAt ? { startedAt: draft.startedAt } : {}),
+        ...(draft.finishedAt ? { finishedAt: draft.finishedAt } : {}),
+      },
     });
-    const fileName = getFullJsonExportFileName();
+    const fileName = getFullJsonExportFileName(trainingPlan.planId, exportedAt);
     const file = new File(
       [`${JSON.stringify(fullExport, null, 2)}\n`],
       fileName,
@@ -4228,96 +4026,4 @@ function Metric({ label, value }: { label: string; value: string }) {
       </p>
     </div>
   );
-}
-
-function buildWorkoutCsv(
-  session: TrainingSession,
-  records: StoredSetEvent[],
-  decisions: Record<string, string>,
-) {
-  const headers = [
-    'date',
-    'week',
-    'session',
-    'exercise',
-    'type',
-    'target',
-    'set_number',
-    'status',
-    'load_kg',
-    'load_type',
-    'reps',
-    'rir',
-    'pain_knee',
-    'pain_wrist',
-    'pain_other',
-    'set_note',
-    'exercise_decision',
-    'exercise_note',
-    'superset_id',
-    'superset_order',
-    'round_number',
-  ];
-
-  const sortedRecords = [...records].sort((a, b) =>
-    a.performedAt.localeCompare(b.performedAt),
-  );
-  const lastRecordKeyByExercise = new Map<string, string>();
-
-  sortedRecords.forEach((record) => {
-    lastRecordKeyByExercise.set(
-      record.exerciseId,
-      `${record.exerciseIndex}-${record.setIndex}`,
-    );
-  });
-
-  const rows = sortedRecords.map((record) => {
-    const exercise =
-      session.exercises[record.exerciseIndex] ??
-      session.exercises.find((item) => item.exerciseId === record.exerciseId);
-    const isSkipped = record.status === 'skipped';
-    const isLastExerciseRow =
-      lastRecordKeyByExercise.get(record.exerciseId) ===
-      `${record.exerciseIndex}-${record.setIndex}`;
-    const loadType = inferLoadType(exercise);
-    const isUnknownMachineLoad =
-      loadType === 'machine' && record.actualWeightKg === 0;
-    const setNote = isSkipped
-      ? ['skipped', record.note].filter(Boolean).join(': ')
-      : record.note;
-
-    return [
-      session.date,
-      session.week,
-      session.sessionLabel,
-      exercise?.name ?? record.exerciseId,
-      exercise?.type ?? '',
-      formatCsvTarget(exercise?.target ?? '', loadType),
-      record.setIndex + 1,
-      record.status === 'completed' ? 'done' : 'skipped',
-      isSkipped || isUnknownMachineLoad
-        ? ''
-        : formatCsvNumber(record.actualWeightKg),
-      loadType,
-      isSkipped
-        ? ''
-        : record.actualDurationSeconds !== undefined
-          ? `${record.actualDurationSeconds}s`
-          : record.actualReps,
-      isSkipped ? '' : record.rirLast,
-      record.painKnee,
-      record.painWrist,
-      record.painOther,
-      setNote,
-      isLastExerciseRow ? (decisions[record.exerciseId] ?? '') : '',
-      isLastExerciseRow ? (exercise?.notes ?? '') : '',
-      record.supersetId ?? exercise?.supersetId ?? '',
-      record.supersetOrder ?? exercise?.supersetOrder ?? '',
-      record.roundNumber ?? record.setIndex + 1,
-    ];
-  });
-
-  return [headers, ...rows]
-    .map((row) => row.map((value) => csvEscape(value)).join(','))
-    .join('\n');
 }
