@@ -2918,8 +2918,8 @@ function ExerciseInsightCard({
   ].filter(Boolean);
 
   return (
-    <div className="rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground">
-      <div className="flex items-start justify-between gap-3">
+    <div className="min-w-0 overflow-hidden rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground">
+      <div className="grid min-w-0 gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-black">{insight.exerciseName}</p>
           <p className="mt-0.5 overflow-hidden text-xs font-bold leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
@@ -2927,19 +2927,19 @@ function ExerciseInsightCard({
           </p>
         </div>
         <span
-          className={`max-w-[42%] shrink-0 truncate rounded-full border px-2.5 py-1 text-xs font-black ${toneClassName}`}
+          className={`min-w-0 justify-self-start truncate rounded-full border px-2.5 py-1 text-xs font-black ${toneClassName}`}
         >
           {insight.recommendation}
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-black">
-        <div className="rounded-[1rem] border bg-card px-3 py-2">
+      <div className="mt-3 grid min-w-0 grid-cols-2 gap-2 text-xs font-black">
+        <div className="min-w-0 rounded-[1rem] border bg-card px-3 py-2">
           <span className="block text-muted-foreground">Última</span>
           <span className="mt-0.5 block truncate">
             {formatDate(insight.lastDate)}
           </span>
         </div>
-        <div className="rounded-[1rem] border bg-card px-3 py-2">
+        <div className="min-w-0 rounded-[1rem] border bg-card px-3 py-2">
           <span className="block text-muted-foreground">Registro</span>
           <span className="mt-0.5 block truncate">{lastParts.join(' · ')}</span>
         </div>
