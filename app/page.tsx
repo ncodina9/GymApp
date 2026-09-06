@@ -39,6 +39,12 @@ import {
 } from '@/lib/sessionExport';
 import { estimateSessionDurationFromSteps } from '@/lib/sessionDuration';
 import {
+  getRecommendedSession as getRecommendedSelectableSession,
+  getWeekSessions,
+  resolveSelectedSession,
+  toIsoDate,
+} from '@/lib/sessionSelection';
+import {
   buildExecutionSteps,
   getCompletedExerciseIds,
   getNextStepLabel,
@@ -493,16 +499,8 @@ const loadKeepScreenAwake = () => {
   return window.localStorage.getItem(wakeLockStorageKey) === 'true';
 };
 
-const getRecommendedSession = () => {
-  const today = new Date();
-  const todayIso = today.toISOString().slice(0, 10);
-
-  return (
-    trainingPlan.sessions.find((session) => session.date === todayIso) ??
-    trainingPlan.sessions.find((session) => session.date >= todayIso) ??
-    fallbackSession
-  );
-};
+const getRecommendedSession = () =>
+  getRecommendedSelectableSession(trainingPlan.sessions) ?? fallbackSession;
 
 const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   phase: 'today',
@@ -544,9 +542,8 @@ const normalizeDraft = (
   }
 
   const session =
-    trainingPlan.sessions.find(
-      (candidate) => candidate.sessionId === draft.selectedSessionId,
-    ) ?? fallbackSession;
+    resolveSelectedSession(trainingPlan.sessions, draft.selectedSessionId) ??
+    fallbackSession;
 
   return {
     ...makeDraft(session),
@@ -705,7 +702,10 @@ const shareOrDownloadFile = async (file: File, fileName: string) => {
   URL.revokeObjectURL(url);
 };
 
-const getTodayIso = () => new Date().toISOString().slice(0, 10);
+const getTodayIso = () => toIsoDate(new Date());
+
+const getSessionById = (sessionId: string | undefined) =>
+  resolveSelectedSession(trainingPlan.sessions, sessionId) ?? fallbackSession;
 
 const getDecisionFallbacks = (
   records: StoredSetEvent[],
@@ -1162,10 +1162,7 @@ export default function Home() {
   const isRegisteringSetRef = useRef(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const keepScreenAwakeRef = useRef(false);
-  const selectedSession =
-    trainingPlan.sessions.find(
-      (session) => session.sessionId === draft.selectedSessionId,
-    ) ?? fallbackSession;
+  const selectedSession = getSessionById(draft.selectedSessionId);
   const selectedSessionDurationEstimate = useMemo(
     () => estimateSessionDuration(selectedSession),
     [selectedSession],
@@ -1222,11 +1219,8 @@ export default function Home() {
     draft.phase === 'transition';
 
   const weekSessions = useMemo(
-    () =>
-      trainingPlan.sessions.filter(
-        (session) => session.week === selectedSession.week,
-      ),
-    [selectedSession.week],
+    () => getWeekSessions(trainingPlan.sessions, selectedSession),
+    [selectedSession],
   );
 
   const refreshSessionHistory = useCallback(async () => {
@@ -1494,10 +1488,7 @@ export default function Home() {
 
   const resetWorkoutPosition = useCallback(
     (sessionId = draft.selectedSessionId) => {
-      const nextSession =
-        trainingPlan.sessions.find(
-          (session) => session.sessionId === sessionId,
-        ) ?? fallbackSession;
+      const nextSession = getSessionById(sessionId);
       const clearEvents = clearSessionEvents(nextSession.sessionId).catch(
         () => undefined,
       );
@@ -1810,9 +1801,7 @@ export default function Home() {
   };
 
   const exportHistorySession = async (sessionId: string) => {
-    const session =
-      trainingPlan.sessions.find((item) => item.sessionId === sessionId) ??
-      fallbackSession;
+    const session = getSessionById(sessionId);
     const records = await loadSessionEvents(session.sessionId);
     const metadata = await loadSessionMetadata();
     const sessionDecisions =
@@ -1831,9 +1820,7 @@ export default function Home() {
   };
 
   const deleteHistorySession = (sessionId: string) => {
-    const session =
-      trainingPlan.sessions.find((item) => item.sessionId === sessionId) ??
-      fallbackSession;
+    const session = getSessionById(sessionId);
     const shouldDelete = window.confirm(
       `Borrar los datos locales de ${session.label}?`,
     );

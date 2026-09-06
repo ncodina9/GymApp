@@ -836,6 +836,7 @@ Estado parcial:
 - la logica de exportacion CSV/JSON, nombres de archivo e inferencia de tipo de carga vive en `lib/sessionExport.ts`
 - el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
 - la estimacion derivada de duracion vive en `lib/sessionDuration.js` y se comparte entre la PWA y `npm run validate:plan`
+- la seleccion del entrenamiento recomendado, resolucion de sesion por id y entrenamientos de la semana vive en `lib/sessionSelection.ts`
 - `docs/ios-native-plan.md` define alcance v1 SwiftUI, mapa de pantallas, persistencia inicial con SwiftData e importacion desde backup JSON
 - las nuevas decisiones de desarrollo y diseno deben tratar la PWA como prototipo validado y la app nativa de iPhone como destino final
 

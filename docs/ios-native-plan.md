@@ -157,10 +157,10 @@ Reglas ya separadas:
 - `lib/sessionExport.ts`: CSV, JSON completo, nombres de archivo e inferencia de tipo de carga
 - `lib/workoutSequence.ts`: pasos de ejercicios, series y superseries
 - `lib/sessionDuration.js`: estimacion operativa de duracion
+- `lib/sessionSelection.ts`: seleccion del entrenamiento recomendado, resolucion por id y entrenamientos de la semana
 
 Reglas pendientes de separar antes de crear el prototipo SwiftUI:
 
-- seleccion del entrenamiento recomendado para hoy
 - progreso de sesion y resumen historico
 - recomendaciones conservadoras de progresion
 - reglas de material disponible y siguiente carga
