@@ -3233,14 +3233,29 @@ function TimedSetPanel({
   const isFinished = remainingSeconds === 0;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-lg border bg-card p-4 shadow-sm">
-      <p className="text-base font-black text-muted-foreground">Tiempo</p>
+    <div
+      className={`flex min-h-0 flex-1 flex-col items-center justify-center rounded-lg border p-4 shadow-sm transition-colors ${
+        isFinished
+          ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
+          : 'bg-card'
+      }`}
+    >
+      <p
+        className={`text-base font-black ${
+          isFinished
+            ? 'text-[var(--complete-foreground)]'
+            : 'text-muted-foreground'
+        }`}
+      >
+        {isFinished ? 'Ejercicio terminado' : 'Tiempo'}
+      </p>
       <CountdownCircle
         label="Tiempo de serie"
         remainingSeconds={remainingSeconds}
         totalSeconds={durationSeconds}
         sizeClassName="my-4 size-52"
         textClassName="text-[4.5rem]"
+        isFinished={isFinished}
       />
       <div
         className="grid w-full gap-3"
@@ -3282,12 +3297,14 @@ function CountdownCircle({
   totalSeconds,
   sizeClassName,
   textClassName,
+  isFinished = false,
 }: {
   label: string;
   remainingSeconds: number;
   totalSeconds: number;
   sizeClassName: string;
   textClassName: string;
+  isFinished?: boolean;
 }) {
   const radius = 46;
   const circumference = 2 * Math.PI * radius;
@@ -3316,7 +3333,9 @@ function CountdownCircle({
           strokeWidth="6"
         />
         <circle
-          className="stroke-primary transition-[stroke-dashoffset] duration-300 ease-linear"
+          className={`transition-[stroke-dashoffset] duration-300 ease-linear ${
+            isFinished ? 'stroke-[var(--complete-border)]' : 'stroke-primary'
+          }`}
           cx="50"
           cy="50"
           r={radius}
@@ -3349,16 +3368,33 @@ function RestScreen({
   onAdjustRest: (value: number | ((current: number) => number)) => void;
   onContinue: () => void;
 }) {
+  const isFinished = restRemaining === 0;
+
   return (
     <section className="flex flex-1 flex-col justify-between gap-5 py-2">
-      <div className="text-center">
-        <p className="text-lg font-bold text-muted-foreground">Descanso</p>
+      <div
+        className={`rounded-lg border p-4 text-center shadow-sm transition-colors ${
+          isFinished
+            ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
+            : 'border-transparent bg-transparent'
+        }`}
+      >
+        <p
+          className={`text-lg font-bold ${
+            isFinished
+              ? 'text-[var(--complete-foreground)]'
+              : 'text-muted-foreground'
+          }`}
+        >
+          {isFinished ? 'Descanso terminado' : 'Descanso'}
+        </p>
         <CountdownCircle
           label="Descanso"
           remainingSeconds={restRemaining}
           totalSeconds={Math.max(restTotal, restRemaining)}
           sizeClassName="mx-auto mt-5 size-64"
           textClassName="text-[5rem]"
+          isFinished={isFinished}
         />
         <p className="mt-4 text-xl font-bold">Siguiente: {nextLabel}</p>
       </div>
