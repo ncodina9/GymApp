@@ -37,6 +37,7 @@ import {
   type ExportPhase,
   type LoadType,
 } from '@/lib/sessionExport';
+import { estimateSessionDurationFromSteps } from '@/lib/sessionDuration';
 import {
   buildExecutionSteps,
   getCompletedExerciseIds,
@@ -243,15 +244,9 @@ type WebMcpDocument = Document & {
 
 type WeightStep = 0.5 | 1 | 1.25 | 2.5 | 5;
 
-type SessionDurationEstimate = {
-  totalMinutes: number;
-  mobilityMinutes: number;
-  executionMinutes: number;
-  restMinutes: number;
-  changeoverMinutes: number;
-  feedbackMinutes: number;
-  targetMinutes: number;
-};
+type SessionDurationEstimate = ReturnType<
+  typeof estimateSessionDurationFromSteps
+>;
 
 const trainingPlan = planData as TrainingPlan;
 const appVersion = packageData.version;
@@ -259,10 +254,6 @@ const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 const themeStorageKey = 'gymapp:appearance-theme';
 const wakeLockStorageKey = 'gymapp:keep-screen-awake';
 const exportedSessionRetentionDays = 30;
-const warmupMobilityMinutes = 9;
-const feedbackSecondsPerSet = 8;
-const exerciseChangeSeconds = 45;
-const supersetTransitionSeconds = 15;
 
 const barbellWeightKg = 20;
 const dumbbellLoadsKg = [
@@ -659,67 +650,8 @@ const getDurationDeltaLabel = (
     : `${Math.abs(delta)} min más rápido`;
 };
 
-const getSetExecutionSeconds = (set: TrainingSet) => {
-  if (set.type === 'timed') {
-    return set.targetDurationSeconds ?? 60;
-  }
-
-  return Math.max(20, (set.targetReps ?? 8) * 4);
-};
-
-const estimateSessionDuration = (
-  session: TrainingSession,
-): SessionDurationEstimate => {
-  const steps = buildExecutionSteps(session);
-  let executionSeconds = 0;
-  let restSeconds = 0;
-  let changeoverSeconds = 0;
-  const feedbackSeconds = steps.length * feedbackSecondsPerSet;
-
-  steps.forEach((step, index) => {
-    const currentSet =
-      session.exercises[step.exerciseIndex].sets[step.setIndex];
-    const nextStep = steps[index + 1];
-    executionSeconds += getSetExecutionSeconds(currentSet);
-
-    if (!nextStep) {
-      return;
-    }
-
-    const isSameSupersetRound =
-      step.supersetId !== undefined &&
-      step.supersetId === nextStep.supersetId &&
-      step.roundNumber === nextStep.roundNumber;
-
-    if (!isSameSupersetRound) {
-      restSeconds += currentSet.restSeconds;
-    }
-
-    if (step.exerciseIndex !== nextStep.exerciseIndex) {
-      changeoverSeconds += isSameSupersetRound
-        ? supersetTransitionSeconds
-        : exerciseChangeSeconds;
-    }
-  });
-
-  const mobilitySeconds = warmupMobilityMinutes * 60;
-  const totalSeconds =
-    mobilitySeconds +
-    executionSeconds +
-    restSeconds +
-    changeoverSeconds +
-    feedbackSeconds;
-
-  return {
-    totalMinutes: Math.round(totalSeconds / 60),
-    mobilityMinutes: warmupMobilityMinutes,
-    executionMinutes: Math.round(executionSeconds / 60),
-    restMinutes: Math.round(restSeconds / 60),
-    changeoverMinutes: Math.round(changeoverSeconds / 60),
-    feedbackMinutes: Math.round(feedbackSeconds / 60),
-    targetMinutes: session.estimatedMinutes,
-  };
-};
+const estimateSessionDuration = (session: TrainingSession) =>
+  estimateSessionDurationFromSteps(session, buildExecutionSteps(session));
 
 const getDurationEstimateStatus = (estimate: SessionDurationEstimate) => {
   const delta = estimate.totalMinutes - estimate.targetMinutes;

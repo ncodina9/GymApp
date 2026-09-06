@@ -175,6 +175,7 @@ Schema actual: `gymapp.full-training-data-export`, version `1`.
 La PWA exporta un backup completo desde `Ajustes > Datos locales > Exportar backup JSON`.
 La implementación portable vive en `lib/sessionExport.ts`.
 La secuencia real de ejecución de ejercicios, series y superseries vive en `lib/workoutSequence.ts`; una app nativa debe replicar esa regla para interpretar progreso, descansos y rondas de superserie de la misma forma.
+La estimación operativa de duración vive en `lib/sessionDuration.js` y suma movilidad, ejecución aproximada, descansos, cambios entre ejercicios y feedback por serie.
 
 ```ts
 type FullTrainingDataExport = {

@@ -1,23 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import {
+  estimateSessionDurationFromSteps,
+  isSameSupersetRound,
+} from '../lib/sessionDuration.js';
+
 const planPath = resolve('data/trainingPlan.json');
 const trainingPlan = JSON.parse(readFileSync(planPath, 'utf8'));
 
-const warmupMobilityMinutes = 9;
-const feedbackSecondsPerSet = 8;
-const exerciseChangeSeconds = 45;
-const supersetTransitionSeconds = 15;
-
 const errors = [];
-
-const getSetExecutionSeconds = (set) => {
-  if (set.type === 'timed') {
-    return set.targetDurationSeconds ?? 60;
-  }
-
-  return Math.max(20, (set.targetReps ?? 8) * 4);
-};
 
 const getSupersetMembers = (session, supersetId) =>
   session.exercises
@@ -84,51 +76,11 @@ const buildExecutionSteps = (session) => {
 
 const estimateSessionMinutes = (session) => {
   const steps = buildExecutionSteps(session);
-  let executionSeconds = 0;
-  let restSeconds = 0;
-  let changeoverSeconds = 0;
-
-  steps.forEach((step, index) => {
-    const currentSet =
-      session.exercises[step.exerciseIndex].sets[step.setIndex];
-    const nextStep = steps[index + 1];
-    executionSeconds += getSetExecutionSeconds(currentSet);
-
-    if (!nextStep) {
-      return;
-    }
-
-    const isSameSupersetRound =
-      step.supersetId !== undefined &&
-      step.supersetId === nextStep.supersetId &&
-      step.roundNumber === nextStep.roundNumber;
-
-    if (!isSameSupersetRound) {
-      restSeconds += currentSet.restSeconds;
-    }
-
-    if (step.exerciseIndex !== nextStep.exerciseIndex) {
-      changeoverSeconds += isSameSupersetRound
-        ? supersetTransitionSeconds
-        : exerciseChangeSeconds;
-    }
-  });
-
-  const totalSeconds =
-    warmupMobilityMinutes * 60 +
-    executionSeconds +
-    restSeconds +
-    changeoverSeconds +
-    steps.length * feedbackSecondsPerSet;
-
-  return Math.round(totalSeconds / 60);
+  return estimateSessionDurationFromSteps(session, steps).totalMinutes;
 };
 
 const shouldRestAfterStep = (currentStep, nextStep) =>
-  nextStep !== undefined &&
-  (!currentStep.supersetId ||
-    currentStep.supersetId !== nextStep.supersetId ||
-    nextStep.roundNumber !== currentStep.roundNumber);
+  nextStep !== undefined && !isSameSupersetRound(currentStep, nextStep);
 
 if (
   !Array.isArray(trainingPlan.sessions) ||
