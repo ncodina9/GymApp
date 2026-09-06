@@ -235,6 +235,43 @@ type SessionDurationEstimate = {
   targetMinutes: number;
 };
 
+type FullTrainingDataExport = {
+  schemaName: 'gymapp.full-training-data-export';
+  schemaVersion: 1;
+  exportedAt: string;
+  app: {
+    name: string;
+    version: string;
+  };
+  source: {
+    platform: 'pwa';
+    localStores: string[];
+  };
+  plan: TrainingPlan;
+  settings: {
+    appearanceTheme: AppearanceTheme;
+    keepScreenAwake: boolean;
+  };
+  activeWorkout: {
+    selectedSessionId: string;
+    phase: Phase;
+    exerciseIndex: number;
+    setIndex: number;
+    startedAt?: string;
+    finishedAt?: string;
+  };
+  sessions: {
+    sessionId: string;
+    sessionDate: string;
+    sessionLabel: string;
+    planSession: TrainingSession;
+    summary: SessionHistorySummary;
+    metadata?: StoredSessionMetadata;
+    decisions: Record<string, string>;
+    events: StoredSetEvent[];
+  }[];
+};
+
 const trainingPlan = planData as TrainingPlan;
 const appVersion = packageData.version;
 const storageKey = `gymapp:${trainingPlan.planId}:draft`;
@@ -743,6 +780,23 @@ const csvEscape = (value: string | number) => {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 
+const shareOrDownloadFile = async (file: File, fileName: string) => {
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({
+      files: [file],
+      title: fileName,
+    });
+    return;
+  }
+
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 const slugifyFilePart = (value: string) =>
   value
     .toLowerCase()
@@ -753,6 +807,11 @@ const slugifyFilePart = (value: string) =>
 
 const getWorkoutCsvFileName = (session: TrainingSession) =>
   `${session.date}-${slugifyFilePart(session.label)}.csv`;
+
+const getTodayIso = () => new Date().toISOString().slice(0, 10);
+
+const getFullJsonExportFileName = () =>
+  `${getTodayIso()}-${slugifyFilePart(trainingPlan.planId)}-backup.json`;
 
 const getDecisionFallbacks = (
   records: StoredSetEvent[],
@@ -831,7 +890,128 @@ const getSessionHistorySummaries = (
     .sort((a, b) => b.lastPerformedAt.localeCompare(a.lastPerformedAt));
 };
 
-const getTodayIso = () => new Date().toISOString().slice(0, 10);
+const buildFullTrainingDataExport = ({
+  events,
+  metadata,
+  exportedAt,
+  appearanceTheme,
+  keepScreenAwake,
+  draft,
+}: {
+  events: StoredSetEvent[];
+  metadata: StoredSessionMetadata[];
+  exportedAt: string;
+  appearanceTheme: AppearanceTheme;
+  keepScreenAwake: boolean;
+  draft: WorkoutDraft;
+}): FullTrainingDataExport => {
+  const eventsBySession = new Map<string, StoredSetEvent[]>();
+  const metadataBySession = new Map(
+    metadata.map((item) => [item.sessionId, item]),
+  );
+
+  events.forEach((event) => {
+    const sessionEvents = eventsBySession.get(event.sessionId) ?? [];
+    sessionEvents.push(event);
+    eventsBySession.set(event.sessionId, sessionEvents);
+  });
+
+  const localSessionIds = Array.from(
+    new Set([
+      ...events.map((event) => event.sessionId),
+      ...metadata.map((item) => item.sessionId),
+    ]),
+  ).sort();
+  const summariesBySession = new Map(
+    getSessionHistorySummaries(trainingPlan.sessions, events, metadata).map(
+      (summary) => [summary.sessionId, summary],
+    ),
+  );
+
+  return {
+    schemaName: 'gymapp.full-training-data-export',
+    schemaVersion: 1,
+    exportedAt,
+    app: {
+      name: packageData.name,
+      version: appVersion,
+    },
+    source: {
+      platform: 'pwa',
+      localStores: ['IndexedDB:setEvents', 'IndexedDB:sessionMetadata'],
+    },
+    plan: trainingPlan,
+    settings: {
+      appearanceTheme,
+      keepScreenAwake,
+    },
+    activeWorkout: {
+      selectedSessionId: draft.selectedSessionId,
+      phase: draft.phase,
+      exerciseIndex: draft.exerciseIndex,
+      setIndex: draft.setIndex,
+      ...(draft.startedAt ? { startedAt: draft.startedAt } : {}),
+      ...(draft.finishedAt ? { finishedAt: draft.finishedAt } : {}),
+    },
+    sessions: localSessionIds.flatMap((sessionId) => {
+      const planSession =
+        trainingPlan.sessions.find(
+          (session) => session.sessionId === sessionId,
+        ) ?? fallbackSession;
+      const sessionEvents = [...(eventsBySession.get(sessionId) ?? [])].sort(
+        (a, b) => a.performedAt.localeCompare(b.performedAt),
+      );
+      const metadataItem = metadataBySession.get(sessionId);
+      const summary =
+        summariesBySession.get(sessionId) ??
+        ({
+          sessionId,
+          sessionDate: planSession.date,
+          sessionLabel: planSession.label,
+          estimatedMinutes: planSession.estimatedMinutes,
+          derivedEstimatedMinutes:
+            estimateSessionDuration(planSession).totalMinutes,
+          attemptedSets: sessionEvents.length,
+          completedSets: sessionEvents.filter(
+            (event) => event.status === 'completed',
+          ).length,
+          totalSets: buildExecutionSteps(planSession).length,
+          ...(metadataItem?.schemaVersion
+            ? { schemaVersion: metadataItem.schemaVersion }
+            : {}),
+          ...(metadataItem?.startedAt
+            ? { startedAt: metadataItem.startedAt }
+            : {}),
+          ...(metadataItem?.finishedAt
+            ? { finishedAt: metadataItem.finishedAt }
+            : {}),
+          ...(metadataItem?.exportedAt
+            ? { exportedAt: metadataItem.exportedAt }
+            : {}),
+          firstPerformedAt:
+            sessionEvents[0]?.performedAt ?? metadataItem?.startedAt ?? '',
+          lastPerformedAt:
+            sessionEvents.at(-1)?.performedAt ??
+            metadataItem?.finishedAt ??
+            metadataItem?.startedAt ??
+            '',
+        } satisfies SessionHistorySummary);
+
+      return [
+        {
+          sessionId,
+          sessionDate: planSession.date,
+          sessionLabel: planSession.sessionLabel,
+          planSession,
+          summary,
+          ...(metadataItem ? { metadata: metadataItem } : {}),
+          decisions: metadataItem?.decisions ?? {},
+          events: sessionEvents,
+        },
+      ];
+    }),
+  };
+};
 
 const getExerciseProgressInsights = (
   sessions: TrainingSession[],
@@ -1983,20 +2163,39 @@ export default function Home() {
     const fileName = getWorkoutCsvFileName(session);
     const file = new File([csv], fileName, { type: 'text/csv;charset=utf-8' });
 
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: fileName,
-      });
-      return;
-    }
+    await shareOrDownloadFile(file, fileName);
+  };
 
-    const url = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(url);
+  const exportFullTrainingDataJson = async () => {
+    const [events, metadata] = await Promise.all([
+      loadAllSessionEvents(),
+      loadSessionMetadata(),
+    ]);
+    const exportedAt = new Date().toISOString();
+    const fullExport = buildFullTrainingDataExport({
+      events,
+      metadata,
+      exportedAt,
+      appearanceTheme,
+      keepScreenAwake,
+      draft,
+    });
+    const fileName = getFullJsonExportFileName();
+    const file = new File(
+      [`${JSON.stringify(fullExport, null, 2)}\n`],
+      fileName,
+      {
+        type: 'application/json;charset=utf-8',
+      },
+    );
+
+    await shareOrDownloadFile(file, fileName);
+    await Promise.all(
+      fullExport.sessions.map((session) =>
+        markSessionExported(session.sessionId, exportedAt),
+      ),
+    );
+    await refreshSessionHistory();
   };
 
   const exportCsv = async () => {
@@ -2244,6 +2443,11 @@ export default function Home() {
               );
             }}
             onClearAllData={clearAllLocalData}
+            onExportFullJson={() => {
+              void exportFullTrainingDataJson().catch(() => {
+                window.alert('No se pudo exportar el backup JSON.');
+              });
+            }}
             onExportHistorySession={exportHistorySession}
             onDeleteHistorySession={deleteHistorySession}
             onBack={() => patchDraft({ phase: settingsReturnPhase })}
@@ -2677,6 +2881,7 @@ function SettingsScreen({
   onUpdateOfflineVersion,
   onResetCurrent,
   onClearAllData,
+  onExportFullJson,
   onExportHistorySession,
   onDeleteHistorySession,
   onBack,
@@ -2698,6 +2903,7 @@ function SettingsScreen({
   onUpdateOfflineVersion: () => void;
   onResetCurrent: () => void;
   onClearAllData: () => void;
+  onExportFullJson: () => void;
   onExportHistorySession: (sessionId: string) => void;
   onDeleteHistorySession: (sessionId: string) => void;
   onBack: () => void;
@@ -2904,6 +3110,14 @@ function SettingsScreen({
                   {selectedSessionLabel}
                 </span>
               </span>
+            </Button>
+            <Button
+              className="h-14 justify-start rounded-[1.75rem] px-5 text-left font-black"
+              variant="secondary"
+              onClick={onExportFullJson}
+            >
+              <Download className="size-5" />
+              Exportar backup JSON
             </Button>
             <Button
               className={`h-14 justify-start rounded-[1.75rem] px-5 text-left font-black ${actionStyles.delete}`}

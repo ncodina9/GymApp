@@ -4,6 +4,8 @@
 
 Crear una companion app para iPhone orientada a ejecutar el entrenamiento en el gimnasio con el mínimo rozamiento posible. La app debe decir claramente que toca hacer ahora, permitir ajustar carga y repeticiones con controles tactiles rapidos, registrar la serie y guiar el descanso hasta la siguiente accion.
 
+La PWA actual debe servir como prototipo funcional y banco de pruebas del producto. El objetivo final, si el uso real confirma el flujo, es evolucionar hacia una app nativa de iPhone en Swift/SwiftUI para aprovechar mejor iOS: HealthKit, Apple Watch, Live Activities, notificaciones locales, haptics, widgets, Atajos e iCloud.
+
 El plan de entrenamiento no debe ser una plantilla generica de 4 dias repetida. El JSON de planificacion debe contener todas las sesiones del trimestre, dia por dia, con pesos, repeticiones, descansos, notas y decisiones ya ajustadas para la semana concreta del plan.
 
 ## Principios de producto
@@ -18,6 +20,9 @@ El plan de entrenamiento no debe ser una plantilla generica de 4 dias repetida. 
 - Cada serie debe poder saltarse con un boton pequeno y deliberadamente secundario para evitar pulsaciones accidentales.
 - La app debe ser offline-first: usable en el gimnasio sin cobertura, con guardado local inmediato tras cada accion relevante.
 - La sincronizacion/exportacion puede venir despues. No debe bloquear el flujo principal.
+- Aunque la primera version sea PWA, las decisiones de datos y arquitectura deben facilitar una futura migracion a app nativa de iPhone.
+- La logica de dominio no debe quedar acoplada innecesariamente a React ni a APIs web si puede expresarse como reglas puras y portables.
+- Todo dato local importante debe poder exportarse en un formato estructurado, versionado y compatible con una futura importacion en Swift.
 
 ## Flujo principal
 
@@ -227,7 +232,7 @@ Pendiente de confirmar antes de cerrar pesos definitivos:
 
 ## Arquitectura propuesta
 
-Primera version como PWA offline-first.
+Primera version como PWA offline-first. Esta PWA no se considera necesariamente el producto final, sino la forma mas rapida de validar el flujo real de entrenamiento antes de invertir en una app nativa iOS.
 
 Stack inicial recomendado:
 
@@ -239,6 +244,15 @@ Stack inicial recomendado:
 - exportacion Markdown/CSV en una fase posterior
 
 La app debe poder alojarse como sitio estatico. No hace falta Northflank para la primera version si no hay backend. Un alojamiento estatico con soporte HTTPS es suficiente para instalarla como PWA en iPhone. Si despues necesitamos sincronizacion multi-dispositivo, cuentas de usuario o backups automaticos, se reevaluara backend.
+
+Preparacion para iOS nativo:
+
+- mantener `trainingPlan.json` como contrato de datos estable y compatible con `Codable`
+- documentar versiones de esquema para plan, eventos, metadata, ajustes y exportaciones
+- separar reglas de dominio de la UI: seleccion de sesion, secuenciador, progreso, estimaciones, recomendaciones y exportacion
+- evitar dependencias profundas de APIs web para logica que despues deba vivir en Swift
+- anadir exportacion JSON completa para migrar historico local desde IndexedDB a una futura app SwiftUI
+- conservar los scripts de generacion del plan como pipeline externo mientras aporten valor
 
 ## Hitos
 
@@ -783,6 +797,55 @@ Criterio de aceptacion:
 - exportar no depende de estar justo en la pantalla final
 - borrar datos es deliberado y claro
 
+### Hito 20: Preparacion para app nativa iOS
+
+Objetivo: dejar la PWA actual preparada para que una futura app SwiftUI pueda reutilizar el modelo de producto, importar datos existentes y replicar el flujo sin reinterpretarlo desde cero.
+
+Tareas:
+
+- documentar el schema de `trainingPlan.json` con versiones y compatibilidad esperada para Swift `Codable`
+- documentar el schema de eventos de serie, metadata de sesion, decisiones, ajustes locales y exportaciones
+- anadir exportacion JSON completa del historico local, no solo CSV por serie
+- incluir `schemaVersion`, `exportedAt`, `appVersion` y timestamps relevantes en la exportacion estructurada
+- separar de `app/page.tsx` la logica de dominio que no depende de React:
+  - seleccion de entrenamiento recomendado
+  - secuenciador de ejercicios, series y superseries
+  - calculo de progreso de sesion
+  - estimacion derivada de duracion
+  - resumen historico
+  - recomendaciones conservadoras de progresion
+- definir un mapa preliminar de pantallas SwiftUI equivalente al flujo actual: Hoy, Preview, Ejecucion, Feedback, Descanso, Transicion, Historial, Progresion y Ajustes
+- identificar que funcionalidades de la PWA son temporales por limitaciones web y cuales deben migrar tal cual a iOS
+- crear `docs/ios-native-plan.md` con alcance de una primera version nativa
+- decidir estrategia inicial de persistencia iOS: SwiftData, Core Data, SQLite o JSON local
+- definir el flujo de importacion desde la PWA a la app nativa mediante archivo JSON
+
+Criterio de aceptacion:
+
+- existe una especificacion clara de datos y pantallas para construir el primer prototipo SwiftUI
+- el historico local de la PWA se puede exportar en JSON estructurado y versionado
+- las reglas principales de entrenamiento estan aisladas de la UI web o documentadas para su traduccion
+- una app iOS futura puede cargar el plan y los registros sin depender de IndexedDB ni de detalles internos de React
+
+Estado parcial:
+
+- `docs/data-schemas.md` documenta `TrainingPlan`, sesiones, ejercicios, series, eventos, metadata, CSV y exportacion JSON completa pensando en Swift `Codable`
+- `Ajustes > Datos locales` permite exportar un backup JSON completo del historico local
+- el JSON exportado incluye `schemaName`, `schemaVersion`, `exportedAt`, version de app, plan completo, ajustes relevantes, sesion activa, metadata, decisiones y eventos de series ordenados
+- las sesiones incluidas en el backup JSON se marcan con `exportedAt`
+- las nuevas decisiones de desarrollo y diseno deben tratar la PWA como prototipo validado y la app nativa de iPhone como destino final
+
+Capacidades iOS candidatas para fases posteriores:
+
+- Live Activity para descanso o sesion activa
+- notificaciones locales al terminar descansos
+- HealthKit para guardar entrenamientos y leer metricas relevantes
+- app companion para Apple Watch
+- haptics nativos para confirmaciones y avisos
+- widgets con proximo entrenamiento y progreso semanal
+- sincronizacion mediante iCloud/CloudKit
+- integracion con Atajos de iOS y Siri
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
@@ -794,10 +857,18 @@ Criterio de aceptacion:
 - Definir mas adelante como tratar superseries con distinto numero de series por ejercicio.
 - Decidir si el plan tendra correcciones manuales despues de cada semana o versiones generadas.
 - Decidir si el historico local debe quedarse solo en IndexedDB o si conviene una copia exportable mas directa.
+- Decidir cuando iniciar el prototipo SwiftUI: despues de validar el flujo principal en gimnasio o antes para probar ventajas nativas concretas.
+- Decidir si la primera app iOS debe usar SwiftData, Core Data, SQLite o archivos JSON locales.
+- Definir que datos deben sincronizarse por iCloud y cuales pueden quedarse solo en el dispositivo.
 
 ## Backlog futuro
 
 - Integracion opcional con Atajos de iOS.
+- Prototipo SwiftUI que cargue `trainingPlan.json` y permita completar una sesion minima.
+- Live Activity para temporizador de descanso.
+- Integracion con HealthKit para registrar entrenamientos.
+- App companion de Apple Watch para registrar series y descansos.
+- Widget de proximo entrenamiento y progreso semanal.
 - Exportacion Markdown por sesion, si aporta valor frente al CSV.
 - Vista de volumen semanal por grupo muscular.
 - Vista de progresion por ejercicio.
