@@ -143,7 +143,7 @@ type StoredSetEvent = {
 Notas:
 
 - Cada fila representa una serie registrada o saltada.
-- `performedAt` usa ISO datetime.
+- `performedAt` se guarda como ISO UTC para ordenar y calcular duraciones sin depender del huso horario.
 - `exerciseIndex` y `setIndex` son 0-based en la PWA.
 - `roundNumber` se usa para reconstruir superseries.
 - `actualWeightKg` debe interpretarse junto con el tipo de carga inferido del ejercicio: `total`, `external`, `per_dumbbell`, `machine` o `bodyweight`.
@@ -246,7 +246,7 @@ date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,lo
 
 Notas:
 
-- `performed_at` es el timestamp ISO exacto del registro de la serie y permite comparar tiempos reales entre series y ejercicios.
+- `performed_at` es el timestamp ISO local de Madrid con offset (`+02:00` en verano, `+01:00` en invierno) para revisar el CSV en Obsidian/Numbers sin perder la hora real del entrenamiento. Internamente `performedAt` sigue guardado en UTC.
 - `set_number` es 1-based en CSV.
 - `load_type` distingue carga total, lastre, mancuerna, máquina y peso corporal.
 - `exercise_decision` y `exercise_note` solo se rellenan en la última fila exportada de cada ejercicio.

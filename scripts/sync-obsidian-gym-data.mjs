@@ -94,7 +94,7 @@ Formato:
 
 \`\`\`csv
 date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
-2026-09-07,2026-09-07T17:42:10.000Z,1,Lunes - Torso fuerza,Press banca con barra,Básico,5x5 @ 65 kg,1,done,65,total,5,2,0,0,0,0,,OK,,,,,
+2026-09-07,2026-09-07T19:42:10.000+02:00,1,Lunes - Torso fuerza,Press banca con barra,Básico,5x5 @ 65 kg,1,done,65,total,5,2,0,0,0,0,,OK,,,,,
 \`\`\`
 
 ## Nombres estándar

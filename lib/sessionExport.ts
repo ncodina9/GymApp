@@ -192,6 +192,60 @@ export const getWorkoutCsvFileName = (session: ExportTrainingSession) =>
 export const getFullJsonExportFileName = (planId: string, exportedAt: string) =>
   `${exportedAt.slice(0, 10)}-${slugifyFilePart(planId)}-backup.json`;
 
+export const exportTimeZone = 'Europe/Madrid';
+
+const getPart = (parts: Intl.DateTimeFormatPart[], type: string) =>
+  parts.find((part) => part.type === type)?.value;
+
+const formatOffset = (timeZoneName: string | undefined) => {
+  const match = timeZoneName?.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const [, sign, hours, minutes = '00'] = match;
+  return `${sign}${hours.padStart(2, '0')}:${minutes}`;
+};
+
+export const formatTimestampForCsv = (
+  timestamp: string,
+  timeZone = exportTimeZone,
+) => {
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return timestamp;
+  }
+
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    fractionalSecondDigits: 3,
+    hourCycle: 'h23',
+    timeZoneName: 'longOffset',
+  }).formatToParts(date);
+  const year = getPart(parts, 'year');
+  const month = getPart(parts, 'month');
+  const day = getPart(parts, 'day');
+  const hour = getPart(parts, 'hour');
+  const minute = getPart(parts, 'minute');
+  const second = getPart(parts, 'second');
+  const fractionalSecond = getPart(parts, 'fractionalSecond') ?? '000';
+  const offset = formatOffset(getPart(parts, 'timeZoneName'));
+
+  if (!year || !month || !day || !hour || !minute || !second || !offset) {
+    return timestamp;
+  }
+
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}.${fractionalSecond}${offset}`;
+};
+
 export const buildWorkoutCsv = (
   session: ExportTrainingSession,
   records: StoredSetEvent[],
@@ -253,7 +307,7 @@ export const buildWorkoutCsv = (
 
     return [
       session.date,
-      record.performedAt,
+      formatTimestampForCsv(record.performedAt),
       session.week,
       session.sessionLabel,
       exercise?.name ?? record.exerciseId,
