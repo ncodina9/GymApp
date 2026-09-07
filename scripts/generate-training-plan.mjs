@@ -412,7 +412,7 @@ const baseSessions = {
 
 const progressions = {
   'press-banca-barra': { step: 2.5, max: 82.5 },
-  'dominadas-lastradas': { step: 2.5, max: 15 },
+  'dominadas-lastradas': { step: 1.25, max: 15 },
   'remo-inclinado-barra': { step: 2.5, max: 67.5 },
   'press-militar-sentado': { step: 2.5, max: 45 },
   'sentadilla-barra': { step: 2.5, max: 82.5 },
@@ -421,8 +421,11 @@ const progressions = {
 };
 
 const sessions = [];
-const skippedDates = new Set(['2026-09-08']);
+const skippedSessionKeys = new Set(['1:friday']);
+const skippedDates = new Set([]);
 const dateOverrides = new Map([
+  ['1:tuesday', '2026-09-10'],
+  ['1:thursday', '2026-09-11'],
   ['5:friday', '2026-10-07'],
   ['6:monday', '2026-10-14'],
   ['12:tuesday', '2026-12-09'],
@@ -430,6 +433,10 @@ const dateOverrides = new Map([
 
 for (let week = 1; week <= 13; week += 1) {
   for (const weekday of weekdays) {
+    if (skippedSessionKeys.has(`${week}:${weekday.key}`)) {
+      continue;
+    }
+
     const base = baseSessions[weekday.key];
     const date = plannedDate(week, weekday);
     const dateIso = isoDate(date);
@@ -553,6 +560,11 @@ function adaptExercise(item, week) {
     );
   }
 
+  if (week > 1) {
+    weightKg = applyFeedbackLoadAdjustment(item, weightKg);
+    reps = applyFeedbackRepAdjustment(item, reps);
+  }
+
   if (templateWeek >= 5 && templateWeek <= 7 && isBasic(item)) {
     setCount = getIntensificationSetCount(item);
     reps = getIntensificationReps(item);
@@ -622,6 +634,37 @@ function adaptExercise(item, week) {
     }),
     sets,
   };
+}
+
+function applyFeedbackLoadAdjustment(item, weightKg) {
+  if (
+    item.exerciseId === 'elevaciones-laterales' ||
+    item.exerciseId === 'elevaciones-laterales-volumen' ||
+    item.exerciseId === 'elevacion-lateral-mecanica'
+  ) {
+    return 8;
+  }
+
+  if (item.exerciseId === 'triceps-polea-simple') {
+    return 75;
+  }
+
+  if (
+    item.exerciseId === 'triceps-polea-volumen' ||
+    item.exerciseId === 'extension-triceps-polea'
+  ) {
+    return 70;
+  }
+
+  return weightKg;
+}
+
+function applyFeedbackRepAdjustment(item, reps) {
+  if (item.exerciseId === 'curl-biceps-alterno') {
+    return 10;
+  }
+
+  return reps;
 }
 
 function getWeekFocus(week) {
@@ -788,7 +831,7 @@ function getRealizationRest(item, fallbackRestSeconds) {
 }
 
 function decisionOptions(item, week, weightKg, options = {}) {
-  if (item.weightKg === 0) {
+  if (weightKg === 0) {
     return options.postVacationAdaptation
       ? ['Mantener suave', 'Subir reps si fácil', 'Marcar molestia']
       : ['Mantener', 'Subir reps', 'Marcar molestia'];
@@ -939,7 +982,7 @@ function getLoadKind(item) {
   const text =
     `${item.exerciseId} ${item.name} ${item.notes.join(' ')}`.toLowerCase();
 
-  if (item.measure === 'duration' || item.weightKg === 0) {
+  if (item.measure === 'duration') {
     return 'bodyweight';
   }
 
@@ -963,6 +1006,10 @@ function getLoadKind(item) {
     (text.includes('máquina') && !text.includes('multipower'))
   ) {
     return 'machine';
+  }
+
+  if (item.weightKg === 0) {
+    return 'bodyweight';
   }
 
   return 'barbell';
