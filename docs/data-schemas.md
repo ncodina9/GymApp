@@ -238,11 +238,12 @@ La construcción del CSV vive en `lib/sessionExport.ts` para mantenerla fuera de
 Campos actuales:
 
 ```csv
-date,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
+date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
 ```
 
 Notas:
 
+- `performed_at` es el timestamp ISO exacto del registro de la serie y permite comparar tiempos reales entre series y ejercicios.
 - `set_number` es 1-based en CSV.
 - `load_type` distingue carga total, lastre, mancuerna, máquina y peso corporal.
 - `exercise_decision` y `exercise_note` solo se rellenan en la última fila exportada de cada ejercicio.

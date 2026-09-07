@@ -198,6 +198,7 @@ export const buildWorkoutCsv = (
 ) => {
   const headers = [
     'date',
+    'performed_at',
     'week',
     'session',
     'exercise',
@@ -249,6 +250,7 @@ export const buildWorkoutCsv = (
 
     return [
       session.date,
+      record.performedAt,
       session.week,
       session.sessionLabel,
       exercise?.name ?? record.exerciseId,

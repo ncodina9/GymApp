@@ -604,6 +604,7 @@ Estado parcial:
 
 - historial local visible desde Ajustes, con scroll permitido en esa pantalla
 - exportacion CSV de sesiones con datos sin depender de estar en la pantalla final
+- CSV por serie ampliado con `performed_at` para comparar tiempos reales entre series y ejercicios
 - borrado de una sesion concreta desde Ajustes
 - al cerrar un entrenamiento y volver a hoy, se conserva la sesion finalizada para exportarla despues
 - sesiones exportadas marcadas en IndexedDB con `exportedAt`
