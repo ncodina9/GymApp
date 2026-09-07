@@ -2526,7 +2526,7 @@ function TodayScreen({
         </Button>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid gap-2">
         {weekSessions.map((session) => {
           const isSelected = session.sessionId === selectedSession.sessionId;
           const isComplete = completedSessionIds.has(session.sessionId);
@@ -2534,7 +2534,7 @@ function TodayScreen({
           return (
             <button
               key={session.sessionId}
-              className={`min-h-20 rounded-lg border p-3 text-left transition active:scale-[0.98] ${
+              className={`min-h-16 rounded-lg border px-3 py-2.5 text-left transition active:scale-[0.98] ${
                 isSelected
                   ? 'border-primary bg-primary text-primary-foreground'
                   : isComplete
