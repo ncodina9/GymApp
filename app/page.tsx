@@ -3552,12 +3552,9 @@ function RestScreen({
           textClassName="text-[4.5rem]"
           isFinished={isFinished}
         />
-        <p className="mt-3 text-lg font-bold">
-          Siguiente:{' '}
-          {nextSetPreview
-            ? `serie ${nextSetPreview.series} · ${nextSetPreview.exerciseName}`
-            : nextLabel}
-        </p>
+        {!nextSetPreview ? (
+          <p className="mt-3 text-lg font-bold">Siguiente: {nextLabel}</p>
+        ) : null}
       </div>
 
       {nextSetPreview ? (
