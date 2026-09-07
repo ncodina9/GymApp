@@ -22,6 +22,8 @@ export type StoredSetEvent = {
   rirLast: number;
   painKnee: number;
   painWrist: number;
+  painShoulder?: number;
+  painLowerBack?: number;
   painOther: number;
   note: string;
 };

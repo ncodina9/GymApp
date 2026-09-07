@@ -133,6 +133,8 @@ type StoredSetEvent = {
   rirLast: number;
   painKnee: number;
   painWrist: number;
+  painShoulder?: number;
+  painLowerBack?: number;
   painOther: number;
   note: string;
 };
@@ -239,7 +241,7 @@ La construcción del CSV vive en `lib/sessionExport.ts` para mantenerla fuera de
 Campos actuales:
 
 ```csv
-date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
+date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
 ```
 
 Notas:

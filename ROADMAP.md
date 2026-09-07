@@ -605,6 +605,7 @@ Estado parcial:
 - historial local visible desde Ajustes, con scroll permitido en esa pantalla
 - exportacion CSV de sesiones con datos sin depender de estar en la pantalla final
 - CSV por serie ampliado con `performed_at` para comparar tiempos reales entre series y ejercicios
+- feedback de molestias ampliado con hombro y lumbar
 - borrado de una sesion concreta desde Ajustes
 - al cerrar un entrenamiento y volver a hoy, se conserva la sesion finalizada para exportarla despues
 - sesiones exportadas marcadas en IndexedDB con `exportedAt`
@@ -639,10 +640,11 @@ Estado parcial:
 
 - `startedAt` se guarda al empezar entrenamiento
 - `finishedAt` se guarda al cerrar entrenamiento
-- al finalizar se muestra la duracion real, el tiempo estimado y la diferencia
+- al finalizar se muestra la duracion real, el tiempo estimado de entrenamiento sin movilidad y la diferencia
 - el historial muestra la duracion de las sesiones cerradas cuando existe metadata suficiente
 - la estimacion operativa ya no depende solo del campo manual `estimatedMinutes`
 - la preview desglosa movilidad, trabajo, cambios/feedback y marca sesiones que superan claramente el objetivo de 60 min
+- la movilidad previa se mantiene dentro de la estimacion global de la preview, pero se excluye de la comparacion final de tiempo real porque el entrenamiento empieza al entrar en la primera serie
 
 Formula actual de estimacion derivada:
 
@@ -663,6 +665,37 @@ Auditoria inicial del plan actual con esta formula:
 - peor caso detectado: `2026-12-10 Torso volumen y potencia`, 115 min estimados, 36 series
 
 Estado: cerrado para la app. Queda como decision futura si la duracion total debe anadirse tambien al CSV por serie o a un resumen independiente de sesion. Las sesiones estimadas por encima de 75 min deben revisarse porque probablemente no caben en una hora real de gimnasio.
+
+### Hito 14c: Ajustes tras primera sesion real
+
+Objetivo: incorporar fricciones detectadas entrenando en gimnasio real sin romper la filosofia de pantallas sin scroll durante serie, feedback y descanso.
+
+Tareas:
+
+- mostrar en descanso la siguiente serie con `serie x/total`, reps/tiempo y peso
+- pedir decision de ejercicio antes del descanso largo entre ejercicios
+- ampliar molestias con hombro y lumbar
+- hacer temporizadores resilientes a perdida de foco usando hora objetivo en vez de decremento por intervalos
+- aumentar tamano de botones inferiores de navegacion
+- redisenar modificacion puntual de reps/peso en pantalla propia con confirmar/cancelar
+- hacer los cuadros de reps/peso clicables y mas bajos tras retirar los botones `+/-`
+- marcar en Hoy los entrenamientos completados de la semana
+- cuando todos los entrenamientos de la semana esten completos, mostrar por defecto la semana siguiente
+
+Criterio de aceptacion:
+
+- durante el descanso se puede preparar la siguiente carga sin volver a preview
+- al cerrar un ejercicio se puede decidir subir, bajar o mantener antes del descanso
+- bloquear y desbloquear el iPhone no reinicia ni desfasa el descanso o temporizador de ejercicio
+- el registro sigue siendo rapido si no se necesita modificar el peso o las reps recomendadas
+
+Estado parcial:
+
+- descanso muestra siguiente serie con metrics compactas
+- decision de ejercicio se solicita antes del descanso entre ejercicios
+- feedback de molestias incluye hombro y lumbar
+- temporizadores recalculan por `endsAt` al recuperar foco
+- comparacion final de duracion usa estimacion sin movilidad previa
 
 ### Hito 14b: Ajuste del planning a 60-70 minutos
 
@@ -886,14 +919,14 @@ Capacidades iOS candidatas para fases posteriores:
 
 ## Proximo hito recomendado
 
-Continuar con el Hito 12: Pulido táctil y visual de controles.
+Continuar con el Hito 14c: redisenar la modificacion puntual de reps/peso en pantalla propia.
 
 Checklist minima de la siguiente iteracion:
 
-1. Revisar tema claro y oscuro en iPhone real.
-2. Cerrar el color principal definitivo de cada tema.
-3. Homogeneizar botones de navegación y acciones secundarias.
-4. Revisar contraste de textos e iconos en botones primarios.
-5. Anotar fricciones de tamano, scroll, textos cortados o pulsaciones incomodas.
+1. Hacer clicables los cuadros centrales de reps y peso.
+2. Quitar los botones `+/-` de la pantalla principal de serie.
+3. Crear pantalla/modal de ajuste con confirmar/cancelar.
+4. Mantener la recomendacion del plan como camino por defecto.
+5. Validar que no aparece scroll en pantalla de serie.
 
 Despues de esa prueba, priorizar Hito 13 si el problema principal es fiabilidad de datos/exportacion.

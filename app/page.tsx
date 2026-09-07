@@ -198,16 +198,21 @@ type WorkoutDraft = {
   weightStep: WeightStep;
   setTimerRemaining: number;
   isSetTimerRunning: boolean;
+  setTimerEndsAt?: string;
   restRemaining: number;
+  restEndsAt?: string;
   records: StoredSetEvent[];
   decisions: Record<string, string>;
   startedAt?: string;
   finishedAt?: string;
   transitionExerciseIds: string[];
-  transitionNextPhase: 'set' | 'done';
+  transitionNextPhase: 'set' | 'rest' | 'done';
+  suppressTransitionOnce: boolean;
   editedRir: number;
   painKnee: number;
   painWrist: number;
+  painShoulder: number;
+  painLowerBack: number;
   painOther: number;
   setNote: string;
 };
@@ -519,9 +524,12 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   decisions: {},
   transitionExerciseIds: [],
   transitionNextPhase: 'set',
+  suppressTransitionOnce: false,
   editedRir: 2,
   painKnee: 0,
   painWrist: 0,
+  painShoulder: 0,
+  painLowerBack: 0,
   painOther: 0,
   setNote: 'OK',
 });
@@ -556,13 +564,18 @@ const normalizeDraft = (
     ...(draft.finishedAt ? { finishedAt: draft.finishedAt } : {}),
     transitionExerciseIds: draft.transitionExerciseIds ?? [],
     transitionNextPhase: draft.transitionNextPhase ?? 'set',
+    suppressTransitionOnce: draft.suppressTransitionOnce ?? false,
     editedRir: draft.editedRir ?? 2,
     editedDurationSeconds: draft.editedDurationSeconds ?? 0,
     weightStep: isWeightStep(draft.weightStep) ? draft.weightStep : 1,
     setTimerRemaining: draft.setTimerRemaining ?? 0,
+    ...(draft.setTimerEndsAt ? { setTimerEndsAt: draft.setTimerEndsAt } : {}),
     isSetTimerRunning: draft.isSetTimerRunning ?? false,
+    ...(draft.restEndsAt ? { restEndsAt: draft.restEndsAt } : {}),
     painKnee: draft.painKnee ?? 0,
     painWrist: draft.painWrist ?? 0,
+    painShoulder: draft.painShoulder ?? 0,
+    painLowerBack: draft.painLowerBack ?? 0,
     painOther: draft.painOther ?? 0,
     setNote: draft.setNote || 'OK',
   };
@@ -620,6 +633,9 @@ const getDurationMinutes = (startedAt?: string, finishedAt?: string) => {
 
   return Math.max(1, Math.round(elapsedMs / 60000));
 };
+
+const getTimerEndsAt = (seconds: number) =>
+  new Date(Date.now() + Math.max(0, seconds) * 1000).toISOString();
 
 const formatDurationMinutes = (minutes: number) => {
   if (minutes < 60) {
@@ -837,7 +853,11 @@ const getExerciseProgressInsights = (
       const recentEvents = sortedEvents.slice(-12);
       const painHits = recentEvents.filter(
         (event) =>
-          event.painKnee > 0 || event.painWrist > 0 || event.painOther > 0,
+          event.painKnee > 0 ||
+          event.painWrist > 0 ||
+          (event.painShoulder ?? 0) > 0 ||
+          (event.painLowerBack ?? 0) > 0 ||
+          event.painOther > 0,
       ).length;
       const sessionEvents = sortedEvents.filter(
         (event) => event.sessionId === lastEvent.sessionId,
@@ -1134,6 +1154,53 @@ const getExercisePreviewMetrics = (exercise: Exercise) => {
     work: reps.join('/'),
     workLabel: 'reps',
     load: loads.join('/'),
+    loadLabel: getPreviewLoadLabel(loadType),
+  };
+};
+
+type NextSetPreview = {
+  exerciseName: string;
+  series: string;
+  work: string;
+  workLabel: string;
+  load: string;
+  loadLabel: string;
+};
+
+const getNextSetPreview = (
+  session: TrainingSession,
+  step: ReturnType<typeof buildExecutionSteps>[number] | undefined,
+): NextSetPreview | undefined => {
+  if (!step) {
+    return undefined;
+  }
+
+  const exercise = session.exercises[step.exerciseIndex];
+  const set = exercise?.sets[step.setIndex];
+
+  if (!exercise || !set) {
+    return undefined;
+  }
+
+  const loadType = inferLoadType(exercise);
+
+  if (set.type === 'timed') {
+    return {
+      exerciseName: exercise.name,
+      series: `${step.setIndex + 1}/${exercise.sets.length}`,
+      work: formatClock(set.targetDurationSeconds ?? 0),
+      workLabel: 'tiempo',
+      load: formatPreviewLoad(set.targetWeightKg, loadType),
+      loadLabel: getPreviewLoadLabel(loadType),
+    };
+  }
+
+  return {
+    exerciseName: exercise.name,
+    series: `${step.setIndex + 1}/${exercise.sets.length}`,
+    work: String(set.targetReps ?? 0),
+    workLabel: 'reps',
+    load: formatPreviewLoad(set.targetWeightKg, loadType),
     loadLabel: getPreviewLoadLabel(loadType),
   };
 };
@@ -1448,14 +1515,33 @@ export default function Home() {
       return;
     }
 
-    const timer = window.setInterval(() => {
-      setDraft((current) => ({
-        ...current,
-        restRemaining: Math.max(0, current.restRemaining - 1),
-      }));
-    }, 1000);
+    const updateRemaining = () => {
+      setDraft((current) => {
+        const restEndsAt =
+          current.restEndsAt ?? getTimerEndsAt(current.restRemaining);
+        const nextRemaining = Math.max(
+          0,
+          Math.ceil((new Date(restEndsAt).getTime() - Date.now()) / 1000),
+        );
 
-    return () => window.clearInterval(timer);
+        return {
+          ...current,
+          restRemaining: nextRemaining,
+          restEndsAt: nextRemaining > 0 ? restEndsAt : undefined,
+        };
+      });
+    };
+
+    updateRemaining();
+    const timer = window.setInterval(updateRemaining, 1000);
+    window.addEventListener('focus', updateRemaining);
+    document.addEventListener('visibilitychange', updateRemaining);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', updateRemaining);
+      document.removeEventListener('visibilitychange', updateRemaining);
+    };
   }, [draft.phase, draft.restRemaining]);
 
   useEffect(() => {
@@ -1467,19 +1553,34 @@ export default function Home() {
       return;
     }
 
-    const timer = window.setInterval(() => {
+    const updateRemaining = () => {
       setDraft((current) => {
-        const nextRemaining = Math.max(0, current.setTimerRemaining - 1);
+        const setTimerEndsAt =
+          current.setTimerEndsAt ?? getTimerEndsAt(current.setTimerRemaining);
+        const nextRemaining = Math.max(
+          0,
+          Math.ceil((new Date(setTimerEndsAt).getTime() - Date.now()) / 1000),
+        );
 
         return {
           ...current,
           setTimerRemaining: nextRemaining,
           isSetTimerRunning: nextRemaining > 0,
+          setTimerEndsAt: nextRemaining > 0 ? setTimerEndsAt : undefined,
         };
       });
-    }, 1000);
+    };
 
-    return () => window.clearInterval(timer);
+    updateRemaining();
+    const timer = window.setInterval(updateRemaining, 1000);
+    window.addEventListener('focus', updateRemaining);
+    document.addEventListener('visibilitychange', updateRemaining);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', updateRemaining);
+      document.removeEventListener('visibilitychange', updateRemaining);
+    };
   }, [draft.phase, draft.isSetTimerRunning, draft.setTimerRemaining]);
 
   const patchDraft = useCallback((patch: Partial<WorkoutDraft>) => {
@@ -1509,6 +1610,7 @@ export default function Home() {
         editedDurationSeconds: nextSet.targetDurationSeconds ?? 0,
         setTimerRemaining: nextSet.targetDurationSeconds ?? 0,
         isSetTimerRunning: false,
+        setTimerEndsAt: undefined,
       });
     },
     [patchDraft, selectedSession],
@@ -1551,17 +1653,23 @@ export default function Home() {
     }
 
     applyPlannedTargets(nextStep.exerciseIndex, nextStep.setIndex);
+    const shouldShowTransition =
+      completedExerciseIds.length > 0 && !draft.suppressTransitionOnce;
+
     patchDraft({
       exerciseIndex: nextStep.exerciseIndex,
       setIndex: nextStep.setIndex,
-      phase: completedExerciseIds.length > 0 ? 'transition' : 'set',
-      transitionExerciseIds: completedExerciseIds,
+      phase: shouldShowTransition ? 'transition' : 'set',
+      transitionExerciseIds: shouldShowTransition ? completedExerciseIds : [],
       transitionNextPhase: 'set',
+      suppressTransitionOnce: false,
+      restEndsAt: undefined,
     });
   }, [
     applyPlannedTargets,
     currentExercise,
     currentStep,
+    draft.suppressTransitionOnce,
     completeWorkout,
     nextStep,
     patchDraft,
@@ -1611,6 +1719,8 @@ export default function Home() {
         rirLast: draft.editedRir,
         painKnee: draft.painKnee,
         painWrist: draft.painWrist,
+        painShoulder: draft.painShoulder,
+        painLowerBack: draft.painLowerBack,
         painOther: draft.painOther,
         note: draft.setNote,
       };
@@ -1632,10 +1742,18 @@ export default function Home() {
         editedRir: 2,
         painKnee: 0,
         painWrist: 0,
+        painShoulder: 0,
+        painLowerBack: 0,
         painOther: 0,
         setNote: 'OK',
         isSetTimerRunning: false,
+        setTimerEndsAt: undefined,
       }));
+
+      const completedExerciseIds = getCompletedExerciseIds(
+        selectedSession,
+        currentStep,
+      );
 
       if (!shouldRestAfterCurrentStep || status === 'skipped') {
         moveForward();
@@ -1644,7 +1762,21 @@ export default function Home() {
         return;
       }
 
-      patchDraft({ restRemaining: currentSet.restSeconds, phase: 'rest' });
+      if (completedExerciseIds.length > 0) {
+        patchDraft({
+          restRemaining: currentSet.restSeconds,
+          restEndsAt: undefined,
+          phase: 'transition',
+          transitionExerciseIds: completedExerciseIds,
+          transitionNextPhase: 'rest',
+        });
+      } else {
+        patchDraft({
+          restRemaining: currentSet.restSeconds,
+          restEndsAt: getTimerEndsAt(currentSet.restSeconds),
+          phase: 'rest',
+        });
+      }
       isRegisteringSetRef.current = false;
       setIsRegisteringSet(false);
     },
@@ -1657,7 +1789,9 @@ export default function Home() {
       draft.editedRir,
       draft.exerciseIndex,
       draft.painKnee,
+      draft.painLowerBack,
       draft.painOther,
+      draft.painShoulder,
       draft.painWrist,
       draft.setIndex,
       draft.setNote,
@@ -2074,18 +2208,31 @@ export default function Home() {
             onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
             onWeightStepChange={(weightStep) => patchDraft({ weightStep })}
             onTimerToggle={() =>
-              patchDraft({
-                isSetTimerRunning: !draft.isSetTimerRunning,
-                setTimerRemaining:
-                  draft.setTimerRemaining > 0
-                    ? draft.setTimerRemaining
-                    : draft.editedDurationSeconds,
-              })
+              patchDraft(
+                draft.isSetTimerRunning
+                  ? {
+                      isSetTimerRunning: false,
+                      setTimerEndsAt: undefined,
+                    }
+                  : {
+                      isSetTimerRunning: true,
+                      setTimerRemaining:
+                        draft.setTimerRemaining > 0
+                          ? draft.setTimerRemaining
+                          : draft.editedDurationSeconds,
+                      setTimerEndsAt: getTimerEndsAt(
+                        draft.setTimerRemaining > 0
+                          ? draft.setTimerRemaining
+                          : draft.editedDurationSeconds,
+                      ),
+                    },
+              )
             }
             onTimerReset={() =>
               patchDraft({
                 setTimerRemaining: draft.editedDurationSeconds,
                 isSetTimerRunning: false,
+                setTimerEndsAt: undefined,
               })
             }
             onContinue={() => patchDraft({ phase: 'feedback' })}
@@ -2109,10 +2256,18 @@ export default function Home() {
             rir={draft.editedRir}
             painKnee={draft.painKnee}
             painWrist={draft.painWrist}
+            painShoulder={draft.painShoulder}
+            painLowerBack={draft.painLowerBack}
             setNote={draft.setNote}
             onRirChange={(editedRir) => patchDraft({ editedRir })}
             onPainKneeChange={(painKnee) => patchDraft({ painKnee })}
             onPainWristChange={(painWrist) => patchDraft({ painWrist })}
+            onPainShoulderChange={(painShoulder) =>
+              patchDraft({ painShoulder })
+            }
+            onPainLowerBackChange={(painLowerBack) =>
+              patchDraft({ painLowerBack })
+            }
             onSetNoteChange={(setNote) => patchDraft({ setNote })}
             onBack={() => patchDraft({ phase: 'set' })}
             onRegister={() => void logCurrentSet('completed')}
@@ -2125,13 +2280,26 @@ export default function Home() {
             restRemaining={draft.restRemaining}
             restTotal={currentSet?.restSeconds ?? draft.restRemaining}
             nextLabel={getNextStepLabel(selectedSession, currentStep, nextStep)}
+            nextSetPreview={getNextSetPreview(selectedSession, nextStep)}
             onAdjustRest={(updater) => {
               setDraft((current) => ({
                 ...current,
-                restRemaining:
-                  typeof updater === 'function'
-                    ? updater(current.restRemaining)
-                    : updater,
+                ...(() => {
+                  const restRemaining = Math.max(
+                    0,
+                    typeof updater === 'function'
+                      ? updater(current.restRemaining)
+                      : updater,
+                  );
+
+                  return {
+                    restRemaining,
+                    restEndsAt:
+                      restRemaining > 0
+                        ? getTimerEndsAt(restRemaining)
+                        : undefined,
+                  };
+                })(),
               }));
             }}
             onContinue={moveForward}
@@ -2148,7 +2316,11 @@ export default function Home() {
               )
               .filter((exercise): exercise is Exercise => Boolean(exercise))}
             nextExercise={
-              draft.transitionNextPhase === 'set' ? currentExercise : undefined
+              draft.transitionNextPhase === 'set'
+                ? currentExercise
+                : draft.transitionNextPhase === 'rest' && nextStep
+                  ? selectedSession.exercises[nextStep.exerciseIndex]
+                  : undefined
             }
             decisions={draft.decisions}
             onDecision={chooseDecision}
@@ -2161,6 +2333,10 @@ export default function Home() {
               patchDraft({
                 phase: draft.transitionNextPhase,
                 transitionExerciseIds: [],
+                suppressTransitionOnce: draft.transitionNextPhase === 'rest',
+                ...(draft.transitionNextPhase === 'rest'
+                  ? { restEndsAt: getTimerEndsAt(draft.restRemaining) }
+                  : {}),
               });
             }}
           />
@@ -2170,7 +2346,11 @@ export default function Home() {
           <DoneScreen
             completedSets={completedSets}
             totalSets={totalSets}
-            estimatedMinutes={selectedSessionDurationEstimate.totalMinutes}
+            estimatedMinutes={Math.max(
+              1,
+              selectedSessionDurationEstimate.totalMinutes -
+                selectedSessionDurationEstimate.mobilityMinutes,
+            )}
             {...(workoutDurationMinutes !== undefined
               ? { durationMinutes: workoutDurationMinutes }
               : {})}
@@ -3081,19 +3261,19 @@ function SetScreen({
 
       <div
         className="grid shrink-0 gap-3"
-        style={{ gridTemplateColumns: '56px minmax(0, 1fr) 56px' }}
+        style={{ gridTemplateColumns: '64px minmax(0, 1fr) 64px' }}
       >
         <Button
           aria-label="Ir a pantalla principal"
-          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.back}`}
-          style={{ width: '56px' }}
+          className={`h-16 w-16 shrink-0 rounded-[1.9rem] p-0 ${actionStyles.back}`}
+          style={{ width: '64px' }}
           variant="outline"
           onClick={onBack}
         >
           <House className="size-5" />
         </Button>
         <Button
-          className="h-14 rounded-[1.75rem] text-lg font-black"
+          className="h-16 rounded-[1.9rem] text-lg font-black"
           onClick={onContinue}
         >
           Continuar
@@ -3101,8 +3281,8 @@ function SetScreen({
         </Button>
         <Button
           aria-label="Saltar serie"
-          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.skip}`}
-          style={{ width: '56px' }}
+          className={`h-16 w-16 shrink-0 rounded-[1.9rem] p-0 ${actionStyles.skip}`}
+          style={{ width: '64px' }}
           variant="outline"
           onClick={onSkip}
           disabled={isRegistering}
@@ -3256,21 +3436,23 @@ function RestScreen({
   restRemaining,
   restTotal,
   nextLabel,
+  nextSetPreview,
   onAdjustRest,
   onContinue,
 }: {
   restRemaining: number;
   restTotal: number;
   nextLabel: string;
+  nextSetPreview?: NextSetPreview;
   onAdjustRest: (value: number | ((current: number) => number)) => void;
   onContinue: () => void;
 }) {
   const isFinished = restRemaining === 0;
 
   return (
-    <section className="flex flex-1 flex-col justify-between gap-5 py-2">
+    <section className="flex flex-1 flex-col justify-between gap-3 py-2">
       <div
-        className={`rounded-lg border p-4 text-center shadow-sm transition-colors ${
+        className={`rounded-lg border p-3 text-center shadow-sm transition-colors ${
           isFinished
             ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
             : 'border-transparent bg-transparent'
@@ -3289,29 +3471,53 @@ function RestScreen({
           label="Descanso"
           remainingSeconds={restRemaining}
           totalSeconds={Math.max(restTotal, restRemaining)}
-          sizeClassName="mx-auto mt-5 size-64"
-          textClassName="text-[5rem]"
+          sizeClassName="mx-auto mt-3 size-56"
+          textClassName="text-[4.5rem]"
           isFinished={isFinished}
         />
-        <p className="mt-4 text-xl font-bold">Siguiente: {nextLabel}</p>
+        <p className="mt-3 text-lg font-bold">
+          Siguiente:{' '}
+          {nextSetPreview
+            ? `serie ${nextSetPreview.series} · ${nextSetPreview.exerciseName}`
+            : nextLabel}
+        </p>
       </div>
+
+      {nextSetPreview ? (
+        <div className="rounded-lg border bg-card p-3">
+          <p className="text-sm font-black leading-none text-muted-foreground">
+            {nextSetPreview.exerciseName}
+          </p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            <PreviewMetric label="serie" value={nextSetPreview.series} />
+            <PreviewMetric
+              label={nextSetPreview.workLabel}
+              value={nextSetPreview.work}
+            />
+            <PreviewMetric
+              label={nextSetPreview.loadLabel}
+              value={nextSetPreview.load}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-3 gap-2">
         <Button
-          className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.rest}`}
+          className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.rest}`}
           variant="secondary"
           onClick={() => onAdjustRest((value) => Math.max(0, value - 15))}
         >
           -15s
         </Button>
         <Button
-          className="h-14 rounded-[1.75rem] text-lg font-black"
+          className="h-16 rounded-[1.9rem] text-lg font-black"
           onClick={onContinue}
         >
           Seguir
         </Button>
         <Button
-          className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.rest}`}
+          className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.rest}`}
           variant="secondary"
           onClick={() => onAdjustRest((value) => value + 15)}
         >
@@ -3331,10 +3537,14 @@ function FeedbackScreen({
   rir,
   painKnee,
   painWrist,
+  painShoulder,
+  painLowerBack,
   setNote,
   onRirChange,
   onPainKneeChange,
   onPainWristChange,
+  onPainShoulderChange,
+  onPainLowerBackChange,
   onSetNoteChange,
   onBack,
   onRegister,
@@ -3348,10 +3558,14 @@ function FeedbackScreen({
   rir: number;
   painKnee: number;
   painWrist: number;
+  painShoulder: number;
+  painLowerBack: number;
   setNote: string;
   onRirChange: (value: number) => void;
   onPainKneeChange: (value: number) => void;
   onPainWristChange: (value: number) => void;
+  onPainShoulderChange: (value: number) => void;
+  onPainLowerBackChange: (value: number) => void;
   onSetNoteChange: (value: string) => void;
   onBack: () => void;
   onRegister: () => void;
@@ -3396,21 +3610,25 @@ function FeedbackScreen({
         rir={rir}
         painKnee={painKnee}
         painWrist={painWrist}
+        painShoulder={painShoulder}
+        painLowerBack={painLowerBack}
         setNote={setNote}
         onRirChange={onRirChange}
         onPainKneeChange={onPainKneeChange}
         onPainWristChange={onPainWristChange}
+        onPainShoulderChange={onPainShoulderChange}
+        onPainLowerBackChange={onPainLowerBackChange}
         onSetNoteChange={onSetNoteChange}
       />
 
       <div
         className="mt-auto grid shrink-0 gap-3"
-        style={{ gridTemplateColumns: '56px minmax(0, 1fr)' }}
+        style={{ gridTemplateColumns: '64px minmax(0, 1fr)' }}
       >
         <Button
           aria-label="Volver a ajustar serie"
-          className={`h-14 w-14 shrink-0 rounded-[1.75rem] p-0 ${actionStyles.back}`}
-          style={{ width: '56px' }}
+          className={`h-16 w-16 shrink-0 rounded-[1.9rem] p-0 ${actionStyles.back}`}
+          style={{ width: '64px' }}
           variant="outline"
           onClick={onBack}
           disabled={isRegistering}
@@ -3418,7 +3636,7 @@ function FeedbackScreen({
           <ArrowLeft className="size-5" />
         </Button>
         <Button
-          className="h-14 rounded-[1.75rem] text-lg font-black"
+          className="h-16 rounded-[1.9rem] text-lg font-black"
           onClick={onRegister}
           disabled={isRegistering}
         >
@@ -3436,19 +3654,27 @@ function SetFeedback({
   rir,
   painKnee,
   painWrist,
+  painShoulder,
+  painLowerBack,
   setNote,
   onRirChange,
   onPainKneeChange,
   onPainWristChange,
+  onPainShoulderChange,
+  onPainLowerBackChange,
   onSetNoteChange,
 }: {
   rir: number;
   painKnee: number;
   painWrist: number;
+  painShoulder: number;
+  painLowerBack: number;
   setNote: string;
   onRirChange: (value: number) => void;
   onPainKneeChange: (value: number) => void;
   onPainWristChange: (value: number) => void;
+  onPainShoulderChange: (value: number) => void;
+  onPainLowerBackChange: (value: number) => void;
   onSetNoteChange: (value: string) => void;
 }) {
   return (
@@ -3493,6 +3719,16 @@ function SetFeedback({
         label="Muñeca"
         value={painWrist}
         onChange={onPainWristChange}
+      />
+      <PainControl
+        label="Hombro"
+        value={painShoulder}
+        onChange={onPainShoulderChange}
+      />
+      <PainControl
+        label="Lumbar"
+        value={painLowerBack}
+        onChange={onPainLowerBackChange}
       />
 
       <div className="grid grid-cols-4 gap-1.5">
@@ -3609,10 +3845,10 @@ function TransitionScreen({
       ) : null}
 
       <Button
-        className="mt-auto h-14 rounded-[1.75rem] text-lg font-black"
+        className="mt-auto h-16 rounded-[1.9rem] text-lg font-black"
         onClick={onContinue}
       >
-        {nextExercise ? 'Siguiente ejercicio' : 'Cerrar entrenamiento'}
+        {nextExercise ? 'Continuar' : 'Cerrar entrenamiento'}
         <ChevronRight className="size-6" />
       </Button>
     </section>
@@ -3662,7 +3898,9 @@ function DoneScreen({
             </p>
           </div>
           <div className="rounded-lg border bg-card px-3 py-3">
-            <p className="text-sm font-black text-muted-foreground">Estimado</p>
+            <p className="text-sm font-black text-muted-foreground">
+              Est. entreno
+            </p>
             <p className="mt-1 text-3xl font-black leading-none">
               {estimatedMinutes} min
             </p>
@@ -3673,14 +3911,14 @@ function DoneScreen({
         </div>
       ) : null}
       <Button
-        className="h-14 rounded-[1.75rem] text-lg font-black"
+        className="h-16 rounded-[1.9rem] text-lg font-black"
         onClick={onExport}
       >
         Guardar CSV
         <Download className="size-5" />
       </Button>
       <Button
-        className={`h-14 rounded-[1.75rem] text-lg font-black ${actionStyles.back}`}
+        className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.back}`}
         variant="secondary"
         onClick={onRestart}
       >
