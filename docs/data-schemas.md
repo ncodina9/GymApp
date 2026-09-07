@@ -225,6 +225,7 @@ Notas:
 
 - El JSON incluye el plan completo para que sea autocontenido.
 - `sessions` solo incluye sesiones con datos locales: eventos o metadata.
+- `events` contiene cada `StoredSetEvent` completo, incluido `performedAt` como timestamp ISO exacto de cada serie.
 - `events` se ordena por `performedAt`.
 - Al completar la exportación JSON, las sesiones incluidas se marcan con `exportedAt`.
 - Este archivo debe ser el formato preferente para migración/importación en Swift.

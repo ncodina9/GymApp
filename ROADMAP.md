@@ -832,7 +832,7 @@ Estado parcial:
 
 - `docs/data-schemas.md` documenta `TrainingPlan`, sesiones, ejercicios, series, eventos, metadata, CSV y exportacion JSON completa pensando en Swift `Codable`
 - `Ajustes > Datos locales` permite exportar un backup JSON completo del historico local
-- el JSON exportado incluye `schemaName`, `schemaVersion`, `exportedAt`, version de app, plan completo, ajustes relevantes, sesion activa, metadata, decisiones y eventos de series ordenados
+- el JSON exportado incluye `schemaName`, `schemaVersion`, `exportedAt`, version de app, plan completo, ajustes relevantes, sesion activa, metadata, decisiones y eventos de series ordenados con `performedAt`
 - las sesiones incluidas en el backup JSON se marcan con `exportedAt`
 - la logica de exportacion CSV/JSON, nombres de archivo e inferencia de tipo de carga vive en `lib/sessionExport.ts`
 - el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
