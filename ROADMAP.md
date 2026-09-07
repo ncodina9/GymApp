@@ -696,6 +696,9 @@ Estado parcial:
 - feedback de molestias incluye hombro y lumbar
 - temporizadores recalculan por `endsAt` al recuperar foco
 - comparacion final de duracion usa estimacion sin movilidad previa
+- cuadros de reps/peso en pantalla de serie son clicables y no muestran `+/-`
+- modificacion puntual de reps/peso se hace en pantalla propia con confirmar/cancelar
+- mancuernas saltan directamente a la siguiente mancuerna disponible; barra/lastre/polea siguen usando saltos segun material real
 
 ### Hito 14b: Ajuste del planning a 60-70 minutos
 
@@ -919,14 +922,14 @@ Capacidades iOS candidatas para fases posteriores:
 
 ## Proximo hito recomendado
 
-Continuar con el Hito 14c: redisenar la modificacion puntual de reps/peso en pantalla propia.
+Continuar con el Hito 14c: marcar entrenamientos completados en Hoy y avanzar por defecto a la semana siguiente cuando la semana actual este cerrada.
 
 Checklist minima de la siguiente iteracion:
 
-1. Hacer clicables los cuadros centrales de reps y peso.
-2. Quitar los botones `+/-` de la pantalla principal de serie.
-3. Crear pantalla/modal de ajuste con confirmar/cancelar.
-4. Mantener la recomendacion del plan como camino por defecto.
-5. Validar que no aparece scroll en pantalla de serie.
+1. Leer sesiones finalizadas desde IndexedDB al entrar en Hoy.
+2. Marcar visualmente los entrenamientos completados dentro de la semana visible.
+3. Mantener disponibles los entrenamientos de la semana aunque esten completados.
+4. Si todos los entrenamientos de esa semana estan completos, seleccionar por defecto la primera sesion pendiente de la semana siguiente.
+5. Validar que el cambio no rompe reanudar entrenamiento en curso.
 
 Despues de esa prueba, priorizar Hito 13 si el problema principal es fiabilidad de datos/exportacion.

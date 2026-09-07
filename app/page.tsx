@@ -72,6 +72,7 @@ type Phase =
   | 'today'
   | 'preview'
   | 'set'
+  | 'edit-set'
   | 'feedback'
   | 'rest'
   | 'transition'
@@ -1281,6 +1282,7 @@ export default function Home() {
     draft.records.length > 0 ||
     draft.exerciseIndex > 0 ||
     draft.setIndex > 0 ||
+    draft.phase === 'edit-set' ||
     draft.phase === 'feedback' ||
     draft.phase === 'rest' ||
     draft.phase === 'transition';
@@ -2199,14 +2201,11 @@ export default function Home() {
             durationSeconds={draft.editedDurationSeconds}
             timerRemaining={draft.setTimerRemaining}
             isTimerRunning={draft.isSetTimerRunning}
-            weightStep={draft.weightStep}
             restSeconds={currentSet.restSeconds}
             completedSetIndexes={draft.records
               .filter((record) => record.exerciseIndex === draft.exerciseIndex)
               .map((record) => record.setIndex)}
-            onRepsChange={(editedReps) => patchDraft({ editedReps })}
-            onWeightChange={(editedWeight) => patchDraft({ editedWeight })}
-            onWeightStepChange={(weightStep) => patchDraft({ weightStep })}
+            onEdit={() => patchDraft({ phase: 'edit-set' })}
             onTimerToggle={() =>
               patchDraft(
                 draft.isSetTimerRunning
@@ -2239,6 +2238,30 @@ export default function Home() {
             onSkip={() => void logCurrentSet('skipped')}
             onBack={() => patchDraft({ phase: 'today' })}
             isRegistering={isRegisteringSet}
+          />
+        ) : null}
+
+        {draft.phase === 'edit-set' && currentSet ? (
+          <SetEditScreen
+            setType={currentSet.type}
+            reps={draft.editedReps}
+            weight={draft.editedWeight}
+            durationSeconds={draft.editedDurationSeconds}
+            loadType={inferLoadType(currentExercise)}
+            weightStep={draft.weightStep}
+            onCancel={() => patchDraft({ phase: 'set' })}
+            onConfirm={({ reps, weight, durationSeconds, weightStep }) =>
+              patchDraft({
+                editedReps: reps,
+                editedWeight: weight,
+                editedDurationSeconds: durationSeconds,
+                setTimerRemaining: durationSeconds,
+                isSetTimerRunning: false,
+                setTimerEndsAt: undefined,
+                weightStep,
+                phase: 'set',
+              })
+            }
           />
         ) : null}
 
@@ -3109,11 +3132,8 @@ function SetScreen({
   durationSeconds,
   timerRemaining,
   isTimerRunning,
-  weightStep,
   restSeconds,
-  onRepsChange,
-  onWeightChange,
-  onWeightStepChange,
+  onEdit,
   onTimerToggle,
   onTimerReset,
   onContinue,
@@ -3138,11 +3158,8 @@ function SetScreen({
   durationSeconds: number;
   timerRemaining: number;
   isTimerRunning: boolean;
-  weightStep: WeightStep;
   restSeconds: number;
-  onRepsChange: (value: number) => void;
-  onWeightChange: (value: number) => void;
-  onWeightStepChange: (value: WeightStep) => void;
+  onEdit: () => void;
   onTimerToggle: () => void;
   onTimerReset: () => void;
   onContinue: () => void;
@@ -3151,7 +3168,6 @@ function SetScreen({
   isRegistering: boolean;
 }) {
   const isTimed = setType === 'timed';
-  const normalizedWeightStep = normalizeWeightStep(weightStep, loadType);
   const isSuperset =
     supersetPosition !== undefined &&
     supersetSize !== undefined &&
@@ -3214,38 +3230,17 @@ function SetScreen({
         />
       ) : (
         <div className="grid min-h-0 flex-1 grid-rows-2 gap-2">
-          <TactileNumber
+          <TappableNumber
             label="Reps"
             value={String(reps)}
-            minusClassName={actionStyles.minus}
-            plusClassName={actionStyles.plus}
-            onMinus={() => onRepsChange(Math.max(1, reps - 1))}
-            onPlus={() => onRepsChange(reps + 1)}
+            hint="Toca para ajustar"
+            onClick={onEdit}
           />
-          <TactileNumber
+          <TappableNumber
             label="Peso"
             value={formatWeight(weight)}
-            minusClassName={actionStyles.minus}
-            plusClassName={actionStyles.plus}
-            centerControl={
-              loadType === 'per_dumbbell' ? undefined : (
-                <WeightStepControl
-                  loadType={loadType}
-                  value={normalizedWeightStep}
-                  onChange={onWeightStepChange}
-                />
-              )
-            }
-            onMinus={() =>
-              onWeightChange(
-                getAdjustedWeight(loadType, weight, normalizedWeightStep, -1),
-              )
-            }
-            onPlus={() =>
-              onWeightChange(
-                getAdjustedWeight(loadType, weight, normalizedWeightStep, 1),
-              )
-            }
+            hint={getPreviewLoadLabel(loadType)}
+            onClick={onEdit}
           />
         </div>
       )}
@@ -3929,62 +3924,207 @@ function DoneScreen({
   );
 }
 
-function TactileNumber({
+type SetEditValues = {
+  reps: number;
+  weight: number;
+  durationSeconds: number;
+  weightStep: WeightStep;
+};
+
+function SetEditScreen({
+  setType,
+  reps,
+  weight,
+  durationSeconds,
+  loadType,
+  weightStep,
+  onCancel,
+  onConfirm,
+}: {
+  setType: TrainingSet['type'];
+  reps: number;
+  weight: number;
+  durationSeconds: number;
+  loadType: LoadType;
+  weightStep: WeightStep;
+  onCancel: () => void;
+  onConfirm: (values: SetEditValues) => void;
+}) {
+  const isTimed = setType === 'timed';
+  const [localReps, setLocalReps] = useState(reps);
+  const [localWeight, setLocalWeight] = useState(weight);
+  const [localDurationSeconds, setLocalDurationSeconds] =
+    useState(durationSeconds);
+  const [localWeightStep, setLocalWeightStep] = useState(
+    normalizeWeightStep(weightStep, loadType),
+  );
+  const normalizedWeightStep = normalizeWeightStep(localWeightStep, loadType);
+
+  const adjustWeight = (direction: -1 | 1) => {
+    setLocalWeight((currentWeight) =>
+      getAdjustedWeight(
+        loadType,
+        currentWeight,
+        normalizedWeightStep,
+        direction,
+      ),
+    );
+  };
+
+  return (
+    <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden py-1">
+      <div className="shrink-0">
+        <p className="text-sm font-black uppercase tracking-normal text-muted-foreground">
+          Ajustar serie
+        </p>
+        <h2 className="mt-1 text-3xl font-black leading-tight tracking-normal">
+          Cambios puntuales
+        </h2>
+      </div>
+
+      <div className="grid min-h-0 flex-1 gap-3">
+        {isTimed ? (
+          <AdjustmentControl
+            label="Tiempo"
+            value={formatClock(localDurationSeconds)}
+            onMinus={() =>
+              setLocalDurationSeconds((value) => Math.max(5, value - 5))
+            }
+            onPlus={() => setLocalDurationSeconds((value) => value + 5)}
+          />
+        ) : (
+          <AdjustmentControl
+            label="Reps"
+            value={String(localReps)}
+            onMinus={() => setLocalReps((value) => Math.max(1, value - 1))}
+            onPlus={() => setLocalReps((value) => value + 1)}
+          />
+        )}
+
+        <div className="grid min-h-0 gap-2">
+          <AdjustmentControl
+            label="Peso"
+            value={formatWeight(localWeight)}
+            onMinus={() => adjustWeight(-1)}
+            onPlus={() => adjustWeight(1)}
+            disableMinus={loadType === 'bodyweight'}
+            disablePlus={loadType === 'bodyweight'}
+          />
+          {loadType === 'bodyweight' || loadType === 'per_dumbbell' ? null : (
+            <WeightStepControl
+              loadType={loadType}
+              value={normalizedWeightStep}
+              onChange={setLocalWeightStep}
+            />
+          )}
+        </div>
+      </div>
+
+      <div
+        className="grid shrink-0 gap-3"
+        style={{ gridTemplateColumns: '64px minmax(0, 1fr)' }}
+      >
+        <Button
+          aria-label="Cancelar ajuste"
+          className={`h-16 w-16 rounded-[1.9rem] p-0 ${actionStyles.back}`}
+          style={{ width: '64px' }}
+          variant="outline"
+          onClick={onCancel}
+        >
+          <ArrowLeft className="size-5" />
+        </Button>
+        <Button
+          className="h-16 rounded-[1.9rem] text-lg font-black"
+          onClick={() =>
+            onConfirm({
+              reps: localReps,
+              weight: localWeight,
+              durationSeconds: localDurationSeconds,
+              weightStep: normalizedWeightStep,
+            })
+          }
+        >
+          Confirmar
+          <Check className="size-5" />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function AdjustmentControl({
   label,
   value,
-  centerControl,
-  minusClassName,
-  plusClassName,
   onMinus,
   onPlus,
+  disableMinus = false,
+  disablePlus = false,
 }: {
   label: string;
   value: string;
-  centerControl?: ReactNode;
-  minusClassName?: string;
-  plusClassName?: string;
   onMinus: () => void;
   onPlus: () => void;
+  disableMinus?: boolean;
+  disablePlus?: boolean;
 }) {
   return (
     <div className="grid min-h-0 grid-rows-[1fr_64px] gap-2 rounded-lg border bg-card p-2 shadow-sm">
       <div className="flex min-w-0 flex-col items-center justify-center">
-        <div className="grid min-h-8 w-full grid-cols-[1fr_auto_1fr] items-center">
-          <span aria-hidden="true" />
-          <p className="text-base font-black text-muted-foreground">{label}</p>
-          <span aria-hidden="true" />
-        </div>
-        <p className="max-w-full text-center text-[clamp(2.75rem,16vw,4.75rem)] font-black leading-none tracking-normal">
+        <p className="text-base font-black text-muted-foreground">{label}</p>
+        <p className="max-w-full text-center text-[clamp(2.75rem,15vw,4.5rem)] font-black leading-none tracking-normal">
           {value}
         </p>
       </div>
-      <div
-        className="grid gap-2"
-        style={{
-          gridTemplateColumns: centerControl
-            ? 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr)'
-            : 'repeat(2, minmax(0, 1fr))',
-        }}
-      >
+      <div className="grid grid-cols-2 gap-2">
         <Button
           aria-label={`Bajar ${label}`}
-          className={`h-16 w-full rounded-[1.75rem] ${minusClassName ?? ''}`}
+          className={`h-16 w-full rounded-[1.75rem] ${actionStyles.minus}`}
           variant="secondary"
           onClick={onMinus}
+          disabled={disableMinus}
         >
           <Minus className="size-8" />
         </Button>
-        {centerControl}
         <Button
           aria-label={`Subir ${label}`}
-          className={`h-16 w-full rounded-[1.75rem] ${plusClassName ?? ''}`}
+          className={`h-16 w-full rounded-[1.75rem] ${actionStyles.plus}`}
           variant="secondary"
           onClick={onPlus}
+          disabled={disablePlus}
         >
           <Plus className="size-8" />
         </Button>
       </div>
     </div>
+  );
+}
+
+function TappableNumber({
+  label,
+  value,
+  hint,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="grid min-h-0 rounded-lg border bg-card p-3 text-center shadow-sm transition active:scale-[0.99]"
+      type="button"
+      onClick={onClick}
+      aria-label={`Ajustar ${label}`}
+    >
+      <span className="text-base font-black text-muted-foreground">
+        {label}
+      </span>
+      <span className="flex min-h-0 items-center justify-center text-[clamp(3rem,17vw,4.9rem)] font-black leading-none tracking-normal">
+        {value}
+      </span>
+      <span className="text-sm font-black text-primary">{hint}</span>
+    </button>
   );
 }
 
@@ -4001,21 +4141,21 @@ function WeightStepControl({
   const isFixed = options.length === 1;
   const label =
     loadType === 'total'
-      ? 'lado'
+      ? 'disco por lado'
       : loadType === 'machine'
-        ? 'kg'
+        ? 'salto'
         : loadType === 'bodyweight'
           ? 'fijo'
-          : 'kg';
+          : 'lastre';
 
   if (isFixed) {
     return (
-      <div className="flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.75rem] border border-border bg-secondary px-1 text-secondary-foreground">
-        <span className="text-[0.68rem] font-black leading-none text-muted-foreground">
+      <div className="flex h-12 min-w-0 items-center justify-center rounded-[1.4rem] border border-border bg-secondary px-3 text-secondary-foreground">
+        <span className="text-sm font-black text-muted-foreground">
           {label}
         </span>
-        <span className="text-base font-black leading-tight tabular-nums">
-          {loadType === 'bodyweight' ? '0' : formatDecimal(value)}
+        <span className="ml-2 text-base font-black leading-tight tabular-nums">
+          {loadType === 'bodyweight' ? '0' : `${formatDecimal(value)} kg`}
         </span>
       </div>
     );
@@ -4027,18 +4167,16 @@ function WeightStepControl({
 
   return (
     <button
-      className="flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.75rem] border border-border bg-secondary px-1 text-secondary-foreground transition active:scale-[0.98]"
+      className="flex h-12 min-w-0 items-center justify-center rounded-[1.4rem] border border-border bg-secondary px-3 text-secondary-foreground transition active:scale-[0.98]"
       type="button"
       onClick={() => onChange(nextValue)}
       aria-label={`Cambiar incremento de peso, actual ${formatDecimal(
         value,
-      )} ${label}`}
+      )} kg`}
     >
-      <span className="text-[0.68rem] font-black leading-none text-muted-foreground">
-        {label}
-      </span>
-      <span className="text-base font-black leading-tight tabular-nums">
-        {formatDecimal(value)}
+      <span className="text-sm font-black text-muted-foreground">{label}</span>
+      <span className="ml-2 text-base font-black leading-tight tabular-nums">
+        {formatDecimal(value)} kg
       </span>
     </button>
   );
