@@ -699,6 +699,8 @@ Estado parcial:
 - cuadros de reps/peso en pantalla de serie son clicables y no muestran `+/-`
 - modificacion puntual de reps/peso se hace en pantalla propia con confirmar/cancelar
 - mancuernas saltan directamente a la siguiente mancuerna disponible; barra/lastre/polea siguen usando saltos segun material real
+- Hoy marca entrenamientos completados en la semana visible
+- si la semana recomendada por fecha esta completa, Hoy salta por defecto a la primera sesion pendiente de la semana siguiente
 
 ### Hito 14b: Ajuste del planning a 60-70 minutos
 
@@ -922,14 +924,14 @@ Capacidades iOS candidatas para fases posteriores:
 
 ## Proximo hito recomendado
 
-Continuar con el Hito 14c: marcar entrenamientos completados en Hoy y avanzar por defecto a la semana siguiente cuando la semana actual este cerrada.
+Continuar con el Hito 20: preparar decisiones de arquitectura PWA -> iPhone nativo.
 
 Checklist minima de la siguiente iteracion:
 
-1. Leer sesiones finalizadas desde IndexedDB al entrar en Hoy.
-2. Marcar visualmente los entrenamientos completados dentro de la semana visible.
-3. Mantener disponibles los entrenamientos de la semana aunque esten completados.
-4. Si todos los entrenamientos de esa semana estan completos, seleccionar por defecto la primera sesion pendiente de la semana siguiente.
-5. Validar que el cambio no rompe reanudar entrenamiento en curso.
+1. Revisar qué datos locales actuales debe importar una app Swift.
+2. Separar decisiones que conviene estabilizar en PWA antes de migrar.
+3. Definir el contrato mínimo de exportación/importación para sesiones en curso.
+4. Identificar pantallas PWA que serán prototipo directo de vistas Swift.
+5. Documentar riesgos específicos de iOS: timers en segundo plano, ficheros y notificaciones.
 
 Despues de esa prueba, priorizar Hito 13 si el problema principal es fiabilidad de datos/exportacion.

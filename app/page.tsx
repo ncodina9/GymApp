@@ -801,6 +801,9 @@ const getSessionHistorySummaries = (
     .sort((a, b) => b.lastPerformedAt.localeCompare(a.lastPerformedAt));
 };
 
+const isSessionHistoryComplete = (summary: SessionHistorySummary) =>
+  Boolean(summary.finishedAt) || summary.attemptedSets >= summary.totalSets;
+
 const getExerciseProgressInsights = (
   sessions: TrainingSession[],
   events: StoredSetEvent[],
@@ -1286,6 +1289,15 @@ export default function Home() {
     draft.phase === 'feedback' ||
     draft.phase === 'rest' ||
     draft.phase === 'transition';
+  const completedSessionIds = useMemo(
+    () =>
+      new Set(
+        sessionHistory
+          .filter((summary) => isSessionHistoryComplete(summary))
+          .map((summary) => summary.sessionId),
+      ),
+    [sessionHistory],
+  );
 
   const weekSessions = useMemo(
     () => getWeekSessions(trainingPlan.sessions, selectedSession),
@@ -1377,6 +1389,54 @@ export default function Home() {
 
     return () => window.clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    if (!hasLoadedDraft) {
+      return;
+    }
+
+    queueMicrotask(() => void refreshSessionHistory());
+  }, [hasLoadedDraft, refreshSessionHistory]);
+
+  useEffect(() => {
+    if (!hasLoadedDraft || draft.phase !== 'today' || hasStarted) {
+      return;
+    }
+
+    const recommendedSession = getRecommendedSession();
+
+    if (draft.selectedSessionId !== recommendedSession.sessionId) {
+      return;
+    }
+
+    const recommendedWeekSessions = getWeekSessions(
+      trainingPlan.sessions,
+      recommendedSession,
+    );
+    const isRecommendedWeekComplete = recommendedWeekSessions.every((session) =>
+      completedSessionIds.has(session.sessionId),
+    );
+
+    if (!isRecommendedWeekComplete) {
+      return;
+    }
+
+    const nextPendingSession = trainingPlan.sessions.find(
+      (session) =>
+        session.week > recommendedSession.week &&
+        !completedSessionIds.has(session.sessionId),
+    );
+
+    if (nextPendingSession) {
+      queueMicrotask(() => setDraft(makeDraft(nextPendingSession)));
+    }
+  }, [
+    completedSessionIds,
+    draft.phase,
+    draft.selectedSessionId,
+    hasLoadedDraft,
+    hasStarted,
+  ]);
 
   useEffect(() => {
     registerServiceWorker({
@@ -1626,10 +1686,10 @@ export default function Home() {
       transitionExerciseIds: [],
       transitionNextPhase: 'set',
     });
-    void markSessionFinished(selectedSession.sessionId, finishedAt).catch(
-      () => undefined,
-    );
-  }, [patchDraft, selectedSession.sessionId]);
+    void markSessionFinished(selectedSession.sessionId, finishedAt)
+      .catch(() => undefined)
+      .finally(refreshSessionHistory);
+  }, [patchDraft, refreshSessionHistory, selectedSession.sessionId]);
 
   const moveForward = useCallback(() => {
     if (!currentExercise || !currentStep) {
@@ -1807,7 +1867,7 @@ export default function Home() {
   );
 
   const changeSession = (sessionId: string) => {
-    void resetWorkoutPosition(sessionId);
+    setDraft(makeDraft(getSessionById(sessionId)));
   };
 
   const previewTraining = () => {
@@ -2121,6 +2181,7 @@ export default function Home() {
             selectedSession={selectedSession}
             durationEstimate={selectedSessionDurationEstimate}
             weekSessions={weekSessions}
+            completedSessionIds={completedSessionIds}
             hasStarted={hasStarted}
             onChangeSession={changeSession}
             onResume={resume}
@@ -2413,6 +2474,7 @@ function TodayScreen({
   selectedSession,
   durationEstimate,
   weekSessions,
+  completedSessionIds,
   hasStarted,
   onChangeSession,
   onResume,
@@ -2422,6 +2484,7 @@ function TodayScreen({
   selectedSession: TrainingSession;
   durationEstimate: SessionDurationEstimate;
   weekSessions: TrainingSession[];
+  completedSessionIds: Set<string>;
   hasStarted: boolean;
   onChangeSession: (sessionId: string) => void;
   onResume: () => void;
@@ -2464,25 +2527,44 @@ function TodayScreen({
       ) : null}
 
       <div className="grid grid-cols-2 gap-2">
-        {weekSessions.map((session) => (
-          <button
-            key={session.sessionId}
-            className={`min-h-20 rounded-lg border p-3 text-left transition active:scale-[0.98] ${
-              session.sessionId === selectedSession.sessionId
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-secondary text-secondary-foreground'
-            }`}
-            type="button"
-            onClick={() => onChangeSession(session.sessionId)}
-          >
-            <span className="block text-sm font-bold capitalize">
-              {session.weekday}
-            </span>
-            <span className="mt-1 block overflow-hidden text-lg font-black leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-              {session.label}
-            </span>
-          </button>
-        ))}
+        {weekSessions.map((session) => {
+          const isSelected = session.sessionId === selectedSession.sessionId;
+          const isComplete = completedSessionIds.has(session.sessionId);
+
+          return (
+            <button
+              key={session.sessionId}
+              className={`min-h-20 rounded-lg border p-3 text-left transition active:scale-[0.98] ${
+                isSelected
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : isComplete
+                    ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
+                    : 'border-border bg-secondary text-secondary-foreground'
+              }`}
+              type="button"
+              onClick={() => onChangeSession(session.sessionId)}
+            >
+              <span className="flex min-w-0 items-center justify-between gap-2 text-sm font-bold capitalize">
+                <span className="truncate">{session.weekday}</span>
+                {isComplete ? (
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[0.68rem] font-black normal-case ${
+                      isSelected
+                        ? 'border-primary-foreground/35 text-primary-foreground'
+                        : 'border-[var(--complete-border)] text-[var(--complete-foreground)]'
+                    }`}
+                  >
+                    <Check className="size-3" />
+                    Hecho
+                  </span>
+                ) : null}
+              </span>
+              <span className="mt-1 block overflow-hidden text-lg font-black leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                {session.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <div

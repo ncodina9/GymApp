@@ -9,6 +9,7 @@ export type ExportPhase =
   | 'today'
   | 'preview'
   | 'set'
+  | 'edit-set'
   | 'feedback'
   | 'rest'
   | 'transition'
