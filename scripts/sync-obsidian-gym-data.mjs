@@ -84,7 +84,8 @@ La companion app registra una fila por serie y exporta el CSV final para guardar
 2. Elegir el entrenamiento previsto o uno de la semana.
 3. Revisar la vista previa para preparar el material.
 4. Registrar cada serie con carga, reps, RIR, molestias y feedback.
-5. Guardar el CSV exportado en Archivos y moverlo o concatenarlo en Obsidian.
+5. Guardar el CSV exportado en \`10. Gym/sesiones/exports\`.
+6. Ejecutar desde GymApp: \`npm run import:obsidian-workouts\`.
 
 ## CSV maestro serie a serie
 
@@ -96,6 +97,8 @@ Formato:
 date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
 2026-09-07,2026-09-07T19:42:10.000+02:00,1,Lunes - Torso fuerza,Press banca con barra,Básico,5x5 @ 65 kg,1,done,65,total,5,2,0,0,0,0,,OK,,,,,
 \`\`\`
+
+El importador normaliza el CSV maestro a esas cabeceras y omite las series que ya estén registradas.
 
 ## Nombres estándar
 

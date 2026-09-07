@@ -13,6 +13,7 @@
     "generate:plan": "node scripts/generate-training-plan.mjs",
     "validate:plan": "node scripts/validate-training-plan.mjs",
     "sync:obsidian": "node scripts/sync-obsidian-gym-data.mjs",
+    "import:obsidian-workouts": "node scripts/import-obsidian-workout-exports.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint app data",
     "format": "oxfmt"
