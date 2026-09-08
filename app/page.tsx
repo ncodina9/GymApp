@@ -2759,11 +2759,11 @@ function UpcomingSessionsPanel({ sessions }: { sessions: TrainingSession[] }) {
   const [selectedSessionId, setSelectedSessionId] = useState(
     sessions[0]?.sessionId ?? '',
   );
-  const selectedSession =
-    sessions.find((session) => session.sessionId === selectedSessionId) ??
-    sessions[0];
+  const selectedSession = sessions.find(
+    (session) => session.sessionId === selectedSessionId,
+  );
 
-  if (sessions.length === 0 || !selectedSession) {
+  if (sessions.length === 0) {
     return (
       <div className="mt-4 rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
         No hay entrenamientos futuros en el planning activo.
@@ -2771,13 +2771,14 @@ function UpcomingSessionsPanel({ sessions }: { sessions: TrainingSession[] }) {
     );
   }
 
-  const estimate = estimateSessionDuration(selectedSession);
-
   return (
     <div className="mt-4 grid gap-3">
       <div className="grid gap-2">
         {sessions.map((session) => {
-          const isSelected = session.sessionId === selectedSession.sessionId;
+          const isSelected = session.sessionId === selectedSession?.sessionId;
+          const estimate = isSelected
+            ? estimateSessionDuration(session)
+            : undefined;
 
           return (
             <div key={session.sessionId} className="grid gap-2">
@@ -2791,7 +2792,9 @@ function UpcomingSessionsPanel({ sessions }: { sessions: TrainingSession[] }) {
                 aria-label={`Ver ${session.label} del ${formatDate(
                   session.date,
                 )}`}
-                onClick={() => setSelectedSessionId(session.sessionId)}
+                onClick={() =>
+                  setSelectedSessionId(isSelected ? '' : session.sessionId)
+                }
               >
                 <span className="flex min-w-0 items-center justify-between gap-3">
                   <span className="min-w-0">
@@ -2818,29 +2821,25 @@ function UpcomingSessionsPanel({ sessions }: { sessions: TrainingSession[] }) {
                 <div className="grid gap-2 rounded-[1.5rem] border bg-secondary p-2">
                   <div className="rounded-lg border bg-card p-3 shadow-sm">
                     <p className="text-sm font-bold text-muted-foreground">
-                      Semana {selectedSession.week} ·{' '}
-                      {selectedSession.weekFocusLabel}
+                      Semana {session.week} · {session.weekFocusLabel}
                     </p>
                     <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                      <Metric
-                        label="Fecha"
-                        value={formatDate(selectedSession.date)}
-                      />
+                      <Metric label="Fecha" value={formatDate(session.date)} />
                       <Metric
                         label="Estimado"
-                        value={`${estimate.totalMinutes}m`}
+                        value={`${estimate?.totalMinutes ?? 0}m`}
                       />
                       <Metric
                         label="Bloques"
-                        value={`${selectedSession.exercises.length}`}
+                        value={`${session.exercises.length}`}
                       />
                     </div>
                   </div>
 
-                  {selectedSession.exercises.map((exercise, index) => (
+                  {session.exercises.map((exercise, index) => (
                     <ExercisePlanCard
                       key={exercise.exerciseId}
-                      session={selectedSession}
+                      session={session}
                       exercise={exercise}
                       index={index}
                     />
