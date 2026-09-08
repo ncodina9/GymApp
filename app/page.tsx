@@ -588,6 +588,11 @@ const formatDate = (date: string) =>
     month: 'short',
   }).format(new Date(`${date}T12:00:00`));
 
+const formatChartDate = (date: string) => {
+  const [, month, day] = date.split('-');
+  return month && day ? `${day}/${month}` : date;
+};
+
 const formatWeight = (weight: number) => `${formatDecimal(weight)} kg`;
 
 const formatClock = (totalSeconds: number) => {
@@ -3123,6 +3128,7 @@ function StatisticsPanel({
         return [
           {
             sessionId: summary.sessionId,
+            date: summary.sessionDate,
             label: summary.sessionLabel,
             actualMinutes,
             estimatedMinutes: summary.derivedEstimatedMinutes,
@@ -3150,6 +3156,13 @@ function StatisticsPanel({
           ) / filteredDurationSamples.length,
         )
       : undefined;
+  const durationChartData = filteredDurationSamples
+    .slice(0, 6)
+    .reverse()
+    .map((sample) => ({
+      ...sample,
+      shortDate: formatChartDate(sample.date),
+    }));
   const filteredExerciseProgressions = useMemo(
     () =>
       exerciseProgressions
@@ -3370,6 +3383,9 @@ function StatisticsPanel({
               Sin sesiones cerradas para este filtro.
             </div>
           ) : null}
+          {durationChartData.length >= 2 ? (
+            <DurationChart data={durationChartData} />
+          ) : null}
           {filteredDurationSamples.slice(0, 3).map((sample) => (
             <div
               key={sample.sessionId}
@@ -3498,6 +3514,171 @@ function StatisticsPanel({
             );
           })}
         </div>
+      </div>
+    </div>
+  );
+}
+
+type DurationChartPoint = {
+  sessionId: string;
+  date: string;
+  shortDate: string;
+  label: string;
+  actualMinutes: number;
+  estimatedMinutes: number;
+  deltaMinutes: number;
+};
+
+function DurationChart({ data }: { data: DurationChartPoint[] }) {
+  const width = 320;
+  const height = 148;
+  const padding = { top: 14, right: 12, bottom: 26, left: 30 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const values = data.flatMap((point) => [
+    point.actualMinutes,
+    point.estimatedMinutes,
+  ]);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const domainPadding = Math.max(5, Math.round((maxValue - minValue) * 0.25));
+  const domainMin = Math.max(0, minValue - domainPadding);
+  const domainMax = maxValue + domainPadding;
+  const yRange = Math.max(1, domainMax - domainMin);
+  const toX = (index: number) =>
+    padding.left +
+    (data.length === 1
+      ? plotWidth / 2
+      : (index / (data.length - 1)) * plotWidth);
+  const toY = (value: number) =>
+    padding.top + plotHeight - ((value - domainMin) / yRange) * plotHeight;
+  const toPath = (key: 'actualMinutes' | 'estimatedMinutes') =>
+    data
+      .map((point, index) => {
+        const command = index === 0 ? 'M' : 'L';
+        return `${command} ${toX(index).toFixed(1)} ${toY(point[key]).toFixed(
+          1,
+        )}`;
+      })
+      .join(' ');
+  const gridValues = [
+    domainMax,
+    Math.round((domainMax + domainMin) / 2),
+    domainMin,
+  ];
+
+  return (
+    <div className="rounded-[1.2rem] border bg-card p-2">
+      <div className="mb-1 flex items-center justify-between gap-3 px-1">
+        <span className="text-xs font-black leading-tight">
+          Real vs estimado
+        </span>
+        <span className="text-xs font-bold leading-tight text-muted-foreground">
+          min
+        </span>
+      </div>
+      <svg
+        className="h-40 w-full overflow-visible"
+        viewBox={`0 0 ${width} ${height}`}
+        aria-labelledby="duration-chart-title"
+      >
+        <title id="duration-chart-title">
+          Duración real comparada con duración estimada
+        </title>
+        {gridValues.map((value) => {
+          const y = toY(value);
+
+          return (
+            <g key={value}>
+              <line
+                x1={padding.left}
+                x2={width - padding.right}
+                y1={y}
+                y2={y}
+                className="stroke-border"
+                strokeDasharray="3 4"
+              />
+              <text
+                x={padding.left - 6}
+                y={y + 3}
+                textAnchor="end"
+                className="fill-muted-foreground text-[9px] font-bold"
+              >
+                {value}
+              </text>
+            </g>
+          );
+        })}
+        <path
+          d={toPath('estimatedMinutes')}
+          fill="none"
+          className="stroke-[var(--chart-2)]"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="5 5"
+        />
+        <path
+          d={toPath('actualMinutes')}
+          fill="none"
+          className="stroke-[var(--chart-1)]"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {data.map((point, index) => (
+          <g key={point.sessionId}>
+            <circle
+              cx={toX(index)}
+              cy={toY(point.estimatedMinutes)}
+              r="3"
+              className="fill-card stroke-[var(--chart-2)]"
+              strokeWidth="2"
+            >
+              <title>
+                {point.label}: estimado {point.estimatedMinutes} min
+              </title>
+            </circle>
+            <circle
+              cx={toX(index)}
+              cy={toY(point.actualMinutes)}
+              r="3.5"
+              className="fill-[var(--chart-1)]"
+            >
+              <title>
+                {point.label}: real {point.actualMinutes} min,{' '}
+                {formatSignedMinutes(point.deltaMinutes)}
+              </title>
+            </circle>
+            <text
+              x={toX(index)}
+              y={height - 8}
+              textAnchor="middle"
+              className="fill-muted-foreground text-[9px] font-bold"
+            >
+              {point.shortDate}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <div
+        className="mt-1 flex items-center justify-center gap-4 text-xs font-bold text-muted-foreground"
+        aria-hidden="true"
+      >
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-1 w-4 rounded-full bg-[var(--chart-1)]" />
+          Real
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className="h-1 w-4 rounded-full bg-[var(--chart-2)] opacity-75"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(90deg, transparent 0 4px, var(--card) 4px 7px)',
+            }}
+          />
+          Estimado
+        </span>
       </div>
     </div>
   );

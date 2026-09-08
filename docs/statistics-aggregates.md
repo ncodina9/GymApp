@@ -222,6 +222,32 @@ Uso previsto:
 
 No debe usarse como fuente principal de migracion. Para migrar a Swift debe preferirse el backup JSON completo, que conserva plan, metadata y eventos por serie.
 
+## Graficas actuales
+
+Pantalla: `Ajustes > Estadisticas`.
+
+### Duracion real vs estimada
+
+Fuente:
+
+- `filteredDurationSamples`, derivado de `SessionHistorySummary[]`.
+
+Reglas:
+
+- Solo muestra sesiones con `startedAt` y `finishedAt` validos.
+- Respeta el filtro de semana.
+- Usa hasta las ultimas 6 sesiones cerradas del filtro.
+- El eje X usa la fecha corta de la sesion.
+- La serie `Real` usa `actualMinutes`.
+- La serie `Estimado` usa `derivedEstimatedMinutes`.
+- La diferencia numerica sigue calculandose como `actualMinutes - derivedEstimatedMinutes`.
+
+Decision de producto:
+
+- Las primeras graficas se generan dentro de la PWA desde agregados exportables.
+- Los datos que alimentan la grafica ya salen en el CSV de estadisticas y en el backup JSON completo.
+- En Swift conviene replicar primero el agregado y despues la visualizacion.
+
 ## Consideraciones para Swift
 
 Modelo recomendado:

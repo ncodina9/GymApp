@@ -973,7 +973,7 @@ Tareas:
 - [ ] anadir filtros por bloque del plan, tipo de ejercicio y grupo muscular cuando el plan incluya esa taxonomia
 - [x] permitir exportar las tablas estadisticas principales en CSV reutilizable
 - [ ] permitir exportar graficas principales cuando existan visualizaciones nativas en la app
-- [ ] definir si los graficos se generan en la PWA o si se preparan primero como datos agregados exportables
+- [x] definir que las primeras graficas se generan en la PWA desde agregados exportables
 - [x] documentar los agregados estadisticos para poder replicarlos en Swift
 
 Criterio de aceptacion:
@@ -999,6 +999,7 @@ Estado parcial:
 - `Ajustes > Estadisticas` permite filtrar por semana y por ejercicio sin depender de calculos externos
 - `docs/statistics-aggregates.md` documenta los calculos de historial, duracion, adherencia, senales y progresion para futura replica en Swift
 - `Ajustes > Estadisticas > CSV` exporta tablas derivadas de resumen, historial, senales y progresion con schema versionado
+- `Ajustes > Estadisticas` muestra un primer grafico de duracion real vs estimada por sesion
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 
