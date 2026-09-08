@@ -25,6 +25,10 @@ import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import planData from '@/data/trainingPlan.json';
@@ -2934,6 +2938,7 @@ function SettingsScreen({
         {section === 'statistics' ? (
           <StatisticsPanel
             stats={trainingStats}
+            history={sessionHistory}
             exerciseProgressions={exerciseProgressions}
             isLoadingHistory={isLoadingHistory}
           />
@@ -3035,50 +3040,172 @@ function getProgressionCardToneClassName(
 
 function StatisticsPanel({
   stats,
+  history,
   exerciseProgressions,
   isLoadingHistory,
 }: {
   stats: TrainingStatsSummary;
+  history: SessionHistorySummary[];
   exerciseProgressions: ExerciseProgressionSummary[];
   isLoadingHistory: boolean;
 }) {
-  const [selectedExerciseId, setSelectedExerciseId] = useState(
+  const [selectedWeekFilter, setSelectedWeekFilter] = useState('all');
+  const [selectedExerciseFilter, setSelectedExerciseFilter] = useState('all');
+  const [expandedExerciseId, setExpandedExerciseId] = useState(
     exerciseProgressions[0]?.exerciseId ?? '',
   );
-  const selectedProgression = exerciseProgressions.find(
-    (progression) => progression.exerciseId === selectedExerciseId,
+  const weekOptions = useMemo(
+    () =>
+      Array.from(new Set(history.map((summary) => summary.weekNumber))).sort(
+        (a, b) => b - a,
+      ),
+    [history],
   );
+  const sessionWeekById = useMemo(
+    () =>
+      new Map(
+        history.map((summary) => [summary.sessionId, summary.weekNumber]),
+      ),
+    [history],
+  );
+  const filteredHistory = useMemo(
+    () =>
+      history.filter(
+        (summary) =>
+          selectedWeekFilter === 'all' ||
+          summary.weekNumber === Number(selectedWeekFilter),
+      ),
+    [history, selectedWeekFilter],
+  );
+  const filteredDurationSamples = useMemo(
+    () =>
+      filteredHistory.flatMap((summary) => {
+        const actualMinutes = getDurationMinutes(
+          summary.startedAt,
+          summary.finishedAt,
+        );
+
+        if (!actualMinutes) {
+          return [];
+        }
+
+        return [
+          {
+            sessionId: summary.sessionId,
+            label: summary.sessionLabel,
+            actualMinutes,
+            estimatedMinutes: summary.derivedEstimatedMinutes,
+            deltaMinutes: actualMinutes - summary.derivedEstimatedMinutes,
+          },
+        ];
+      }),
+    [filteredHistory],
+  );
+  const filteredAverageDurationMinutes =
+    filteredDurationSamples.length > 0
+      ? Math.round(
+          filteredDurationSamples.reduce(
+            (total, sample) => total + sample.actualMinutes,
+            0,
+          ) / filteredDurationSamples.length,
+        )
+      : undefined;
+  const filteredAverageDeltaMinutes =
+    filteredDurationSamples.length > 0
+      ? Math.round(
+          filteredDurationSamples.reduce(
+            (total, sample) => total + sample.deltaMinutes,
+            0,
+          ) / filteredDurationSamples.length,
+        )
+      : undefined;
+  const filteredExerciseProgressions = useMemo(
+    () =>
+      exerciseProgressions
+        .filter(
+          (progression) =>
+            selectedExerciseFilter === 'all' ||
+            progression.exerciseId === selectedExerciseFilter,
+        )
+        .map((progression) => ({
+          ...progression,
+          exposures:
+            selectedWeekFilter === 'all'
+              ? progression.exposures
+              : progression.exposures.filter(
+                  (exposure) =>
+                    sessionWeekById.get(exposure.sessionId) ===
+                    Number(selectedWeekFilter),
+                ),
+        }))
+        .filter(
+          (progression) =>
+            selectedWeekFilter === 'all' || progression.exposures.length > 0,
+        ),
+    [
+      exerciseProgressions,
+      selectedExerciseFilter,
+      selectedWeekFilter,
+      sessionWeekById,
+    ],
+  );
+  const selectedProgression = filteredExerciseProgressions.find(
+    (progression) => progression.exerciseId === expandedExerciseId,
+  );
+  const effectiveExpandedExerciseId = selectedProgression?.exerciseId ?? '';
   const adherenceValue =
     stats.weekTotalSessions > 0
       ? Math.round(
           (stats.weekCompletedSessions / stats.weekTotalSessions) * 100,
         )
       : 0;
+  const visibleInsights = [
+    ...stats.warningInsights,
+    ...stats.upInsights,
+    ...stats.downInsights,
+  ].filter(
+    (insight) =>
+      selectedExerciseFilter === 'all' ||
+      insight.exerciseId === selectedExerciseFilter,
+  );
   const primarySignals = [
     {
       label: 'Revisar',
-      value: String(stats.warningInsights.length),
+      value: String(
+        visibleInsights.filter((insight) => insight.tone === 'warning').length,
+      ),
       className:
         'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
     },
     {
       label: 'Subir',
-      value: String(stats.upInsights.length),
+      value: String(
+        visibleInsights.filter((insight) => insight.tone === 'up').length,
+      ),
       className:
         'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
     },
     {
       label: 'Bajar',
-      value: String(stats.downInsights.length),
+      value: String(
+        visibleInsights.filter((insight) => insight.tone === 'down').length,
+      ),
       className:
         'border-[var(--action-down-border)] bg-[var(--action-down)] text-[var(--action-down-foreground)]',
     },
   ];
-  const topSignals = [
-    ...stats.warningInsights,
-    ...stats.upInsights,
-    ...stats.downInsights,
-  ].slice(0, 4);
+  const topSignals = visibleInsights.slice(0, 4);
+  const visibleSkippedSets =
+    selectedExerciseFilter === 'all'
+      ? stats.skippedSets
+      : visibleInsights.reduce(
+          (total, insight) => total + insight.skippedSets,
+          0,
+        );
+  const visiblePainHits =
+    selectedExerciseFilter === 'all'
+      ? stats.painHits
+      : visibleInsights.reduce((total, insight) => total + insight.painHits, 0);
 
   if (isLoadingHistory) {
     return (
@@ -3104,6 +3231,54 @@ function StatisticsPanel({
 
   return (
     <div className="mt-4 grid gap-3">
+      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <p className="text-sm font-black leading-tight">Filtros</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <label className="grid gap-1 text-xs font-black text-muted-foreground">
+            Semana
+            <NativeSelect
+              className="w-full"
+              value={selectedWeekFilter}
+              onChange={(event) => setSelectedWeekFilter(event.target.value)}
+            >
+              <NativeSelectOption value="all">Todas</NativeSelectOption>
+              {weekOptions.map((weekNumber) => (
+                <NativeSelectOption key={weekNumber} value={String(weekNumber)}>
+                  Semana {weekNumber}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </label>
+          <label className="grid gap-1 text-xs font-black text-muted-foreground">
+            Ejercicio
+            <NativeSelect
+              className="w-full"
+              value={selectedExerciseFilter}
+              onChange={(event) => {
+                setSelectedExerciseFilter(event.target.value);
+                setExpandedExerciseId(
+                  event.target.value === 'all' ? '' : event.target.value,
+                );
+              }}
+            >
+              <NativeSelectOption value="all">Todos</NativeSelectOption>
+              {exerciseProgressions.map((progression) => (
+                <NativeSelectOption
+                  key={progression.exerciseId}
+                  value={progression.exerciseId}
+                >
+                  {progression.exerciseName}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </label>
+        </div>
+        <p className="mt-2 text-xs font-bold leading-tight text-muted-foreground">
+          Semana filtra duración, últimas sesiones y exposiciones. Ejercicio
+          filtra señales y progresión.
+        </p>
+      </div>
+
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -3134,22 +3309,27 @@ function StatisticsPanel({
           <Metric
             label="Media"
             value={
-              stats.averageDurationMinutes
-                ? formatDurationMinutes(stats.averageDurationMinutes)
+              filteredAverageDurationMinutes
+                ? formatDurationMinutes(filteredAverageDurationMinutes)
                 : '-'
             }
           />
           <Metric
             label="Diferencia"
             value={
-              stats.averageDeltaMinutes !== undefined
-                ? formatSignedMinutes(stats.averageDeltaMinutes)
+              filteredAverageDeltaMinutes !== undefined
+                ? formatSignedMinutes(filteredAverageDeltaMinutes)
                 : '-'
             }
           />
         </div>
         <div className="mt-2 grid gap-1.5">
-          {stats.durationSamples.slice(0, 3).map((sample) => (
+          {filteredDurationSamples.length === 0 ? (
+            <div className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+              Sin sesiones cerradas para este filtro.
+            </div>
+          ) : null}
+          {filteredDurationSamples.slice(0, 3).map((sample) => (
             <div
               key={sample.sessionId}
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
@@ -3184,11 +3364,11 @@ function StatisticsPanel({
         <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-black">
           <div className="rounded-[1rem] border bg-card px-3 py-2">
             <span className="block text-muted-foreground">Saltadas</span>
-            <span className="mt-0.5 block">{stats.skippedSets} series</span>
+            <span className="mt-0.5 block">{visibleSkippedSets} series</span>
           </div>
           <div className="rounded-[1rem] border bg-card px-3 py-2">
             <span className="block text-muted-foreground">Molestias</span>
-            <span className="mt-0.5 block">{stats.painHits} marcas</span>
+            <span className="mt-0.5 block">{visiblePainHits} marcas</span>
           </div>
         </div>
         {topSignals.length > 0 ? (
@@ -3208,22 +3388,22 @@ function StatisticsPanel({
         ) : null}
       </div>
 
-      {exerciseProgressions.length > 0 ? (
+      {filteredExerciseProgressions.length > 0 ? (
         <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <p className="text-sm font-black leading-tight">
             Progresión por ejercicio
           </p>
           <div className="mt-2 grid gap-2">
-            {exerciseProgressions.map((progression) => (
+            {filteredExerciseProgressions.map((progression) => (
               <ExerciseProgressionCard
                 key={progression.exerciseId}
                 progression={progression}
                 isExpanded={
-                  progression.exerciseId === selectedProgression?.exerciseId
+                  progression.exerciseId === effectiveExpandedExerciseId
                 }
                 onToggle={() =>
-                  setSelectedExerciseId(
-                    progression.exerciseId === selectedProgression?.exerciseId
+                  setExpandedExerciseId(
+                    progression.exerciseId === effectiveExpandedExerciseId
                       ? ''
                       : progression.exerciseId,
                   )
@@ -3232,12 +3412,21 @@ function StatisticsPanel({
             ))}
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-sm font-bold text-muted-foreground">
+          Sin progresión para este filtro.
+        </div>
+      )}
 
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
         <p className="text-sm font-black leading-tight">Últimas sesiones</p>
         <div className="mt-2 grid gap-1.5">
-          {stats.latestSessions.map((summary) => {
+          {filteredHistory.length === 0 ? (
+            <div className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+              Sin sesiones para este filtro.
+            </div>
+          ) : null}
+          {filteredHistory.slice(0, 3).map((summary) => {
             const durationMinutes = getDurationMinutes(
               summary.startedAt,
               summary.finishedAt,

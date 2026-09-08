@@ -14,6 +14,7 @@ import type {
 export type SessionHistorySummary = {
   sessionId: string;
   sessionDate: string;
+  weekNumber: number;
   sessionLabel: string;
   estimatedMinutes: number;
   derivedEstimatedMinutes: number;
@@ -169,6 +170,7 @@ export const getSessionHistorySummaries = (
         {
           sessionId: session.sessionId,
           sessionDate: session.date,
+          weekNumber: session.week,
           sessionLabel: session.label,
           estimatedMinutes: session.estimatedMinutes,
           derivedEstimatedMinutes: estimateSessionDurationFromSteps(

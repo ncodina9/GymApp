@@ -969,7 +969,8 @@ Tareas:
 - [ ] mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
 - [x] mostrar progresion por ejercicio con vista consultable: carga, reps, RIR, saltos y decisiones tomadas
 - [x] detectar tendencias simples: estancamiento, subidas sostenidas, molestias repetidas y series saltadas
-- [ ] anadir filtros por semana, bloque del plan, ejercicio y tipo de ejercicio
+- [x] anadir filtros iniciales por semana y ejercicio
+- [ ] anadir filtros por bloque del plan, tipo de ejercicio y grupo muscular cuando el plan incluya esa taxonomia
 - [ ] permitir exportar las tablas y graficas principales en formatos reutilizables
 - [ ] definir si los graficos se generan en la PWA o si se preparan primero como datos agregados exportables
 - [ ] documentar los agregados estadisticos para poder replicarlos en Swift
@@ -994,6 +995,7 @@ Estado parcial:
 - vista consultable de progresion por ejercicio con tarjetas colapsables en una columna, ultimas exposiciones, carga, reps/tiempo, RIR, molestias y decision tomada
 - las tarjetas cerradas de progresion priorizan el nombre del ejercicio y usan color sutil para la senal; la recomendacion textual completa solo aparece al desplegar el detalle
 - las senales de progresion distinguen visualmente candidatos/avisos en amarillo y bajadas de carga en rojo suave
+- `Ajustes > Estadisticas` permite filtrar por semana y por ejercicio sin depender de calculos externos
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 
