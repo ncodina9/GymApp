@@ -910,20 +910,138 @@ Capacidades iOS candidatas para fases posteriores:
 - sincronizacion mediante iCloud/CloudKit
 - integracion con Atajos de iOS y Siri
 
+### Hito 21: Estadisticas y graficos dentro de la app
+
+Objetivo: que la app deje de depender de Obsidian para consultar la evolucion basica y avanzada del entrenamiento. Obsidian debe quedar como archivo, backup o entorno de analisis personal, no como requisito para entender el progreso.
+
+Enfoque:
+
+- calcular metricas de forma determinista desde el historico local y desde el backup JSON completo
+- mantener los datos fuente por serie como verdad principal
+- evitar graficas o conclusiones que no puedan trazarse hasta eventos concretos
+- disenar la capa de estadisticas pensando en portarla despues a Swift/SwiftUI
+
+Tareas:
+
+- crear una vista de resumen semanal con sesiones completadas, sesiones pendientes y adherencia
+- mostrar duracion real por sesion y compararla con la estimacion operativa sin movilidad previa
+- mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
+- mostrar progresion por ejercicio: carga, reps, RIR, saltos y decisiones tomadas
+- detectar tendencias simples: estancamiento, subidas sostenidas, molestias repetidas y series saltadas
+- anadir filtros por semana, bloque del plan, ejercicio y tipo de ejercicio
+- permitir exportar las tablas y graficas principales en formatos reutilizables
+- definir si los graficos se generan en la PWA o si se preparan primero como datos agregados exportables
+- documentar los agregados estadisticos para poder replicarlos en Swift
+
+Criterio de aceptacion:
+
+- desde la app se puede responder rapidamente: que he hecho esta semana, como evoluciona un ejercicio y donde aparecen molestias
+- las metricas no dependen de Obsidian ni de calculos manuales externos
+- cualquier grafica puede reconstruirse desde el JSON/CSV exportado
+- la implementacion no compromete el rendimiento aunque crezca el historico local
+
+### Hito 22: Generador guiado de planes de entrenamiento
+
+Objetivo: permitir crear o versionar planes desde la propia app mediante un flujo guiado, manteniendo planes explicitos por fecha y compatibles con el JSON actual.
+
+Enfoque:
+
+- la app debe preguntar primero la informacion relevante al usuario
+- el resultado debe ser un plan completo, revisable y editable antes de activarse
+- el motor debe validar material, duracion, volumen, descansos y progresion antes de aceptar el plan
+- cada cambio importante debe crear una nueva version del plan, no mutar silenciosamente el historico
+
+Informacion inicial que debe solicitar:
+
+- objetivo principal: fuerza, hipertrofia, recomposicion, salud, rendimiento mixto
+- dias disponibles por semana y dias preferidos
+- duracion maxima por sesion y si incluye movilidad previa
+- material disponible: barras, discos, mancuernas, poleas, maquinas, banco, rack, accesorios
+- pesos disponibles concretos y reglas de carga
+- nivel, marcas recientes y ejercicios de referencia
+- molestias, restricciones y ejercicios vetados
+- ejercicios preferidos y ejercicios sustituibles
+- fechas especiales: viajes, semanas de descarga, cierres de gimnasio o competiciones
+
+Tareas:
+
+- definir el cuestionario inicial y sus respuestas estructuradas
+- crear un perfil de material reutilizable por la app
+- generar una propuesta de calendario con sesiones completas por fecha
+- validar que cada carga propuesta se puede montar con el material disponible
+- validar que las sesiones caben en el tiempo objetivo con la formula de estimacion derivada
+- permitir revisar el plan antes de activarlo
+- permitir editar ejercicios, series, reps, tiempos, pesos y descansos en una interfaz tactil
+- guardar `planVersion`, fecha de creacion, origen del plan y razon de los cambios
+- exportar el plan generado en el mismo formato que consume actualmente la app
+
+Criterio de aceptacion:
+
+- se puede crear un plan nuevo sin editar scripts ni JSON a mano
+- el plan resultante es explicito por fecha, no una plantilla semanal con reglas ocultas
+- las cargas respetan el material real
+- el usuario confirma el plan antes de que sustituya al activo
+
+### Hito 23: Capa de IA para planificacion y analisis
+
+Objetivo: usar IA como asistente de revision, generacion y explicacion, sin delegar en ella reglas criticas ni decisiones opacas durante el entrenamiento.
+
+Opinion de producto:
+
+- la IA puede aportar mucho valor al proponer planes, resumir semanas, detectar patrones y explicar ajustes
+- la app no debe depender de IA para funcionar en el gimnasio
+- las recomendaciones deben pasar por validadores deterministas antes de mostrarse como accionables
+- las decisiones finales de cambiar cargas, volumen o ejercicios deben requerir confirmacion del usuario
+
+Casos deseables:
+
+- generar un borrador de plan a partir del cuestionario del Hito 22
+- explicar por que una semana sube, mantiene o baja volumen
+- proponer ajustes semanales usando cumplimiento, RIR, molestias y duracion real
+- sugerir sustituciones de ejercicios cuando falta material o aparece molestia
+- resumir una sesion o semana en lenguaje natural
+- convertir notas libres o dictadas en etiquetas estructuradas
+- ayudar a detectar incoherencias del plan: exceso de duracion, volumen mal distribuido o progresiones demasiado agresivas
+
+Limites:
+
+- no decidir pesos serie a serie en tiempo real sin reglas visibles
+- no modificar el plan activo sin una pantalla de revision y confirmacion
+- no mezclar datos estimados con datos registrados sin indicarlo
+- no bloquear el uso offline de la app
+- no depender de respuestas no versionadas para reconstruir el historico
+
+Arquitectura propuesta:
+
+- motor determinista local para calculos, validaciones y recomendaciones conservadoras
+- IA opcional para generar propuestas, explicaciones y resumenes
+- salida de IA siempre en JSON versionado y validado antes de entrar en el plan
+- registro de `aiSuggestionId`, modelo/proveedor si aplica, fecha y decision del usuario cuando una sugerencia se acepta
+- posibilidad de desactivar IA sin perder ninguna funcionalidad principal de registro
+
+Criterio de aceptacion:
+
+- la IA mejora la planificacion y el analisis, pero la app sigue siendo fiable sin conexion
+- toda sugerencia queda trazada, validada y aprobada antes de modificar datos
+- el esquema de datos permite migrar estas capacidades a la app nativa sin rehacer el historico
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
 - Definir si el plan prioriza fuerza, hipertrofia, recomposicion o rendimiento mixto.
 - Decidir si la primera version necesita autenticacion. Por ahora, no.
-- Decidir si los datos se quedan solo en el dispositivo o si habra sincronizacion.
+- Decidir si los datos se quedan solo en el dispositivo, si habra sincronizacion iCloud o si se ofrecera backup manual como opcion principal.
 - Evitar que el countdown de descanso bloquee ajustes utiles entre series.
 - Disenar controles tactiles suficientemente grandes sin convertir la pantalla en una calculadora.
 - Definir mas adelante como tratar superseries con distinto numero de series por ejercicio.
-- Decidir si el plan tendra correcciones manuales despues de cada semana o versiones generadas.
-- Decidir si el historico local debe quedarse solo en IndexedDB o si conviene una copia exportable mas directa.
+- Decidir si el plan tendra correcciones manuales, versiones generadas desde la app o sugerencias asistidas por IA.
+- Decidir cuando IndexedDB deja de ser suficiente en PWA y conviene una copia local exportable mas directa.
 - Decidir cuando iniciar el prototipo SwiftUI: despues de validar el flujo principal en gimnasio o antes para probar ventajas nativas concretas.
 - Revisar la decision inicial de SwiftData si aparecen requisitos fuertes de portabilidad o control manual de base de datos.
 - Definir que datos deben sincronizarse por iCloud y cuales pueden quedarse solo en el dispositivo.
+- Definir que estadisticas son imprescindibles en local y cuales pueden esperar a exportaciones externas.
+- Definir si la IA se ejecutara mediante backend propio, proveedor externo o solo como flujo manual durante las primeras pruebas.
+- Definir politica de privacidad antes de enviar historico, molestias o datos fisicos a cualquier servicio de IA.
 
 ## Backlog futuro
 
@@ -934,9 +1052,19 @@ Capacidades iOS candidatas para fases posteriores:
 - App companion de Apple Watch para registrar series y descansos.
 - Widget de proximo entrenamiento y progreso semanal.
 - Exportacion Markdown por sesion, si aporta valor frente al CSV.
+- Estadisticas avanzadas y graficos dentro de la app.
+- Exportacion de graficos y resumenes desde la app.
 - Vista de volumen semanal por grupo muscular.
 - Vista de progresion por ejercicio.
+- Vista de duracion real, descansos reales y tiempos entre ejercicios.
+- Vista de comparacion planificado vs ejecutado.
 - Modo de edicion manual del plan desde la propia app.
+- Generador guiado de planes de entrenamiento dentro de la app.
+- Perfil de material disponible editable por el usuario.
+- Versionado de planes activos y planes historicos.
+- Capa opcional de IA para proponer planes, analizar semanas y sugerir ajustes.
+- Sustituciones inteligentes de ejercicios por material disponible o molestias.
+- Modo `tengo 45 minutos hoy` para adaptar una sesion puntual sin alterar el plan base.
 - Gestion de calentamientos o aproximaciones antes de series efectivas.
 - Soporte para notas libres con dictado, si no rompe la filosofia tactil.
 - Sincronizacion multi-dispositivo, solo si el uso local se queda corto.
@@ -944,14 +1072,14 @@ Capacidades iOS candidatas para fases posteriores:
 
 ## Proximo hito recomendado
 
-Continuar con el Hito 20: preparar decisiones de arquitectura PWA -> iPhone nativo.
+Continuar con el Hito 21: estadisticas y graficos dentro de la app.
 
 Checklist minima de la siguiente iteracion:
 
-1. Revisar qué datos locales actuales debe importar una app Swift.
-2. Separar decisiones que conviene estabilizar en PWA antes de migrar.
-3. Definir el contrato mínimo de exportación/importación para sesiones en curso.
-4. Identificar pantallas PWA que serán prototipo directo de vistas Swift.
-5. Documentar riesgos específicos de iOS: timers en segundo plano, ficheros y notificaciones.
+1. Definir el primer dashboard local: semana actual, adherencia, duracion real y sesiones completadas.
+2. Crear funciones puras para agregar eventos por sesion, ejercicio y semana.
+3. Reutilizar el historico de IndexedDB y el backup JSON completo como fuentes compatibles.
+4. Mostrar una primera vista de progresion por ejercicio con carga, reps, RIR y molestias.
+5. Mantener la exportacion como verificacion: todo lo que se grafica debe poder salir en JSON/CSV.
 
-Despues de esa prueba, priorizar Hito 13 si el problema principal es fiabilidad de datos/exportacion.
+Despues de esa primera capa, avanzar al Hito 22: generador guiado de planes desde la app.
