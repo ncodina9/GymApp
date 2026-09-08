@@ -702,6 +702,26 @@ Estado parcial:
 - Hoy marca entrenamientos completados en la semana visible
 - si la semana recomendada por fecha esta completa, Hoy salta por defecto a la primera sesion pendiente de la semana siguiente
 
+### Hito 14d: Consulta de proximos entrenamientos
+
+Objetivo: poder consultar desde Ajustes los entrenamientos futuros del planning activo sin iniciar una sesion.
+
+Tareas:
+
+- anadir una seccion `Proximos` en el menu de Ajustes
+- listar las sesiones con fecha igual o posterior a hoy
+- permitir seleccionar cualquier sesion futura
+- desplegar bajo la sesion seleccionada sus ejercicios con series, reps/tiempo y peso
+- reutilizar el formato visual de la preview para mantener consistencia
+
+Criterio de aceptacion:
+
+- se puede revisar material, pesos y reps de un entrenamiento futuro desde la app
+- la consulta no cambia el entrenamiento seleccionado en Hoy ni crea sesion local
+- la seccion permite scroll porque forma parte de Ajustes
+
+Estado: implementado.
+
 ### Hito 14b: Ajuste del planning a 60-70 minutos
 
 Objetivo: revisar el plan como entrenador personal para que las sesiones quepan en 60-70 min reales, incluyendo 8-10 min de movilidad previa, ejecucion, descansos, feedback y cambios entre ejercicios.

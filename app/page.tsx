@@ -2,6 +2,7 @@
 
 import {
   Check,
+  CalendarDays,
   ChevronRight,
   Database,
   Download,
@@ -86,6 +87,7 @@ type SettingsSection =
   | 'appearance'
   | 'training'
   | 'installation'
+  | 'upcoming'
   | 'local-data'
   | 'progression'
   | 'history';
@@ -1303,6 +1305,13 @@ export default function Home() {
     () => getWeekSessions(trainingPlan.sessions, selectedSession),
     [selectedSession],
   );
+  const upcomingSessions = useMemo(() => {
+    const todayIso = getTodayIso();
+
+    return trainingPlan.sessions
+      .filter((session) => session.date >= todayIso)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, []);
 
   const refreshSessionHistory = useCallback(async () => {
     setIsLoadingHistory(true);
@@ -2208,6 +2217,7 @@ export default function Home() {
             offlineStatus={offlineStatus}
             offlineInfo={offlineInfo}
             selectedSessionLabel={selectedSession.label}
+            upcomingSessions={upcomingSessions}
             sessionHistory={sessionHistory}
             exerciseInsights={exerciseInsights}
             isLoadingHistory={isLoadingHistory}
@@ -2655,47 +2665,14 @@ function PreviewScreen({
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         <div className="grid gap-2 pb-1">
-          {session.exercises.map((exercise, index) => {
-            const metrics = getExercisePreviewMetrics(exercise);
-            const supersetSize = exercise.supersetId
-              ? getSupersetMembers(session, exercise.supersetId).length
-              : 0;
-
-            return (
-              <div
-                key={exercise.exerciseId}
-                className="grid gap-3 rounded-lg border bg-card p-3 shadow-sm"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-secondary-foreground">
-                    {index + 1}
-                  </span>
-                  <div className="min-w-0">
-                    {exercise.supersetId ? (
-                      <p className="mb-1 text-[0.68rem] font-black uppercase leading-none text-primary">
-                        Superserie {exercise.supersetOrder}/{supersetSize}
-                      </p>
-                    ) : null}
-                    <p className="min-w-0 text-base font-black leading-tight">
-                      {exercise.name}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <PreviewMetric label="series" value={metrics.sets} />
-                  <PreviewMetric
-                    label={metrics.workLabel}
-                    value={metrics.work}
-                  />
-                  <PreviewMetric
-                    label={metrics.loadLabel}
-                    value={metrics.load}
-                  />
-                </div>
-              </div>
-            );
-          })}
+          {session.exercises.map((exercise, index) => (
+            <ExercisePlanCard
+              key={exercise.exerciseId}
+              session={session}
+              exercise={exercise}
+              index={index}
+            />
+          ))}
         </div>
       </div>
 
@@ -2737,6 +2714,147 @@ function PreviewMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ExercisePlanCard({
+  session,
+  exercise,
+  index,
+}: {
+  session: TrainingSession;
+  exercise: Exercise;
+  index: number;
+}) {
+  const metrics = getExercisePreviewMetrics(exercise);
+  const supersetSize = exercise.supersetId
+    ? getSupersetMembers(session, exercise.supersetId).length
+    : 0;
+
+  return (
+    <div className="grid gap-3 rounded-lg border bg-card p-3 shadow-sm">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-secondary-foreground">
+          {index + 1}
+        </span>
+        <div className="min-w-0">
+          {exercise.supersetId ? (
+            <p className="mb-1 text-[0.68rem] font-black uppercase leading-none text-primary">
+              Superserie {exercise.supersetOrder}/{supersetSize}
+            </p>
+          ) : null}
+          <p className="min-w-0 text-base font-black leading-tight">
+            {exercise.name}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <PreviewMetric label="series" value={metrics.sets} />
+        <PreviewMetric label={metrics.workLabel} value={metrics.work} />
+        <PreviewMetric label={metrics.loadLabel} value={metrics.load} />
+      </div>
+    </div>
+  );
+}
+
+function UpcomingSessionsPanel({ sessions }: { sessions: TrainingSession[] }) {
+  const [selectedSessionId, setSelectedSessionId] = useState(
+    sessions[0]?.sessionId ?? '',
+  );
+  const selectedSession =
+    sessions.find((session) => session.sessionId === selectedSessionId) ??
+    sessions[0];
+
+  if (sessions.length === 0 || !selectedSession) {
+    return (
+      <div className="mt-4 rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+        No hay entrenamientos futuros en el planning activo.
+      </div>
+    );
+  }
+
+  const estimate = estimateSessionDuration(selectedSession);
+
+  return (
+    <div className="mt-4 grid gap-3">
+      <div className="grid gap-2">
+        {sessions.map((session) => {
+          const isSelected = session.sessionId === selectedSession.sessionId;
+
+          return (
+            <div key={session.sessionId} className="grid gap-2">
+              <button
+                className={`rounded-[1.4rem] border px-3 py-2.5 text-left transition active:scale-[0.98] ${
+                  isSelected
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-secondary text-secondary-foreground'
+                }`}
+                type="button"
+                aria-label={`Ver ${session.label} del ${formatDate(
+                  session.date,
+                )}`}
+                onClick={() => setSelectedSessionId(session.sessionId)}
+              >
+                <span className="flex min-w-0 items-center justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold capitalize">
+                      {session.weekday} · {formatDate(session.date)}
+                    </span>
+                    <span className="mt-0.5 block truncate text-base font-black leading-tight">
+                      {session.label}
+                    </span>
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${
+                      isSelected
+                        ? 'border-primary-foreground/35 text-primary-foreground'
+                        : 'border-border text-muted-foreground'
+                    }`}
+                  >
+                    S{session.week}
+                  </span>
+                </span>
+              </button>
+
+              {isSelected ? (
+                <div className="grid gap-2 rounded-[1.5rem] border bg-secondary p-2">
+                  <div className="rounded-lg border bg-card p-3 shadow-sm">
+                    <p className="text-sm font-bold text-muted-foreground">
+                      Semana {selectedSession.week} ·{' '}
+                      {selectedSession.weekFocusLabel}
+                    </p>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                      <Metric
+                        label="Fecha"
+                        value={formatDate(selectedSession.date)}
+                      />
+                      <Metric
+                        label="Estimado"
+                        value={`${estimate.totalMinutes}m`}
+                      />
+                      <Metric
+                        label="Bloques"
+                        value={`${selectedSession.exercises.length}`}
+                      />
+                    </div>
+                  </div>
+
+                  {selectedSession.exercises.map((exercise, index) => (
+                    <ExercisePlanCard
+                      key={exercise.exerciseId}
+                      session={selectedSession}
+                      exercise={exercise}
+                      index={index}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function SettingsScreen({
   section,
   theme,
@@ -2745,6 +2863,7 @@ function SettingsScreen({
   offlineStatus,
   offlineInfo,
   selectedSessionLabel,
+  upcomingSessions,
   sessionHistory,
   exerciseInsights,
   isLoadingHistory,
@@ -2767,6 +2886,7 @@ function SettingsScreen({
   offlineStatus: OfflineStatus;
   offlineInfo: OfflineInfo;
   selectedSessionLabel: string;
+  upcomingSessions: TrainingSession[];
   sessionHistory: SessionHistorySummary[];
   exerciseInsights: ExerciseProgressInsight[];
   isLoadingHistory: boolean;
@@ -2787,6 +2907,7 @@ function SettingsScreen({
     appearance: 'Apariencia',
     training: 'Entrenamiento',
     installation: 'Instalación',
+    upcoming: 'Próximos',
     'local-data': 'Datos locales',
     progression: 'Progresión',
     history: 'Historial local',
@@ -2814,6 +2935,14 @@ function SettingsScreen({
       title: 'Instalación',
       detail: offlineStatusLabels[offlineStatus],
       icon: <Download className="size-5" />,
+    },
+    {
+      section: 'upcoming',
+      title: 'Próximos',
+      detail: upcomingSessions.length
+        ? `${upcomingSessions.length} entrenamientos previstos`
+        : 'Sin entrenamientos futuros',
+      icon: <CalendarDays className="size-5" />,
     },
     {
       section: 'local-data',
@@ -2966,6 +3095,10 @@ function SettingsScreen({
               </Button>
             </div>
           </div>
+        ) : null}
+
+        {section === 'upcoming' ? (
+          <UpcomingSessionsPanel sessions={upcomingSessions} />
         ) : null}
 
         {section === 'local-data' ? (
