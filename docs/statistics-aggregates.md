@@ -201,6 +201,27 @@ Filtro por ejercicio:
 - Filtra senales, series saltadas, molestias y progresion.
 - Al elegir un ejercicio concreto, la tarjeta de progresion se abre automaticamente.
 
+## Exportacion CSV
+
+Funcion: `buildStatisticsCsv` en `lib/statisticsExport.ts`.
+
+La exportacion estadistica genera un CSV derivado con schema `gymapp.statistics-export` version `1`.
+
+Tablas incluidas:
+
+- `summary`: metricas globales de adherencia, sesiones, duracion, senales, series saltadas y molestias.
+- `session_history`: resumen por sesion con duracion real, estimacion derivada, estado y series completadas.
+- `exercise_insight`: recomendaciones conservadoras por ejercicio.
+- `exercise_progression`: exposiciones historicas por ejercicio y sesion.
+
+Uso previsto:
+
+- revision rapida en Obsidian, Numbers o herramientas externas
+- validacion de que lo que se muestra en la app puede salir de forma estructurada
+- puente hacia futuras graficas sin depender de capturas ni calculos manuales
+
+No debe usarse como fuente principal de migracion. Para migrar a Swift debe preferirse el backup JSON completo, que conserva plan, metadata y eventos por serie.
+
 ## Consideraciones para Swift
 
 Modelo recomendado:

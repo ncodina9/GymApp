@@ -44,6 +44,10 @@ import {
 } from '@/lib/sessionExport';
 import { estimateSessionDurationFromSteps } from '@/lib/sessionDuration';
 import {
+  buildStatisticsCsv,
+  getStatisticsCsvFileName,
+} from '@/lib/statisticsExport';
+import {
   getRecommendedSession as getRecommendedSelectableSession,
   getWeekSessions,
   resolveSelectedSession,
@@ -1780,6 +1784,23 @@ export default function Home() {
     await refreshSessionHistory();
   };
 
+  const exportStatisticsCsv = async () => {
+    const exportedAt = new Date().toISOString();
+    const csv = buildStatisticsCsv({
+      exportedAt,
+      appVersion,
+      stats: trainingStats,
+      history: sessionHistory,
+      exerciseProgressions,
+    });
+    const fileName = getStatisticsCsvFileName(exportedAt);
+    const file = new File([csv], fileName, {
+      type: 'text/csv;charset=utf-8',
+    });
+
+    await shareOrDownloadFile(file, fileName);
+  };
+
   const exportCsv = async () => {
     await exportWorkoutCsv(selectedSession, draft.records, draft.decisions);
     await markSessionExported(
@@ -2028,6 +2049,11 @@ export default function Home() {
             onExportFullJson={() => {
               void exportFullTrainingDataJson().catch(() => {
                 window.alert('No se pudo exportar el backup JSON.');
+              });
+            }}
+            onExportStatisticsCsv={() => {
+              void exportStatisticsCsv().catch(() => {
+                window.alert('No se pudieron exportar las estadísticas CSV.');
               });
             }}
             onExportHistorySession={exportHistorySession}
@@ -2662,6 +2688,7 @@ function SettingsScreen({
   onResetCurrent,
   onClearAllData,
   onExportFullJson,
+  onExportStatisticsCsv,
   onExportHistorySession,
   onDeleteHistorySession,
   onBack,
@@ -2687,6 +2714,7 @@ function SettingsScreen({
   onResetCurrent: () => void;
   onClearAllData: () => void;
   onExportFullJson: () => void;
+  onExportStatisticsCsv: () => void;
   onExportHistorySession: (sessionId: string) => void;
   onDeleteHistorySession: (sessionId: string) => void;
   onBack: () => void;
@@ -2941,6 +2969,7 @@ function SettingsScreen({
             history={sessionHistory}
             exerciseProgressions={exerciseProgressions}
             isLoadingHistory={isLoadingHistory}
+            onExportStatisticsCsv={onExportStatisticsCsv}
           />
         ) : null}
 
@@ -3043,11 +3072,13 @@ function StatisticsPanel({
   history,
   exerciseProgressions,
   isLoadingHistory,
+  onExportStatisticsCsv,
 }: {
   stats: TrainingStatsSummary;
   history: SessionHistorySummary[];
   exerciseProgressions: ExerciseProgressionSummary[];
   isLoadingHistory: boolean;
+  onExportStatisticsCsv: () => void;
 }) {
   const [selectedWeekFilter, setSelectedWeekFilter] = useState('all');
   const [selectedExerciseFilter, setSelectedExerciseFilter] = useState('all');
@@ -3232,7 +3263,17 @@ function StatisticsPanel({
   return (
     <div className="mt-4 grid gap-3">
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-        <p className="text-sm font-black leading-tight">Filtros</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-black leading-tight">Filtros</p>
+          <Button
+            className="h-9 shrink-0 rounded-[1.2rem] px-3 text-xs font-black"
+            variant="secondary"
+            onClick={onExportStatisticsCsv}
+          >
+            <Download className="size-4" />
+            CSV
+          </Button>
+        </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <label className="grid gap-1 text-xs font-black text-muted-foreground">
             Semana

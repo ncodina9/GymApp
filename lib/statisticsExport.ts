@@ -1,0 +1,249 @@
+import {
+  getDurationMinutes,
+  type ExerciseProgressInsight,
+  type ExerciseProgressionSummary,
+  type SessionHistorySummary,
+  type TrainingStatsSummary,
+} from '@/lib/trainingStats';
+
+type StatisticsCsvInput = {
+  exportedAt: string;
+  appVersion: string;
+  stats: TrainingStatsSummary;
+  history: SessionHistorySummary[];
+  exerciseProgressions: ExerciseProgressionSummary[];
+};
+
+const schemaName = 'gymapp.statistics-export';
+const schemaVersion = 1;
+
+export const getStatisticsCsvFileName = (exportedAt: string) =>
+  `${exportedAt.slice(0, 10)}-gymapp-statistics.csv`;
+
+export const buildStatisticsCsv = ({
+  exportedAt,
+  appVersion,
+  stats,
+  history,
+  exerciseProgressions,
+}: StatisticsCsvInput) => {
+  const headers = [
+    'schema_name',
+    'schema_version',
+    'exported_at',
+    'app_version',
+    'table',
+    'date',
+    'week',
+    'session_id',
+    'session',
+    'exercise_id',
+    'exercise',
+    'target',
+    'metric',
+    'value',
+    'value_2',
+    'status',
+    'tone',
+    'recommendation',
+    'notes',
+  ];
+  const insightRows = [
+    ...stats.warningInsights,
+    ...stats.upInsights,
+    ...stats.downInsights,
+  ].flatMap((insight) => buildInsightRows({ exportedAt, appVersion, insight }));
+  const progressionRows = exerciseProgressions.flatMap((progression) =>
+    progression.exposures.map((exposure) => [
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      'exercise_progression',
+      exposure.sessionDate,
+      '',
+      exposure.sessionId,
+      exposure.sessionLabel,
+      progression.exerciseId,
+      progression.exerciseName,
+      exposure.target,
+      'exposure',
+      exposure.topLoadKg ?? '',
+      exposure.totalDurationSeconds > 0
+        ? `${exposure.totalDurationSeconds}s`
+        : exposure.totalReps,
+      `${exposure.completedSets}/${exposure.plannedSets}`,
+      progression.tone,
+      progression.recommendation,
+      [
+        exposure.averageRir !== undefined
+          ? `RIR ${formatExportNumber(exposure.averageRir)}`
+          : undefined,
+        exposure.skippedSets > 0
+          ? `${exposure.skippedSets} skipped`
+          : undefined,
+        exposure.painHits > 0 ? `${exposure.painHits} pain hits` : undefined,
+        exposure.decision,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    ]),
+  );
+
+  return [
+    headers,
+    ...buildSummaryRows({ exportedAt, appVersion, stats }),
+    ...buildHistoryRows({ exportedAt, appVersion, history }),
+    ...insightRows,
+    ...progressionRows,
+  ]
+    .map((row) => row.map((value) => csvEscape(value)).join(','))
+    .join('\n');
+};
+
+const buildSummaryRows = ({
+  exportedAt,
+  appVersion,
+  stats,
+}: {
+  exportedAt: string;
+  appVersion: string;
+  stats: TrainingStatsSummary;
+}) =>
+  [
+    [
+      'week_adherence',
+      stats.weekCompletedSessions,
+      stats.weekTotalSessions,
+      `Semana ${stats.weekNumber} · ${stats.weekFocusLabel}`,
+    ],
+    ['stored_sessions', stats.storedSessions, '', ''],
+    ['completed_sessions', stats.completedSessions, '', ''],
+    ['average_duration_minutes', stats.averageDurationMinutes ?? '', '', ''],
+    ['average_delta_minutes', stats.averageDeltaMinutes ?? '', '', ''],
+    ['warning_insights', stats.warningInsights.length, '', ''],
+    ['up_insights', stats.upInsights.length, '', ''],
+    ['down_insights', stats.downInsights.length, '', ''],
+    ['skipped_sets', stats.skippedSets, '', ''],
+    ['pain_hits', stats.painHits, '', ''],
+  ].map(([metric, value, value2, notes]) => [
+    schemaName,
+    schemaVersion,
+    exportedAt,
+    appVersion,
+    'summary',
+    '',
+    stats.weekNumber,
+    '',
+    '',
+    '',
+    '',
+    '',
+    metric,
+    value,
+    value2,
+    '',
+    '',
+    '',
+    notes,
+  ]);
+
+const buildHistoryRows = ({
+  exportedAt,
+  appVersion,
+  history,
+}: {
+  exportedAt: string;
+  appVersion: string;
+  history: SessionHistorySummary[];
+}) =>
+  history.map((summary) => {
+    const actualMinutes = getDurationMinutes(
+      summary.startedAt,
+      summary.finishedAt,
+    );
+    const status = summary.exportedAt
+      ? 'exported'
+      : summary.finishedAt || summary.attemptedSets >= summary.totalSets
+        ? 'complete'
+        : 'in_progress';
+
+    return [
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      'session_history',
+      summary.sessionDate,
+      summary.weekNumber,
+      summary.sessionId,
+      summary.sessionLabel,
+      '',
+      '',
+      '',
+      'session',
+      actualMinutes ?? '',
+      summary.derivedEstimatedMinutes,
+      status,
+      '',
+      '',
+      `${summary.completedSets}/${summary.totalSets} completed · ${summary.attemptedSets} attempted`,
+    ];
+  });
+
+const buildInsightRows = ({
+  exportedAt,
+  appVersion,
+  insight,
+}: {
+  exportedAt: string;
+  appVersion: string;
+  insight: ExerciseProgressInsight;
+}) => [
+  [
+    schemaName,
+    schemaVersion,
+    exportedAt,
+    appVersion,
+    'exercise_insight',
+    insight.lastDate,
+    '',
+    '',
+    insight.nextSessionLabel ?? '',
+    insight.exerciseId,
+    insight.exerciseName,
+    insight.target,
+    'recommendation',
+    insight.lastLoadKg ?? '',
+    insight.lastDurationSeconds !== undefined
+      ? `${insight.lastDurationSeconds}s`
+      : (insight.lastReps ?? ''),
+    `${insight.completedSets}/${insight.plannedSets}`,
+    insight.tone,
+    insight.recommendation,
+    [
+      insight.lastRir !== undefined
+        ? `RIR ${formatExportNumber(insight.lastRir)}`
+        : undefined,
+      insight.skippedSets > 0 ? `${insight.skippedSets} skipped` : undefined,
+      insight.painHits > 0 ? `${insight.painHits} pain hits` : undefined,
+      insight.lastDecision,
+      insight.nextDate ? `next ${insight.nextDate}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  ],
+];
+
+const csvEscape = (value: string | number) => {
+  const text = String(value);
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+};
+
+const formatExportNumber = (value: number) => {
+  if (Number.isInteger(value)) {
+    return String(value);
+  }
+
+  return Number(value.toFixed(2)).toString();
+};
