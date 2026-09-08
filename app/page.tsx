@@ -18,7 +18,6 @@ import {
   RotateCcw,
   Settings,
   Smartphone,
-  TrendingUp,
   Trash2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -109,7 +108,6 @@ type SettingsSection =
   | 'upcoming'
   | 'local-data'
   | 'statistics'
-  | 'progression'
   | 'history';
 type OfflineStatus =
   | 'checking'
@@ -2029,7 +2027,6 @@ export default function Home() {
             selectedSessionLabel={selectedSession.label}
             upcomingSessions={upcomingSessions}
             sessionHistory={sessionHistory}
-            exerciseInsights={exerciseInsights}
             exerciseProgressions={exerciseProgressions}
             trainingStats={trainingStats}
             isLoadingHistory={isLoadingHistory}
@@ -2681,7 +2678,6 @@ function SettingsScreen({
   selectedSessionLabel,
   upcomingSessions,
   sessionHistory,
-  exerciseInsights,
   exerciseProgressions,
   trainingStats,
   isLoadingHistory,
@@ -2707,7 +2703,6 @@ function SettingsScreen({
   selectedSessionLabel: string;
   upcomingSessions: TrainingSession[];
   sessionHistory: SessionHistorySummary[];
-  exerciseInsights: ExerciseProgressInsight[];
   exerciseProgressions: ExerciseProgressionSummary[];
   trainingStats: TrainingStatsSummary;
   isLoadingHistory: boolean;
@@ -2732,7 +2727,6 @@ function SettingsScreen({
     upcoming: 'Próximos',
     'local-data': 'Datos locales',
     statistics: 'Estadísticas',
-    progression: 'Progresión',
     history: 'Historial local',
   }[section];
   const sectionItems: {
@@ -2780,14 +2774,6 @@ function SettingsScreen({
         ? `${trainingStats.weekCompletedSessions}/${trainingStats.weekTotalSessions} esta semana`
         : 'Sin datos todavía',
       icon: <BarChart3 className="size-5" />,
-    },
-    {
-      section: 'progression',
-      title: 'Progresión',
-      detail: exerciseInsights.length
-        ? `${exerciseInsights.length} señales disponibles`
-        : 'Sin señales todavía',
-      icon: <TrendingUp className="size-5" />,
     },
     {
       section: 'history',
@@ -2976,26 +2962,6 @@ function SettingsScreen({
             isLoadingHistory={isLoadingHistory}
             onExportStatisticsCsv={onExportStatisticsCsv}
           />
-        ) : null}
-
-        {section === 'progression' ? (
-          <div className="mt-4 grid gap-2">
-            {isLoadingHistory ? (
-              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
-                Revisando registros...
-              </div>
-            ) : null}
-
-            {!isLoadingHistory && exerciseInsights.length === 0 ? (
-              <div className="rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
-                Aún no hay series suficientes para recomendar ajustes.
-              </div>
-            ) : null}
-
-            {exerciseInsights.map((insight) => (
-              <ExerciseInsightCard key={insight.exerciseId} insight={insight} />
-            ))}
-          </div>
         ) : null}
 
         {section === 'history' ? (
@@ -3238,7 +3204,6 @@ function StatisticsPanel({
         'border-[var(--action-down-border)] bg-[var(--action-down)] text-[var(--action-down-foreground)]',
     },
   ];
-  const topSignals = visibleInsights.slice(0, 4);
   const visibleSkippedSets =
     selectedExerciseFilter === 'all'
       ? stats.skippedSets
@@ -3378,14 +3343,7 @@ function StatisticsPanel({
           />
         </div>
         <div className="mt-2 grid gap-1.5">
-          {filteredDurationSamples.length === 0 ? (
-            <div className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
-              Sin sesiones cerradas para este filtro.
-            </div>
-          ) : null}
-          {durationChartData.length >= 2 ? (
-            <DurationChart data={durationChartData} />
-          ) : null}
+          <DurationChart data={durationChartData} />
           {filteredDurationSamples.slice(0, 3).map((sample) => (
             <div
               key={sample.sessionId}
@@ -3402,7 +3360,14 @@ function StatisticsPanel({
       </div>
 
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-        <p className="text-sm font-black leading-tight">Señales</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-black leading-tight">
+            Señales y progresión
+          </p>
+          <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
+            {filteredExerciseProgressions.length} ejercicios
+          </span>
+        </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           {primarySignals.map((signal) => (
             <div
@@ -3428,29 +3393,8 @@ function StatisticsPanel({
             <span className="mt-0.5 block">{visiblePainHits} marcas</span>
           </div>
         </div>
-        {topSignals.length > 0 ? (
-          <div className="mt-2 grid gap-1.5">
-            {topSignals.map((insight) => (
-              <div
-                key={insight.exerciseId}
-                className="grid grid-cols-[minmax(0,1fr)_minmax(0,9rem)] items-center gap-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
-              >
-                <span className="truncate">{insight.exerciseName}</span>
-                <span className="truncate text-right text-muted-foreground">
-                  {insight.recommendation}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {filteredExerciseProgressions.length > 0 ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-          <p className="text-sm font-black leading-tight">
-            Progresión por ejercicio
-          </p>
-          <div className="mt-2 grid gap-2">
+        {filteredExerciseProgressions.length > 0 ? (
+          <div className="mt-3 grid gap-2">
             {filteredExerciseProgressions.map((progression) => (
               <ExerciseProgressionCard
                 key={progression.exerciseId}
@@ -3468,12 +3412,12 @@ function StatisticsPanel({
               />
             ))}
           </div>
-        </div>
-      ) : (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-sm font-bold text-muted-foreground">
-          Sin progresión para este filtro.
-        </div>
-      )}
+        ) : (
+          <div className="mt-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+            Sin progresión para este filtro.
+          </div>
+        )}
+      </div>
 
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
         <p className="text-sm font-black leading-tight">Últimas sesiones</p>
@@ -3530,6 +3474,26 @@ type DurationChartPoint = {
 };
 
 function DurationChart({ data }: { data: DurationChartPoint[] }) {
+  if (data.length < 2) {
+    return (
+      <div className="rounded-[1.2rem] border bg-card p-2">
+        <div className="mb-1 flex items-center justify-between gap-3 px-1">
+          <span className="text-xs font-black leading-tight">
+            Real vs estimado
+          </span>
+          <span className="text-xs font-bold leading-tight text-muted-foreground">
+            min
+          </span>
+        </div>
+        <div className="grid h-40 place-items-center rounded-[1rem] border border-dashed bg-secondary/60 px-4 text-center text-xs font-bold leading-tight text-muted-foreground">
+          {data.length === 1
+            ? 'Hay una sesión cerrada. Falta otra para dibujar tendencia.'
+            : 'Cierra al menos dos sesiones para ver la comparativa.'}
+        </div>
+      </div>
+    );
+  }
+
   const width = 320;
   const height = 148;
   const padding = { top: 14, right: 12, bottom: 26, left: 30 };
@@ -3792,69 +3756,6 @@ function ExerciseProgressionExposureCard({
       <p className="mt-2 overflow-hidden leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
         {detailParts.join(' · ')}
       </p>
-    </div>
-  );
-}
-
-function ExerciseInsightCard({
-  insight,
-}: {
-  insight: ExerciseProgressInsight;
-}) {
-  const toneClassName = getInsightToneClassName(insight.tone);
-  const detailParts = [
-    insight.nextDate ? `Próx. ${formatDate(insight.nextDate)}` : undefined,
-    insight.nextSessionLabel,
-    insight.target,
-  ].filter(Boolean);
-  const lastParts = [
-    `${insight.completedSets}/${insight.plannedSets} series`,
-    insight.lastLoadKg !== undefined
-      ? `${formatCsvNumber(insight.lastLoadKg)} kg`
-      : undefined,
-    insight.lastReps !== undefined ? `${insight.lastReps} reps` : undefined,
-    insight.lastDurationSeconds !== undefined
-      ? formatClock(insight.lastDurationSeconds)
-      : undefined,
-    insight.lastRir !== undefined ? `RIR ${insight.lastRir}` : undefined,
-  ].filter(Boolean);
-  const alertParts = [
-    insight.skippedSets > 0 ? `${insight.skippedSets} saltadas` : undefined,
-    insight.painHits > 0 ? `${insight.painHits} molestias` : undefined,
-  ].filter(Boolean);
-
-  return (
-    <div className="min-w-0 overflow-hidden rounded-[1.4rem] border bg-secondary p-3 text-secondary-foreground">
-      <div className="grid min-w-0 gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-black">{insight.exerciseName}</p>
-          <p className="mt-0.5 overflow-hidden text-xs font-bold leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-            {detailParts.join(' · ')}
-          </p>
-        </div>
-        <span
-          className={`min-w-0 justify-self-start truncate rounded-full border px-2.5 py-1 text-xs font-black ${toneClassName}`}
-        >
-          {insight.recommendation}
-        </span>
-      </div>
-      <div className="mt-3 grid min-w-0 grid-cols-2 gap-2 text-xs font-black">
-        <div className="min-w-0 rounded-[1rem] border bg-card px-3 py-2">
-          <span className="block text-muted-foreground">Última</span>
-          <span className="mt-0.5 block truncate">
-            {formatDate(insight.lastDate)}
-          </span>
-        </div>
-        <div className="min-w-0 rounded-[1rem] border bg-card px-3 py-2">
-          <span className="block text-muted-foreground">Registro</span>
-          <span className="mt-0.5 block truncate">{lastParts.join(' · ')}</span>
-        </div>
-      </div>
-      {insight.lastDecision || alertParts.length > 0 ? (
-        <p className="mt-2 text-xs font-bold leading-tight text-muted-foreground">
-          {[insight.lastDecision, ...alertParts].filter(Boolean).join(' · ')}
-        </p>
-      ) : null}
     </div>
   );
 }

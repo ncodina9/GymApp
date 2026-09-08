@@ -245,6 +245,7 @@ Reglas:
 Decision de producto:
 
 - Las primeras graficas se generan dentro de la PWA desde agregados exportables.
+- La tarjeta del grafico debe mostrarse aunque no haya suficientes sesiones cerradas; con 0 o 1 sesiones muestra un estado vacio explicando que hacen falta dos puntos para dibujar tendencia.
 - Los datos que alimentan la grafica ya salen en el CSV de estadisticas y en el backup JSON completo.
 - En Swift conviene replicar primero el agregado y despues la visualizacion.
 

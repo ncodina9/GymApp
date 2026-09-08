@@ -847,6 +847,7 @@ Tareas:
 - [ ] documentar como forzar actualizacion de la PWA en iPhone
 - [x] validar que `trainingPlan.json`, iconos y assets quedan cacheados
 - [x] decidir si hace falta aviso cuando hay una version nueva disponible
+- [x] subir `package.json` y `package-lock.json` en cada iteracion desplegable para que Ajustes identifique la version servida
 
 Criterio de aceptacion:
 
@@ -990,16 +991,16 @@ Estado parcial:
 - conteo de sesiones guardadas y sesiones completas
 - duracion media reciente y diferencia media contra la estimacion operativa sin movilidad previa
 - listado de ultimas sesiones con fecha, series registradas y duracion cuando esta cerrada
-- bloque de senales con ejercicios a revisar, candidatos a subir, candidatos a bajar, series saltadas y molestias registradas
+- bloque unificado de senales y progresion con ejercicios a revisar, candidatos a subir, candidatos a bajar, series saltadas y molestias registradas
 - la implementacion reutiliza los resumenes locales ya calculados desde IndexedDB, evitando una lectura adicional del historico
 - los agregados de historial, progresion y estadisticas estan extraidos a `lib/trainingStats.ts`
 - vista consultable de progresion por ejercicio con tarjetas colapsables en una columna, ultimas exposiciones, carga, reps/tiempo, RIR, molestias y decision tomada
 - las tarjetas cerradas de progresion priorizan el nombre del ejercicio y usan color sutil para la senal; la recomendacion textual completa solo aparece al desplegar el detalle
 - las senales de progresion distinguen visualmente candidatos/avisos en amarillo y bajadas de carga en rojo suave
-- `Ajustes > Estadisticas` permite filtrar por semana y por ejercicio sin depender de calculos externos
+- `Ajustes > Estadisticas` permite filtrar por semana y por ejercicio sin depender de calculos externos, sin duplicar una seccion separada de `Progresion`
 - `docs/statistics-aggregates.md` documenta los calculos de historial, duracion, adherencia, senales y progresion para futura replica en Swift
 - `Ajustes > Estadisticas > CSV` exporta tablas derivadas de resumen, historial, senales y progresion con schema versionado
-- `Ajustes > Estadisticas` muestra un primer grafico de duracion real vs estimada por sesion
+- `Ajustes > Estadisticas` muestra un primer grafico de duracion real vs estimada por sesion, con estado vacio visible hasta que haya dos sesiones cerradas
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 
