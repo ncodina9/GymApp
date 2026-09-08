@@ -3023,10 +3023,9 @@ function StatisticsPanel({
   const [selectedExerciseId, setSelectedExerciseId] = useState(
     exerciseProgressions[0]?.exerciseId ?? '',
   );
-  const selectedProgression =
-    exerciseProgressions.find(
-      (progression) => progression.exerciseId === selectedExerciseId,
-    ) ?? exerciseProgressions[0];
+  const selectedProgression = exerciseProgressions.find(
+    (progression) => progression.exerciseId === selectedExerciseId,
+  );
   const adherenceValue =
     stats.weekTotalSessions > 0
       ? Math.round(
@@ -3187,71 +3186,26 @@ function StatisticsPanel({
         ) : null}
       </div>
 
-      {selectedProgression ? (
+      {exerciseProgressions.length > 0 ? (
         <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-sm font-black leading-tight">
-                Progresión por ejercicio
-              </p>
-              <p className="mt-0.5 truncate text-xs font-bold text-muted-foreground">
-                {selectedProgression.nextDate
-                  ? `Próx. ${formatDate(selectedProgression.nextDate)}`
-                  : 'Sin próxima exposición'}
-              </p>
-            </div>
-            <span
-              className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${getInsightToneClassName(
-                selectedProgression.tone,
-              )}`}
-            >
-              {selectedProgression.recommendation}
-            </span>
-          </div>
-
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {exerciseProgressions.map((progression) => {
-              const isSelected =
-                progression.exerciseId === selectedProgression.exerciseId;
-
-              return (
-                <button
-                  key={progression.exerciseId}
-                  className={`min-h-11 min-w-[9rem] max-w-[12rem] rounded-[1.35rem] border px-3 py-2 text-left text-xs font-black transition active:scale-[0.98] ${
-                    isSelected
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card text-secondary-foreground'
-                  }`}
-                  type="button"
-                  onClick={() => setSelectedExerciseId(progression.exerciseId)}
-                >
-                  <span className="block truncate">
-                    {progression.exerciseName}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-2 rounded-[1.2rem] border bg-card p-3">
-            <p className="truncate text-sm font-black leading-tight">
-              {selectedProgression.exerciseName}
-            </p>
-            <p className="mt-0.5 overflow-hidden text-xs font-bold leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-              {[
-                selectedProgression.nextSessionLabel,
-                selectedProgression.target,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
-          </div>
-
-          <div className="mt-2 grid gap-1.5">
-            {selectedProgression.exposures.slice(0, 4).map((exposure) => (
-              <ExerciseProgressionExposureCard
-                key={exposure.sessionId}
-                exposure={exposure}
+          <p className="text-sm font-black leading-tight">
+            Progresión por ejercicio
+          </p>
+          <div className="mt-2 grid gap-2">
+            {exerciseProgressions.map((progression) => (
+              <ExerciseProgressionCard
+                key={progression.exerciseId}
+                progression={progression}
+                isExpanded={
+                  progression.exerciseId === selectedProgression?.exerciseId
+                }
+                onToggle={() =>
+                  setSelectedExerciseId(
+                    progression.exerciseId === selectedProgression?.exerciseId
+                      ? ''
+                      : progression.exerciseId,
+                  )
+                }
               />
             ))}
           </div>
@@ -3293,6 +3247,76 @@ function StatisticsPanel({
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ExerciseProgressionCard({
+  progression,
+  isExpanded,
+  onToggle,
+}: {
+  progression: ExerciseProgressionSummary;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const nextLabel = progression.nextDate
+    ? `Próx. ${formatDate(progression.nextDate)}`
+    : 'Sin próxima exposición';
+
+  return (
+    <div className="grid gap-2">
+      <button
+        className={`rounded-[1.4rem] border px-3 py-2.5 text-left transition active:scale-[0.98] ${
+          isExpanded
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-border bg-card text-secondary-foreground'
+        }`}
+        type="button"
+        aria-label={`${isExpanded ? 'Cerrar' : 'Ver'} progresión de ${
+          progression.exerciseName
+        }`}
+        onClick={onToggle}
+      >
+        <span className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-black leading-tight">
+              {progression.exerciseName}
+            </span>
+            <span
+              className={`mt-0.5 block truncate text-xs font-bold leading-tight ${
+                isExpanded
+                  ? 'text-primary-foreground/80'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {[nextLabel, progression.nextSessionLabel, progression.target]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
+          </span>
+          <span
+            className={`max-w-[7.5rem] truncate rounded-full border px-2.5 py-1 text-right text-xs font-black ${
+              isExpanded
+                ? 'border-primary-foreground/35 text-primary-foreground'
+                : getInsightToneClassName(progression.tone)
+            }`}
+          >
+            {progression.recommendation}
+          </span>
+        </span>
+      </button>
+
+      {isExpanded ? (
+        <div className="grid gap-1.5 rounded-[1.5rem] border bg-secondary p-2">
+          {progression.exposures.slice(0, 4).map((exposure) => (
+            <ExerciseProgressionExposureCard
+              key={exposure.sessionId}
+              exposure={exposure}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

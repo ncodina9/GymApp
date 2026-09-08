@@ -991,7 +991,7 @@ Estado parcial:
 - bloque de senales con ejercicios a revisar, candidatos a subir, candidatos a bajar, series saltadas y molestias registradas
 - la implementacion reutiliza los resumenes locales ya calculados desde IndexedDB, evitando una lectura adicional del historico
 - los agregados de historial, progresion y estadisticas estan extraidos a `lib/trainingStats.ts`
-- vista consultable de progresion por ejercicio con selector tactil, ultimas exposiciones, carga, reps/tiempo, RIR, molestias y decision tomada
+- vista consultable de progresion por ejercicio con tarjetas colapsables en una columna, ultimas exposiciones, carga, reps/tiempo, RIR, molestias y decision tomada
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 
