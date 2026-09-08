@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BarChart3,
   Check,
   CalendarDays,
   ChevronRight,
@@ -89,6 +90,7 @@ type SettingsSection =
   | 'installation'
   | 'upcoming'
   | 'local-data'
+  | 'statistics'
   | 'progression'
   | 'history';
 type OfflineStatus =
@@ -188,6 +190,30 @@ type ExerciseProgressInsight = {
   painHits: number;
   recommendation: string;
   tone: 'neutral' | 'up' | 'down' | 'warning';
+};
+
+type TrainingStatsSummary = {
+  weekNumber: number;
+  weekFocusLabel: string;
+  weekCompletedSessions: number;
+  weekTotalSessions: number;
+  completedSessions: number;
+  storedSessions: number;
+  averageDurationMinutes?: number;
+  averageDeltaMinutes?: number;
+  latestSessions: SessionHistorySummary[];
+  durationSamples: {
+    sessionId: string;
+    label: string;
+    actualMinutes: number;
+    estimatedMinutes: number;
+    deltaMinutes: number;
+  }[];
+  warningInsights: ExerciseProgressInsight[];
+  upInsights: ExerciseProgressInsight[];
+  downInsights: ExerciseProgressInsight[];
+  skippedSets: number;
+  painHits: number;
 };
 
 type WorkoutDraft = {
@@ -666,6 +692,14 @@ const getDurationDeltaLabel = (
     : `${Math.abs(delta)} min más rápido`;
 };
 
+const formatSignedMinutes = (minutes: number) => {
+  if (minutes === 0) {
+    return '0 min';
+  }
+
+  return minutes > 0 ? `+${minutes} min` : `-${Math.abs(minutes)} min`;
+};
+
 const estimateSessionDuration = (session: TrainingSession) =>
   estimateSessionDurationFromSteps(session, buildExecutionSteps(session));
 
@@ -805,6 +839,85 @@ const getSessionHistorySummaries = (
 
 const isSessionHistoryComplete = (summary: SessionHistorySummary) =>
   Boolean(summary.finishedAt) || summary.attemptedSets >= summary.totalSets;
+
+const getTrainingStatsSummary = (
+  sessions: TrainingSession[],
+  history: SessionHistorySummary[],
+  insights: ExerciseProgressInsight[],
+): TrainingStatsSummary => {
+  const recommendedSession = getRecommendedSession();
+  const currentWeekSessions = getWeekSessions(sessions, recommendedSession);
+  const completedSessionIds = new Set(
+    history
+      .filter((summary) => isSessionHistoryComplete(summary))
+      .map((summary) => summary.sessionId),
+  );
+  const durationSamples = history
+    .flatMap((summary) => {
+      const actualMinutes = getDurationMinutes(
+        summary.startedAt,
+        summary.finishedAt,
+      );
+
+      if (!actualMinutes) {
+        return [];
+      }
+
+      return [
+        {
+          sessionId: summary.sessionId,
+          label: summary.sessionLabel,
+          actualMinutes,
+          estimatedMinutes: summary.derivedEstimatedMinutes,
+          deltaMinutes: actualMinutes - summary.derivedEstimatedMinutes,
+        },
+      ];
+    })
+    .slice(0, 5);
+  const averageDurationMinutes =
+    durationSamples.length > 0
+      ? Math.round(
+          durationSamples.reduce(
+            (total, sample) => total + sample.actualMinutes,
+            0,
+          ) / durationSamples.length,
+        )
+      : undefined;
+  const averageDeltaMinutes =
+    durationSamples.length > 0
+      ? Math.round(
+          durationSamples.reduce(
+            (total, sample) => total + sample.deltaMinutes,
+            0,
+          ) / durationSamples.length,
+        )
+      : undefined;
+
+  return {
+    weekNumber: recommendedSession.week,
+    weekFocusLabel: recommendedSession.weekFocusLabel,
+    weekCompletedSessions: currentWeekSessions.filter((session) =>
+      completedSessionIds.has(session.sessionId),
+    ).length,
+    weekTotalSessions: currentWeekSessions.length,
+    completedSessions: history.filter((summary) =>
+      isSessionHistoryComplete(summary),
+    ).length,
+    storedSessions: history.length,
+    ...(averageDurationMinutes ? { averageDurationMinutes } : {}),
+    ...(averageDeltaMinutes !== undefined ? { averageDeltaMinutes } : {}),
+    latestSessions: history.slice(0, 3),
+    durationSamples,
+    warningInsights: insights.filter((insight) => insight.tone === 'warning'),
+    upInsights: insights.filter((insight) => insight.tone === 'up'),
+    downInsights: insights.filter((insight) => insight.tone === 'down'),
+    skippedSets: insights.reduce(
+      (total, insight) => total + insight.skippedSets,
+      0,
+    ),
+    painHits: insights.reduce((total, insight) => total + insight.painHits, 0),
+  };
+};
 
 const getExerciseProgressInsights = (
   sessions: TrainingSession[],
@@ -1312,6 +1425,15 @@ export default function Home() {
       .filter((session) => session.date >= todayIso)
       .sort((a, b) => a.date.localeCompare(b.date));
   }, []);
+  const trainingStats = useMemo(
+    () =>
+      getTrainingStatsSummary(
+        trainingPlan.sessions,
+        sessionHistory,
+        exerciseInsights,
+      ),
+    [sessionHistory, exerciseInsights],
+  );
 
   const refreshSessionHistory = useCallback(async () => {
     setIsLoadingHistory(true);
@@ -2220,6 +2342,7 @@ export default function Home() {
             upcomingSessions={upcomingSessions}
             sessionHistory={sessionHistory}
             exerciseInsights={exerciseInsights}
+            trainingStats={trainingStats}
             isLoadingHistory={isLoadingHistory}
             onSectionChange={setSettingsSection}
             onThemeChange={setAppearanceTheme}
@@ -2865,6 +2988,7 @@ function SettingsScreen({
   upcomingSessions,
   sessionHistory,
   exerciseInsights,
+  trainingStats,
   isLoadingHistory,
   onSectionChange,
   onThemeChange,
@@ -2888,6 +3012,7 @@ function SettingsScreen({
   upcomingSessions: TrainingSession[];
   sessionHistory: SessionHistorySummary[];
   exerciseInsights: ExerciseProgressInsight[];
+  trainingStats: TrainingStatsSummary;
   isLoadingHistory: boolean;
   onSectionChange: (section: SettingsSection) => void;
   onThemeChange: (theme: AppearanceTheme) => void;
@@ -2908,6 +3033,7 @@ function SettingsScreen({
     installation: 'Instalación',
     upcoming: 'Próximos',
     'local-data': 'Datos locales',
+    statistics: 'Estadísticas',
     progression: 'Progresión',
     history: 'Historial local',
   }[section];
@@ -2948,6 +3074,14 @@ function SettingsScreen({
       title: 'Datos locales',
       detail: selectedSessionLabel,
       icon: <Database className="size-5" />,
+    },
+    {
+      section: 'statistics',
+      title: 'Estadísticas',
+      detail: sessionHistory.length
+        ? `${trainingStats.weekCompletedSessions}/${trainingStats.weekTotalSessions} esta semana`
+        : 'Sin datos todavía',
+      icon: <BarChart3 className="size-5" />,
     },
     {
       section: 'progression',
@@ -3136,6 +3270,13 @@ function SettingsScreen({
           </div>
         ) : null}
 
+        {section === 'statistics' ? (
+          <StatisticsPanel
+            stats={trainingStats}
+            isLoadingHistory={isLoadingHistory}
+          />
+        ) : null}
+
         {section === 'progression' ? (
           <div className="mt-4 grid gap-2">
             {isLoadingHistory ? (
@@ -3195,6 +3336,212 @@ function SettingsScreen({
         {section === 'index' ? 'Volver' : 'Ajustes'}
       </Button>
     </section>
+  );
+}
+
+function StatisticsPanel({
+  stats,
+  isLoadingHistory,
+}: {
+  stats: TrainingStatsSummary;
+  isLoadingHistory: boolean;
+}) {
+  const adherenceValue =
+    stats.weekTotalSessions > 0
+      ? Math.round(
+          (stats.weekCompletedSessions / stats.weekTotalSessions) * 100,
+        )
+      : 0;
+  const primarySignals = [
+    {
+      label: 'Revisar',
+      value: String(stats.warningInsights.length),
+      className:
+        'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
+    },
+    {
+      label: 'Subir',
+      value: String(stats.upInsights.length),
+      className:
+        'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
+    },
+    {
+      label: 'Bajar',
+      value: String(stats.downInsights.length),
+      className:
+        'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
+    },
+  ];
+  const topSignals = [
+    ...stats.warningInsights,
+    ...stats.upInsights,
+    ...stats.downInsights,
+  ].slice(0, 4);
+
+  if (isLoadingHistory) {
+    return (
+      <div className="mt-4 rounded-[1.4rem] border bg-secondary px-4 py-3 text-sm font-bold text-muted-foreground">
+        Calculando estadísticas locales...
+      </div>
+    );
+  }
+
+  if (stats.storedSessions === 0) {
+    return (
+      <div className="mt-4 rounded-[1.75rem] border bg-secondary p-4 text-secondary-foreground">
+        <p className="text-base font-black leading-tight">
+          Aún no hay sesiones registradas
+        </p>
+        <p className="mt-1 text-sm font-bold leading-tight text-muted-foreground">
+          Cuando completes entrenamientos, aquí aparecerán adherencia, duración
+          real y señales de progresión.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 grid gap-3">
+      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-bold leading-tight text-muted-foreground">
+              Semana {stats.weekNumber}
+            </p>
+            <p className="mt-0.5 truncate text-base font-black leading-tight">
+              {stats.weekFocusLabel}
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full border bg-card px-3 py-1 text-xs font-black text-muted-foreground">
+            {adherenceValue}%
+          </span>
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <Metric
+            label="Semana"
+            value={`${stats.weekCompletedSessions}/${stats.weekTotalSessions}`}
+          />
+          <Metric label="Guardadas" value={String(stats.storedSessions)} />
+          <Metric label="Completas" value={String(stats.completedSessions)} />
+        </div>
+      </div>
+
+      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <p className="text-sm font-black leading-tight">Duración real</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <Metric
+            label="Media"
+            value={
+              stats.averageDurationMinutes
+                ? formatDurationMinutes(stats.averageDurationMinutes)
+                : '-'
+            }
+          />
+          <Metric
+            label="Diferencia"
+            value={
+              stats.averageDeltaMinutes !== undefined
+                ? formatSignedMinutes(stats.averageDeltaMinutes)
+                : '-'
+            }
+          />
+        </div>
+        <div className="mt-2 grid gap-1.5">
+          {stats.durationSamples.slice(0, 3).map((sample) => (
+            <div
+              key={sample.sessionId}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
+            >
+              <span className="truncate">{sample.label}</span>
+              <span className="tabular-nums text-muted-foreground">
+                {formatDurationMinutes(sample.actualMinutes)} ·{' '}
+                {formatSignedMinutes(sample.deltaMinutes)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <p className="text-sm font-black leading-tight">Señales</p>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          {primarySignals.map((signal) => (
+            <div
+              key={signal.label}
+              className={`flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.1rem] border px-2 ${signal.className}`}
+            >
+              <p className="text-xs font-bold leading-none opacity-80">
+                {signal.label}
+              </p>
+              <p className="mt-1 max-w-full text-center text-lg font-black leading-tight">
+                {signal.value}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-black">
+          <div className="rounded-[1rem] border bg-card px-3 py-2">
+            <span className="block text-muted-foreground">Saltadas</span>
+            <span className="mt-0.5 block">{stats.skippedSets} series</span>
+          </div>
+          <div className="rounded-[1rem] border bg-card px-3 py-2">
+            <span className="block text-muted-foreground">Molestias</span>
+            <span className="mt-0.5 block">{stats.painHits} marcas</span>
+          </div>
+        </div>
+        {topSignals.length > 0 ? (
+          <div className="mt-2 grid gap-1.5">
+            {topSignals.map((insight) => (
+              <div
+                key={insight.exerciseId}
+                className="grid grid-cols-[minmax(0,1fr)_minmax(0,9rem)] items-center gap-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
+              >
+                <span className="truncate">{insight.exerciseName}</span>
+                <span className="truncate text-right text-muted-foreground">
+                  {insight.recommendation}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <p className="text-sm font-black leading-tight">Últimas sesiones</p>
+        <div className="mt-2 grid gap-1.5">
+          {stats.latestSessions.map((summary) => {
+            const durationMinutes = getDurationMinutes(
+              summary.startedAt,
+              summary.finishedAt,
+            );
+
+            return (
+              <div
+                key={summary.sessionId}
+                className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
+              >
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <span className="truncate">{summary.sessionLabel}</span>
+                  <span className="shrink-0 text-muted-foreground">
+                    {formatDate(summary.sessionDate)}
+                  </span>
+                </div>
+                <div className="mt-1 flex min-w-0 items-center justify-between gap-3 text-muted-foreground">
+                  <span>
+                    {summary.attemptedSets}/{summary.totalSets} series
+                  </span>
+                  <span>
+                    {durationMinutes
+                      ? formatDurationMinutes(durationMinutes)
+                      : 'sin cerrar'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 

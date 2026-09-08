@@ -940,6 +940,16 @@ Criterio de aceptacion:
 - cualquier grafica puede reconstruirse desde el JSON/CSV exportado
 - la implementacion no compromete el rendimiento aunque crezca el historico local
 
+Estado parcial:
+
+- `Ajustes > Estadisticas` muestra una primera vista local sin depender de Obsidian
+- resumen de la semana actual con adherencia de sesiones completadas sobre previstas
+- conteo de sesiones guardadas y sesiones completas
+- duracion media reciente y diferencia media contra la estimacion operativa sin movilidad previa
+- listado de ultimas sesiones con fecha, series registradas y duracion cuando esta cerrada
+- bloque de senales con ejercicios a revisar, candidatos a subir, candidatos a bajar, series saltadas y molestias registradas
+- la implementacion reutiliza los resumenes locales ya calculados desde IndexedDB, evitando una lectura adicional del historico
+
 ### Hito 22: Generador guiado de planes de entrenamiento
 
 Objetivo: permitir crear o versionar planes desde la propia app mediante un flujo guiado, manteniendo planes explicitos por fecha y compatibles con el JSON actual.
