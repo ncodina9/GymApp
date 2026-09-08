@@ -993,6 +993,7 @@ Estado parcial:
 - los agregados de historial, progresion y estadisticas estan extraidos a `lib/trainingStats.ts`
 - vista consultable de progresion por ejercicio con tarjetas colapsables en una columna, ultimas exposiciones, carga, reps/tiempo, RIR, molestias y decision tomada
 - las tarjetas cerradas de progresion priorizan el nombre del ejercicio y usan color sutil para la senal; la recomendacion textual completa solo aparece al desplegar el detalle
+- las senales de progresion distinguen visualmente candidatos/avisos en amarillo y bajadas de carga en rojo suave
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 

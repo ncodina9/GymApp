@@ -3005,7 +3005,7 @@ function getInsightToneClassName(tone: ExerciseProgressInsight['tone']) {
   return {
     neutral: 'border-border bg-card text-muted-foreground',
     up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
-    down: 'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
+    down: 'border-[var(--action-down-border)] bg-[var(--action-down)] text-[var(--action-down-foreground)]',
     warning:
       'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
   }[tone];
@@ -3027,7 +3027,7 @@ function getProgressionCardToneClassName(
   return {
     neutral: 'border-border bg-card text-secondary-foreground',
     up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
-    down: 'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
+    down: 'border-[var(--action-down-border)] bg-[var(--action-down)] text-[var(--action-down-foreground)]',
     warning:
       'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
   }[tone];
@@ -3071,7 +3071,7 @@ function StatisticsPanel({
       label: 'Bajar',
       value: String(stats.downInsights.length),
       className:
-        'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
+        'border-[var(--action-down-border)] bg-[var(--action-down)] text-[var(--action-down-foreground)]',
     },
   ];
   const topSignals = [
