@@ -48,10 +48,12 @@ import {
 import {
   getDurationMinutes,
   getExerciseProgressInsights,
+  getExerciseProgressionSummaries,
   getSessionHistorySummaries,
   getTrainingStatsSummary,
   isSessionHistoryComplete,
   type ExerciseProgressInsight,
+  type ExerciseProgressionSummary,
   type SessionHistorySummary,
   type TrainingStatsSummary,
 } from '@/lib/trainingStats';
@@ -979,6 +981,9 @@ export default function Home() {
   const [exerciseInsights, setExerciseInsights] = useState<
     ExerciseProgressInsight[]
   >([]);
+  const [exerciseProgressions, setExerciseProgressions] = useState<
+    ExerciseProgressionSummary[]
+  >([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isRegisteringSet, setIsRegisteringSet] = useState(false);
   const isRegisteringSetRef = useRef(false);
@@ -1079,20 +1084,31 @@ export default function Home() {
       await purgeExportedSessionsOlderThan(exportedSessionRetentionDays);
       const events = await loadAllSessionEvents();
       const metadata = await loadSessionMetadata();
+      const todayIso = getTodayIso();
+      const nextExerciseInsights = getExerciseProgressInsights(
+        trainingPlan.sessions,
+        events,
+        metadata,
+        todayIso,
+      );
+
       setSessionHistory(
         getSessionHistorySummaries(trainingPlan.sessions, events, metadata),
       );
-      setExerciseInsights(
-        getExerciseProgressInsights(
+      setExerciseInsights(nextExerciseInsights);
+      setExerciseProgressions(
+        getExerciseProgressionSummaries(
           trainingPlan.sessions,
           events,
           metadata,
-          getTodayIso(),
+          nextExerciseInsights,
+          todayIso,
         ),
       );
     } catch {
       setSessionHistory([]);
       setExerciseInsights([]);
+      setExerciseProgressions([]);
     } finally {
       setIsLoadingHistory(false);
     }
@@ -1984,6 +2000,7 @@ export default function Home() {
             upcomingSessions={upcomingSessions}
             sessionHistory={sessionHistory}
             exerciseInsights={exerciseInsights}
+            exerciseProgressions={exerciseProgressions}
             trainingStats={trainingStats}
             isLoadingHistory={isLoadingHistory}
             onSectionChange={setSettingsSection}
@@ -2630,6 +2647,7 @@ function SettingsScreen({
   upcomingSessions,
   sessionHistory,
   exerciseInsights,
+  exerciseProgressions,
   trainingStats,
   isLoadingHistory,
   onSectionChange,
@@ -2654,6 +2672,7 @@ function SettingsScreen({
   upcomingSessions: TrainingSession[];
   sessionHistory: SessionHistorySummary[];
   exerciseInsights: ExerciseProgressInsight[];
+  exerciseProgressions: ExerciseProgressionSummary[];
   trainingStats: TrainingStatsSummary;
   isLoadingHistory: boolean;
   onSectionChange: (section: SettingsSection) => void;
@@ -2915,6 +2934,7 @@ function SettingsScreen({
         {section === 'statistics' ? (
           <StatisticsPanel
             stats={trainingStats}
+            exerciseProgressions={exerciseProgressions}
             isLoadingHistory={isLoadingHistory}
           />
         ) : null}
@@ -2981,13 +3001,32 @@ function SettingsScreen({
   );
 }
 
+function getInsightToneClassName(tone: ExerciseProgressInsight['tone']) {
+  return {
+    neutral: 'border-border bg-card text-muted-foreground',
+    up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
+    down: 'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
+    warning:
+      'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
+  }[tone];
+}
+
 function StatisticsPanel({
   stats,
+  exerciseProgressions,
   isLoadingHistory,
 }: {
   stats: TrainingStatsSummary;
+  exerciseProgressions: ExerciseProgressionSummary[];
   isLoadingHistory: boolean;
 }) {
+  const [selectedExerciseId, setSelectedExerciseId] = useState(
+    exerciseProgressions[0]?.exerciseId ?? '',
+  );
+  const selectedProgression =
+    exerciseProgressions.find(
+      (progression) => progression.exerciseId === selectedExerciseId,
+    ) ?? exerciseProgressions[0];
   const adherenceValue =
     stats.weekTotalSessions > 0
       ? Math.round(
@@ -3148,6 +3187,77 @@ function StatisticsPanel({
         ) : null}
       </div>
 
+      {selectedProgression ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-black leading-tight">
+                Progresión por ejercicio
+              </p>
+              <p className="mt-0.5 truncate text-xs font-bold text-muted-foreground">
+                {selectedProgression.nextDate
+                  ? `Próx. ${formatDate(selectedProgression.nextDate)}`
+                  : 'Sin próxima exposición'}
+              </p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${getInsightToneClassName(
+                selectedProgression.tone,
+              )}`}
+            >
+              {selectedProgression.recommendation}
+            </span>
+          </div>
+
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {exerciseProgressions.map((progression) => {
+              const isSelected =
+                progression.exerciseId === selectedProgression.exerciseId;
+
+              return (
+                <button
+                  key={progression.exerciseId}
+                  className={`min-h-11 min-w-[9rem] max-w-[12rem] rounded-[1.35rem] border px-3 py-2 text-left text-xs font-black transition active:scale-[0.98] ${
+                    isSelected
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-card text-secondary-foreground'
+                  }`}
+                  type="button"
+                  onClick={() => setSelectedExerciseId(progression.exerciseId)}
+                >
+                  <span className="block truncate">
+                    {progression.exerciseName}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-2 rounded-[1.2rem] border bg-card p-3">
+            <p className="truncate text-sm font-black leading-tight">
+              {selectedProgression.exerciseName}
+            </p>
+            <p className="mt-0.5 overflow-hidden text-xs font-bold leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+              {[
+                selectedProgression.nextSessionLabel,
+                selectedProgression.target,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          </div>
+
+          <div className="mt-2 grid gap-1.5">
+            {selectedProgression.exposures.slice(0, 4).map((exposure) => (
+              <ExerciseProgressionExposureCard
+                key={exposure.sessionId}
+                exposure={exposure}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
         <p className="text-sm font-black leading-tight">Últimas sesiones</p>
         <div className="mt-2 grid gap-1.5">
@@ -3187,18 +3297,58 @@ function StatisticsPanel({
   );
 }
 
+function ExerciseProgressionExposureCard({
+  exposure,
+}: {
+  exposure: ExerciseProgressionSummary['exposures'][number];
+}) {
+  const loadLabel =
+    exposure.topLoadKg !== undefined
+      ? `${formatCsvNumber(exposure.topLoadKg)} kg`
+      : '-';
+  const workLabel =
+    exposure.totalDurationSeconds > 0
+      ? formatClock(exposure.totalDurationSeconds)
+      : `${exposure.totalReps} reps`;
+  const rirLabel =
+    exposure.averageRir !== undefined
+      ? `RIR ${formatDecimal(exposure.averageRir)}`
+      : 'RIR -';
+  const detailParts = [
+    `${exposure.completedSets}/${exposure.plannedSets} series`,
+    exposure.skippedSets > 0 ? `${exposure.skippedSets} saltadas` : undefined,
+    exposure.painHits > 0 ? `${exposure.painHits} molestias` : undefined,
+    exposure.decision,
+  ].filter(Boolean);
+
+  return (
+    <div className="rounded-[1.2rem] border bg-card p-3 text-xs font-bold">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <span className="truncate text-sm font-black">
+          {formatDate(exposure.sessionDate)}
+        </span>
+        <span className="min-w-0 max-w-[11rem] truncate text-right text-muted-foreground">
+          {exposure.sessionLabel}
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+        <Metric label="Peso" value={loadLabel} />
+        <Metric label="Trabajo" value={workLabel} />
+        <Metric label="Esfuerzo" value={rirLabel} />
+      </div>
+      <p className="mt-2 overflow-hidden leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        {detailParts.join(' · ')}
+      </p>
+    </div>
+  );
+}
+
 function ExerciseInsightCard({
   insight,
 }: {
   insight: ExerciseProgressInsight;
 }) {
-  const toneClassName = {
-    neutral: 'border-border bg-secondary text-secondary-foreground',
-    up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
-    down: 'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
-    warning:
-      'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
-  }[insight.tone];
+  const toneClassName = getInsightToneClassName(insight.tone);
   const detailParts = [
     insight.nextDate ? `Próx. ${formatDate(insight.nextDate)}` : undefined,
     insight.nextSessionLabel,

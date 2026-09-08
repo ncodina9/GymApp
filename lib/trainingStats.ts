@@ -49,6 +49,35 @@ export type ExerciseProgressInsight = {
   tone: 'neutral' | 'up' | 'down' | 'warning';
 };
 
+export type ExerciseProgressionExposure = {
+  sessionId: string;
+  sessionDate: string;
+  sessionLabel: string;
+  target: string;
+  attemptedSets: number;
+  completedSets: number;
+  plannedSets: number;
+  skippedSets: number;
+  topLoadKg?: number;
+  totalReps: number;
+  totalDurationSeconds: number;
+  averageRir?: number;
+  painHits: number;
+  decision?: string;
+  lastPerformedAt: string;
+};
+
+export type ExerciseProgressionSummary = {
+  exerciseId: string;
+  exerciseName: string;
+  target: string;
+  recommendation: string;
+  tone: ExerciseProgressInsight['tone'];
+  nextDate?: string;
+  nextSessionLabel?: string;
+  exposures: ExerciseProgressionExposure[];
+};
+
 export type TrainingStatsSummary = {
   weekNumber: number;
   weekFocusLabel: string;
@@ -72,6 +101,16 @@ export type TrainingStatsSummary = {
   skippedSets: number;
   painHits: number;
 };
+
+const getPainHits = (events: StoredSetEvent[]) =>
+  events.filter(
+    (event) =>
+      event.painKnee > 0 ||
+      event.painWrist > 0 ||
+      (event.painShoulder ?? 0) > 0 ||
+      (event.painLowerBack ?? 0) > 0 ||
+      event.painOther > 0,
+  ).length;
 
 export const getDurationMinutes = (startedAt?: string, finishedAt?: string) => {
   if (!startedAt || !finishedAt) {
@@ -211,14 +250,7 @@ export const getExerciseProgressInsights = (
         (event) => event.status === 'skipped',
       ).length;
       const recentEvents = sortedEvents.slice(-12);
-      const painHits = recentEvents.filter(
-        (event) =>
-          event.painKnee > 0 ||
-          event.painWrist > 0 ||
-          (event.painShoulder ?? 0) > 0 ||
-          (event.painLowerBack ?? 0) > 0 ||
-          event.painOther > 0,
-      ).length;
+      const painHits = getPainHits(recentEvents);
       const sessionEvents = sortedEvents.filter(
         (event) => event.sessionId === lastEvent.sessionId,
       );
@@ -303,6 +335,166 @@ export const getExerciseProgressInsights = (
       );
     })
     .slice(0, 8);
+};
+
+export const getExerciseProgressionSummaries = (
+  sessions: ExportTrainingSession[],
+  events: StoredSetEvent[],
+  metadata: StoredSessionMetadata[],
+  insights: ExerciseProgressInsight[],
+  todayIso: string,
+): ExerciseProgressionSummary[] => {
+  const metadataBySession = new Map(
+    metadata.map((item) => [item.sessionId, item]),
+  );
+  const insightsByExercise = new Map(
+    insights.map((insight) => [insight.exerciseId, insight]),
+  );
+  const eventsByExercise = new Map<string, StoredSetEvent[]>();
+
+  events.forEach((event) => {
+    const exerciseEvents = eventsByExercise.get(event.exerciseId) ?? [];
+    exerciseEvents.push(event);
+    eventsByExercise.set(event.exerciseId, exerciseEvents);
+  });
+
+  return Array.from(eventsByExercise.entries())
+    .map(([exerciseId, exerciseEvents]) => {
+      const sortedEvents = [...exerciseEvents].sort((a, b) =>
+        a.performedAt.localeCompare(b.performedAt),
+      );
+      const lastEvent = sortedEvents[sortedEvents.length - 1];
+      const lastSession =
+        sessions.find((session) => session.sessionId === lastEvent.sessionId) ??
+        sessions.find((session) =>
+          session.exercises.some(
+            (exercise) => exercise.exerciseId === exerciseId,
+          ),
+        );
+      const lastExercise = lastSession?.exercises.find(
+        (exercise) => exercise.exerciseId === exerciseId,
+      );
+      const nextSession = sessions
+        .filter((session) => session.date >= todayIso)
+        .find((session) =>
+          session.exercises.some(
+            (exercise) => exercise.exerciseId === exerciseId,
+          ),
+        );
+      const nextExercise = nextSession?.exercises.find(
+        (exercise) => exercise.exerciseId === exerciseId,
+      );
+      const exerciseName =
+        nextExercise?.name ?? lastExercise?.name ?? exerciseId;
+      const target = formatExportTarget(
+        nextExercise?.target ?? lastExercise?.target ?? '',
+        inferLoadType(nextExercise ?? lastExercise),
+      );
+      const eventsBySession = new Map<string, StoredSetEvent[]>();
+
+      sortedEvents.forEach((event) => {
+        const sessionEvents = eventsBySession.get(event.sessionId) ?? [];
+        sessionEvents.push(event);
+        eventsBySession.set(event.sessionId, sessionEvents);
+      });
+
+      const exposures = Array.from(eventsBySession.entries())
+        .flatMap(([sessionId, sessionEvents]) => {
+          const session = sessions.find((item) => item.sessionId === sessionId);
+          const exercise = session?.exercises.find(
+            (item) => item.exerciseId === exerciseId,
+          );
+
+          if (!session) {
+            return [];
+          }
+
+          const sessionSortedEvents = [...sessionEvents].sort((a, b) =>
+            a.performedAt.localeCompare(b.performedAt),
+          );
+          const completedEvents = sessionSortedEvents.filter(
+            (event) => event.status === 'completed',
+          );
+          const completedLoads = completedEvents
+            .map((event) => event.actualWeightKg)
+            .filter((weight) => weight > 0);
+          const averageRir =
+            completedEvents.length > 0
+              ? Math.round(
+                  (completedEvents.reduce(
+                    (total, event) => total + event.rirLast,
+                    0,
+                  ) /
+                    completedEvents.length) *
+                    10,
+                ) / 10
+              : undefined;
+
+          return [
+            {
+              sessionId,
+              sessionDate: session.date,
+              sessionLabel: session.label,
+              target: formatExportTarget(
+                exercise?.target ?? '',
+                inferLoadType(exercise),
+              ),
+              attemptedSets: sessionSortedEvents.length,
+              completedSets: completedEvents.length,
+              plannedSets: exercise?.sets.length ?? sessionSortedEvents.length,
+              skippedSets: sessionSortedEvents.filter(
+                (event) => event.status === 'skipped',
+              ).length,
+              ...(completedLoads.length > 0
+                ? { topLoadKg: Math.max(...completedLoads) }
+                : {}),
+              totalReps: completedEvents.reduce(
+                (total, event) => total + event.actualReps,
+                0,
+              ),
+              totalDurationSeconds: completedEvents.reduce(
+                (total, event) => total + (event.actualDurationSeconds ?? 0),
+                0,
+              ),
+              ...(averageRir !== undefined ? { averageRir } : {}),
+              painHits: getPainHits(sessionSortedEvents),
+              ...(metadataBySession.get(sessionId)?.decisions?.[exerciseId]
+                ? {
+                    decision:
+                      metadataBySession.get(sessionId)?.decisions?.[exerciseId],
+                  }
+                : {}),
+              lastPerformedAt:
+                sessionSortedEvents[sessionSortedEvents.length - 1].performedAt,
+            },
+          ];
+        })
+        .sort((a, b) => b.lastPerformedAt.localeCompare(a.lastPerformedAt))
+        .slice(0, 8);
+      const insight = insightsByExercise.get(exerciseId);
+
+      return {
+        exerciseId,
+        exerciseName,
+        target,
+        recommendation: insight?.recommendation ?? 'Mantener y observar',
+        tone: insight?.tone ?? 'neutral',
+        ...(nextSession
+          ? {
+              nextDate: nextSession.date,
+              nextSessionLabel: nextSession.label,
+            }
+          : {}),
+        exposures,
+      };
+    })
+    .sort((a, b) => {
+      const toneOrder = { warning: 0, up: 1, down: 2, neutral: 3 };
+      return (
+        toneOrder[a.tone] - toneOrder[b.tone] ||
+        a.exerciseName.localeCompare(b.exerciseName)
+      );
+    });
 };
 
 export const getTrainingStatsSummary = ({

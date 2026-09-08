@@ -967,7 +967,7 @@ Tareas:
 - [x] crear una vista de resumen semanal con sesiones completadas, sesiones pendientes y adherencia
 - [x] mostrar duracion real por sesion y compararla con la estimacion operativa sin movilidad previa
 - [ ] mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
-- [ ] mostrar progresion por ejercicio con vista consultable: carga, reps, RIR, saltos y decisiones tomadas
+- [x] mostrar progresion por ejercicio con vista consultable: carga, reps, RIR, saltos y decisiones tomadas
 - [x] detectar tendencias simples: estancamiento, subidas sostenidas, molestias repetidas y series saltadas
 - [ ] anadir filtros por semana, bloque del plan, ejercicio y tipo de ejercicio
 - [ ] permitir exportar las tablas y graficas principales en formatos reutilizables
@@ -991,6 +991,7 @@ Estado parcial:
 - bloque de senales con ejercicios a revisar, candidatos a subir, candidatos a bajar, series saltadas y molestias registradas
 - la implementacion reutiliza los resumenes locales ya calculados desde IndexedDB, evitando una lectura adicional del historico
 - los agregados de historial, progresion y estadisticas estan extraidos a `lib/trainingStats.ts`
+- vista consultable de progresion por ejercicio con selector tactil, ultimas exposiciones, carga, reps/tiempo, RIR, molestias y decision tomada
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 
@@ -1131,7 +1132,7 @@ Checklist minima de la siguiente iteracion:
 - [x] Definir el primer dashboard local: semana actual, adherencia, duracion real y sesiones completadas.
 - [x] Crear funciones puras para agregar eventos por sesion, ejercicio y semana.
 - [x] Reutilizar el historico de IndexedDB y el backup JSON completo como fuentes compatibles.
-- [ ] Mostrar una primera vista de progresion por ejercicio con carga, reps, RIR y molestias.
+- [x] Mostrar una primera vista de progresion por ejercicio con carga, reps, RIR y molestias.
 - [ ] Mantener la exportacion como verificacion: todo lo que se grafica debe poder salir en JSON/CSV.
 
 Despues de esa primera capa, avanzar al Hito 22: generador guiado de planes desde la app.
