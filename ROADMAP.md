@@ -973,7 +973,7 @@ Tareas:
 - [ ] anadir filtros por bloque del plan, tipo de ejercicio y grupo muscular cuando el plan incluya esa taxonomia
 - [ ] permitir exportar las tablas y graficas principales en formatos reutilizables
 - [ ] definir si los graficos se generan en la PWA o si se preparan primero como datos agregados exportables
-- [ ] documentar los agregados estadisticos para poder replicarlos en Swift
+- [x] documentar los agregados estadisticos para poder replicarlos en Swift
 
 Criterio de aceptacion:
 
@@ -996,6 +996,7 @@ Estado parcial:
 - las tarjetas cerradas de progresion priorizan el nombre del ejercicio y usan color sutil para la senal; la recomendacion textual completa solo aparece al desplegar el detalle
 - las senales de progresion distinguen visualmente candidatos/avisos en amarillo y bajadas de carga en rojo suave
 - `Ajustes > Estadisticas` permite filtrar por semana y por ejercicio sin depender de calculos externos
+- `docs/statistics-aggregates.md` documenta los calculos de historial, duracion, adherencia, senales y progresion para futura replica en Swift
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 
