@@ -426,6 +426,7 @@ const skippedDates = new Set([]);
 const dateOverrides = new Map([
   ['1:tuesday', '2026-09-10'],
   ['1:thursday', '2026-09-11'],
+  ['4:tuesday', '2026-09-30'],
   ['5:friday', '2026-10-07'],
   ['6:monday', '2026-10-14'],
   ['12:tuesday', '2026-12-09'],

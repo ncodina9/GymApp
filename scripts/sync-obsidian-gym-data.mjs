@@ -40,6 +40,7 @@ const calendarRows = [
     'planned_sets',
     'exercises',
     'exercise_targets',
+    'exercise_details',
   ],
   ...plan.sessions.map((session) => {
     const basicCount = session.exercises.filter((exercise) =>
@@ -67,6 +68,15 @@ const calendarRows = [
       session.exercises.map((exercise) => exercise.name).join('; '),
       session.exercises
         .map((exercise) => `${exercise.name}: ${exercise.target}`)
+        .join('; '),
+      session.exercises
+        .map((exercise) => {
+          const firstSet = exercise.sets[0] ?? {};
+          const rest = firstSet.restSeconds
+            ? `descanso ${formatRest(firstSet.restSeconds)}`
+            : 'descanso n.a.';
+          return `${exercise.name}: ${exercise.target}, ${rest}`;
+        })
         .join('; '),
     ];
   }),
@@ -465,6 +475,14 @@ function normalize(value) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
+}
+
+function formatRest(seconds) {
+  if (seconds % 60 === 0) {
+    return `${seconds / 60} min`;
+  }
+
+  return `${seconds} s`;
 }
 
 function rmIfExists(path) {
