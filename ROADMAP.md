@@ -256,6 +256,46 @@ Preparacion para iOS nativo:
 
 ## Hitos
 
+### Resumen operativo
+
+| Hito | Estado    | Urgencia | Complejidad | Descripcion                                                                      |
+| ---- | --------- | -------- | ----------- | -------------------------------------------------------------------------------- |
+| 0    | Cerrado   | Baja     | Baja        | Repositorio y base de proyecto.                                                  |
+| 1    | Cerrado   | Baja     | Media       | Prototipo navegable del flujo principal de entrenamiento.                        |
+| 2    | Cerrado   | Baja     | Alta        | Plan JSON trimestral completo y explicito por fecha.                             |
+| 3    | Cerrado   | Baja     | Media       | Persistencia local de entrenamientos y series.                                   |
+| 4    | Parcial   | Media    | Media       | Exportacion CSV y puente con Obsidian; Markdown queda pendiente si aporta valor. |
+| 5    | Cerrado   | Baja     | Media       | PWA instalable en iPhone con cache basica.                                       |
+| 5a   | Cerrado   | Baja     | Baja        | Prueba local en iPhone desde red local.                                          |
+| 6    | Cerrado   | Baja     | Baja        | Despliegue privado mediante GitHub/Vercel.                                       |
+| 7    | Cerrado   | Baja     | Alta        | Superseries v1 en secuenciador, preview y CSV.                                   |
+| 8    | Cerrado   | Baja     | Alta        | Planning ajustado a planchas de 60 s y material real.                            |
+| 9    | Cerrado   | Baja     | Baja        | Textos visibles con acentos y eñes.                                              |
+| 10   | Cerrado   | Baja     | Media       | Pantalla siempre encendida cuando el navegador lo soporta.                       |
+| 11   | En curso  | Alta     | Media       | Validacion continua con uso real en gimnasio.                                    |
+| 12   | Parcial   | Media    | Media       | Pulido tactil y visual de controles.                                             |
+| 13   | Parcial   | Alta     | Alta        | Robustez de persistencia, exportacion y purga de historico.                      |
+| 14   | Cerrado   | Baja     | Media       | Duracion real y estimacion operativa del entrenamiento.                          |
+| 14b  | Cerrado   | Baja     | Alta        | Planning reajustado a 60-70 min estimados.                                       |
+| 14c  | Cerrado   | Baja     | Alta        | Ajustes tras primera sesion real.                                                |
+| 14d  | Cerrado   | Baja     | Media       | Consulta de proximos entrenamientos desde Ajustes.                               |
+| 15   | Cerrado   | Baja     | Alta        | Superseries v2 con validacion automatica.                                        |
+| 16   | Parcial   | Media    | Media       | Progresion asistida conservadora dentro de Ajustes.                              |
+| 17   | Parcial   | Media    | Media       | Instalacion/offline mas solida y estado de service worker.                       |
+| 18   | Pendiente | Baja     | Media       | Layout movil horizontal; de momento la app bloquea vertical.                     |
+| 19   | Parcial   | Media    | Media       | Historial dentro de la app con exportacion y borrado.                            |
+| 20   | Parcial   | Alta     | Alta        | Preparacion PWA -> app nativa iOS y contrato JSON completo.                      |
+| 21   | Parcial   | Alta     | Alta        | Estadisticas y graficos dentro de la app.                                        |
+| 22   | Pendiente | Media    | Alta        | Generador guiado de planes desde la app.                                         |
+| 23   | Pendiente | Baja     | Alta        | Capa opcional de IA para planificacion y analisis.                               |
+
+Estados usados:
+
+- `Pendiente`: no empezado.
+- `En curso`: se valida o ajusta de forma recurrente.
+- `Parcial`: hay una v1 funcional, pero quedan tareas definidas.
+- `Cerrado`: cumple el criterio actual y solo recibiria mejoras futuras.
+
 ### Estado actual
 
 Ya esta implementada una primera version funcional de la app:
@@ -576,23 +616,23 @@ Objetivo: hacer mas fiable el ciclo registro local -> CSV -> Obsidian/Archivos.
 
 Tareas:
 
-- mostrar estado simple de guardado local despues de registrar una serie
-- proteger contra doble pulsacion accidental en `Registrar serie`
-- permitir reexportar un entrenamiento terminado sin perder datos
-- listar entrenamientos con datos locales desde Ajustes
-- borrar los datos de una sesion concreta sin borrar todo el historico local
-- marcar sesiones exportadas con `exportedAt`
-- purgar automaticamente sesiones exportadas cuando cumplan el periodo de retencion local
-- no purgar sesiones sin exportar para evitar perdida silenciosa de datos
-- mostrar progreso de historial como series registradas / series planificadas
-- sustituir chips numericos ambiguos por estado: en curso, completo o exportado
-- guardar metadata basica de sesion: `schemaVersion`, `startedAt`, `finishedAt`, `exportedAt`
-- bloquear el registro mientras se guarda una serie para evitar doble pulsacion
-- definir si se guarda también un resumen por ejercicio además del CSV por serie
-- documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
-- revisar compatibilidad del CSV con el fichero maestro de Obsidian
-- decidir si el CSV debe incluir version de esquema
-- valorar importacion o concatenacion posterior de varios CSV
+- [ ] mostrar estado simple de guardado local despues de registrar una serie
+- [x] proteger contra doble pulsacion accidental en `Registrar serie`
+- [x] permitir reexportar un entrenamiento terminado sin perder datos
+- [x] listar entrenamientos con datos locales desde Ajustes
+- [x] borrar los datos de una sesion concreta sin borrar todo el historico local
+- [x] marcar sesiones exportadas con `exportedAt`
+- [x] purgar automaticamente sesiones exportadas cuando cumplan el periodo de retencion local
+- [x] no purgar sesiones sin exportar para evitar perdida silenciosa de datos
+- [x] mostrar progreso de historial como series registradas / series planificadas
+- [x] sustituir chips numericos ambiguos por estado: en curso, completo o exportado
+- [x] guardar metadata basica de sesion: `schemaVersion`, `startedAt`, `finishedAt`, `exportedAt`
+- [x] bloquear el registro mientras se guarda una serie para evitar doble pulsacion
+- [ ] definir si se guarda también un resumen por ejercicio además del CSV por serie
+- [ ] documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
+- [x] revisar compatibilidad del CSV con el fichero maestro de Obsidian
+- [ ] decidir si el CSV debe incluir version de esquema
+- [x] valorar importacion o concatenacion posterior de varios CSV
 
 Criterio de aceptacion:
 
@@ -801,12 +841,12 @@ Objetivo: reducir riesgos de uso en gimnasio sin red.
 
 Tareas:
 
-- revisar estrategia de cache del service worker
-- mostrar version/build visible en ajustes
-- anadir boton de comprobacion offline o estado de app instalada
-- documentar como forzar actualizacion de la PWA en iPhone
-- validar que `trainingPlan.json`, iconos y assets quedan cacheados
-- decidir si hace falta aviso cuando hay una version nueva disponible
+- [x] revisar estrategia de cache del service worker
+- [x] mostrar version/build visible en ajustes
+- [x] anadir boton de comprobacion offline o estado de app instalada
+- [ ] documentar como forzar actualizacion de la PWA en iPhone
+- [x] validar que `trainingPlan.json`, iconos y assets quedan cacheados
+- [x] decidir si hace falta aviso cuando hay una version nueva disponible
 
 Criterio de aceptacion:
 
@@ -826,11 +866,11 @@ Estado previo: hasta acometer este hito, la app queda bloqueada en vertical. El 
 
 Tareas:
 
-- definir distribucion horizontal para pantalla de serie
-- colocar ejercicio/progreso y controles en columnas sin scroll
-- adaptar pantalla de descanso para que el circulo y botones respiren
-- revisar feedback en horizontal
-- probar iPhone normal y Pro Max
+- [ ] definir distribucion horizontal para pantalla de serie
+- [ ] colocar ejercicio/progreso y controles en columnas sin scroll
+- [ ] adaptar pantalla de descanso para que el circulo y botones respiren
+- [ ] revisar feedback en horizontal
+- [ ] probar iPhone normal y Pro Max
 
 Criterio de aceptacion:
 
@@ -844,11 +884,11 @@ Objetivo: consultar sesiones anteriores sin depender del CSV exportado.
 
 Tareas:
 
-- listar sesiones guardadas en el dispositivo
-- permitir ver resumen simple de una sesion terminada
-- permitir exportar de nuevo una sesion anterior
-- permitir borrar una sesion concreta
-- distinguir sesion en curso, completada y abandonada
+- [x] listar sesiones guardadas en el dispositivo
+- [x] permitir ver resumen simple de una sesion terminada
+- [x] permitir exportar de nuevo una sesion anterior
+- [x] permitir borrar una sesion concreta
+- [x] distinguir sesion en curso, completada y abandonada
 
 Criterio de aceptacion:
 
@@ -862,22 +902,22 @@ Objetivo: dejar la PWA actual preparada para que una futura app SwiftUI pueda re
 
 Tareas:
 
-- documentar el schema de `trainingPlan.json` con versiones y compatibilidad esperada para Swift `Codable`
-- documentar el schema de eventos de serie, metadata de sesion, decisiones, ajustes locales y exportaciones
-- anadir exportacion JSON completa del historico local, no solo CSV por serie
-- incluir `schemaVersion`, `exportedAt`, `appVersion` y timestamps relevantes en la exportacion estructurada
-- separar de `app/page.tsx` la logica de dominio que no depende de React:
-  - seleccion de entrenamiento recomendado
-  - secuenciador de ejercicios, series y superseries
-  - calculo de progreso de sesion
-  - estimacion derivada de duracion
-  - resumen historico
-  - recomendaciones conservadoras de progresion
-- definir un mapa preliminar de pantallas SwiftUI equivalente al flujo actual: Hoy, Preview, Ejecucion, Feedback, Descanso, Transicion, Historial, Progresion y Ajustes
-- identificar que funcionalidades de la PWA son temporales por limitaciones web y cuales deben migrar tal cual a iOS
-- crear `docs/ios-native-plan.md` con alcance de una primera version nativa
-- decidir estrategia inicial de persistencia iOS: SwiftData, Core Data, SQLite o JSON local
-- definir el flujo de importacion desde la PWA a la app nativa mediante archivo JSON
+- [x] documentar el schema de `trainingPlan.json` con versiones y compatibilidad esperada para Swift `Codable`
+- [x] documentar el schema de eventos de serie, metadata de sesion, decisiones, ajustes locales y exportaciones
+- [x] anadir exportacion JSON completa del historico local, no solo CSV por serie
+- [x] incluir `schemaVersion`, `exportedAt`, `appVersion` y timestamps relevantes en la exportacion estructurada
+- [ ] separar de `app/page.tsx` toda la logica de dominio que no depende de React
+- [x] separar seleccion de entrenamiento recomendado
+- [x] separar secuenciador de ejercicios, series y superseries
+- [ ] separar calculo de progreso de sesion
+- [x] separar estimacion derivada de duracion
+- [ ] separar resumen historico
+- [ ] separar recomendaciones conservadoras de progresion
+- [x] definir un mapa preliminar de pantallas SwiftUI equivalente al flujo actual: Hoy, Preview, Ejecucion, Feedback, Descanso, Transicion, Historial, Progresion y Ajustes
+- [x] identificar que funcionalidades de la PWA son temporales por limitaciones web y cuales deben migrar tal cual a iOS
+- [x] crear `docs/ios-native-plan.md` con alcance de una primera version nativa
+- [x] decidir estrategia inicial de persistencia iOS: SwiftData, Core Data, SQLite o JSON local
+- [x] definir el flujo de importacion desde la PWA a la app nativa mediante archivo JSON
 
 Criterio de aceptacion:
 
@@ -923,15 +963,15 @@ Enfoque:
 
 Tareas:
 
-- crear una vista de resumen semanal con sesiones completadas, sesiones pendientes y adherencia
-- mostrar duracion real por sesion y compararla con la estimacion operativa sin movilidad previa
-- mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
-- mostrar progresion por ejercicio: carga, reps, RIR, saltos y decisiones tomadas
-- detectar tendencias simples: estancamiento, subidas sostenidas, molestias repetidas y series saltadas
-- anadir filtros por semana, bloque del plan, ejercicio y tipo de ejercicio
-- permitir exportar las tablas y graficas principales en formatos reutilizables
-- definir si los graficos se generan en la PWA o si se preparan primero como datos agregados exportables
-- documentar los agregados estadisticos para poder replicarlos en Swift
+- [x] crear una vista de resumen semanal con sesiones completadas, sesiones pendientes y adherencia
+- [x] mostrar duracion real por sesion y compararla con la estimacion operativa sin movilidad previa
+- [ ] mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
+- [ ] mostrar progresion por ejercicio: carga, reps, RIR, saltos y decisiones tomadas
+- [x] detectar tendencias simples: estancamiento, subidas sostenidas, molestias repetidas y series saltadas
+- [ ] anadir filtros por semana, bloque del plan, ejercicio y tipo de ejercicio
+- [ ] permitir exportar las tablas y graficas principales en formatos reutilizables
+- [ ] definir si los graficos se generan en la PWA o si se preparan primero como datos agregados exportables
+- [ ] documentar los agregados estadisticos para poder replicarlos en Swift
 
 Criterio de aceptacion:
 
@@ -975,15 +1015,15 @@ Informacion inicial que debe solicitar:
 
 Tareas:
 
-- definir el cuestionario inicial y sus respuestas estructuradas
-- crear un perfil de material reutilizable por la app
-- generar una propuesta de calendario con sesiones completas por fecha
-- validar que cada carga propuesta se puede montar con el material disponible
-- validar que las sesiones caben en el tiempo objetivo con la formula de estimacion derivada
-- permitir revisar el plan antes de activarlo
-- permitir editar ejercicios, series, reps, tiempos, pesos y descansos en una interfaz tactil
-- guardar `planVersion`, fecha de creacion, origen del plan y razon de los cambios
-- exportar el plan generado en el mismo formato que consume actualmente la app
+- [ ] definir el cuestionario inicial y sus respuestas estructuradas
+- [ ] crear un perfil de material reutilizable por la app
+- [ ] generar una propuesta de calendario con sesiones completas por fecha
+- [ ] validar que cada carga propuesta se puede montar con el material disponible
+- [ ] validar que las sesiones caben en el tiempo objetivo con la formula de estimacion derivada
+- [ ] permitir revisar el plan antes de activarlo
+- [ ] permitir editar ejercicios, series, reps, tiempos, pesos y descansos en una interfaz tactil
+- [ ] guardar `planVersion`, fecha de creacion, origen del plan y razon de los cambios
+- [ ] exportar el plan generado en el mismo formato que consume actualmente la app
 
 Criterio de aceptacion:
 
@@ -1005,29 +1045,29 @@ Opinion de producto:
 
 Casos deseables:
 
-- generar un borrador de plan a partir del cuestionario del Hito 22
-- explicar por que una semana sube, mantiene o baja volumen
-- proponer ajustes semanales usando cumplimiento, RIR, molestias y duracion real
-- sugerir sustituciones de ejercicios cuando falta material o aparece molestia
-- resumir una sesion o semana en lenguaje natural
-- convertir notas libres o dictadas en etiquetas estructuradas
-- ayudar a detectar incoherencias del plan: exceso de duracion, volumen mal distribuido o progresiones demasiado agresivas
+- [ ] generar un borrador de plan a partir del cuestionario del Hito 22
+- [ ] explicar por que una semana sube, mantiene o baja volumen
+- [ ] proponer ajustes semanales usando cumplimiento, RIR, molestias y duracion real
+- [ ] sugerir sustituciones de ejercicios cuando falta material o aparece molestia
+- [ ] resumir una sesion o semana en lenguaje natural
+- [ ] convertir notas libres o dictadas en etiquetas estructuradas
+- [ ] ayudar a detectar incoherencias del plan: exceso de duracion, volumen mal distribuido o progresiones demasiado agresivas
 
 Limites:
 
-- no decidir pesos serie a serie en tiempo real sin reglas visibles
-- no modificar el plan activo sin una pantalla de revision y confirmacion
-- no mezclar datos estimados con datos registrados sin indicarlo
-- no bloquear el uso offline de la app
-- no depender de respuestas no versionadas para reconstruir el historico
+- [ ] no decidir pesos serie a serie en tiempo real sin reglas visibles
+- [ ] no modificar el plan activo sin una pantalla de revision y confirmacion
+- [ ] no mezclar datos estimados con datos registrados sin indicarlo
+- [ ] no bloquear el uso offline de la app
+- [ ] no depender de respuestas no versionadas para reconstruir el historico
 
 Arquitectura propuesta:
 
-- motor determinista local para calculos, validaciones y recomendaciones conservadoras
-- IA opcional para generar propuestas, explicaciones y resumenes
-- salida de IA siempre en JSON versionado y validado antes de entrar en el plan
-- registro de `aiSuggestionId`, modelo/proveedor si aplica, fecha y decision del usuario cuando una sugerencia se acepta
-- posibilidad de desactivar IA sin perder ninguna funcionalidad principal de registro
+- [ ] motor determinista local para calculos, validaciones y recomendaciones conservadoras
+- [ ] IA opcional para generar propuestas, explicaciones y resumenes
+- [ ] salida de IA siempre en JSON versionado y validado antes de entrar en el plan
+- [ ] registro de `aiSuggestionId`, modelo/proveedor si aplica, fecha y decision del usuario cuando una sugerencia se acepta
+- [ ] posibilidad de desactivar IA sin perder ninguna funcionalidad principal de registro
 
 Criterio de aceptacion:
 
@@ -1086,10 +1126,10 @@ Continuar con el Hito 21: estadisticas y graficos dentro de la app.
 
 Checklist minima de la siguiente iteracion:
 
-1. Definir el primer dashboard local: semana actual, adherencia, duracion real y sesiones completadas.
-2. Crear funciones puras para agregar eventos por sesion, ejercicio y semana.
-3. Reutilizar el historico de IndexedDB y el backup JSON completo como fuentes compatibles.
-4. Mostrar una primera vista de progresion por ejercicio con carga, reps, RIR y molestias.
-5. Mantener la exportacion como verificacion: todo lo que se grafica debe poder salir en JSON/CSV.
+- [x] Definir el primer dashboard local: semana actual, adherencia, duracion real y sesiones completadas.
+- [ ] Crear funciones puras para agregar eventos por sesion, ejercicio y semana.
+- [x] Reutilizar el historico de IndexedDB y el backup JSON completo como fuentes compatibles.
+- [ ] Mostrar una primera vista de progresion por ejercicio con carga, reps, RIR y molestias.
+- [ ] Mantener la exportacion como verificacion: todo lo que se grafica debe poder salir en JSON/CSV.
 
 Despues de esa primera capa, avanzar al Hito 22: generador guiado de planes desde la app.
