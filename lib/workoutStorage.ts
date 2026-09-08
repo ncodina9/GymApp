@@ -242,7 +242,7 @@ export async function markSessionExerciseDecision(
   await updateSessionMetadata(sessionId, {
     schemaVersion: 1,
     decisions: {
-      ...(current?.decisions ?? {}),
+      ...current?.decisions,
       [exerciseId]: decision,
     },
   });

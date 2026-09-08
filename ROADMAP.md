@@ -911,8 +911,8 @@ Tareas:
 - [x] separar secuenciador de ejercicios, series y superseries
 - [ ] separar calculo de progreso de sesion
 - [x] separar estimacion derivada de duracion
-- [ ] separar resumen historico
-- [ ] separar recomendaciones conservadoras de progresion
+- [x] separar resumen historico
+- [x] separar recomendaciones conservadoras de progresion
 - [x] definir un mapa preliminar de pantallas SwiftUI equivalente al flujo actual: Hoy, Preview, Ejecucion, Feedback, Descanso, Transicion, Historial, Progresion y Ajustes
 - [x] identificar que funcionalidades de la PWA son temporales por limitaciones web y cuales deben migrar tal cual a iOS
 - [x] crear `docs/ios-native-plan.md` con alcance de una primera version nativa
@@ -936,6 +936,7 @@ Estado parcial:
 - el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
 - la estimacion derivada de duracion vive en `lib/sessionDuration.js` y se comparte entre la PWA y `npm run validate:plan`
 - la seleccion del entrenamiento recomendado, resolucion de sesion por id y entrenamientos de la semana vive en `lib/sessionSelection.ts`
+- los resumenes de historial, estadisticas y recomendaciones conservadoras de progresion viven en `lib/trainingStats.ts`
 - `docs/ios-native-plan.md` define alcance v1 SwiftUI, mapa de pantallas, persistencia inicial con SwiftData e importacion desde backup JSON
 - las nuevas decisiones de desarrollo y diseno deben tratar la PWA como prototipo validado y la app nativa de iPhone como destino final
 
@@ -966,7 +967,7 @@ Tareas:
 - [x] crear una vista de resumen semanal con sesiones completadas, sesiones pendientes y adherencia
 - [x] mostrar duracion real por sesion y compararla con la estimacion operativa sin movilidad previa
 - [ ] mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
-- [ ] mostrar progresion por ejercicio: carga, reps, RIR, saltos y decisiones tomadas
+- [ ] mostrar progresion por ejercicio con vista consultable: carga, reps, RIR, saltos y decisiones tomadas
 - [x] detectar tendencias simples: estancamiento, subidas sostenidas, molestias repetidas y series saltadas
 - [ ] anadir filtros por semana, bloque del plan, ejercicio y tipo de ejercicio
 - [ ] permitir exportar las tablas y graficas principales en formatos reutilizables
@@ -989,6 +990,7 @@ Estado parcial:
 - listado de ultimas sesiones con fecha, series registradas y duracion cuando esta cerrada
 - bloque de senales con ejercicios a revisar, candidatos a subir, candidatos a bajar, series saltadas y molestias registradas
 - la implementacion reutiliza los resumenes locales ya calculados desde IndexedDB, evitando una lectura adicional del historico
+- los agregados de historial, progresion y estadisticas estan extraidos a `lib/trainingStats.ts`
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 
@@ -1127,7 +1129,7 @@ Continuar con el Hito 21: estadisticas y graficos dentro de la app.
 Checklist minima de la siguiente iteracion:
 
 - [x] Definir el primer dashboard local: semana actual, adherencia, duracion real y sesiones completadas.
-- [ ] Crear funciones puras para agregar eventos por sesion, ejercicio y semana.
+- [x] Crear funciones puras para agregar eventos por sesion, ejercicio y semana.
 - [x] Reutilizar el historico de IndexedDB y el backup JSON completo como fuentes compatibles.
 - [ ] Mostrar una primera vista de progresion por ejercicio con carga, reps, RIR y molestias.
 - [ ] Mantener la exportacion como verificacion: todo lo que se grafica debe poder salir en JSON/CSV.

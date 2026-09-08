@@ -15,7 +15,7 @@
     "sync:obsidian": "node scripts/sync-obsidian-gym-data.mjs",
     "import:obsidian-workouts": "node scripts/import-obsidian-workout-exports.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
-    "lint": "oxlint app data",
+    "lint": "oxlint app data lib",
     "format": "oxfmt"
   },
   "dependencies": {
