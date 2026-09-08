@@ -3011,6 +3011,28 @@ function getInsightToneClassName(tone: ExerciseProgressInsight['tone']) {
   }[tone];
 }
 
+function getProgressionCardToneClassName(
+  tone: ExerciseProgressInsight['tone'],
+  isExpanded: boolean,
+  recommendation: string,
+) {
+  if (isExpanded) {
+    return 'border-primary bg-primary text-primary-foreground';
+  }
+
+  if (recommendation.toLowerCase().includes('candidato')) {
+    return 'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]';
+  }
+
+  return {
+    neutral: 'border-border bg-card text-secondary-foreground',
+    up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
+    down: 'border-[var(--action-minus-border)] bg-[var(--action-minus)] text-[var(--action-minus-foreground)]',
+    warning:
+      'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
+  }[tone];
+}
+
 function StatisticsPanel({
   stats,
   exerciseProgressions,
@@ -3267,27 +3289,25 @@ function ExerciseProgressionCard({
   return (
     <div className="grid gap-2">
       <button
-        className={`rounded-[1.4rem] border px-3 py-2.5 text-left transition active:scale-[0.98] ${
-          isExpanded
-            ? 'border-primary bg-primary text-primary-foreground'
-            : 'border-border bg-card text-secondary-foreground'
-        }`}
+        className={`rounded-[1.4rem] border px-3 py-2.5 text-left transition active:scale-[0.98] ${getProgressionCardToneClassName(
+          progression.tone,
+          isExpanded,
+          progression.recommendation,
+        )}`}
         type="button"
         aria-label={`${isExpanded ? 'Cerrar' : 'Ver'} progresión de ${
           progression.exerciseName
         }`}
         onClick={onToggle}
       >
-        <span className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <span className="grid min-w-0 gap-0.5">
           <span className="min-w-0">
-            <span className="block truncate text-sm font-black leading-tight">
+            <span className="block truncate text-[0.95rem] font-black leading-tight">
               {progression.exerciseName}
             </span>
             <span
               className={`mt-0.5 block truncate text-xs font-bold leading-tight ${
-                isExpanded
-                  ? 'text-primary-foreground/80'
-                  : 'text-muted-foreground'
+                isExpanded ? 'text-primary-foreground/80' : 'opacity-75'
               }`}
             >
               {[nextLabel, progression.nextSessionLabel, progression.target]
@@ -3295,20 +3315,18 @@ function ExerciseProgressionCard({
                 .join(' · ')}
             </span>
           </span>
-          <span
-            className={`max-w-[7.5rem] truncate rounded-full border px-2.5 py-1 text-right text-xs font-black ${
-              isExpanded
-                ? 'border-primary-foreground/35 text-primary-foreground'
-                : getInsightToneClassName(progression.tone)
-            }`}
-          >
-            {progression.recommendation}
-          </span>
         </span>
       </button>
 
       {isExpanded ? (
         <div className="grid gap-1.5 rounded-[1.5rem] border bg-secondary p-2">
+          <div
+            className={`rounded-[1.1rem] border px-3 py-2 text-sm font-black leading-tight ${getInsightToneClassName(
+              progression.tone,
+            )}`}
+          >
+            {progression.recommendation}
+          </div>
           {progression.exposures.slice(0, 4).map((exposure) => (
             <ExerciseProgressionExposureCard
               key={exposure.sessionId}
