@@ -1022,6 +1022,7 @@ Estado parcial:
 - Actualizacion v0.1.14: `Volumen` pasa a calcularse desde exposiciones por sesion y ejercicio, permitiendo filtrar con precision por semana y sesion. El CSV estadistico sube a schema v4 e incluye `exercise_volume_exposure`.
 - Actualizacion v0.1.15: el puente de Obsidian genera `data/Estadisticas entrenamiento.csv` desde el maestro serie-a-serie con schema estadistico v4. El dashboard de Obsidian consume `exercise_volume_exposure` cuando existe y conserva fallback al registro serie-a-serie.
 - Actualizacion v0.1.16: se consolida Obsidian en `Entrenamiento/00 Dashboard.md` como unica entrada principal. `Dashboard entrenamiento.md` deja de generarse y se elimina en `sync:obsidian`; `00 Dashboard` y `02 Estadisticas` consumen `Estadisticas entrenamiento.csv` v4 para volumen cuando esta disponible.
+- Actualizacion v0.1.17: `Ajustes > Estadisticas > Volumen` añade tarjetas desplegables por ejercicio. Cada tarjeta muestra volumen, series, reps/tiempo y, al abrirla, las exposiciones por sesion que componen el total filtrado.
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 

@@ -4,6 +4,7 @@ import {
   BarChart3,
   Check,
   CalendarDays,
+  ChevronDown,
   ChevronRight,
   Database,
   Download,
@@ -3438,6 +3439,7 @@ function StatisticsPanel({
   const [expandedExerciseId, setExpandedExerciseId] = useState(
     exerciseProgressions[0]?.exerciseId ?? '',
   );
+  const [expandedVolumeExerciseId, setExpandedVolumeExerciseId] = useState('');
   const weekOptions = useMemo(
     () =>
       Array.from(new Set(history.map((summary) => summary.weekNumber))).sort(
@@ -3604,26 +3606,48 @@ function StatisticsPanel({
       sessionWeekById,
     ],
   );
-  const filteredVolumeExposures = volumeSummary.exposures.filter(
-    (exposure) =>
-      (selectedWeekFilter === 'all' ||
-        exposure.weekNumber === Number(selectedWeekFilter)) &&
-      (selectedSessionFilter === 'all' ||
-        exposure.sessionId === selectedSessionFilter) &&
-      (selectedExerciseFilter === 'all' ||
-        exposure.exerciseId === selectedExerciseFilter) &&
-      (selectedTrainingBlockFilter === 'all' ||
-        exposure.trainingBlock === selectedTrainingBlockFilter) &&
-      (selectedMovementPatternFilter === 'all' ||
-        exposure.movementPattern === selectedMovementPatternFilter) &&
-      (selectedMuscleFilter === 'all' ||
-        exposure.primaryMuscles.includes(selectedMuscleFilter)),
+  const filteredVolumeExposures = useMemo(
+    () =>
+      volumeSummary.exposures.filter(
+        (exposure) =>
+          (selectedWeekFilter === 'all' ||
+            exposure.weekNumber === Number(selectedWeekFilter)) &&
+          (selectedSessionFilter === 'all' ||
+            exposure.sessionId === selectedSessionFilter) &&
+          (selectedExerciseFilter === 'all' ||
+            exposure.exerciseId === selectedExerciseFilter) &&
+          (selectedTrainingBlockFilter === 'all' ||
+            exposure.trainingBlock === selectedTrainingBlockFilter) &&
+          (selectedMovementPatternFilter === 'all' ||
+            exposure.movementPattern === selectedMovementPatternFilter) &&
+          (selectedMuscleFilter === 'all' ||
+            exposure.primaryMuscles.includes(selectedMuscleFilter)),
+      ),
+    [
+      volumeSummary.exposures,
+      selectedWeekFilter,
+      selectedSessionFilter,
+      selectedExerciseFilter,
+      selectedTrainingBlockFilter,
+      selectedMovementPatternFilter,
+      selectedMuscleFilter,
+    ],
   );
   const filteredVolumeSummary = summarizeVolumeExposures(
     filteredVolumeExposures,
   );
   const filteredVolumeByExercise = filteredVolumeSummary.byExercise;
   const filteredVolumeByMuscle = filteredVolumeSummary.byMuscle;
+  const filteredVolumeExposuresByExercise = useMemo(
+    () =>
+      filteredVolumeExposures.reduce((byExercise, exposure) => {
+        const exposures = byExercise.get(exposure.exerciseId) ?? [];
+        exposures.push(exposure);
+        byExercise.set(exposure.exerciseId, exposures);
+        return byExercise;
+      }, new Map<string, VolumeSummary['exposures']>()),
+    [filteredVolumeExposures],
+  );
   const selectedProgression = filteredExerciseProgressions.find(
     (progression) => progression.exerciseId === expandedExerciseId,
   );
@@ -4043,20 +4067,22 @@ function StatisticsPanel({
             <p className="text-xs font-black leading-tight text-muted-foreground">
               Por ejercicio
             </p>
-            {filteredVolumeByExercise.slice(0, 8).map((summary) => (
-              <VolumeRow
+            {filteredVolumeByExercise.map((summary) => (
+              <VolumeExerciseCard
                 key={summary.exerciseId}
-                title={summary.exerciseName}
-                subtitle={[
-                  summary.primaryMuscles.map(formatTaxonomyLabel).join(', '),
-                  `${summary.completedSets} series`,
-                  summary.totalDurationSeconds > 0
-                    ? `${summary.totalDurationSeconds}s`
-                    : `${summary.totalReps} reps`,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-                value={formatVolumeValue(summary.totalLoadVolumeKg)}
+                exposures={
+                  filteredVolumeExposuresByExercise.get(summary.exerciseId) ??
+                  []
+                }
+                isExpanded={summary.exerciseId === expandedVolumeExerciseId}
+                onToggle={() =>
+                  setExpandedVolumeExerciseId(
+                    summary.exerciseId === expandedVolumeExerciseId
+                      ? ''
+                      : summary.exerciseId,
+                  )
+                }
+                summary={summary}
               />
             ))}
           </div>
@@ -4266,6 +4292,121 @@ function VolumeRow({
         </p>
       </div>
       <span className="shrink-0 rounded-full border bg-secondary px-2.5 py-1 text-xs font-black tabular-nums text-secondary-foreground">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function VolumeExerciseCard({
+  summary,
+  exposures,
+  isExpanded,
+  onToggle,
+}: {
+  summary: VolumeSummary['byExercise'][number];
+  exposures: VolumeSummary['exposures'];
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const totalWorkLabel =
+    summary.totalDurationSeconds > 0
+      ? `${summary.totalDurationSeconds}s`
+      : `${summary.totalReps} reps`;
+
+  return (
+    <div className="min-w-0 overflow-hidden rounded-[1.25rem] border bg-card text-card-foreground">
+      <button
+        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 text-left transition active:scale-[0.99]"
+        type="button"
+        onClick={onToggle}
+      >
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-black leading-tight">
+            {summary.exerciseName}
+          </span>
+          <span className="mt-1 flex min-w-0 flex-wrap gap-1.5 text-[0.68rem] font-black leading-none text-muted-foreground">
+            {summary.primaryMuscles.slice(0, 3).map((muscle) => (
+              <span
+                key={muscle}
+                className="rounded-full border bg-secondary px-2 py-1"
+              >
+                {formatTaxonomyLabel(muscle)}
+              </span>
+            ))}
+          </span>
+        </span>
+        <span className="grid shrink-0 grid-cols-[auto_auto] items-center gap-2">
+          <span className="rounded-full border bg-secondary px-2.5 py-1 text-xs font-black tabular-nums text-secondary-foreground">
+            {formatVolumeValue(summary.totalLoadVolumeKg)}
+          </span>
+          {isExpanded ? (
+            <ChevronDown className="size-4 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="size-4 text-muted-foreground" />
+          )}
+        </span>
+      </button>
+
+      <div className="grid grid-cols-3 gap-1.5 border-t px-3 py-2 text-center">
+        <MiniMetric label="Series" value={String(summary.completedSets)} />
+        <MiniMetric label="Trabajo" value={totalWorkLabel} />
+        <MiniMetric label="Sesiones" value={String(exposures.length)} />
+      </div>
+
+      {isExpanded ? (
+        <div className="grid gap-1.5 border-t bg-secondary/55 p-2">
+          {exposures.length === 0 ? (
+            <div className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+              Sin sesiones para este filtro.
+            </div>
+          ) : null}
+          {exposures.map((exposure) => (
+            <div
+              key={`${exposure.sessionId}-${exposure.exerciseId}`}
+              className="grid min-w-0 gap-1 rounded-[1rem] border bg-card px-3 py-2"
+            >
+              <div className="flex min-w-0 items-center justify-between gap-3">
+                <span className="truncate text-xs font-black leading-tight">
+                  {exposure.sessionLabel ?? 'Sesión'}
+                </span>
+                <span className="shrink-0 text-[0.68rem] font-bold leading-tight text-muted-foreground">
+                  {exposure.sessionDate ? formatDate(exposure.sessionDate) : ''}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 text-center">
+                <MiniMetric
+                  label="Series"
+                  value={String(exposure.completedSets)}
+                />
+                <MiniMetric
+                  label={exposure.totalDurationSeconds > 0 ? 'Tiempo' : 'Reps'}
+                  value={
+                    exposure.totalDurationSeconds > 0
+                      ? `${exposure.totalDurationSeconds}s`
+                      : String(exposure.totalReps)
+                  }
+                />
+                <MiniMetric
+                  label="Volumen"
+                  value={formatVolumeValue(exposure.totalLoadVolumeKg)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-[0.9rem] border bg-secondary px-2 py-1.5">
+      <span className="block truncate text-[0.65rem] font-bold leading-none text-muted-foreground">
+        {label}
+      </span>
+      <span className="mt-1 block truncate text-xs font-black leading-tight tabular-nums">
         {value}
       </span>
     </div>
