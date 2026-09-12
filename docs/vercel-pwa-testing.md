@@ -27,6 +27,33 @@ Antes del lunes, haz una prueba corta con conexion:
 
 La app guarda el borrador en `localStorage` y las series en IndexedDB dentro del iPhone. El service worker cachea la app despues de la primera carga para que la pantalla y el plan sigan disponibles aunque la cobertura del gimnasio sea mala.
 
+## Forzar actualización de la PWA en iPhone
+
+Usa este flujo cuando Vercel ya haya desplegado una versión nueva, pero la app instalada siga mostrando una versión anterior en `Ajustes`.
+
+1. Abre la PWA instalada desde la pantalla de inicio.
+2. Entra en `Ajustes > App sin conexión`.
+3. Pulsa `Comprobar caché`.
+4. Si aparece una versión pendiente, pulsa `Actualizar ahora`.
+5. Cierra la app desde el selector de apps de iOS y vuelve a abrirla.
+6. Comprueba en `Ajustes` que el chip de versión coincide con la versión esperada.
+
+Si no aparece la versión nueva:
+
+1. Abre la URL de Vercel en Safari.
+2. Recarga la página.
+3. Vuelve a abrir la PWA instalada.
+4. Entra otra vez en `Ajustes > App sin conexión` y repite `Comprobar caché`.
+
+Último recurso, solo si la app sigue bloqueada en una versión antigua:
+
+1. Exporta primero el backup JSON desde `Ajustes > Datos locales`.
+2. Exporta cualquier CSV pendiente desde `Ajustes > Historial`.
+3. Elimina la PWA de la pantalla de inicio.
+4. En Safari, abre la URL de Vercel y vuelve a usar `Añadir a pantalla de inicio`.
+
+No borres los datos de Safari ni del sitio salvo que tengas backup JSON y CSV exportados. iOS puede eliminar `localStorage` e IndexedDB al borrar datos del sitio.
+
 ## Guardar CSV en Archivos
 
 Flujo recomendado al terminar una sesion real:

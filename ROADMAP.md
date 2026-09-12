@@ -281,7 +281,7 @@ Preparacion para iOS nativo:
 | 14d  | Cerrado   | Baja     | Media       | Consulta de proximos entrenamientos desde Ajustes.                               |
 | 15   | Cerrado   | Baja     | Alta        | Superseries v2 con validacion automatica.                                        |
 | 16   | Parcial   | Media    | Media       | Progresion asistida conservadora dentro de Ajustes.                              |
-| 17   | Parcial   | Media    | Media       | Instalacion/offline mas solida y estado de service worker.                       |
+| 17   | Cerrado   | Baja     | Media       | Instalacion/offline mas solida y estado de service worker.                       |
 | 18   | Pendiente | Baja     | Media       | Layout movil horizontal; de momento la app bloquea vertical.                     |
 | 19   | Parcial   | Media    | Media       | Historial dentro de la app con exportacion y borrado.                            |
 | 20   | Parcial   | Alta     | Alta        | Preparacion PWA -> app nativa iOS y contrato JSON completo.                      |
@@ -856,7 +856,7 @@ Tareas:
 - [x] revisar estrategia de cache del service worker
 - [x] mostrar version/build visible en ajustes
 - [x] anadir boton de comprobacion offline o estado de app instalada
-- [ ] documentar como forzar actualizacion de la PWA en iPhone
+- [x] documentar como forzar actualizacion de la PWA en iPhone
 - [x] validar que `trainingPlan.json`, iconos y assets quedan cacheados
 - [x] decidir si hace falta aviso cuando hay una version nueva disponible
 - [x] subir `package.json` y `package-lock.json` en cada iteracion desplegable para que Ajustes identifique la version servida
@@ -867,9 +867,9 @@ Criterio de aceptacion:
 - el usuario puede comprobar que version esta usando
 - actualizar la app no borra datos locales
 
-Estado: v1 implementada. El service worker cachea la ruta principal, manifest e iconos base, limpia caches antiguas y responde con version/cache para que Ajustes pueda mostrar el estado de uso sin conexion. La pantalla de Ajustes incluye comprobacion manual de caché, version del worker, recursos base y boton de actualizacion cuando hay una version esperando. En `localhost` se permite registrar el worker para pruebas; en una URL `http://IP-del-Mac:3000` iOS no lo tratara como contexto seguro, por lo que la prueba real de gimnasio debe hacerse desde la URL HTTPS de Vercel instalada en pantalla de inicio.
+Estado: cerrado. El service worker cachea la ruta principal, manifest e iconos base, limpia caches antiguas y responde con version/cache para que Ajustes pueda mostrar el estado de uso sin conexion. La pantalla de Ajustes incluye comprobacion manual de caché, version del worker, recursos base y boton de actualizacion cuando hay una version esperando. En `localhost` se permite registrar el worker para pruebas; en una URL `http://IP-del-Mac:3000` iOS no lo tratara como contexto seguro, por lo que la prueba real de gimnasio debe hacerse desde la URL HTTPS de Vercel instalada en pantalla de inicio.
 
-Pendiente futuro: documentar el flujo de forzar refresco de PWA en iPhone si Safari mantiene una version antigua.
+Actualizacion v0.1.24: `docs/vercel-pwa-testing.md` documenta el flujo para forzar actualizacion de la PWA en iPhone sin borrar datos locales, incluyendo comprobacion de caché desde Ajustes, reapertura, recarga desde Safari y reinstalacion solo como ultimo recurso con backup previo.
 
 ### Hito 18: Layout movil horizontal
 
