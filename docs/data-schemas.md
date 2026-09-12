@@ -82,6 +82,7 @@ Notas:
 - `exerciseId` debe mantenerse estable entre versiones del plan para poder analizar progresión.
 - `block` conserva el orden de planificación, por ejemplo `A`, `B`, `E1`, `E2`.
 - `equipment` fija el material real previsto para calcular cargas montables: `barbell`, `multipower`, `dumbbell`, `cable`, `plate_loaded_machine`, `external` o `bodyweight`.
+- `decisionOptions` usa etiquetas normalizadas para la decisión final del ejercicio. En ejercicios con carga: `Mantener`, `Subir peso`, `Bajar peso`, `Subir reps`, `Bajar reps`, `Marcar molestia`. En peso corporal sin carga: `Mantener`, `Subir reps`, `Bajar reps`, `Marcar molestia`. En ejercicios temporizados: `Mantener tiempo`, `Subir tiempo`, `Bajar tiempo`, `Mejorar posición`, `Marcar molestia`.
 - `supersetId` agrupa ejercicios vinculados.
 - `supersetOrder` define el orden dentro de una superserie.
 - `target` es texto de presentación; para lógica debe usarse `sets`.

@@ -866,39 +866,34 @@ function getRealizationRest(item, fallbackRestSeconds) {
   return Math.max(fallbackRestSeconds, 120);
 }
 
-function decisionOptions(item, week, weightKg, options = {}) {
+function decisionOptions(item, _week, weightKg, _options = {}) {
   if (item.measure === 'duration') {
-    return options.postVacationAdaptation
-      ? ['Mantener 60s suave', 'Mejorar posición', 'Marcar molestia']
-      : ['Mantener 60s', 'Mejorar posición', 'Marcar molestia'];
-  }
-
-  if (weightKg === 0) {
-    return options.postVacationAdaptation
-      ? ['Mantener suave', 'Subir reps si fácil', 'Marcar molestia']
-      : ['Mantener', 'Subir reps', 'Marcar molestia'];
-  }
-
-  const next = getNextAvailableLoad(item, weightKg);
-  const down = getPreviousAvailableLoad(item, weightKg);
-
-  if (options.postVacationAdaptation) {
-    return ['Mantener suave', `Subir a ${formatKg(next)}`, 'Marcar molestia'];
-  }
-
-  if (week === 4 || week === 8) {
     return [
-      'Cerrar descarga',
-      `Volver a ${formatKg(getAvailableLoad(item, item.weightKg))}`,
+      'Mantener tiempo',
+      'Subir tiempo',
+      'Bajar tiempo',
+      'Mejorar posición',
       'Marcar molestia',
     ];
   }
 
-  if (week === 12) {
-    return ['Consolidar marca', 'Repetir bloque', 'Marcar molestia'];
+  const canChangeWeight =
+    weightKg > 0 &&
+    item.equipment !== 'bodyweight' &&
+    (item.equipment !== 'cable' || weightKg > 0);
+
+  if (!canChangeWeight) {
+    return ['Mantener', 'Subir reps', 'Bajar reps', 'Marcar molestia'];
   }
 
-  return ['Mantener', `Subir a ${formatKg(next)}`, `Bajar a ${formatKg(down)}`];
+  return [
+    'Mantener',
+    'Subir peso',
+    'Bajar peso',
+    'Subir reps',
+    'Bajar reps',
+    'Marcar molestia',
+  ];
 }
 
 function plannedDate(week, weekday) {

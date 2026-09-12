@@ -288,6 +288,7 @@ Preparacion para iOS nativo:
 | 21   | Parcial   | Alta     | Alta        | Estadisticas y graficos dentro de la app.                                        |
 | 22   | Pendiente | Media    | Alta        | Generador guiado de planes desde la app.                                         |
 | 23   | Pendiente | Baja     | Alta        | Capa opcional de IA para planificacion y analisis.                               |
+| 24   | Pendiente | Alta     | Alta        | Selector de material por ejercicio y dia con redondeo de cargas.                 |
 
 Estados usados:
 
@@ -836,6 +837,8 @@ Criterio de aceptacion:
 
 Estado: v1 implementada. La app guarda las decisiones por ejercicio en los metadatos locales de sesion y muestra en Ajustes una seccion de `Progresion` con recomendaciones conservadoras por ejercicio registrado. La recomendacion combina decision marcada, series completadas/saltadas, molestias recientes, ultima carga/reps/RIR y proxima exposicion planificada. No modifica `trainingPlan.json`; el plan sigue siendo explicito por fecha.
 
+Actualizacion v0.1.3: la decision final del ejercicio queda normalizada por tipo de ejercicio. Los ejercicios con carga muestran `Mantener`, `Subir peso`, `Bajar peso`, `Subir reps`, `Bajar reps` y `Marcar molestia`; los de peso corporal sin carga usan reps; los temporizados usan tiempo, posicion y molestia. La opcion por defecto se guarda aunque el usuario pulse continuar sin tocar nada.
+
 Pendiente futuro: convertir estas senales en una vista de revision semanal y preparar una exportacion resumida por ejercicio/sesion para Obsidian.
 
 ### Hito 17: Instalacion/offline mas solida
@@ -1090,6 +1093,29 @@ Criterio de aceptacion:
 - toda sugerencia queda trazada, validada y aprobada antes de modificar datos
 - el esquema de datos permite migrar estas capacidades a la app nativa sin rehacer el historico
 
+### Hito 24: Selector de material por ejercicio
+
+Objetivo: permitir escoger el material usado en una serie o ejercicio cuando el gimnasio obliga a cambiar la variante prevista, manteniendo cargas montables y datos exportables.
+
+Tareas:
+
+- [ ] definir `plannedEquipment` y `actualEquipment` sin romper el schema actual
+- [ ] mostrar un selector segmentado tactil, estilo iOS, encima del cuadro de peso solo en ejercicios con variantes permitidas
+- [ ] recalcular el peso al cambiar material usando la carga montable mas cercana
+- [ ] guardar el material elegido en eventos de serie y exportaciones CSV/JSON
+- [ ] distinguir correctamente `load_type`: `total`, `external`, `per_dumbbell`, `machine` y `bodyweight`
+- [ ] definir variantes permitidas por ejercicio, no globales, para evitar opciones que no tienen sentido
+- [ ] validar que la futura app nativa puede cargar el mismo contrato de datos sin inferir desde el nombre
+
+Criterio de aceptacion:
+
+- si la barra, multipower o mancuernas estan ocupadas, se puede cambiar la variante del dia sin teclado ni selector nativo
+- el peso mostrado queda redondeado al material real disponible
+- el historico conserva que variante se uso realmente
+- el plan base no se modifica por una sustitucion puntual
+
+Estado: pendiente. El plan actual ya fija un material por ejercicio; este hito anadira sustituciones puntuales durante la ejecucion.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
@@ -1137,14 +1163,14 @@ Criterio de aceptacion:
 
 ## Proximo hito recomendado
 
-Continuar con el Hito 21: estadisticas y graficos dentro de la app.
+Continuar con el Hito 24: selector de material por ejercicio y dia.
 
 Checklist minima de la siguiente iteracion:
 
-- [x] Definir el primer dashboard local: semana actual, adherencia, duracion real y sesiones completadas.
-- [x] Crear funciones puras para agregar eventos por sesion, ejercicio y semana.
-- [x] Reutilizar el historico de IndexedDB y el backup JSON completo como fuentes compatibles.
-- [x] Mostrar una primera vista de progresion por ejercicio con carga, reps, RIR y molestias.
-- [ ] Mantener la exportacion como verificacion: todo lo que se grafica debe poder salir en JSON/CSV.
+- [ ] Definir variantes permitidas por ejercicio.
+- [ ] Anadir selector segmentado tactil en pantalla de serie para ejercicios con alternativa real.
+- [ ] Redondear automaticamente la carga al material elegido: barra, multipower, mancuernas o discos.
+- [ ] Guardar `actualEquipment` en eventos locales y exportaciones.
+- [ ] Mantener el plan base intacto aunque ese dia se use otra variante.
 
-Despues de esa primera capa, avanzar al Hito 22: generador guiado de planes desde la app.
+Despues de esta capa, volver al Hito 21 para completar estadisticas y graficos.

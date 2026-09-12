@@ -920,6 +920,45 @@ const getPreviewLoadLabel = (
   return 'kg';
 };
 
+const getExerciseDecisionOptions = (exercise: Exercise) => {
+  const isTimed = exercise.sets.some(
+    (set) => set.type === 'timed' || set.targetDurationSeconds !== undefined,
+  );
+
+  if (isTimed) {
+    return [
+      'Mantener tiempo',
+      'Subir tiempo',
+      'Bajar tiempo',
+      'Mejorar posición',
+      'Marcar molestia',
+    ];
+  }
+
+  const loadType = inferLoadType(exercise);
+  const hasPlannedWeight = exercise.sets.some((set) => set.targetWeightKg > 0);
+  const canChangeWeight =
+    hasPlannedWeight &&
+    loadType !== 'bodyweight' &&
+    (loadType !== 'machine' || exercise.equipment === 'plate_loaded_machine');
+
+  if (!canChangeWeight) {
+    return ['Mantener', 'Subir reps', 'Bajar reps', 'Marcar molestia'];
+  }
+
+  return [
+    'Mantener',
+    'Subir peso',
+    'Bajar peso',
+    'Subir reps',
+    'Bajar reps',
+    'Marcar molestia',
+  ];
+};
+
+const getDefaultExerciseDecision = (exercise: Exercise) =>
+  getExerciseDecisionOptions(exercise)[0] ?? 'Mantener';
+
 const getExercisePreviewMetrics = (exercise: Exercise) => {
   const loadType = inferLoadType(exercise);
   const loads = Array.from(
@@ -2270,13 +2309,51 @@ export default function Home() {
             decisions={draft.decisions}
             onDecision={chooseDecision}
             onContinue={() => {
+              const completedExercises = draft.transitionExerciseIds
+                .map((exerciseId) =>
+                  selectedSession.exercises.find(
+                    (exercise) => exercise.exerciseId === exerciseId,
+                  ),
+                )
+                .filter((exercise): exercise is Exercise => Boolean(exercise));
+              const defaultDecisions = completedExercises.reduce<
+                Record<string, string>
+              >(
+                (decisions, exercise) => ({
+                  ...decisions,
+                  [exercise.exerciseId]:
+                    draft.decisions[exercise.exerciseId] ??
+                    getDefaultExerciseDecision(exercise),
+                }),
+                {},
+              );
+              const nextDecisions = {
+                ...draft.decisions,
+                ...defaultDecisions,
+              };
+
+              completedExercises.forEach((exercise) => {
+                if (draft.decisions[exercise.exerciseId] === undefined) {
+                  void markSessionExerciseDecision(
+                    selectedSession.sessionId,
+                    exercise.exerciseId,
+                    defaultDecisions[exercise.exerciseId],
+                  ).catch(() => undefined);
+                }
+              });
+
               if (draft.transitionNextPhase === 'done') {
+                setDraft((current) => ({
+                  ...current,
+                  decisions: nextDecisions,
+                }));
                 completeWorkout();
                 return;
               }
 
               patchDraft({
                 phase: draft.transitionNextPhase,
+                decisions: nextDecisions,
                 transitionExerciseIds: [],
                 suppressTransitionOnce: draft.transitionNextPhase === 'rest',
                 ...(draft.transitionNextPhase === 'rest'
@@ -4561,29 +4638,44 @@ function TransitionScreen({
           {isSuperset ? 'Evaluar superserie' : 'Evaluar'}
         </p>
         <div className="mt-2 grid gap-4">
-          {completedExercises.map((exercise) => (
-            <div key={exercise.exerciseId}>
-              <h2 className="text-[1.55rem] font-black leading-tight tracking-normal">
-                {exercise.name}
-              </h2>
-              <div className="mt-2 grid gap-2">
-                {exercise.decisionOptions.map((option) => (
-                  <button
-                    key={option}
-                    className={`h-12 rounded-lg border px-4 text-left text-base font-black ${
-                      decisions[exercise.exerciseId] === option
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-secondary text-secondary-foreground'
-                    }`}
-                    type="button"
-                    onClick={() => onDecision(exercise.exerciseId, option)}
-                  >
-                    {option}
-                  </button>
-                ))}
+          {completedExercises.map((exercise) => {
+            const decisionOptions = getExerciseDecisionOptions(exercise);
+
+            return (
+              <div key={exercise.exerciseId}>
+                <h2 className="text-[1.55rem] font-black leading-tight tracking-normal">
+                  {exercise.name}
+                </h2>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {decisionOptions.map((option) => {
+                    const selectedDecision =
+                      decisions[exercise.exerciseId] ??
+                      getDefaultExerciseDecision(exercise);
+                    const shouldSpan =
+                      decisionOptions.length % 2 !== 0 &&
+                      option === decisionOptions.at(-1);
+
+                    return (
+                      <button
+                        key={option}
+                        className={`h-12 rounded-lg border px-3 text-center text-sm font-black ${
+                          shouldSpan ? 'col-span-2' : ''
+                        } ${
+                          selectedDecision === option
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-border bg-secondary text-secondary-foreground'
+                        }`}
+                        type="button"
+                        onClick={() => onDecision(exercise.exerciseId, option)}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

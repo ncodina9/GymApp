@@ -29,8 +29,11 @@
           "target": "5x5 @ 65 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 67.5 kg",
-            "Bajar a 62.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -81,8 +84,11 @@
           "target": "5x5 @ 5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 6.25 kg",
-            "Bajar a 3.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -133,8 +139,11 @@
           "target": "4x6 @ 57.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60 kg",
-            "Bajar a 55 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -178,8 +187,11 @@
           "target": "3x6 @ 35 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 37.5 kg",
-            "Bajar a 32.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -218,8 +230,11 @@
           "target": "3x15 @ 9 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 10 kg",
-            "Bajar a 8 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -258,8 +273,11 @@
           "target": "3x9 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -297,6 +315,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -342,8 +361,11 @@
           "target": "4x5 @ 65 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 67.5 kg",
-            "Bajar a 62.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -387,8 +409,11 @@
           "target": "4x6 @ 65 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 67.5 kg",
-            "Bajar a 62.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -432,8 +457,11 @@
           "target": "3x8 @ 90 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 92.5 kg",
-            "Bajar a 87.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -472,8 +500,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -512,8 +543,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -550,8 +584,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -587,7 +624,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -636,8 +675,11 @@
           "target": "4x8 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -682,6 +724,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -726,8 +769,11 @@
           "target": "4x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -771,8 +817,11 @@
           "target": "4x10 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -816,8 +865,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -849,8 +901,11 @@
           "target": "3x15 @ 9 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 10 kg",
-            "Bajar a 8 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -889,8 +944,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -928,6 +986,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -973,8 +1032,11 @@
           "target": "5x5 @ 67.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 70 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1025,8 +1087,11 @@
           "target": "5x5 @ 6.25 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 7.5 kg",
-            "Bajar a 5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1077,8 +1142,11 @@
           "target": "4x6 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1122,8 +1190,11 @@
           "target": "3x6 @ 37.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 40 kg",
-            "Bajar a 35 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1162,8 +1233,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1202,8 +1276,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1240,8 +1317,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1286,8 +1366,11 @@
           "target": "4x5 @ 67.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 70 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1331,8 +1414,11 @@
           "target": "4x6 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 72.5 kg",
-            "Bajar a 67.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1376,8 +1462,11 @@
           "target": "3x8 @ 95 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 97.5 kg",
-            "Bajar a 92.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1416,8 +1505,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1456,8 +1548,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1494,8 +1589,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1531,7 +1629,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -1580,8 +1680,11 @@
           "target": "4x8 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1626,6 +1729,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -1670,8 +1774,11 @@
           "target": "4x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1715,8 +1822,11 @@
           "target": "4x10 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1760,8 +1870,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1793,8 +1906,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1833,8 +1949,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1871,8 +1990,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1917,8 +2039,11 @@
           "target": "4x7 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -1963,6 +2088,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -2000,8 +2126,11 @@
           "target": "3x10 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2038,8 +2167,11 @@
           "target": "3x11 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2076,8 +2208,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2109,8 +2244,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2142,8 +2280,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2173,8 +2314,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2219,8 +2363,11 @@
           "target": "5x5 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 72.5 kg",
-            "Bajar a 67.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2271,8 +2418,11 @@
           "target": "5x5 @ 7.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 8.75 kg",
-            "Bajar a 6.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2323,8 +2473,11 @@
           "target": "4x6 @ 62.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 65 kg",
-            "Bajar a 60 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2368,8 +2521,11 @@
           "target": "3x6 @ 40 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 42.5 kg",
-            "Bajar a 37.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2408,8 +2564,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2448,8 +2607,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2486,8 +2648,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2532,8 +2697,11 @@
           "target": "4x5 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 72.5 kg",
-            "Bajar a 67.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2577,8 +2745,11 @@
           "target": "4x6 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 77.5 kg",
-            "Bajar a 72.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2622,8 +2793,11 @@
           "target": "3x8 @ 100 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 102.5 kg",
-            "Bajar a 97.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2662,8 +2836,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2702,8 +2879,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2740,8 +2920,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2777,7 +2960,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -2826,8 +3011,11 @@
           "target": "4x8 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2872,6 +3060,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -2916,8 +3105,11 @@
           "target": "4x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -2961,8 +3153,11 @@
           "target": "4x10 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3006,8 +3201,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3039,8 +3237,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3079,8 +3280,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3117,8 +3321,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3163,8 +3370,11 @@
           "target": "4x7 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3209,6 +3419,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3246,8 +3457,11 @@
           "target": "3x10 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3284,8 +3498,11 @@
           "target": "3x11 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3322,8 +3539,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3355,8 +3575,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3388,8 +3611,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3419,8 +3645,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -3464,8 +3693,11 @@
           "notes": "Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente. Mantener 1-2 RIR en la última serie.",
           "target": "3x6 @ 62.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3502,8 +3734,11 @@
           "notes": "Registrar siempre el lastre exacto. Parar si la barbilla no pasa clara.",
           "target": "3x6 @ 7.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3540,8 +3775,11 @@
           "notes": "Torso firme y mismo ángulo en todas las reps.",
           "target": "3x6 @ 57.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 57.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3578,8 +3816,11 @@
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "3x6 @ 37.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 35 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3618,8 +3859,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 7.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 9 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3651,8 +3895,11 @@
           "notes": "Rango 8-10 reps. Peso por mancuerna.",
           "target": "2x9 @ 12.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3682,8 +3929,11 @@
           "notes": "Usar RIR 2 hasta acumular historial de polea.",
           "target": "2x11 @ 65 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 0 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3728,8 +3978,11 @@
           "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, reducir rango o revisar variante antes de subir carga.",
           "target": "3x6 @ 62.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3766,8 +4019,11 @@
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
           "target": "3x6 @ 70 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3804,8 +4060,11 @@
           "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
           "target": "3x8 @ 92.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 90 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3844,8 +4103,11 @@
           "notes": "No empujar dolor de rodilla por encima de 3/10.",
           "target": "2x12 @ 28.75 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 32.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3877,8 +4139,11 @@
           "notes": "Usar el mismo banco que la extensión de cuádriceps y cargar con discos.",
           "target": "2x11 @ 17.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 20 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3908,8 +4173,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x12 @ 50.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 58 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -3939,7 +4207,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -3987,8 +4257,11 @@
           "notes": "Usar barra y mantener recorrido estable.",
           "target": "3x8 @ 42.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 47.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4027,6 +4300,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4063,8 +4337,11 @@
           "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "3x6 @ 27.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 30 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4101,8 +4378,11 @@
           "notes": "Mantener tensión y recorrido estable.",
           "target": "3x10 @ 45.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 53 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4139,8 +4419,11 @@
           "notes": "Rango 10-12 reps.",
           "target": "2x11 @ 25 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 27.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4172,8 +4455,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 7.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 9 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4205,8 +4491,11 @@
           "notes": "Rango 10-12 reps. Peso por mancuerna.",
           "target": "2x11 @ 12.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4236,8 +4525,11 @@
           "notes": "Rango 12-15 reps con RIR 2.",
           "target": "2x13 @ 60 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 0 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4282,8 +4574,11 @@
           "notes": "Rango 6-8 reps. Cuidar muñeca.",
           "target": "3x7 @ 50.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 58 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4322,6 +4617,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4358,8 +4654,11 @@
           "notes": "Tempo 3 s bajada, 1 s pausa, subida firme.",
           "target": "3x10 @ 52.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 60 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4396,8 +4695,11 @@
           "notes": "Rango 10-12 reps. Pausa arriba.",
           "target": "3x11 @ 75 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 85 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4434,8 +4736,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x15 @ 50.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 58 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4467,8 +4772,11 @@
           "notes": "Peso por mancuerna.",
           "target": "2x11 @ 12.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4500,8 +4808,11 @@
           "notes": "Rango 10-12 reps con RIR 2.",
           "target": "2x11 @ 60 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 0 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4531,8 +4842,11 @@
           "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
           "target": "2x28 @ 7.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 9 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -4578,8 +4892,11 @@
           "target": "4x4 @ 72.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4623,8 +4940,11 @@
           "target": "4x4 @ 8.75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 10 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4668,8 +4988,11 @@
           "target": "4x5 @ 65 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 67.5 kg",
-            "Bajar a 62.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4713,8 +5036,11 @@
           "target": "4x5 @ 42.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 45 kg",
-            "Bajar a 40 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4760,8 +5086,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4800,8 +5129,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4838,8 +5170,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4884,8 +5219,11 @@
           "target": "4x4 @ 72.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4929,8 +5267,11 @@
           "target": "4x5 @ 80 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 82.5 kg",
-            "Bajar a 77.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -4974,8 +5315,11 @@
           "target": "4x7 @ 105 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 107.5 kg",
-            "Bajar a 102.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5021,8 +5365,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5061,8 +5408,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5099,8 +5449,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5136,7 +5489,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -5185,8 +5540,11 @@
           "target": "4x6 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5231,6 +5589,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -5275,8 +5634,11 @@
           "target": "3x9 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5313,8 +5675,11 @@
           "target": "3x10 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5351,8 +5716,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5384,8 +5752,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5417,8 +5788,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5448,8 +5822,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5494,8 +5871,11 @@
           "target": "4x7 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5540,6 +5920,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -5584,8 +5965,11 @@
           "target": "4x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5629,8 +6013,11 @@
           "target": "4x9 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5674,8 +6061,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5707,8 +6097,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5747,8 +6140,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5785,8 +6181,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5831,8 +6230,11 @@
           "target": "4x4 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 77.5 kg",
-            "Bajar a 72.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5876,8 +6278,11 @@
           "target": "4x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5921,8 +6326,11 @@
           "target": "4x7 @ 110 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 112.5 kg",
-            "Bajar a 107.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -5968,8 +6376,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6008,8 +6419,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6046,8 +6460,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6083,7 +6500,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -6132,8 +6551,11 @@
           "target": "4x4 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 77.5 kg",
-            "Bajar a 72.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6177,8 +6599,11 @@
           "target": "4x4 @ 10 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 11.25 kg",
-            "Bajar a 8.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6222,8 +6647,11 @@
           "target": "4x5 @ 67.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 70 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6267,8 +6695,11 @@
           "target": "4x5 @ 45 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 47.5 kg",
-            "Bajar a 42.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6314,8 +6745,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6354,8 +6788,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6392,8 +6829,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6438,8 +6878,11 @@
           "target": "4x7 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6484,6 +6927,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -6528,8 +6972,11 @@
           "target": "4x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6573,8 +7020,11 @@
           "target": "4x9 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6618,8 +7068,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6651,8 +7104,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6691,8 +7147,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6729,8 +7188,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6775,8 +7237,11 @@
           "target": "4x6 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6821,6 +7286,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -6865,8 +7331,11 @@
           "target": "3x9 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6903,8 +7372,11 @@
           "target": "3x10 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6941,8 +7413,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -6974,8 +7449,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7007,8 +7485,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7038,8 +7519,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7084,8 +7568,11 @@
           "target": "4x4 @ 77.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7129,8 +7616,11 @@
           "target": "4x4 @ 11.25 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 12.5 kg",
-            "Bajar a 10 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7174,8 +7664,11 @@
           "target": "4x5 @ 67.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 70 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7219,8 +7712,11 @@
           "target": "4x5 @ 45 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 47.5 kg",
-            "Bajar a 42.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7266,8 +7762,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7306,8 +7805,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7344,8 +7846,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7390,8 +7895,11 @@
           "target": "4x4 @ 77.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7435,8 +7943,11 @@
           "target": "4x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7480,8 +7991,11 @@
           "target": "4x7 @ 115 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 117.5 kg",
-            "Bajar a 112.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7527,8 +8041,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7567,8 +8084,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7605,8 +8125,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7642,7 +8165,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -7691,8 +8216,11 @@
           "target": "4x7 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7737,6 +8265,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -7781,8 +8310,11 @@
           "target": "4x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7826,8 +8358,11 @@
           "target": "4x9 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7871,8 +8406,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7904,8 +8442,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7944,8 +8485,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -7982,8 +8526,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8028,8 +8575,11 @@
           "target": "4x6 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8074,6 +8624,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8118,8 +8669,11 @@
           "target": "3x9 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8156,8 +8710,11 @@
           "target": "3x10 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8194,8 +8751,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8227,8 +8787,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8260,8 +8823,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8291,8 +8857,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -8336,8 +8905,11 @@
           "notes": "Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente. Mantener 1-2 RIR en la última serie.",
           "target": "3x6 @ 70 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8374,8 +8946,11 @@
           "notes": "Registrar siempre el lastre exacto. Parar si la barbilla no pasa clara.",
           "target": "3x6 @ 11.25 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8412,8 +8987,11 @@
           "notes": "Torso firme y mismo ángulo en todas las reps.",
           "target": "3x6 @ 60 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 57.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8450,8 +9028,11 @@
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "3x6 @ 40 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 35 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8490,8 +9071,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 7.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 9 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8523,8 +9107,11 @@
           "notes": "Rango 8-10 reps. Peso por mancuerna.",
           "target": "2x9 @ 12.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8554,8 +9141,11 @@
           "notes": "Usar RIR 2 hasta acumular historial de polea.",
           "target": "2x11 @ 65 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 0 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8600,8 +9190,11 @@
           "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, reducir rango o revisar variante antes de subir carga.",
           "target": "3x6 @ 70 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8638,8 +9231,11 @@
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
           "target": "3x6 @ 75 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8676,8 +9272,11 @@
           "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
           "target": "3x8 @ 100 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 90 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8716,8 +9315,11 @@
           "notes": "No empujar dolor de rodilla por encima de 3/10.",
           "target": "2x12 @ 28.75 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 32.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8749,8 +9351,11 @@
           "notes": "Usar el mismo banco que la extensión de cuádriceps y cargar con discos.",
           "target": "2x11 @ 17.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 20 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8780,8 +9385,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x12 @ 50.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 58 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8811,7 +9419,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -8859,8 +9469,11 @@
           "notes": "Usar barra y mantener recorrido estable.",
           "target": "3x8 @ 42.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 47.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8899,6 +9512,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8935,8 +9549,11 @@
           "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "3x6 @ 27.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 30 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -8973,8 +9590,11 @@
           "notes": "Mantener tensión y recorrido estable.",
           "target": "3x10 @ 45.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 53 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9011,8 +9631,11 @@
           "notes": "Rango 10-12 reps.",
           "target": "2x11 @ 25 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 27.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9044,8 +9667,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 7.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 9 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9077,8 +9703,11 @@
           "notes": "Rango 10-12 reps. Peso por mancuerna.",
           "target": "2x11 @ 12.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9108,8 +9737,11 @@
           "notes": "Rango 12-15 reps con RIR 2.",
           "target": "2x13 @ 60 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 0 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9154,8 +9786,11 @@
           "notes": "Rango 6-8 reps. Cuidar muñeca.",
           "target": "3x7 @ 50.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 58 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9194,6 +9829,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9230,8 +9866,11 @@
           "notes": "Tempo 3 s bajada, 1 s pausa, subida firme.",
           "target": "3x10 @ 52.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 60 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9268,8 +9907,11 @@
           "notes": "Rango 10-12 reps. Pausa arriba.",
           "target": "3x11 @ 75 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 85 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9306,8 +9948,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x15 @ 50.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 58 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9339,8 +9984,11 @@
           "notes": "Peso por mancuerna.",
           "target": "2x11 @ 12.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9372,8 +10020,11 @@
           "notes": "Rango 10-12 reps con RIR 2.",
           "target": "2x11 @ 60 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 0 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9403,8 +10054,11 @@
           "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
           "target": "2x28 @ 7.5 kg",
           "decisionOptions": [
-            "Cerrar descarga",
-            "Volver a 9 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -9450,8 +10104,11 @@
           "target": "4x3 @ 80 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 82.5 kg",
-            "Bajar a 77.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9495,8 +10152,11 @@
           "target": "4x3 @ 12.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 13.75 kg",
-            "Bajar a 11.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9540,8 +10200,11 @@
           "target": "3x3 @ 67.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 70 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9578,8 +10241,11 @@
           "target": "3x3 @ 45 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 47.5 kg",
-            "Bajar a 42.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9618,8 +10284,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9658,8 +10327,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9696,8 +10368,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9742,8 +10417,11 @@
           "target": "4x3 @ 80 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 82.5 kg",
-            "Bajar a 77.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9787,8 +10465,11 @@
           "target": "3x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9825,8 +10506,11 @@
           "target": "3x5 @ 115 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 117.5 kg",
-            "Bajar a 112.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9865,8 +10549,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9905,8 +10592,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9943,8 +10633,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -9980,7 +10673,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -10029,8 +10724,11 @@
           "target": "3x3 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10068,6 +10766,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -10105,8 +10804,11 @@
           "target": "3x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10143,8 +10845,11 @@
           "target": "3x3 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10181,8 +10886,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10214,8 +10922,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10254,8 +10965,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10292,8 +11006,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10338,8 +11055,11 @@
           "target": "3x3 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10377,6 +11097,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -10414,8 +11135,11 @@
           "target": "3x3 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10452,8 +11176,11 @@
           "target": "3x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10490,8 +11217,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10523,8 +11253,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10556,8 +11289,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10587,8 +11323,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10633,8 +11372,11 @@
           "target": "4x3 @ 82.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 85 kg",
-            "Bajar a 80 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10678,8 +11420,11 @@
           "target": "4x3 @ 13.75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 15 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10723,8 +11468,11 @@
           "target": "3x3 @ 67.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 70 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10761,8 +11509,11 @@
           "target": "3x3 @ 45 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 47.5 kg",
-            "Bajar a 42.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10801,8 +11552,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10841,8 +11595,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10879,8 +11636,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10925,8 +11685,11 @@
           "target": "4x3 @ 82.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 85 kg",
-            "Bajar a 80 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -10970,8 +11733,11 @@
           "target": "3x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11008,8 +11774,11 @@
           "target": "3x5 @ 115 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 117.5 kg",
-            "Bajar a 112.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11048,8 +11817,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11088,8 +11860,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11126,8 +11901,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11163,7 +11941,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -11212,8 +11992,11 @@
           "target": "3x3 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11251,6 +12034,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -11288,8 +12072,11 @@
           "target": "3x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11326,8 +12113,11 @@
           "target": "3x3 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11364,8 +12154,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11397,8 +12190,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11437,8 +12233,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11475,8 +12274,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11521,8 +12323,11 @@
           "target": "3x3 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11560,6 +12365,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -11597,8 +12403,11 @@
           "target": "3x3 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11635,8 +12444,11 @@
           "target": "3x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11673,8 +12485,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11706,8 +12521,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11739,8 +12557,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11770,8 +12591,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -11815,8 +12639,11 @@
           "notes": "Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente. Mantener 1-2 RIR en la última serie.",
           "target": "3x5 @ 70 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 72.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -11853,8 +12680,11 @@
           "notes": "Registrar siempre el lastre exacto. Parar si la barbilla no pasa clara.",
           "target": "3x5 @ 12.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 13.75 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -11891,8 +12721,11 @@
           "notes": "Torso firme y mismo ángulo en todas las reps.",
           "target": "3x6 @ 57.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 60 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -11929,8 +12762,11 @@
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "3x6 @ 37.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 40 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -11969,8 +12805,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 7.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 8 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12002,8 +12841,11 @@
           "notes": "Rango 8-10 reps. Peso por mancuerna.",
           "target": "2x9 @ 12.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12033,8 +12875,11 @@
           "notes": "Usar RIR 2 hasta acumular historial de polea.",
           "target": "2x11 @ 65 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 70 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12079,8 +12924,11 @@
           "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, reducir rango o revisar variante antes de subir carga.",
           "target": "3x5 @ 70 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 72.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12117,8 +12965,11 @@
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
           "target": "3x6 @ 72.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 75 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12155,8 +13006,11 @@
           "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
           "target": "3x8 @ 97.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 100 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12195,8 +13049,11 @@
           "notes": "No empujar dolor de rodilla por encima de 3/10.",
           "target": "2x12 @ 27.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 28.75 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12228,8 +13085,11 @@
           "notes": "Usar el mismo banco que la extensión de cuádriceps y cargar con discos.",
           "target": "2x11 @ 17.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 18.75 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12259,8 +13119,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x12 @ 50.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 53 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12290,7 +13153,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s suave",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -12338,8 +13203,11 @@
           "notes": "Usar barra y mantener recorrido estable.",
           "target": "3x8 @ 40 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 42.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12376,8 +13244,9 @@
           "notes": "Rango 8-10 reps, dejando 1-2 reps en recámara.",
           "target": "3x9 @ 0 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir reps si fácil",
+            "Mantener",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12414,8 +13283,11 @@
           "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "3x3 @ 25 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 27.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12452,8 +13324,11 @@
           "notes": "Mantener tensión y recorrido estable.",
           "target": "3x10 @ 45.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 48 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12490,8 +13365,11 @@
           "notes": "Rango 10-12 reps.",
           "target": "2x11 @ 25 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 27.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12523,8 +13401,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 7.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 8 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12556,8 +13437,11 @@
           "notes": "Rango 10-12 reps. Peso por mancuerna.",
           "target": "2x11 @ 12.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12587,8 +13471,11 @@
           "notes": "Rango 12-15 reps con RIR 2.",
           "target": "2x13 @ 60 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12633,8 +13520,11 @@
           "notes": "Rango 6-8 reps. Cuidar muñeca.",
           "target": "3x7 @ 48 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 50.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12671,8 +13561,9 @@
           "notes": "Peso corporal, dejando 1-2 reps en recámara.",
           "target": "3x7 @ 0 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir reps si fácil",
+            "Mantener",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12709,8 +13600,11 @@
           "notes": "Tempo 3 s bajada, 1 s pausa, subida firme.",
           "target": "3x10 @ 50 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 52.5 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12747,8 +13641,11 @@
           "notes": "Rango 10-12 reps. Pausa arriba.",
           "target": "3x11 @ 72.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 75 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12785,8 +13682,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x15 @ 50.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 53 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12818,8 +13718,11 @@
           "notes": "Peso por mancuerna.",
           "target": "2x11 @ 12.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 15 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12851,8 +13754,11 @@
           "notes": "Rango 10-12 reps con RIR 2.",
           "target": "2x11 @ 60 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 65 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12882,8 +13788,11 @@
           "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
           "target": "2x28 @ 7.5 kg",
           "decisionOptions": [
-            "Mantener suave",
-            "Subir a 8 kg",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -12929,8 +13838,11 @@
           "target": "4x3 @ 82.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 85 kg",
-            "Bajar a 80 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -12974,8 +13886,11 @@
           "target": "4x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 16.25 kg",
-            "Bajar a 13.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13019,8 +13934,11 @@
           "target": "3x3 @ 67.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 70 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13057,8 +13975,11 @@
           "target": "3x3 @ 45 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 47.5 kg",
-            "Bajar a 42.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13097,8 +14018,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13137,8 +14061,11 @@
           "target": "3x10 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13175,8 +14102,11 @@
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 80 kg",
-            "Bajar a 70 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13221,8 +14151,11 @@
           "target": "4x3 @ 82.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 85 kg",
-            "Bajar a 80 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13266,8 +14199,11 @@
           "target": "3x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13304,8 +14240,11 @@
           "target": "3x5 @ 115 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 117.5 kg",
-            "Bajar a 112.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13344,8 +14283,11 @@
           "target": "3x12 @ 32.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 33.75 kg",
-            "Bajar a 31.25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13384,8 +14326,11 @@
           "target": "3x11 @ 20 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 21.25 kg",
-            "Bajar a 18.75 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13422,8 +14367,11 @@
           "target": "3x12 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13459,7 +14407,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -13508,8 +14458,11 @@
           "target": "3x3 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 50 kg",
-            "Bajar a 45 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13547,6 +14500,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -13584,8 +14538,11 @@
           "target": "3x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 32.5 kg",
-            "Bajar a 27.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13622,8 +14579,11 @@
           "target": "3x3 @ 53 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 55.5 kg",
-            "Bajar a 50.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13660,8 +14620,11 @@
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 30 kg",
-            "Bajar a 25 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13693,8 +14656,11 @@
           "target": "3x15 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13733,8 +14699,11 @@
           "target": "3x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13771,8 +14740,11 @@
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13817,8 +14789,11 @@
           "target": "3x3 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13856,6 +14831,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -13893,8 +14869,11 @@
           "target": "3x3 @ 60 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 62.5 kg",
-            "Bajar a 57.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13931,8 +14910,11 @@
           "target": "3x5 @ 85 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 87.5 kg",
-            "Bajar a 82.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -13969,8 +14951,11 @@
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 60.5 kg",
-            "Bajar a 55.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -14002,8 +14987,11 @@
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 17.5 kg",
-            "Bajar a 12.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -14035,8 +15023,11 @@
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 75 kg",
-            "Bajar a 65 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -14066,8 +15057,11 @@
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
             "Mantener",
-            "Subir a 9 kg",
-            "Bajar a 7.5 kg"
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
+            "Marcar molestia"
           ],
           "sets": [
             {
@@ -14111,8 +15105,11 @@
           "notes": "Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente. Mantener 1-2 RIR en la última serie.",
           "target": "2x5 @ 82.5 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14142,8 +15139,11 @@
           "notes": "Registrar siempre el lastre exacto. Parar si la barbilla no pasa clara.",
           "target": "2x5 @ 15 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14173,8 +15173,11 @@
           "notes": "Torso firme y mismo ángulo en todas las reps.",
           "target": "2x6 @ 67.5 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14204,8 +15207,11 @@
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
           "target": "2x6 @ 45 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14237,8 +15243,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 8 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14270,8 +15279,11 @@
           "notes": "Rango 8-10 reps. Peso por mancuerna.",
           "target": "2x9 @ 15 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14301,8 +15313,11 @@
           "notes": "Usar RIR 2 hasta acumular historial de polea.",
           "target": "2x11 @ 75 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14347,8 +15362,11 @@
           "notes": "Tempo controlado: 2 s bajada y pausa corta abajo. Si rodilla molesta, reducir rango o revisar variante antes de subir carga.",
           "target": "2x5 @ 82.5 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14378,8 +15396,11 @@
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
           "target": "2x6 @ 85 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14409,8 +15430,11 @@
           "notes": "Pausa clara arriba sin sacrificar bloqueo de cadera.",
           "target": "2x8 @ 115 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14442,8 +15466,11 @@
           "notes": "No empujar dolor de rodilla por encima de 3/10.",
           "target": "2x12 @ 32.5 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14475,8 +15502,11 @@
           "notes": "Usar el mismo banco que la extensión de cuádriceps y cargar con discos.",
           "target": "2x11 @ 20 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14506,8 +15536,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x12 @ 58 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14537,7 +15570,9 @@
           "notes": "Series de 60 s sin perder posición.",
           "target": "2x60s",
           "decisionOptions": [
-            "Mantener 60s",
+            "Mantener tiempo",
+            "Subir tiempo",
+            "Bajar tiempo",
             "Mejorar posición",
             "Marcar molestia"
           ],
@@ -14585,8 +15620,11 @@
           "notes": "Usar barra y mantener recorrido estable.",
           "target": "2x8 @ 47.5 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14618,6 +15656,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14647,8 +15686,11 @@
           "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
           "target": "2x3 @ 30 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14678,8 +15720,11 @@
           "notes": "Mantener tensión y recorrido estable.",
           "target": "2x10 @ 53 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14709,8 +15754,11 @@
           "notes": "Rango 10-12 reps.",
           "target": "2x11 @ 27.5 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14742,8 +15790,11 @@
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
           "target": "2x15 @ 8 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14775,8 +15826,11 @@
           "notes": "Rango 10-12 reps. Peso por mancuerna.",
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14806,8 +15860,11 @@
           "notes": "Rango 12-15 reps con RIR 2.",
           "target": "2x13 @ 70 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14852,8 +15909,11 @@
           "notes": "Rango 6-8 reps. Cuidar muñeca.",
           "target": "2x7 @ 58 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14885,6 +15945,7 @@
           "decisionOptions": [
             "Mantener",
             "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14914,8 +15975,11 @@
           "notes": "Tempo 3 s bajada, 1 s pausa, subida firme.",
           "target": "2x10 @ 60 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14945,8 +16009,11 @@
           "notes": "Rango 10-12 reps. Pausa arriba.",
           "target": "2x11 @ 85 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -14976,8 +16043,11 @@
           "notes": "Pausa 1 s arriba y bajada controlada.",
           "target": "2x15 @ 58 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -15009,8 +16079,11 @@
           "notes": "Peso por mancuerna.",
           "target": "2x11 @ 15 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -15042,8 +16115,11 @@
           "notes": "Rango 10-12 reps con RIR 2.",
           "target": "2x11 @ 70 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
@@ -15073,8 +16149,11 @@
           "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
           "target": "2x28 @ 8 kg",
           "decisionOptions": [
-            "Consolidar marca",
-            "Repetir bloque",
+            "Mantener",
+            "Subir peso",
+            "Bajar peso",
+            "Subir reps",
+            "Bajar reps",
             "Marcar molestia"
           ],
           "sets": [
