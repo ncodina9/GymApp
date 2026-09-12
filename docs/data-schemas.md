@@ -198,6 +198,7 @@ La PWA exporta un backup completo desde `Ajustes > Datos locales > Exportar back
 La implementación portable vive en `lib/sessionExport.ts`.
 La secuencia real de ejecución de ejercicios, series y superseries vive en `lib/workoutSequence.ts`; una app nativa debe replicar esa regla para interpretar progreso, descansos y rondas de superserie de la misma forma.
 El cálculo de progreso de sesión vive en `lib/workoutProgress.ts` y deriva paso actual, siguiente paso, porcentaje global, series completadas del ejercicio y estado de sesión empezada desde `WorkoutDraft` y los pasos de ejecución.
+Las transiciones principales del flujo viven en `lib/workoutFlow.ts` y deciden si una accion de serie lleva a otra serie, a descanso directo, a feedback de ejercicio/superserie o al cierre del entrenamiento.
 La preparación de objetivos de serie vive en `lib/workoutTargets.ts` y deriva reps, peso, duración y timer inicial desde la serie planificada, el material previsto y el material elegido ese día.
 La estimación operativa de duración vive en `lib/sessionDuration.js` y suma movilidad, ejecución aproximada, descansos, cambios entre ejercicios y feedback por serie.
 La selección del entrenamiento recomendado y los entrenamientos de la semana vive en `lib/sessionSelection.ts`.

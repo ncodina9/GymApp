@@ -53,6 +53,12 @@ import {
   getStatisticsCsvFileName,
 } from '@/lib/statisticsExport';
 import {
+  getAdvanceWorkoutTransition,
+  getPostSetWorkoutTransition,
+  type SetLogStatus,
+  type WorkoutTransition,
+} from '@/lib/workoutFlow';
+import {
   getRecommendedSession as getRecommendedSelectableSession,
   getWeekSessions,
   resolveSelectedSession,
@@ -76,7 +82,6 @@ import {
 } from '@/lib/trainingStats';
 import {
   buildExecutionSteps,
-  getCompletedExerciseIds,
   getNextStepLabel,
   getSupersetMembers,
 } from '@/lib/workoutSequence';
@@ -1558,62 +1563,58 @@ export default function Home() {
       .finally(refreshSessionHistory);
   }, [patchDraft, refreshSessionHistory, selectedSession.sessionId]);
 
+  const applyWorkoutTransition = useCallback(
+    (transition: WorkoutTransition) => {
+      if (transition.action === 'complete') {
+        completeWorkout();
+        return;
+      }
+
+      if (
+        transition.patch.exerciseIndex !== undefined &&
+        transition.patch.setIndex !== undefined
+      ) {
+        applyPlannedTargets(
+          transition.patch.exerciseIndex,
+          transition.patch.setIndex,
+        );
+      }
+
+      patchDraft({
+        ...transition.patch,
+        ...(transition.restTimer === 'start-now' &&
+        transition.patch.restRemaining !== undefined
+          ? { restEndsAt: getTimerEndsAt(transition.patch.restRemaining) }
+          : {}),
+      });
+    },
+    [applyPlannedTargets, completeWorkout, patchDraft],
+  );
+
   const moveForward = useCallback(() => {
     if (!currentExercise || !currentStep) {
       return;
     }
 
-    const completedExerciseIds = getCompletedExerciseIds(
-      selectedSession,
-      currentStep,
+    applyWorkoutTransition(
+      getAdvanceWorkoutTransition({
+        session: selectedSession,
+        currentStep,
+        nextStep,
+        suppressTransitionOnce: draft.suppressTransitionOnce,
+      }),
     );
-
-    if (!nextStep) {
-      if (completedExerciseIds.length > 0) {
-        patchDraft({
-          phase: 'transition',
-          transitionExerciseIds: completedExerciseIds,
-          transitionNextPhase: 'done',
-        });
-      } else {
-        completeWorkout();
-      }
-      return;
-    }
-
-    applyPlannedTargets(nextStep.exerciseIndex, nextStep.setIndex);
-    const shouldShowTransition =
-      completedExerciseIds.length > 0 && !draft.suppressTransitionOnce;
-
-    patchDraft({
-      exerciseIndex: nextStep.exerciseIndex,
-      setIndex: nextStep.setIndex,
-      phase: shouldShowTransition ? 'transition' : 'set',
-      transitionExerciseIds: shouldShowTransition ? completedExerciseIds : [],
-      transitionNextPhase: 'set',
-      suppressTransitionOnce: false,
-      restEndsAt: undefined,
-    });
   }, [
-    applyPlannedTargets,
+    applyWorkoutTransition,
     currentExercise,
     currentStep,
     draft.suppressTransitionOnce,
-    completeWorkout,
     nextStep,
-    patchDraft,
     selectedSession,
   ]);
 
-  const shouldRestAfterCurrentStep =
-    currentStep !== undefined &&
-    nextStep !== undefined &&
-    (!currentStep.supersetId ||
-      currentStep.supersetId !== nextStep.supersetId ||
-      nextStep.roundNumber !== currentStep.roundNumber);
-
   const logCurrentSet = useCallback(
-    async (status: 'completed' | 'skipped') => {
+    async (status: SetLogStatus) => {
       if (!currentSet || isRegisteringSetRef.current) {
         return;
       }
@@ -1686,33 +1687,16 @@ export default function Home() {
         setTimerEndsAt: undefined,
       }));
 
-      const completedExerciseIds = getCompletedExerciseIds(
-        selectedSession,
-        currentStep,
+      applyWorkoutTransition(
+        getPostSetWorkoutTransition({
+          session: selectedSession,
+          currentStep,
+          nextStep,
+          status,
+          restSeconds: currentSet.restSeconds,
+          suppressTransitionOnce: draft.suppressTransitionOnce,
+        }),
       );
-
-      if (!shouldRestAfterCurrentStep || status === 'skipped') {
-        moveForward();
-        isRegisteringSetRef.current = false;
-        setIsRegisteringSet(false);
-        return;
-      }
-
-      if (completedExerciseIds.length > 0) {
-        patchDraft({
-          restRemaining: currentSet.restSeconds,
-          restEndsAt: undefined,
-          phase: 'transition',
-          transitionExerciseIds: completedExerciseIds,
-          transitionNextPhase: 'rest',
-        });
-      } else {
-        patchDraft({
-          restRemaining: currentSet.restSeconds,
-          restEndsAt: getTimerEndsAt(currentSet.restSeconds),
-          phase: 'rest',
-        });
-      }
       isRegisteringSetRef.current = false;
       setIsRegisteringSet(false);
     },
@@ -1733,11 +1717,11 @@ export default function Home() {
       draft.setIndex,
       draft.setNote,
       draft.setTimerRemaining,
+      draft.suppressTransitionOnce,
+      applyWorkoutTransition,
       currentExercise,
-      moveForward,
-      patchDraft,
+      nextStep,
       selectedSession,
-      shouldRestAfterCurrentStep,
     ],
   );
 
