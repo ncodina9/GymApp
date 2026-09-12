@@ -78,10 +78,9 @@ import {
   buildExecutionSteps,
   getCompletedExerciseIds,
   getNextStepLabel,
-  getStepIndex,
   getSupersetMembers,
-  getSupersetRoundCount,
 } from '@/lib/workoutSequence';
+import { getWorkoutProgressSummary } from '@/lib/workoutProgress';
 import {
   clearAllSessionEvents,
   clearSessionEvents,
@@ -1261,51 +1260,48 @@ export default function Home() {
       ? (inferEquipmentLoadType(currentEquipment) ??
         inferLoadType(currentExercise))
       : inferLoadType(currentExercise);
-  const currentStepIndex = getStepIndex(
-    executionSteps,
-    draft.exerciseIndex,
-    draft.setIndex,
+  const workoutProgress = useMemo(
+    () =>
+      getWorkoutProgressSummary({
+        session: selectedSession,
+        steps: executionSteps,
+        records: draft.records,
+        position: {
+          phase: draft.phase,
+          exerciseIndex: draft.exerciseIndex,
+          setIndex: draft.setIndex,
+        },
+      }),
+    [
+      draft.exerciseIndex,
+      draft.phase,
+      draft.records,
+      draft.setIndex,
+      executionSteps,
+      selectedSession,
+    ],
   );
-  const currentStep =
-    currentStepIndex >= 0 ? executionSteps[currentStepIndex] : undefined;
-  const nextStep =
-    currentStepIndex >= 0 ? executionSteps[currentStepIndex + 1] : undefined;
-  const supersetMembers =
-    currentStep?.supersetId !== undefined
-      ? getSupersetMembers(selectedSession, currentStep.supersetId)
-      : [];
-  const supersetRoundCount =
-    currentStep?.supersetId !== undefined
-      ? getSupersetRoundCount(selectedSession, currentStep.supersetId)
-      : undefined;
-  const nextLinkedStep =
-    currentStep?.supersetId !== undefined &&
-    nextStep?.supersetId === currentStep.supersetId &&
-    nextStep.roundNumber === currentStep.roundNumber
-      ? nextStep
-      : undefined;
+  const {
+    currentStep,
+    nextStep,
+    supersetMembers,
+    supersetRoundCount,
+    nextLinkedStep,
+    totalSets,
+    completedSets,
+    attemptedSets,
+    progressValue,
+    hasStarted,
+    completedSetIndexes,
+  } = workoutProgress;
   const nextLinkedExercise =
     nextLinkedStep !== undefined
       ? selectedSession.exercises[nextLinkedStep.exerciseIndex]
       : undefined;
-  const totalSets = executionSteps.length;
-  const completedSets = draft.records.filter(
-    (record) => record.status === 'completed',
-  ).length;
-  const attemptedSets = draft.records.length;
   const workoutDurationMinutes = getDurationMinutes(
     draft.startedAt,
     draft.finishedAt,
   );
-  const progressValue = Math.round((attemptedSets / totalSets) * 100);
-  const hasStarted =
-    draft.records.length > 0 ||
-    draft.exerciseIndex > 0 ||
-    draft.setIndex > 0 ||
-    draft.phase === 'edit-set' ||
-    draft.phase === 'feedback' ||
-    draft.phase === 'rest' ||
-    draft.phase === 'transition';
   const completedSessionIds = useMemo(
     () =>
       new Set(
@@ -2389,9 +2385,7 @@ export default function Home() {
             timerRemaining={draft.setTimerRemaining}
             isTimerRunning={draft.isSetTimerRunning}
             restSeconds={currentSet.restSeconds}
-            completedSetIndexes={draft.records
-              .filter((record) => record.exerciseIndex === draft.exerciseIndex)
-              .map((record) => record.setIndex)}
+            completedSetIndexes={completedSetIndexes}
             onEdit={() => patchDraft({ phase: 'edit-set' })}
             onTimerToggle={() =>
               patchDraft(

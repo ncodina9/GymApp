@@ -922,7 +922,7 @@ Tareas:
 - [ ] separar de `app/page.tsx` toda la logica de dominio que no depende de React
 - [x] separar seleccion de entrenamiento recomendado
 - [x] separar secuenciador de ejercicios, series y superseries
-- [ ] separar calculo de progreso de sesion
+- [x] separar calculo de progreso de sesion
 - [x] separar estimacion derivada de duracion
 - [x] separar resumen historico
 - [x] separar recomendaciones conservadoras de progresion
@@ -948,6 +948,7 @@ Estado parcial:
 - la logica de exportacion CSV/JSON, nombres de archivo e inferencia de tipo de carga vive en `lib/sessionExport.ts`
 - el CSV por serie `gymapp.workout-set-export` version 2 separa `exercise_id`, `base_exercise_id`, `exercise`, `base_exercise` y `variant_label` sin reescribir exports ya guardados
 - el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
+- el calculo de progreso de sesion vive en `lib/workoutProgress.ts`: paso actual, siguiente paso, progreso global, progreso por ejercicio y sesion empezada
 - la estimacion derivada de duracion vive en `lib/sessionDuration.js` y se comparte entre la PWA y `npm run validate:plan`
 - la seleccion del entrenamiento recomendado, resolucion de sesion por id y entrenamientos de la semana vive en `lib/sessionSelection.ts`
 - los resumenes de historial, estadisticas y recomendaciones conservadoras de progresion viven en `lib/trainingStats.ts`

@@ -163,6 +163,7 @@ Reglas ya separadas:
 
 - `lib/sessionExport.ts`: CSV, JSON completo, nombres de archivo e inferencia de tipo de carga
 - `lib/workoutSequence.ts`: pasos de ejercicios, series y superseries
+- `lib/workoutProgress.ts`: paso actual, siguiente paso, progreso global, progreso por ejercicio y sesion empezada
 - `lib/sessionDuration.js`: estimacion operativa de duracion
 - `lib/sessionSelection.ts`: seleccion del entrenamiento recomendado, resolucion por id y entrenamientos de la semana
 - `lib/trainingStats.ts`: resumen historico, progresion por ejercicio y senales conservadoras con material usado
