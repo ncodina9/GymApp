@@ -819,6 +819,11 @@ const equipmentLabels: Record<ExerciseEquipment, string> = {
   bodyweight: 'Peso corporal',
 };
 
+const formatEquipmentLabel = (equipment?: string) =>
+  equipment && equipment in equipmentLabels
+    ? equipmentLabels[equipment as ExerciseEquipment]
+    : undefined;
+
 const exerciseEquipmentVariants: Record<string, ExerciseEquipment[]> = {
   'press-banca-barra': ['barbell', 'multipower', 'dumbbell'],
   'press-banca-inclinado': ['barbell', 'multipower', 'dumbbell'],
@@ -3693,6 +3698,10 @@ function StatisticsPanel({
             {filteredExerciseProgressions.length} ejercicios
           </span>
         </div>
+        <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
+          Señales calculadas desde datos reales. La decisión manual aparece al
+          abrir cada ejercicio.
+        </p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           {primarySignals.map((signal) => (
             <div
@@ -4073,6 +4082,7 @@ function ExerciseProgressionExposureCard({
       ? `RIR ${formatDecimal(exposure.averageRir)}`
       : 'RIR -';
   const detailParts = [
+    formatEquipmentLabel(exposure.actualEquipment ?? exposure.plannedEquipment),
     `${exposure.completedSets}/${exposure.plannedSets} series`,
     exposure.skippedSets > 0 ? `${exposure.skippedSets} saltadas` : undefined,
     exposure.painHits > 0 ? `${exposure.painHits} molestias` : undefined,

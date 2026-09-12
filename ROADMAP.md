@@ -946,6 +946,7 @@ Estado parcial:
 - la estimacion derivada de duracion vive en `lib/sessionDuration.js` y se comparte entre la PWA y `npm run validate:plan`
 - la seleccion del entrenamiento recomendado, resolucion de sesion por id y entrenamientos de la semana vive en `lib/sessionSelection.ts`
 - los resumenes de historial, estadisticas y recomendaciones conservadoras de progresion viven en `lib/trainingStats.ts`
+- las exposiciones estadisticas por ejercicio conservan `loadType`, `plannedEquipment` y `actualEquipment`, para que Swift no tenga que inferir material desde nombres de ejercicios
 - `docs/ios-native-plan.md` define alcance v1 SwiftUI, mapa de pantallas, persistencia inicial con SwiftData e importacion desde backup JSON
 - las nuevas decisiones de desarrollo y diseno deben tratar la PWA como prototipo validado y la app nativa de iPhone como destino final
 
@@ -1008,6 +1009,7 @@ Estado parcial:
 - `Ajustes > Estadisticas` permite filtrar por semana y por ejercicio sin depender de calculos externos, sin duplicar una seccion separada de `Progresion`
 - `docs/statistics-aggregates.md` documenta los calculos de historial, duracion, adherencia, senales y progresion para futura replica en Swift
 - `Ajustes > Estadisticas > CSV` exporta tablas derivadas de resumen, historial, senales y progresion con schema versionado
+- Actualizacion v0.1.8: el CSV estadistico pasa a `gymapp.statistics-export` version 2 e incluye `load_type`, `planned_equipment` y `actual_equipment` en filas por ejercicio. La vista de progresion muestra el material usado dentro del detalle desplegado.
 - `Ajustes > Estadisticas` muestra un primer grafico de duracion real vs estimada por sesion, con estado vacio visible hasta que haya dos sesiones cerradas
 
 ### Hito 22: Generador guiado de planes de entrenamiento
@@ -1110,7 +1112,7 @@ Tareas:
 - [x] guardar el material elegido en eventos de serie y exportaciones CSV/JSON
 - [x] distinguir correctamente `load_type`: `total`, `external`, `per_dumbbell`, `machine` y `bodyweight`
 - [x] definir variantes permitidas por ejercicio, no globales, para evitar opciones que no tienen sentido
-- [ ] validar que la futura app nativa puede cargar el mismo contrato de datos sin inferir desde el nombre
+- [x] validar que la futura app nativa puede cargar el mismo contrato de datos sin inferir desde el nombre
 - [x] migrar exports antiguos de Obsidian para anadir `planned_equipment` y `actual_equipment`
 
 Criterio de aceptacion:
@@ -1121,7 +1123,7 @@ Criterio de aceptacion:
 - el historico conserva que variante se uso realmente
 - el plan base no se modifica por una sustitucion puntual
 
-Estado: v1 implementada en PWA. El plan actual fija un material por ejercicio y la pantalla de serie permite sustituciones puntuales en ejercicios con variantes reales. La variante seleccionada se guarda en el borrador del entrenamiento y se mantiene durante el resto del ejercicio. Pendiente validar ergonomia en iPhone y llevar el contrato a un prototipo Swift.
+Estado: v1 implementada en PWA. El plan actual fija un material por ejercicio y la pantalla de serie permite sustituciones puntuales en ejercicios con variantes reales. La variante seleccionada se guarda en el borrador del entrenamiento y se mantiene durante el resto del ejercicio. CSV, backup JSON, CSV estadistico, roadmap y plan Swift documentan `plannedEquipment`/`actualEquipment`. Pendiente validar ergonomia en iPhone con mas sesiones reales.
 
 ## Riesgos y decisiones pendientes
 
@@ -1170,12 +1172,12 @@ Estado: v1 implementada en PWA. El plan actual fija un material por ejercicio y 
 
 ## Proximo hito recomendado
 
-Continuar con una validacion real del Hito 24 en iPhone y cerrar el contrato para Swift.
+Simplificar la vista `Revisión del plan` del Hito 21/16 para que funcione como lectura descriptiva mientras no exista todavía revision semanal inteligente ni ajuste automatico del planning.
 
 Checklist minima de la siguiente iteracion:
 
-- [ ] Probar en movil que el selector no ocupa demasiado ni provoca cambios accidentales.
-- [ ] Revisar equivalencias barra/multipower/mancuernas ejercicio por ejercicio.
-- [x] Decidir si el selector debe afectar solo a la serie actual o a todas las series restantes del ejercicio: se mantiene durante todo el ejercicio.
-- [ ] Anadir el contrato `plannedEquipment`/`actualEquipment` al plan de migracion Swift.
-- [ ] Tras validar, volver al Hito 21 para completar estadisticas y graficos.
+- [ ] Revisar textos y jerarquia visual de `Revisión del plan`.
+- [ ] Separar claramente senal calculada, decision manual y datos reales.
+- [ ] Decidir que tarjetas deben mostrarse cerradas y que informacion solo al desplegar.
+- [ ] Reducir ruido de recomendaciones conservadoras hasta que exista revision semanal guiada.
+- [ ] Mantener exportacion estadistica trazable para Obsidian y futura app nativa.

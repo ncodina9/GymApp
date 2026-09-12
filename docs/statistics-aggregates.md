@@ -160,6 +160,9 @@ Campos calculados por exposicion:
 - `plannedSets`: series del ejercicio en el plan; si falta, usa `attemptedSets`.
 - `skippedSets`: eventos saltados.
 - `topLoadKg`: mayor `actualWeightKg` completado y mayor que 0.
+- `loadType`: tipo de carga inferido desde `actualEquipment`, con fallback al plan.
+- `plannedEquipment`: material previsto por el plan o por el evento registrado.
+- `actualEquipment`: material usado realmente en la ultima serie completada de la exposicion, con fallback a `plannedEquipment`.
 - `totalReps`: suma de `actualReps` en eventos completados.
 - `totalDurationSeconds`: suma de `actualDurationSeconds` en eventos completados.
 - `averageRir`: media de `rirLast` en eventos completados, redondeada a un decimal.
@@ -205,7 +208,7 @@ Filtro por ejercicio:
 
 Funcion: `buildStatisticsCsv` en `lib/statisticsExport.ts`.
 
-La exportacion estadistica genera un CSV derivado con schema `gymapp.statistics-export` version `1`.
+La exportacion estadistica genera un CSV derivado con schema `gymapp.statistics-export` version `2`.
 
 Tablas incluidas:
 
@@ -213,6 +216,8 @@ Tablas incluidas:
 - `session_history`: resumen por sesion con duracion real, estimacion derivada, estado y series completadas.
 - `exercise_insight`: recomendaciones conservadoras por ejercicio.
 - `exercise_progression`: exposiciones historicas por ejercicio y sesion.
+
+Desde la version 2, las filas por ejercicio incluyen `load_type`, `planned_equipment` y `actual_equipment`. Esto permite comparar exposiciones hechas con barra, multipower, mancuernas, polea o discos sin inferir material desde el nombre del ejercicio.
 
 Uso previsto:
 

@@ -102,6 +102,8 @@ Campos que deben ser enums Swift:
 
 Los eventos de serie deben conservar `plannedEquipment` y `actualEquipment`. `plannedEquipment` sale del plan; `actualEquipment` refleja la variante usada realmente ese dia. Si un backup antiguo no trae esos campos, Swift debe derivarlos desde `Exercise.equipment` solo como fallback de compatibilidad.
 
+Las estadisticas derivadas tambien deben conservar `loadType`, `plannedEquipment` y `actualEquipment` en sus exposiciones por ejercicio. Swift no debe inferir material desde el nombre del ejercicio salvo para importar historicos antiguos sin esos campos.
+
 El plan puede seguir estando en JSON plano. SwiftData debe guardar el historico y los datos vivos, no sustituir el plan como fuente de verdad.
 
 ## Persistencia
@@ -161,11 +163,10 @@ Reglas ya separadas:
 - `lib/workoutSequence.ts`: pasos de ejercicios, series y superseries
 - `lib/sessionDuration.js`: estimacion operativa de duracion
 - `lib/sessionSelection.ts`: seleccion del entrenamiento recomendado, resolucion por id y entrenamientos de la semana
+- `lib/trainingStats.ts`: resumen historico, progresion por ejercicio y senales conservadoras con material usado
 
 Reglas pendientes de separar antes de crear el prototipo SwiftUI:
 
-- progreso de sesion y resumen historico
-- recomendaciones conservadoras de progresion
 - reglas de material disponible y siguiente carga
 - selector de material por ejercicio y redondeo de carga montable
 - limpieza/purga de sesiones exportadas

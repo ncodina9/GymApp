@@ -15,7 +15,7 @@ type StatisticsCsvInput = {
 };
 
 const schemaName = 'gymapp.statistics-export';
-const schemaVersion = 1;
+const schemaVersion = 2;
 
 export const getStatisticsCsvFileName = (exportedAt: string) =>
   `${exportedAt.slice(0, 10)}-gymapp-statistics.csv`;
@@ -40,6 +40,9 @@ export const buildStatisticsCsv = ({
     'exercise_id',
     'exercise',
     'target',
+    'load_type',
+    'planned_equipment',
+    'actual_equipment',
     'metric',
     'value',
     'value_2',
@@ -67,6 +70,9 @@ export const buildStatisticsCsv = ({
       progression.exerciseId,
       progression.exerciseName,
       exposure.target,
+      exposure.loadType ?? '',
+      exposure.plannedEquipment ?? '',
+      exposure.actualEquipment ?? '',
       'exposure',
       exposure.topLoadKg ?? '',
       exposure.totalDurationSeconds > 0
@@ -139,6 +145,9 @@ const buildSummaryRows = ({
     '',
     '',
     '',
+    '',
+    '',
+    '',
     metric,
     value,
     value2,
@@ -181,6 +190,9 @@ const buildHistoryRows = ({
       '',
       '',
       '',
+      '',
+      '',
+      '',
       'session',
       actualMinutes ?? '',
       summary.derivedEstimatedMinutes,
@@ -213,7 +225,10 @@ const buildInsightRows = ({
     insight.exerciseId,
     insight.exerciseName,
     insight.target,
-    'recommendation',
+    insight.lastLoadType ?? '',
+    insight.lastPlannedEquipment ?? '',
+    insight.lastActualEquipment ?? '',
+    'signal',
     insight.lastLoadKg ?? '',
     insight.lastDurationSeconds !== undefined
       ? `${insight.lastDurationSeconds}s`

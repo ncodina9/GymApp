@@ -261,7 +261,7 @@ Notas:
 
 ## CSV de estadísticas
 
-Schema actual: `gymapp.statistics-export`, version `1`.
+Schema actual: `gymapp.statistics-export`, version `2`.
 
 La PWA exporta un CSV derivado desde `Ajustes > Estadísticas > CSV`.
 La implementación portable vive en `lib/statisticsExport.ts`.
@@ -269,7 +269,7 @@ La implementación portable vive en `lib/statisticsExport.ts`.
 Campos actuales:
 
 ```csv
-schema_name,schema_version,exported_at,app_version,table,date,week,session_id,session,exercise_id,exercise,target,metric,value,value_2,status,tone,recommendation,notes
+schema_name,schema_version,exported_at,app_version,table,date,week,session_id,session,exercise_id,exercise,target,load_type,planned_equipment,actual_equipment,metric,value,value_2,status,tone,recommendation,notes
 ```
 
 Tablas incluidas en el mismo archivo:
@@ -282,6 +282,7 @@ Tablas incluidas en el mismo archivo:
 Notas:
 
 - Este CSV es un formato de análisis y revisión, no sustituye al backup JSON completo.
+- Desde la version 2, `exercise_insight` y `exercise_progression` conservan `load_type`, `planned_equipment` y `actual_equipment` cuando existen. Las filas globales dejan esos campos vacíos.
 - Cada fila incluye `schema_name`, `schema_version`, `exported_at` y `app_version` para poder mezclar exports futuros sin perder trazabilidad.
 - Las tablas se reconstruyen desde los agregados documentados en `docs/statistics-aggregates.md`.
 

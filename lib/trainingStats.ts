@@ -1,7 +1,9 @@
 import {
   formatExportTarget,
+  inferEquipmentLoadType,
   inferLoadType,
   type ExportTrainingSession,
+  type LoadType,
 } from '@/lib/sessionExport';
 import { estimateSessionDurationFromSteps } from '@/lib/sessionDuration';
 import { getWeekSessions } from '@/lib/sessionSelection';
@@ -41,6 +43,9 @@ export type ExerciseProgressInsight = {
   lastDurationSeconds?: number;
   lastRir?: number;
   lastDecision?: string;
+  lastLoadType?: LoadType;
+  lastPlannedEquipment?: string;
+  lastActualEquipment?: string;
   completedSets: number;
   attemptedSets: number;
   plannedSets: number;
@@ -60,6 +65,9 @@ export type ExerciseProgressionExposure = {
   plannedSets: number;
   skippedSets: number;
   topLoadKg?: number;
+  loadType?: LoadType;
+  plannedEquipment?: string;
+  actualEquipment?: string;
   totalReps: number;
   totalDurationSeconds: number;
   averageRir?: number;
@@ -263,6 +271,15 @@ export const getExerciseProgressInsights = (
       const attemptedSets = sessionEvents.length;
       const plannedSets = lastExercise?.sets.length ?? attemptedSets;
       const lastCompletedEvent = completedEvents.at(-1);
+      const lastPlannedEquipment =
+        lastCompletedEvent?.plannedEquipment ?? lastExercise?.equipment;
+      const lastActualEquipment =
+        lastCompletedEvent?.actualEquipment ??
+        lastPlannedEquipment ??
+        lastExercise?.equipment;
+      const lastLoadType =
+        inferEquipmentLoadType(lastActualEquipment) ??
+        inferLoadType(lastExercise);
       const lastDecision = metadataBySession.get(lastEvent.sessionId)
         ?.decisions?.[exerciseId];
       const decisionText = lastDecision?.toLowerCase() ?? '';
@@ -314,6 +331,9 @@ export const getExerciseProgressInsights = (
         ...(lastCompletedEvent
           ? {
               lastLoadKg: lastCompletedEvent.actualWeightKg,
+              lastLoadType,
+              ...(lastPlannedEquipment ? { lastPlannedEquipment } : {}),
+              ...(lastActualEquipment ? { lastActualEquipment } : {}),
               ...(lastCompletedEvent.actualDurationSeconds !== undefined
                 ? {
                     lastDurationSeconds:
@@ -422,6 +442,15 @@ export const getExerciseProgressionSummaries = (
           const completedEvents = sessionSortedEvents.filter(
             (event) => event.status === 'completed',
           );
+          const lastCompletedEvent = completedEvents.at(-1);
+          const plannedEquipment =
+            lastCompletedEvent?.plannedEquipment ?? exercise?.equipment;
+          const actualEquipment =
+            lastCompletedEvent?.actualEquipment ??
+            plannedEquipment ??
+            exercise?.equipment;
+          const loadType =
+            inferEquipmentLoadType(actualEquipment) ?? inferLoadType(exercise);
           const completedLoads = completedEvents
             .map((event) => event.actualWeightKg)
             .filter((weight) => weight > 0);
@@ -458,6 +487,9 @@ export const getExerciseProgressionSummaries = (
               ...(completedLoads.length > 0
                 ? { topLoadKg: Math.max(...completedLoads) }
                 : {}),
+              loadType,
+              ...(plannedEquipment ? { plannedEquipment } : {}),
+              ...(actualEquipment ? { actualEquipment } : {}),
               totalReps: completedEvents.reduce(
                 (total, event) => total + event.actualReps,
                 0,
