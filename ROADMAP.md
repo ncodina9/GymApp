@@ -1111,11 +1111,12 @@ Tareas:
 Criterio de aceptacion:
 
 - si la barra, multipower o mancuernas estan ocupadas, se puede cambiar la variante del dia sin teclado ni selector nativo
+- la variante elegida la primera vez se mantiene durante todas las series restantes del ejercicio
 - el peso mostrado queda redondeado al material real disponible
 - el historico conserva que variante se uso realmente
 - el plan base no se modifica por una sustitucion puntual
 
-Estado: v1 implementada en PWA. El plan actual fija un material por ejercicio y la pantalla de serie permite sustituciones puntuales en ejercicios con variantes reales. Pendiente validar ergonomia en iPhone y llevar el contrato a un prototipo Swift.
+Estado: v1 implementada en PWA. El plan actual fija un material por ejercicio y la pantalla de serie permite sustituciones puntuales en ejercicios con variantes reales. La variante seleccionada se guarda en el borrador del entrenamiento y se mantiene durante el resto del ejercicio. Pendiente validar ergonomia en iPhone y llevar el contrato a un prototipo Swift.
 
 ## Riesgos y decisiones pendientes
 
@@ -1170,6 +1171,6 @@ Checklist minima de la siguiente iteracion:
 
 - [ ] Probar en movil que el selector no ocupa demasiado ni provoca cambios accidentales.
 - [ ] Revisar equivalencias barra/multipower/mancuernas ejercicio por ejercicio.
-- [ ] Decidir si el selector debe afectar solo a la serie actual o a todas las series restantes del ejercicio.
+- [x] Decidir si el selector debe afectar solo a la serie actual o a todas las series restantes del ejercicio: se mantiene durante todo el ejercicio.
 - [ ] Anadir el contrato `plannedEquipment`/`actualEquipment` al plan de migracion Swift.
 - [ ] Tras validar, volver al Hito 21 para completar estadisticas y graficos.
