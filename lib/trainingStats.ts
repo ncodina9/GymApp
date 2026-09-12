@@ -73,6 +73,7 @@ export type ExerciseProgressionSummary = {
   exerciseName: string;
   target: string;
   recommendation: string;
+  lastDecision?: string;
   tone: ExerciseProgressInsight['tone'];
   nextDate?: string;
   nextSessionLabel?: string;
@@ -340,8 +341,7 @@ export const getExerciseProgressInsights = (
         toneOrder[a.tone] - toneOrder[b.tone] ||
         (a.nextDate ?? '9999-12-31').localeCompare(b.nextDate ?? '9999-12-31')
       );
-    })
-    .slice(0, 8);
+    });
 };
 
 export const getExerciseProgressionSummaries = (
@@ -488,6 +488,9 @@ export const getExerciseProgressionSummaries = (
         exerciseName,
         target,
         recommendation: insight?.recommendation ?? 'Mantener y observar',
+        ...(insight?.lastDecision
+          ? { lastDecision: insight.lastDecision }
+          : {}),
         tone: insight?.tone ?? 'neutral',
         ...(nextSession
           ? {

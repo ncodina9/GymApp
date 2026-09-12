@@ -1343,6 +1343,29 @@ export default function Home() {
     keepScreenAwakeRef.current = keepScreenAwake;
   }, [keepScreenAwake]);
 
+  useEffect(() => {
+    const preventGesture = (event: Event) => event.preventDefault();
+    const preventMultitouch = (event: TouchEvent) => {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener('gesturestart', preventGesture);
+    document.addEventListener('gesturechange', preventGesture);
+    document.addEventListener('gestureend', preventGesture);
+    document.addEventListener('touchmove', preventMultitouch, {
+      passive: false,
+    });
+
+    return () => {
+      document.removeEventListener('gesturestart', preventGesture);
+      document.removeEventListener('gesturechange', preventGesture);
+      document.removeEventListener('gestureend', preventGesture);
+      document.removeEventListener('touchmove', preventMultitouch);
+    };
+  }, []);
+
   const releaseScreenWakeLock = useCallback(() => {
     const lock = wakeLockRef.current;
     wakeLockRef.current = null;
@@ -3536,7 +3559,7 @@ function StatisticsPanel({
         </p>
         <p className="mt-1 text-sm font-bold leading-tight text-muted-foreground">
           Cuando completes entrenamientos, aquí aparecerán adherencia, duración
-          real y señales de progresión.
+          real y revisión del plan.
         </p>
       </div>
     );
@@ -3665,9 +3688,7 @@ function StatisticsPanel({
 
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-black leading-tight">
-            Señales y progresión
-          </p>
+          <p className="text-sm font-black leading-tight">Revisión del plan</p>
           <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
             {filteredExerciseProgressions.length} ejercicios
           </span>
@@ -3999,13 +4020,28 @@ function ExerciseProgressionCard({
 
       {isExpanded ? (
         <div className="grid gap-1.5 rounded-[1.5rem] border bg-secondary p-2">
-          <div
-            className={`rounded-[1.1rem] border px-3 py-2 text-sm font-black leading-tight ${getProgressionRecommendationToneClassName(
-              progression.tone,
-              progression.recommendation,
-            )}`}
-          >
-            {progression.recommendation}
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            <div
+              className={`rounded-[1.1rem] border px-3 py-2 leading-tight ${getProgressionRecommendationToneClassName(
+                progression.tone,
+                progression.recommendation,
+              )}`}
+            >
+              <span className="block text-[0.65rem] font-black uppercase opacity-75">
+                Señal
+              </span>
+              <span className="mt-0.5 block text-sm font-black">
+                {progression.recommendation}
+              </span>
+            </div>
+            <div className="rounded-[1.1rem] border bg-card px-3 py-2 leading-tight text-secondary-foreground">
+              <span className="block text-[0.65rem] font-black uppercase text-muted-foreground">
+                Tu decisión
+              </span>
+              <span className="mt-0.5 block text-sm font-black">
+                {progression.lastDecision ?? 'Sin decisión'}
+              </span>
+            </div>
           </div>
           {progression.exposures.slice(0, 4).map((exposure) => (
             <ExerciseProgressionExposureCard

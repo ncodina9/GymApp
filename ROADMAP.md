@@ -839,6 +839,8 @@ Estado: v1 implementada. La app guarda las decisiones por ejercicio en los metad
 
 Actualizacion v0.1.3: la decision final del ejercicio queda normalizada por tipo de ejercicio. Los ejercicios con carga muestran `Mantener`, `Subir peso`, `Bajar peso`, `Subir reps`, `Bajar reps` y `Marcar molestia`; los de peso corporal sin carga usan reps; los temporizados usan tiempo, posicion y molestia. La opcion por defecto se guarda aunque el usuario pulse continuar sin tocar nada.
 
+Actualizacion v0.1.5: la seccion de estadisticas separa visualmente la senal calculada por la app de la decision registrada por el usuario. Las senales se calculan para todos los ejercicios registrados y no solo para los primeros 8. Estas senales no modifican el planning automaticamente; sirven como entrada para la revision semanal del plan.
+
 Pendiente futuro: convertir estas senales en una vista de revision semanal y preparar una exportacion resumida por ejercicio/sesion para Obsidian.
 
 ### Hito 17: Instalacion/offline mas solida

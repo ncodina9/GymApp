@@ -94,7 +94,7 @@ Nota de implementacion:
 
 Funcion: `getExerciseProgressInsights`.
 
-Agrupa eventos por `exerciseId` y genera una recomendacion conservadora.
+Agrupa eventos por `exerciseId` y genera una senal conservadora. La senal no modifica el plan por si sola: combina la ultima decision registrada por el usuario con datos de ejecucion para alimentar una revision semanal posterior.
 
 Datos base por ejercicio:
 
@@ -136,7 +136,7 @@ Orden:
 
 - Primero `warning`, despues `up`, despues `down`, despues `neutral`.
 - Dentro de cada tono, por `nextDate` ascendente.
-- La PWA limita la lista a 8 insights.
+- La PWA calcula insights para todos los ejercicios registrados; la UI puede filtrar por semana o ejercicio.
 
 ## ExerciseProgressionSummary
 
