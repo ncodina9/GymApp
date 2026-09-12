@@ -1,21 +1,31 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const obsidianGymPath =
   '/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(__dirname, '..');
+const planPath = resolve(repoRoot, 'data/trainingPlan.json');
 
 const defaultSourceDir = resolve(obsidianGymPath, 'sesiones/exports');
 const defaultTargetPath = resolve(
   obsidianGymPath,
   'data/Registro entrenamiento series.csv',
 );
+const plan = JSON.parse(readFileSync(planPath, 'utf8'));
+const planLookups = buildPlanLookups(plan);
 
 const canonicalHeaders = [
   'date',
   'performed_at',
   'week',
   'session',
+  'exercise_id',
+  'base_exercise_id',
   'exercise',
+  'base_exercise',
+  'variant_label',
   'type',
   'target',
   'set_number',
@@ -185,12 +195,78 @@ function normalizeRow(row, sourceHeaders) {
   const normalized = Object.fromEntries(
     canonicalHeaders.map((header) => [header, row[header] ?? '']),
   );
+  const planExercise = findPlanExercise(row);
+
+  normalized.exercise_id =
+    normalized.exercise_id || row.exerciseId || planExercise?.exerciseId || '';
+  normalized.base_exercise_id =
+    normalized.base_exercise_id ||
+    row.baseExerciseId ||
+    planExercise?.baseExerciseId ||
+    planExercise?.exerciseId ||
+    normalized.exercise_id;
+  normalized.exercise =
+    normalized.exercise || row.exerciseName || planExercise?.name || '';
+  normalized.base_exercise =
+    normalized.base_exercise ||
+    row.baseExerciseName ||
+    planExercise?.baseExerciseName ||
+    planExercise?.name ||
+    normalized.exercise;
+  normalized.variant_label =
+    normalized.variant_label ||
+    row.variantLabel ||
+    planExercise?.variantLabel ||
+    '';
 
   if (!sourceHeaders.includes('status')) {
     normalized.status = 'done';
   }
 
   return normalized;
+}
+
+function buildPlanLookups(trainingPlan) {
+  const byDateSessionExercise = new Map();
+  const byExerciseId = new Map();
+
+  trainingPlan.sessions.forEach((session) => {
+    const sessionNames = [session.label, session.sessionLabel].filter(Boolean);
+
+    session.exercises.forEach((exercise) => {
+      byExerciseId.set(exercise.exerciseId, exercise);
+      sessionNames.forEach((sessionName) => {
+        byDateSessionExercise.set(
+          `${session.date}|${sessionName}|${exercise.name}`,
+          exercise,
+        );
+        byDateSessionExercise.set(
+          `${session.date}|${sessionName}|${
+            exercise.baseExerciseName ?? exercise.name
+          }`,
+          exercise,
+        );
+      });
+    });
+  });
+
+  return { byDateSessionExercise, byExerciseId };
+}
+
+function findPlanExercise(row) {
+  if (row.exercise_id || row.exerciseId) {
+    const byId = planLookups.byExerciseId.get(
+      row.exercise_id || row.exerciseId,
+    );
+
+    if (byId) {
+      return byId;
+    }
+  }
+
+  return planLookups.byDateSessionExercise.get(
+    `${row.date}|${row.session}|${row.exercise}`,
+  );
 }
 
 function buildSeenKeys(rows) {

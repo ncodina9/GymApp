@@ -14,7 +14,11 @@ const canonicalHeaders = [
   'performed_at',
   'week',
   'session',
+  'exercise_id',
+  'base_exercise_id',
   'exercise',
+  'base_exercise',
+  'variant_label',
   'type',
   'target',
   'set_number',
@@ -144,6 +148,7 @@ function migrateRow(row) {
 
   if (exerciseMigration) {
     migrated.exercise = exerciseMigration.exercise;
+    migrated.base_exercise = row.base_exercise || exerciseMigration.exercise;
     migrated.target = exerciseMigration.target;
     migrated.load_type = exerciseMigration.loadType;
 
@@ -152,6 +157,11 @@ function migrateRow(row) {
     }
   }
 
+  migrated.exercise_id = row.exercise_id;
+  migrated.base_exercise_id = row.base_exercise_id || row.exercise_id;
+  migrated.base_exercise =
+    migrated.base_exercise || row.base_exercise || row.exercise;
+  migrated.variant_label = row.variant_label;
   migrated.planned_equipment = row.planned_equipment || equipment;
   migrated.actual_equipment = row.actual_equipment || equipment;
   migrated.exercise_decision = normalizeDecision(row.exercise_decision);

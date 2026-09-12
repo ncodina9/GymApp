@@ -731,14 +731,16 @@ export const getVolumeSummary = (
       const reps =
         event.actualDurationSeconds === undefined ? event.actualReps : 0;
       const durationSeconds = event.actualDurationSeconds ?? 0;
-      const exposureKey = `${event.sessionId}|${event.exerciseId}`;
+      const exposureExerciseId = exercise.baseExerciseId ?? event.exerciseId;
+      const exposureExerciseName = exercise.baseExerciseName ?? exercise.name;
+      const exposureKey = `${event.sessionId}|${exposureExerciseId}`;
       const exposure = exposuresByExerciseSession.get(exposureKey) ?? {
         sessionId: session.sessionId,
         sessionDate: session.date,
         sessionLabel: session.label,
         weekNumber: session.week,
-        exerciseId: event.exerciseId,
-        exerciseName: exercise.name,
+        exerciseId: exposureExerciseId,
+        exerciseName: exposureExerciseName,
         ...(exercise.trainingBlock
           ? { trainingBlock: exercise.trainingBlock }
           : {}),

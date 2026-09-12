@@ -256,7 +256,7 @@ Notas:
 
 ## CSV por serie
 
-Contrato actual: `gymapp.workout-set-export`, version `1`.
+Contrato actual: `gymapp.workout-set-export`, version `2`.
 
 El CSV sigue siendo el formato práctico para Obsidian y análisis manual. No debe usarse como fuente principal para migrar a Swift porque pierde estructura.
 La construcción del CSV vive en `lib/sessionExport.ts` para mantenerla fuera de la UI React.
@@ -264,12 +264,14 @@ La construcción del CSV vive en `lib/sessionExport.ts` para mantenerla fuera de
 Campos actuales:
 
 ```csv
-date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,planned_equipment,actual_equipment,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
+date,performed_at,week,session,exercise_id,base_exercise_id,exercise,base_exercise,variant_label,type,target,set_number,status,load_kg,load_type,planned_equipment,actual_equipment,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
 ```
 
 Notas:
 
 - `performed_at` es el timestamp ISO local de Madrid con offset (`+02:00` en verano, `+01:00` en invierno) para revisar el CSV en Obsidian/Numbers sin perder la hora real del entrenamiento. Internamente `performedAt` sigue guardado en UTC.
+- Desde la version 2, `exercise_id`, `base_exercise_id`, `base_exercise` y `variant_label` separan identidad historica, agrupacion analitica y variante/material visible. Los exports v1 siguen siendo importables: el importador de Obsidian rellena esos campos desde `trainingPlan.json` cuando faltan.
+- `exercise` conserva el nombre completo de planificacion por compatibilidad con el maestro historico.
 - `set_number` es 1-based en CSV.
 - `load_type` distingue carga total, lastre, mancuerna, máquina y peso corporal.
 - `exercise_decision` y `exercise_note` solo se rellenan en la última fila exportada de cada ejercicio.

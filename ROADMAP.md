@@ -660,7 +660,7 @@ Estado: cerrado para el alcance actual.
 - metadata local de sesion ampliada con `schemaVersion`, `startedAt`, `finishedAt` y `exportedAt`
 - estado contextual `Guardando`/`Guardado` visible tras registrar una serie
 - flujo de guardado en Archivos documentado en `docs/vercel-pwa-testing.md`
-- decision cerrada: el CSV por serie conserva cabecera estable sin columnas de schema para seguir siendo apendable al maestro de Obsidian; el contrato queda documentado como `gymapp.workout-set-export` version 1
+- decision cerrada: el CSV por serie no incluye columnas `schema_name` ni `schema_version` por fila para seguir siendo apendable al maestro de Obsidian; el contrato actual queda documentado como `gymapp.workout-set-export` version 2 y el importador mantiene compatibilidad con exports v1
 - decision cerrada: no se genera un segundo resumen por ejercicio desde el flujo principal porque el CSV estadistico y el backup JSON completo ya cubren ese analisis sin duplicar fuentes
 
 ### Hito 14: Duracion real del entrenamiento
@@ -946,6 +946,7 @@ Estado parcial:
 - el JSON exportado incluye `schemaName`, `schemaVersion`, `exportedAt`, version de app, plan completo, ajustes relevantes, sesion activa, metadata, decisiones y eventos de series ordenados con `performedAt`
 - las sesiones incluidas en el backup JSON se marcan con `exportedAt`
 - la logica de exportacion CSV/JSON, nombres de archivo e inferencia de tipo de carga vive en `lib/sessionExport.ts`
+- el CSV por serie `gymapp.workout-set-export` version 2 separa `exercise_id`, `base_exercise_id`, `exercise`, `base_exercise` y `variant_label` sin reescribir exports ya guardados
 - el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
 - la estimacion derivada de duracion vive en `lib/sessionDuration.js` y se comparte entre la PWA y `npm run validate:plan`
 - la seleccion del entrenamiento recomendado, resolucion de sesion por id y entrenamientos de la semana vive en `lib/sessionSelection.ts`
@@ -1025,12 +1026,13 @@ Estado parcial:
 - Actualizacion v0.1.17: `Ajustes > Estadisticas > Volumen` añade tarjetas desplegables por ejercicio. Cada tarjeta muestra volumen, series, reps/tiempo y, al abrirla, las exposiciones por sesion que componen el total filtrado.
 - Actualizacion v0.1.18: los agregados de volumen agrupan variantes estadisticas equivalentes bajo un ejercicio base, por ejemplo `Elevaciones laterales` y `Triceps en polea`, aunque el plan conserve ids separados por contexto de programacion.
 - Actualizacion v0.1.19: `trainingPlan.json` separa `baseExerciseId`, `baseExerciseName` y `variantLabel`. La UI usa el nombre base como titulo visible y muestra el material/variante como contexto secundario en la previsualizacion. No migra ni modifica exports historicos: el CSV por serie conserva `exerciseId`, `exercise` y `actual_equipment` para compatibilidad con Obsidian.
+- Actualizacion v0.1.20: el CSV por serie sube a contrato `gymapp.workout-set-export` version 2 con columnas explicitas `exercise_id`, `base_exercise_id`, `base_exercise` y `variant_label`. El importador de Obsidian acepta exports v1 y v2, y rellena los campos nuevos desde `trainingPlan.json` cuando faltan. Los agregados locales de volumen usan `baseExerciseId` y `baseExerciseName` del plan como agrupacion preferente.
 
 Pendiente de nomenclatura:
 
 - [x] revisar nombres visibles del plan para separar ejercicio base y material usado: por ejemplo `Press banca` como nombre base, con selector de material `barra`, `multipower` o `mancuernas`
 - [x] mantener ids estables para no romper historico, pero anadir si hace falta campos explicitos tipo `baseExerciseId`, `baseExerciseName` o `variantLabel`
-- actualizar exportaciones, Obsidian y futura app Swift para leer esa separacion sin depender de strings
+- [x] actualizar exportaciones, Obsidian y futura app Swift para leer esa separacion sin depender de strings
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 

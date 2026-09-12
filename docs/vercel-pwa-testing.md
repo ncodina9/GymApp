@@ -46,4 +46,4 @@ LifeOS/10. Gym/sesiones/exports
 npm run import:obsidian-workouts
 ```
 
-El CSV por serie esta pensado para ser apendable al maestro de Obsidian. Por compatibilidad, no incluye columnas `schema_name` ni `schema_version`; su contrato actual queda documentado como `gymapp.workout-set-export` version `1` en `docs/data-schemas.md`. El backup JSON completo sigue siendo el formato preferente para migracion futura a Swift.
+El CSV por serie esta pensado para ser apendable al maestro de Obsidian. Por compatibilidad, no incluye columnas `schema_name` ni `schema_version`; su contrato actual queda documentado como `gymapp.workout-set-export` version `2` en `docs/data-schemas.md`. El backup JSON completo sigue siendo el formato preferente para migracion futura a Swift.

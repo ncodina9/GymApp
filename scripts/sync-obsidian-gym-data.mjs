@@ -136,11 +136,11 @@ Archivo: \`10. Gym/data/Registro entrenamiento series.csv\`
 Formato:
 
 \`\`\`csv
-date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,planned_equipment,actual_equipment,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
-2026-09-07,2026-09-07T19:42:10.000+02:00,1,Lunes - Torso fuerza,Press banca con barra,Básico,5x5 @ 65 kg,1,done,65,total,barbell,barbell,5,2,0,0,0,0,,OK,,,,,
+date,performed_at,week,session,exercise_id,base_exercise_id,exercise,base_exercise,variant_label,type,target,set_number,status,load_kg,load_type,planned_equipment,actual_equipment,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
+2026-09-07,2026-09-07T19:42:10.000+02:00,1,Lunes - Torso fuerza,press-banca-barra,press-banca,Press banca con barra,Press banca,Barra,Básico,5x5 @ 65 kg,1,done,65,total,barbell,barbell,5,2,0,0,0,0,,OK,,,,,
 \`\`\`
 
-El importador normaliza el CSV maestro a esas cabeceras y omite las series que ya estén registradas.
+El importador normaliza el CSV maestro a esas cabeceras, rellena datos de ejercicio base desde el planning cuando importa exports antiguos y omite las series que ya estén registradas.
 
 ## Nombres estándar
 

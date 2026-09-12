@@ -102,6 +102,8 @@ Campos que deben ser enums Swift:
 
 Los eventos de serie deben conservar `plannedEquipment` y `actualEquipment`. `plannedEquipment` sale del plan; `actualEquipment` refleja la variante usada realmente ese dia. Si un backup antiguo no trae esos campos, Swift debe derivarlos desde `Exercise.equipment` solo como fallback de compatibilidad.
 
+El plan debe separar `exerciseId`/`name` de `baseExerciseId`/`baseExerciseName`/`variantLabel`. `exerciseId` conserva la identidad historica exacta del plan; `baseExerciseId` agrupa variantes equivalentes para UI, volumen y analisis; `variantLabel` describe el material o variante visible sin obligar a parsear strings.
+
 Las estadisticas derivadas tambien deben conservar `loadType`, `plannedEquipment` y `actualEquipment` en sus exposiciones por ejercicio. Swift no debe inferir material desde el nombre del ejercicio salvo para importar historicos antiguos sin esos campos.
 
 El plan puede seguir estando en JSON plano. SwiftData debe guardar el historico y los datos vivos, no sustituir el plan como fuente de verdad.
