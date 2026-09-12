@@ -122,6 +122,33 @@ export type VolumeSummary = {
   byExercise: ExerciseVolumeSummary[];
 };
 
+const volumeExerciseGroups: Record<string, { id: string; name: string }> = {
+  'elevaciones-laterales-volumen': {
+    id: 'elevaciones-laterales',
+    name: 'Elevaciones laterales',
+  },
+  'triceps-polea-simple': {
+    id: 'triceps-polea-simple',
+    name: 'Tríceps en polea',
+  },
+  'triceps-polea-volumen': {
+    id: 'triceps-polea-simple',
+    name: 'Tríceps en polea',
+  },
+  'extension-triceps-polea': {
+    id: 'triceps-polea-simple',
+    name: 'Tríceps en polea',
+  },
+};
+
+export const getVolumeExerciseGroup = (
+  exposure: Pick<ExerciseVolumeSummary, 'exerciseId' | 'exerciseName'>,
+) =>
+  volumeExerciseGroups[exposure.exerciseId] ?? {
+    id: exposure.exerciseId,
+    name: exposure.exerciseName,
+  };
+
 export type TrainingStatsSummary = {
   weekNumber: number;
   weekFocusLabel: string;
@@ -623,9 +650,10 @@ export const summarizeVolumeExposures = (
   const byExercise = new Map<string, ExerciseVolumeSummary>();
 
   exposures.forEach((exposure) => {
-    const exerciseSummary = byExercise.get(exposure.exerciseId) ?? {
-      exerciseId: exposure.exerciseId,
-      exerciseName: exposure.exerciseName,
+    const exerciseGroup = getVolumeExerciseGroup(exposure);
+    const exerciseSummary = byExercise.get(exerciseGroup.id) ?? {
+      exerciseId: exerciseGroup.id,
+      exerciseName: exerciseGroup.name,
       ...(exposure.trainingBlock
         ? { trainingBlock: exposure.trainingBlock }
         : {}),
@@ -643,7 +671,7 @@ export const summarizeVolumeExposures = (
     exerciseSummary.totalReps += exposure.totalReps;
     exerciseSummary.totalDurationSeconds += exposure.totalDurationSeconds;
     exerciseSummary.totalLoadVolumeKg += exposure.totalLoadVolumeKg;
-    byExercise.set(exposure.exerciseId, exerciseSummary);
+    byExercise.set(exerciseGroup.id, exerciseSummary);
 
     exposure.primaryMuscles.forEach((muscle) => {
       const muscleSummary = byMuscle.get(muscle) ?? {

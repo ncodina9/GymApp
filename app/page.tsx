@@ -65,6 +65,7 @@ import {
   getSessionHistorySummaries,
   getTrainingStatsSummary,
   getVolumeSummary,
+  getVolumeExerciseGroup,
   isSessionHistoryComplete,
   summarizeVolumeExposures,
   type ExerciseProgressInsight,
@@ -3641,9 +3642,10 @@ function StatisticsPanel({
   const filteredVolumeExposuresByExercise = useMemo(
     () =>
       filteredVolumeExposures.reduce((byExercise, exposure) => {
-        const exposures = byExercise.get(exposure.exerciseId) ?? [];
+        const exerciseGroup = getVolumeExerciseGroup(exposure);
+        const exposures = byExercise.get(exerciseGroup.id) ?? [];
         exposures.push(exposure);
-        byExercise.set(exposure.exerciseId, exposures);
+        byExercise.set(exerciseGroup.id, exposures);
         return byExercise;
       }, new Map<string, VolumeSummary['exposures']>()),
     [filteredVolumeExposures],

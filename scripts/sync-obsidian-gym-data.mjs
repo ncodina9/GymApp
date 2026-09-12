@@ -480,10 +480,11 @@ function summarizeExerciseVolume(exposureRows) {
   const summaries = new Map();
 
   exposureRows.forEach((row) => {
-    const key = row[9] || row[10];
+    const exerciseGroup = getVolumeExerciseGroup(row[9], row[10]);
+    const key = exerciseGroup.id;
     const current = summaries.get(key) ?? {
-      exerciseId: row[9],
-      exerciseName: row[10],
+      exerciseId: exerciseGroup.id,
+      exerciseName: exerciseGroup.name,
       trainingBlock: row[15],
       movementPattern: row[16],
       primaryMuscles: row[17],
@@ -504,6 +505,31 @@ function summarizeExerciseVolume(exposureRows) {
       b.sets - a.sets ||
       b.volume - a.volume ||
       a.exerciseName.localeCompare(b.exerciseName, 'es'),
+  );
+}
+
+function getVolumeExerciseGroup(exerciseId, exerciseName) {
+  const groups = {
+    'elevaciones-laterales-volumen': {
+      id: 'elevaciones-laterales',
+      name: 'Elevaciones laterales',
+    },
+    'triceps-polea-simple': {
+      id: 'triceps-polea-simple',
+      name: 'Tríceps en polea',
+    },
+    'triceps-polea-volumen': {
+      id: 'triceps-polea-simple',
+      name: 'Tríceps en polea',
+    },
+    'extension-triceps-polea': {
+      id: 'triceps-polea-simple',
+      name: 'Tríceps en polea',
+    },
+  };
+
+  return (
+    groups[exerciseId] ?? { id: exerciseId || exerciseName, name: exerciseName }
   );
 }
 
