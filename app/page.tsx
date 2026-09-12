@@ -2383,7 +2383,6 @@ export default function Home() {
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
-            loadType={currentLoadType}
             equipment={currentEquipment}
             equipmentOptions={getExerciseEquipmentOptions(currentExercise)}
             durationSeconds={draft.editedDurationSeconds}
@@ -4891,7 +4890,6 @@ function SetScreen({
   setType,
   reps,
   weight,
-  loadType,
   equipment,
   equipmentOptions,
   durationSeconds,
@@ -4921,7 +4919,6 @@ function SetScreen({
   setType: TrainingSet['type'];
   reps: number;
   weight: number;
-  loadType: LoadType;
   equipment?: ExerciseEquipment;
   equipmentOptions: ExerciseEquipment[];
   durationSeconds: number;
@@ -5010,16 +5007,10 @@ function SetScreen({
         />
       ) : (
         <div className="grid min-h-0 flex-1 grid-rows-2 gap-2">
+          <TappableNumber label="reps" value={String(reps)} onClick={onEdit} />
           <TappableNumber
-            label="Reps"
-            value={String(reps)}
-            hint="Toca para ajustar"
-            onClick={onEdit}
-          />
-          <TappableNumber
-            label="Peso"
+            label="peso"
             value={formatWeight(weight)}
-            hint={getPreviewLoadLabel(loadType, equipment)}
             onClick={onEdit}
           />
         </div>
@@ -5981,28 +5972,25 @@ function AdjustmentControl({
 function TappableNumber({
   label,
   value,
-  hint,
   onClick,
 }: {
   label: string;
   value: string;
-  hint: string;
   onClick: () => void;
 }) {
   return (
     <button
-      className="grid min-h-0 rounded-lg border bg-card p-3 text-center shadow-sm transition active:scale-[0.99]"
+      className="grid min-h-0 grid-rows-[1fr_auto] rounded-lg border-2 border-primary/30 bg-card p-3 text-center shadow-sm shadow-primary/10 transition active:scale-[0.99]"
       type="button"
       onClick={onClick}
       aria-label={`Ajustar ${label}`}
     >
-      <span className="text-base font-black text-muted-foreground">
-        {label}
-      </span>
       <span className="flex min-h-0 items-center justify-center text-[clamp(3rem,17vw,4.9rem)] font-black leading-none tracking-normal">
         {value}
       </span>
-      <span className="text-sm font-black text-primary">{hint}</span>
+      <span className="text-sm font-black uppercase leading-none text-muted-foreground">
+        {label}
+      </span>
     </button>
   );
 }
