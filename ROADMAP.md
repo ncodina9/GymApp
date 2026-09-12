@@ -1027,6 +1027,7 @@ Estado parcial:
 - Actualizacion v0.1.18: los agregados de volumen agrupan variantes estadisticas equivalentes bajo un ejercicio base, por ejemplo `Elevaciones laterales` y `Triceps en polea`, aunque el plan conserve ids separados por contexto de programacion.
 - Actualizacion v0.1.19: `trainingPlan.json` separa `baseExerciseId`, `baseExerciseName` y `variantLabel`. La UI usa el nombre base como titulo visible y muestra el material/variante como contexto secundario en la previsualizacion. No migra ni modifica exports historicos: el CSV por serie conserva `exerciseId`, `exercise` y `actual_equipment` para compatibilidad con Obsidian.
 - Actualizacion v0.1.20: el CSV por serie sube a contrato `gymapp.workout-set-export` version 2 con columnas explicitas `exercise_id`, `base_exercise_id`, `base_exercise` y `variant_label`. El importador de Obsidian acepta exports v1 y v2, y rellena los campos nuevos desde `trainingPlan.json` cuando faltan. Los agregados locales de volumen usan `baseExerciseId` y `baseExerciseName` del plan como agrupacion preferente.
+- Actualizacion v0.1.21: `Revisión` y `Progresión` pasan a agrupar por `baseExerciseId` y `baseExerciseName`, igual que `Volumen`, conservando las decisiones y el material de cada exposicion concreta.
 
 Pendiente de nomenclatura:
 

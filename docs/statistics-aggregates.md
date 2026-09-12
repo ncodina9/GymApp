@@ -94,7 +94,7 @@ Nota de implementacion:
 
 Funcion: `getExerciseProgressInsights`.
 
-Agrupa eventos por `exerciseId` y genera una senal conservadora. La senal no modifica el plan por si sola: combina la ultima decision registrada por el usuario con datos de ejecucion para alimentar una revision semanal posterior.
+Agrupa eventos por `baseExerciseId` cuando existe, con fallback a `exerciseId`, y genera una senal conservadora. La senal no modifica el plan por si sola: combina la ultima decision registrada por el usuario con datos de ejecucion para alimentar una revision semanal posterior.
 
 Datos base por ejercicio:
 
@@ -113,7 +113,7 @@ Datos base por ejercicio:
 - `attemptedSets`: intentadas en la ultima sesion registrada.
 - `plannedSets`: series planificadas en `lastExercise`; si falta el plan, usa `attemptedSets`.
 - `lastCompletedEvent`: ultimo evento completado del ejercicio.
-- `lastDecision`: decision guardada en metadata para `exerciseId`.
+- `lastDecision`: decision guardada en metadata para el `exerciseId` concreto registrado en la ultima exposicion.
 - `avgRecentRir`: media de RIR de las ultimas tres series completadas, o 0 si no hay series completadas.
 
 Reglas de recomendacion, en orden:
@@ -127,7 +127,7 @@ Reglas de recomendacion, en orden:
 
 Campos de salida:
 
-- `exerciseName`: nombre de `nextExercise`, con fallback a `lastExercise` o `exerciseId`.
+- `exerciseName`: nombre base de `nextExercise`, con fallback a `lastExercise` o `exerciseId`.
 - `target`: objetivo formateado desde el siguiente objetivo planificado, con fallback al ultimo.
 - `lastLoadKg`, `lastReps`, `lastDurationSeconds`, `lastRir`: salen del ultimo evento completado si existe.
 - `completedSets`, `attemptedSets`, `plannedSets`, `skippedSets`, `painHits`: resumen de la ultima exposicion y eventos recientes segun las reglas anteriores.
@@ -146,7 +146,7 @@ Construye una vista consultable por ejercicio con exposiciones historicas.
 
 Agrupacion:
 
-- Agrupa todos los eventos por `exerciseId`.
+- Agrupa todos los eventos por `baseExerciseId` cuando existe, con fallback a `exerciseId`.
 - Dentro de cada ejercicio, agrupa por `sessionId`.
 
 Cada `ExerciseProgressionExposure` representa un ejercicio dentro de una sesion.
@@ -200,7 +200,7 @@ Filtro por semana:
 
 Filtro por ejercicio:
 
-- Usa `exerciseId`.
+- Usa `baseExerciseId` cuando existe, con fallback a `exerciseId`.
 - Filtra senales, series saltadas, molestias y progresion.
 - Al elegir un ejercicio concreto, la tarjeta de progresion se abre automaticamente.
 

@@ -173,6 +173,33 @@ export type TrainingStatsSummary = {
   painHits: number;
 };
 
+type PlanExercise = ExportTrainingSession['exercises'][number];
+
+const getExerciseDisplayIdentity = (
+  exercise: PlanExercise | undefined,
+  fallbackExerciseId: string,
+) => ({
+  exerciseId:
+    exercise?.baseExerciseId ?? exercise?.exerciseId ?? fallbackExerciseId,
+  exerciseName:
+    exercise?.baseExerciseName ?? exercise?.name ?? fallbackExerciseId,
+});
+
+const getSessionExercise = (
+  session: ExportTrainingSession | undefined,
+  exerciseId: string,
+) =>
+  session?.exercises.find(
+    (exercise) =>
+      exercise.exerciseId === exerciseId ||
+      exercise.baseExerciseId === exerciseId,
+  );
+
+const getEventExercise = (
+  sessionsById: Map<string, ExportTrainingSession>,
+  event: StoredSetEvent,
+) => getSessionExercise(sessionsById.get(event.sessionId), event.exerciseId);
+
 const getPainHits = (events: StoredSetEvent[]) =>
   events.filter(
     (event) =>
@@ -312,12 +339,20 @@ export const getExerciseProgressInsights = (
   const metadataBySession = new Map(
     metadata.map((item) => [item.sessionId, item]),
   );
+  const sessionsById = new Map(
+    sessions.map((session) => [session.sessionId, session]),
+  );
   const eventsByExercise = new Map<string, StoredSetEvent[]>();
 
   events.forEach((event) => {
-    const exerciseEvents = eventsByExercise.get(event.exerciseId) ?? [];
+    const exerciseIdentity = getExerciseDisplayIdentity(
+      getEventExercise(sessionsById, event),
+      event.exerciseId,
+    );
+    const exerciseEvents =
+      eventsByExercise.get(exerciseIdentity.exerciseId) ?? [];
     exerciseEvents.push(event);
-    eventsByExercise.set(event.exerciseId, exerciseEvents);
+    eventsByExercise.set(exerciseIdentity.exerciseId, exerciseEvents);
   });
 
   return Array.from(eventsByExercise.entries())
@@ -330,21 +365,28 @@ export const getExerciseProgressInsights = (
         sessions.find((session) => session.sessionId === lastEvent.sessionId) ??
         sessions.find((session) =>
           session.exercises.some(
-            (exercise) => exercise.exerciseId === exerciseId,
+            (exercise) =>
+              exercise.exerciseId === exerciseId ||
+              exercise.baseExerciseId === exerciseId,
           ),
         );
-      const lastExercise = lastSession?.exercises.find(
-        (exercise) => exercise.exerciseId === exerciseId,
+      const lastExercise = getSessionExercise(
+        lastSession,
+        lastEvent.exerciseId,
       );
       const nextSession = sessions
         .filter((session) => session.date >= todayIso)
         .find((session) =>
           session.exercises.some(
-            (exercise) => exercise.exerciseId === exerciseId,
+            (exercise) =>
+              exercise.exerciseId === exerciseId ||
+              exercise.baseExerciseId === exerciseId,
           ),
         );
-      const nextExercise = nextSession?.exercises.find(
-        (exercise) => exercise.exerciseId === exerciseId,
+      const nextExercise = getSessionExercise(nextSession, exerciseId);
+      const exerciseIdentity = getExerciseDisplayIdentity(
+        nextExercise ?? lastExercise,
+        exerciseId,
       );
       const completedEvents = sortedEvents.filter(
         (event) => event.status === 'completed',
@@ -373,7 +415,7 @@ export const getExerciseProgressInsights = (
         inferEquipmentLoadType(lastActualEquipment) ??
         inferLoadType(lastExercise);
       const lastDecision = metadataBySession.get(lastEvent.sessionId)
-        ?.decisions?.[exerciseId];
+        ?.decisions?.[lastEvent.exerciseId];
       const decisionText = lastDecision?.toLowerCase() ?? '';
       const completedRirEvents = completedEvents.filter(
         (event) => event.actualDurationSeconds === undefined,
@@ -407,8 +449,8 @@ export const getExerciseProgressInsights = (
       }
 
       return {
-        exerciseId,
-        exerciseName: nextExercise?.name ?? lastExercise?.name ?? exerciseId,
+        exerciseId: exerciseIdentity.exerciseId,
+        exerciseName: exerciseIdentity.exerciseName,
         lastDate: lastEvent.sessionDate,
         ...(nextSession
           ? {
@@ -469,12 +511,20 @@ export const getExerciseProgressionSummaries = (
   const insightsByExercise = new Map(
     insights.map((insight) => [insight.exerciseId, insight]),
   );
+  const sessionsById = new Map(
+    sessions.map((session) => [session.sessionId, session]),
+  );
   const eventsByExercise = new Map<string, StoredSetEvent[]>();
 
   events.forEach((event) => {
-    const exerciseEvents = eventsByExercise.get(event.exerciseId) ?? [];
+    const exerciseIdentity = getExerciseDisplayIdentity(
+      getEventExercise(sessionsById, event),
+      event.exerciseId,
+    );
+    const exerciseEvents =
+      eventsByExercise.get(exerciseIdentity.exerciseId) ?? [];
     exerciseEvents.push(event);
-    eventsByExercise.set(event.exerciseId, exerciseEvents);
+    eventsByExercise.set(exerciseIdentity.exerciseId, exerciseEvents);
   });
 
   return Array.from(eventsByExercise.entries())
@@ -487,24 +537,30 @@ export const getExerciseProgressionSummaries = (
         sessions.find((session) => session.sessionId === lastEvent.sessionId) ??
         sessions.find((session) =>
           session.exercises.some(
-            (exercise) => exercise.exerciseId === exerciseId,
+            (exercise) =>
+              exercise.exerciseId === exerciseId ||
+              exercise.baseExerciseId === exerciseId,
           ),
         );
-      const lastExercise = lastSession?.exercises.find(
-        (exercise) => exercise.exerciseId === exerciseId,
+      const lastExercise = getSessionExercise(
+        lastSession,
+        lastEvent.exerciseId,
       );
       const nextSession = sessions
         .filter((session) => session.date >= todayIso)
         .find((session) =>
           session.exercises.some(
-            (exercise) => exercise.exerciseId === exerciseId,
+            (exercise) =>
+              exercise.exerciseId === exerciseId ||
+              exercise.baseExerciseId === exerciseId,
           ),
         );
-      const nextExercise = nextSession?.exercises.find(
-        (exercise) => exercise.exerciseId === exerciseId,
+      const nextExercise = getSessionExercise(nextSession, exerciseId);
+      const exerciseIdentity = getExerciseDisplayIdentity(
+        nextExercise ?? lastExercise,
+        exerciseId,
       );
-      const exerciseName =
-        nextExercise?.name ?? lastExercise?.name ?? exerciseId;
+      const exerciseName = exerciseIdentity.exerciseName;
       const taxonomySource = nextExercise ?? lastExercise;
       const target = formatExportTarget(
         taxonomySource?.target ?? '',
@@ -521,9 +577,9 @@ export const getExerciseProgressionSummaries = (
       const exposures = Array.from(eventsBySession.entries())
         .flatMap(([sessionId, sessionEvents]) => {
           const session = sessions.find((item) => item.sessionId === sessionId);
-          const exercise = session?.exercises.find(
-            (item) => item.exerciseId === exerciseId,
-          );
+          const exercise =
+            getSessionExercise(session, exerciseId) ??
+            getSessionExercise(session, sessionEvents[0]?.exerciseId ?? '');
 
           if (!session) {
             return [];
@@ -593,10 +649,16 @@ export const getExerciseProgressionSummaries = (
               ),
               ...(averageRir !== undefined ? { averageRir } : {}),
               painHits: getPainHits(sessionSortedEvents),
-              ...(metadataBySession.get(sessionId)?.decisions?.[exerciseId]
+              ...(metadataBySession.get(sessionId)?.decisions?.[
+                sessionEvents[sessionEvents.length - 1]?.exerciseId ??
+                  exerciseId
+              ]
                 ? {
                     decision:
-                      metadataBySession.get(sessionId)?.decisions?.[exerciseId],
+                      metadataBySession.get(sessionId)?.decisions?.[
+                        sessionEvents[sessionEvents.length - 1]?.exerciseId ??
+                          exerciseId
+                      ],
                   }
                 : {}),
               lastPerformedAt:
@@ -609,7 +671,7 @@ export const getExerciseProgressionSummaries = (
       const insight = insightsByExercise.get(exerciseId);
 
       return {
-        exerciseId,
+        exerciseId: exerciseIdentity.exerciseId,
         exerciseName,
         ...(taxonomySource?.trainingBlock
           ? { trainingBlock: taxonomySource.trainingBlock }
