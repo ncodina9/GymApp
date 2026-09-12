@@ -445,7 +445,7 @@ const baseSessions = {
 
 const progressions = {
   'press-banca-barra': { step: 2.5, max: 82.5 },
-  'dominadas-lastradas': { step: 1.25, max: 15 },
+  'dominadas-lastradas': { step: 2.5, max: 15 },
   'remo-inclinado-barra': { step: 2.5, max: 67.5 },
   'press-militar-sentado': { step: 2.5, max: 45 },
   'sentadilla-barra': { step: 2.5, max: 82.5 },
@@ -673,12 +673,36 @@ function adaptExercise(item, week) {
 }
 
 function applyFeedbackLoadAdjustment(item, weightKg) {
+  if (item.exerciseId === 'press-banca-inclinado') {
+    return 45;
+  }
+
+  if (item.exerciseId === 'press-militar-sentado-velocidad') {
+    return 32.5;
+  }
+
+  if (item.exerciseId === 'pullover-mancuerna') {
+    return 30;
+  }
+
   if (
     item.exerciseId === 'elevaciones-laterales' ||
     item.exerciseId === 'elevaciones-laterales-volumen' ||
     item.exerciseId === 'elevacion-lateral-mecanica'
   ) {
-    return 8;
+    return 7.5;
+  }
+
+  if (item.exerciseId === 'curl-martillo') {
+    return 12.5;
+  }
+
+  if (item.exerciseId === 'curl-femoral-maquina') {
+    return 10;
+  }
+
+  if (item.exerciseId === 'gemelos-pie') {
+    return 63;
   }
 
   if (item.exerciseId === 'triceps-polea-simple') {
@@ -698,6 +722,14 @@ function applyFeedbackLoadAdjustment(item, weightKg) {
 function applyFeedbackRepAdjustment(item, reps) {
   if (item.exerciseId === 'curl-biceps-alterno') {
     return 10;
+  }
+
+  if (item.exerciseId === 'dominadas-peso-corporal') {
+    return 8;
+  }
+
+  if (item.exerciseId === 'curl-femoral-maquina') {
+    return 12;
   }
 
   return reps;
