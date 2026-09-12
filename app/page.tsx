@@ -82,6 +82,17 @@ import {
 } from '@/lib/workoutSequence';
 import { getWorkoutProgressSummary } from '@/lib/workoutProgress';
 import {
+  convertWeightForEquipment,
+  getAdjustedWeight,
+  getExerciseEquipment,
+  getPreparedSetTargets,
+  getWeightStepOptions,
+  isWeightStep,
+  normalizeWeightStep,
+  type ExerciseEquipment,
+  type WeightStep,
+} from '@/lib/workoutTargets';
+import {
   clearAllSessionEvents,
   clearSessionEvents,
   loadAllSessionEvents,
@@ -171,8 +182,6 @@ type Exercise = {
   decisionOptions: string[];
   sets: TrainingSet[];
 };
-
-type ExerciseEquipment = NonNullable<Exercise['equipment']>;
 
 type TrainingSession = {
   sessionId: string;
@@ -265,8 +274,6 @@ type WebMcpDocument = Document & {
   };
 };
 
-type WeightStep = 0.5 | 1 | 1.25 | 2.5 | 5;
-
 type SessionDurationEstimate = ReturnType<
   typeof estimateSessionDurationFromSteps
 >;
@@ -277,21 +284,6 @@ const storageKey = `gymapp:${trainingPlan.planId}:draft`;
 const themeStorageKey = 'gymapp:appearance-theme';
 const wakeLockStorageKey = 'gymapp:keep-screen-awake';
 const exportedSessionRetentionDays = 30;
-
-const barbellWeightKg = 20;
-const multipowerBarWeightKg = 18;
-const dumbbellLoadsKg = [
-  5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30,
-];
-const plateInventoryKg = [
-  { weight: 1.25, count: 4 },
-  { weight: 2.5, count: 4 },
-  { weight: 5, count: 12 },
-  { weight: 10, count: 12 },
-  { weight: 15, count: 2 },
-  { weight: 20, count: 4 },
-];
-const cableLoadsKg = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
 
 const fallbackSession = trainingPlan.sessions[0];
 const appearanceThemes: { value: AppearanceTheme; label: string }[] = [
@@ -776,59 +768,6 @@ const formatPreviewLoad = (weight: number, loadType: LoadType) => {
   return compactWeight;
 };
 
-const roundEquipmentLoad = (value: number) => Math.round(value * 100) / 100;
-
-const buildSidePlateLoads = () => {
-  const pairs = plateInventoryKg.map((plate) => ({
-    weight: plate.weight,
-    count: Math.floor(plate.count / 2),
-  }));
-  const loads = new Set([0]);
-
-  pairs.forEach((plate) => {
-    const existing = Array.from(loads);
-
-    existing.forEach((load) => {
-      Array.from({ length: plate.count }).forEach((_, index) => {
-        loads.add(roundEquipmentLoad(load + plate.weight * (index + 1)));
-      });
-    });
-  });
-
-  return Array.from(loads);
-};
-
-const buildPlateCombinationLoads = () => {
-  const loads = new Set([0]);
-
-  plateInventoryKg.forEach((plate) => {
-    const existing = Array.from(loads);
-
-    existing.forEach((load) => {
-      Array.from({ length: plate.count }).forEach((_, index) => {
-        loads.add(roundEquipmentLoad(load + plate.weight * (index + 1)));
-      });
-    });
-  });
-
-  return Array.from(loads)
-    .filter((load) => load > 0)
-    .sort((a, b) => a - b);
-};
-
-const buildSymmetricLoadedBarLoads = (barWeightKg: number) =>
-  Array.from(
-    new Set(
-      buildSidePlateLoads().map(
-        (sideLoad) => Math.round((barWeightKg + sideLoad * 2) * 2) / 2,
-      ),
-    ),
-  ).sort((a, b) => a - b);
-
-const barbellLoadsKg = buildSymmetricLoadedBarLoads(barbellWeightKg);
-const multipowerLoadsKg = buildSymmetricLoadedBarLoads(multipowerBarWeightKg);
-const externalLoadsKg = buildPlateCombinationLoads();
-
 const equipmentLabels: Record<ExerciseEquipment, string> = {
   barbell: 'Barra',
   multipower: 'Multipower',
@@ -858,9 +797,6 @@ const exerciseEquipmentVariants: Record<string, ExerciseEquipment[]> = {
   'press-cerrado-multipower': ['multipower', 'barbell'],
 };
 
-const getExerciseEquipment = (exercise: Exercise): ExerciseEquipment =>
-  (exercise.equipment ?? 'barbell') as ExerciseEquipment;
-
 const getExerciseEquipmentOptions = (exercise: Exercise) => {
   const plannedEquipment = getExerciseEquipment(exercise);
   const variants = exerciseEquipmentVariants[exercise.exerciseId] ?? [
@@ -871,147 +807,6 @@ const getExerciseEquipmentOptions = (exercise: Exercise) => {
     : [plannedEquipment, ...variants];
 
   return Array.from(new Set(options));
-};
-
-const isWeightStep = (value: unknown): value is WeightStep =>
-  value === 0.5 ||
-  value === 1 ||
-  value === 1.25 ||
-  value === 2.5 ||
-  value === 5;
-
-const getWeightStepOptions = (
-  loadType: LoadType,
-  equipment?: Exercise['equipment'],
-): WeightStep[] => {
-  if (
-    loadType === 'total' ||
-    loadType === 'external' ||
-    equipment === 'plate_loaded_machine'
-  ) {
-    return [1.25, 2.5, 5];
-  }
-
-  if (loadType === 'machine') {
-    return [5];
-  }
-
-  if (loadType === 'bodyweight') {
-    return [1];
-  }
-
-  return [1, 0.5];
-};
-
-const normalizeWeightStep = (
-  value: WeightStep,
-  loadType: LoadType,
-  equipment?: Exercise['equipment'],
-): WeightStep => {
-  const options = getWeightStepOptions(loadType, equipment);
-  return options.includes(value) ? value : options[0];
-};
-
-const getAvailableLoadsForType = (
-  loadType: LoadType,
-  equipment?: Exercise['equipment'],
-) => {
-  if (loadType === 'per_dumbbell') {
-    return dumbbellLoadsKg;
-  }
-
-  if (equipment === 'plate_loaded_machine') {
-    return externalLoadsKg;
-  }
-
-  if (loadType === 'machine') {
-    return cableLoadsKg;
-  }
-
-  if (loadType === 'total') {
-    if (equipment === 'multipower') {
-      return multipowerLoadsKg;
-    }
-
-    return barbellLoadsKg;
-  }
-
-  if (loadType === 'external') {
-    return externalLoadsKg;
-  }
-
-  return [0];
-};
-
-const getWeightDelta = (loadType: LoadType, step: WeightStep) =>
-  loadType === 'total' ? step * 2 : step;
-
-const getAdjustedWeight = (
-  loadType: LoadType,
-  equipment: Exercise['equipment'] | undefined,
-  currentWeight: number,
-  step: WeightStep,
-  direction: -1 | 1,
-) => {
-  if (loadType === 'bodyweight') {
-    return 0;
-  }
-
-  const normalizedStep = normalizeWeightStep(step, loadType, equipment);
-  const target =
-    currentWeight + getWeightDelta(loadType, normalizedStep) * direction;
-  const loads = getAvailableLoadsForType(loadType, equipment);
-
-  if (direction > 0) {
-    return (
-      loads.find((load) => load >= target) ?? loads.at(-1) ?? currentWeight
-    );
-  }
-
-  return (
-    [...loads].reverse().find((load) => load <= Math.max(0, target)) ??
-    (loadType === 'machine' || loadType === 'per_dumbbell' ? 0 : currentWeight)
-  );
-};
-
-const getNearestAvailableLoad = (
-  loadType: LoadType,
-  equipment: ExerciseEquipment,
-  targetWeight: number,
-) => {
-  const loads = getAvailableLoadsForType(loadType, equipment);
-
-  return loads.reduce(
-    (nearest, load) =>
-      Math.abs(load - targetWeight) < Math.abs(nearest - targetWeight)
-        ? load
-        : nearest,
-    loads[0] ?? 0,
-  );
-};
-
-const convertWeightForEquipment = (
-  currentWeight: number,
-  currentEquipment: ExerciseEquipment,
-  nextEquipment: ExerciseEquipment,
-) => {
-  const currentLoadType =
-    inferEquipmentLoadType(currentEquipment) ?? 'bodyweight';
-  const nextLoadType = inferEquipmentLoadType(nextEquipment) ?? 'bodyweight';
-
-  if (nextLoadType === 'bodyweight') {
-    return 0;
-  }
-
-  let estimatedWeight = currentWeight;
-
-  if (currentLoadType === 'total' && nextLoadType === 'per_dumbbell') {
-    estimatedWeight = currentWeight / 2;
-  } else if (currentLoadType === 'per_dumbbell' && nextLoadType === 'total') {
-    estimatedWeight = currentWeight * 2;
-  }
-
-  return getNearestAvailableLoad(nextLoadType, nextEquipment, estimatedWeight);
 };
 
 const getPreviewLoadLabel = (
@@ -1739,24 +1534,13 @@ export default function Home() {
     (nextExerciseIndex: number, nextSetIndex: number) => {
       const nextExercise = selectedSession.exercises[nextExerciseIndex];
       const nextSet = nextExercise.sets[nextSetIndex];
-      const plannedEquipment = getExerciseEquipment(nextExercise);
-      const selectedEquipment =
-        draft.equipmentByExercise[nextExercise.exerciseId] ?? plannedEquipment;
-      patchDraft({
-        editedReps: nextSet.targetReps ?? 0,
-        editedWeight:
-          selectedEquipment === plannedEquipment
-            ? nextSet.targetWeightKg
-            : convertWeightForEquipment(
-                nextSet.targetWeightKg,
-                plannedEquipment,
-                selectedEquipment,
-              ),
-        editedDurationSeconds: nextSet.targetDurationSeconds ?? 0,
-        setTimerRemaining: nextSet.targetDurationSeconds ?? 0,
-        isSetTimerRunning: false,
-        setTimerEndsAt: undefined,
-      });
+      patchDraft(
+        getPreparedSetTargets({
+          exercise: nextExercise,
+          set: nextSet,
+          selectedEquipment: draft.equipmentByExercise[nextExercise.exerciseId],
+        }),
+      );
     },
     [draft.equipmentByExercise, patchDraft, selectedSession],
   );

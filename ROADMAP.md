@@ -923,6 +923,7 @@ Tareas:
 - [x] separar seleccion de entrenamiento recomendado
 - [x] separar secuenciador de ejercicios, series y superseries
 - [x] separar calculo de progreso de sesion
+- [x] separar preparacion de objetivos de serie y redondeo por material disponible
 - [x] separar estimacion derivada de duracion
 - [x] separar resumen historico
 - [x] separar recomendaciones conservadoras de progresion
@@ -949,6 +950,7 @@ Estado parcial:
 - el CSV por serie `gymapp.workout-set-export` version 2 separa `exercise_id`, `base_exercise_id`, `exercise`, `base_exercise` y `variant_label` sin reescribir exports ya guardados
 - el secuenciador de ejercicios, series y superseries vive en `lib/workoutSequence.ts`
 - el calculo de progreso de sesion vive en `lib/workoutProgress.ts`: paso actual, siguiente paso, progreso global, progreso por ejercicio y sesion empezada
+- la preparacion de objetivos de la siguiente serie vive en `lib/workoutTargets.ts`: reps, peso redondeado segun material, duracion, timer inicial y conversion entre barra, multipower, mancuernas, polea, discos, lastre y peso corporal
 - la estimacion derivada de duracion vive en `lib/sessionDuration.js` y se comparte entre la PWA y `npm run validate:plan`
 - la seleccion del entrenamiento recomendado, resolucion de sesion por id y entrenamientos de la semana vive en `lib/sessionSelection.ts`
 - los resumenes de historial, estadisticas y recomendaciones conservadoras de progresion viven en `lib/trainingStats.ts`
