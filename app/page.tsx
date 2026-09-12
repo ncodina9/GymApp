@@ -65,6 +65,7 @@ import {
   getTrainingStatsSummary,
   getVolumeSummary,
   isSessionHistoryComplete,
+  summarizeVolumeExposures,
   type ExerciseProgressInsight,
   type ExerciseProgressionSummary,
   type SessionHistorySummary,
@@ -1221,6 +1222,7 @@ export default function Home() {
     ExerciseProgressionSummary[]
   >([]);
   const [volumeSummary, setVolumeSummary] = useState<VolumeSummary>({
+    exposures: [],
     byMuscle: [],
     byExercise: [],
   });
@@ -1360,7 +1362,7 @@ export default function Home() {
       setSessionHistory([]);
       setExerciseInsights([]);
       setExerciseProgressions([]);
-      setVolumeSummary({ byMuscle: [], byExercise: [] });
+      setVolumeSummary({ exposures: [], byMuscle: [], byExercise: [] });
     } finally {
       setIsLoadingHistory(false);
     }
@@ -3426,6 +3428,7 @@ function StatisticsPanel({
   const [statisticsSection, setStatisticsSection] =
     useState<StatisticsSection>('summary');
   const [selectedWeekFilter, setSelectedWeekFilter] = useState('all');
+  const [selectedSessionFilter, setSelectedSessionFilter] = useState('all');
   const [selectedExerciseFilter, setSelectedExerciseFilter] = useState('all');
   const [selectedTrainingBlockFilter, setSelectedTrainingBlockFilter] =
     useState('all');
@@ -3491,6 +3494,16 @@ function StatisticsPanel({
           summary.weekNumber === Number(selectedWeekFilter),
       ),
     [history, selectedWeekFilter],
+  );
+  const sessionOptions = useMemo(
+    () =>
+      filteredHistory
+        .map((summary) => ({
+          sessionId: summary.sessionId,
+          label: `${formatDate(summary.sessionDate)} · ${summary.sessionLabel}`,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label, 'es')),
+    [filteredHistory],
   );
   const filteredDurationSamples = useMemo(
     () =>
@@ -3591,55 +3604,26 @@ function StatisticsPanel({
       sessionWeekById,
     ],
   );
-  const filteredExerciseIds = new Set(
-    filteredExerciseProgressions.map((progression) => progression.exerciseId),
-  );
-  const filteredVolumeByExercise = volumeSummary.byExercise.filter(
-    (summary) =>
-      (filteredExerciseIds.size === 0 ||
-        filteredExerciseIds.has(summary.exerciseId)) &&
+  const filteredVolumeExposures = volumeSummary.exposures.filter(
+    (exposure) =>
+      (selectedWeekFilter === 'all' ||
+        exposure.weekNumber === Number(selectedWeekFilter)) &&
+      (selectedSessionFilter === 'all' ||
+        exposure.sessionId === selectedSessionFilter) &&
+      (selectedExerciseFilter === 'all' ||
+        exposure.exerciseId === selectedExerciseFilter) &&
       (selectedTrainingBlockFilter === 'all' ||
-        summary.trainingBlock === selectedTrainingBlockFilter) &&
+        exposure.trainingBlock === selectedTrainingBlockFilter) &&
       (selectedMovementPatternFilter === 'all' ||
-        summary.movementPattern === selectedMovementPatternFilter) &&
+        exposure.movementPattern === selectedMovementPatternFilter) &&
       (selectedMuscleFilter === 'all' ||
-        summary.primaryMuscles.includes(selectedMuscleFilter)),
+        exposure.primaryMuscles.includes(selectedMuscleFilter)),
   );
-  const filteredVolumeByMuscle = Array.from(
-    filteredVolumeByExercise
-      .reduce((byMuscle, summary) => {
-        summary.primaryMuscles.forEach((muscle) => {
-          if (
-            selectedMuscleFilter !== 'all' &&
-            selectedMuscleFilter !== muscle
-          ) {
-            return;
-          }
-
-          const current = byMuscle.get(muscle) ?? {
-            muscle,
-            completedSets: 0,
-            totalReps: 0,
-            totalDurationSeconds: 0,
-            totalLoadVolumeKg: 0,
-          };
-
-          current.completedSets += summary.completedSets;
-          current.totalReps += summary.totalReps;
-          current.totalDurationSeconds += summary.totalDurationSeconds;
-          current.totalLoadVolumeKg += summary.totalLoadVolumeKg;
-          byMuscle.set(muscle, current);
-        });
-
-        return byMuscle;
-      }, new Map<string, VolumeSummary['byMuscle'][number]>())
-      .values(),
-  ).sort(
-    (a, b) =>
-      b.completedSets - a.completedSets ||
-      b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
-      a.muscle.localeCompare(b.muscle),
+  const filteredVolumeSummary = summarizeVolumeExposures(
+    filteredVolumeExposures,
   );
+  const filteredVolumeByExercise = filteredVolumeSummary.byExercise;
+  const filteredVolumeByMuscle = filteredVolumeSummary.byMuscle;
   const selectedProgression = filteredExerciseProgressions.find(
     (progression) => progression.exerciseId === expandedExerciseId,
   );
@@ -3755,8 +3739,10 @@ function StatisticsPanel({
     statisticsSection === 'progression';
   const showWeekFilter =
     statisticsSection === 'duration' ||
+    statisticsSection === 'volume' ||
     statisticsSection === 'review' ||
     statisticsSection === 'progression';
+  const showSessionFilter = statisticsSection === 'volume';
   const showTaxonomyFilters =
     statisticsSection === 'volume' ||
     statisticsSection === 'review' ||
@@ -3838,9 +3824,10 @@ function StatisticsPanel({
                 <NativeSelect
                   className="w-full"
                   value={selectedWeekFilter}
-                  onChange={(event) =>
-                    setSelectedWeekFilter(event.target.value)
-                  }
+                  onChange={(event) => {
+                    setSelectedWeekFilter(event.target.value);
+                    setSelectedSessionFilter('all');
+                  }}
                 >
                   <NativeSelectOption value="all">Todas</NativeSelectOption>
                   {weekOptions.map((weekNumber) => (
@@ -3849,6 +3836,28 @@ function StatisticsPanel({
                       value={String(weekNumber)}
                     >
                       Semana {weekNumber}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </label>
+            ) : null}
+            {showSessionFilter ? (
+              <label className="grid gap-1 text-xs font-black text-muted-foreground">
+                Sesión
+                <NativeSelect
+                  className="w-full"
+                  value={selectedSessionFilter}
+                  onChange={(event) =>
+                    setSelectedSessionFilter(event.target.value)
+                  }
+                >
+                  <NativeSelectOption value="all">Todas</NativeSelectOption>
+                  {sessionOptions.map((option) => (
+                    <NativeSelectOption
+                      key={option.sessionId}
+                      value={option.sessionId}
+                    >
+                      {option.label}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
@@ -4005,7 +4014,7 @@ function StatisticsPanel({
         <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-black leading-tight">
-              Volumen acumulado
+              Volumen registrado
             </p>
             <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
               {filteredVolumeByExercise.length} ejercicios

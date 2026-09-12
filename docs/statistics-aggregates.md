@@ -208,7 +208,7 @@ Filtro por ejercicio:
 
 Funcion: `buildStatisticsCsv` en `lib/statisticsExport.ts`.
 
-La exportacion estadistica genera un CSV derivado con schema `gymapp.statistics-export` version `3`.
+La exportacion estadistica genera un CSV derivado con schema `gymapp.statistics-export` version `4`.
 
 Tablas incluidas:
 
@@ -220,6 +220,8 @@ Tablas incluidas:
 Desde la version 2, las filas por ejercicio incluyen `load_type`, `planned_equipment` y `actual_equipment`. Esto permite comparar exposiciones hechas con barra, multipower, mancuernas, polea o discos sin inferir material desde el nombre del ejercicio.
 
 Desde la version 3, las filas estadisticas incluyen taxonomia del plan (`training_block`, `movement_pattern`, `primary_muscles`) y filas nuevas de volumen acumulado por grupo muscular y por ejercicio. El volumen de mancuernas cuenta ambas manos; peso corporal y ejercicios temporizados conservan reps o segundos aunque no aporten carga en kg.
+
+Desde la version 4, la exportacion incluye `exercise_volume_exposure`: una fila por sesion y ejercicio. Estas filas son la fuente derivada para reconstruir volumen por semana o sesion sin depender de agregados globales.
 
 Uso previsto:
 

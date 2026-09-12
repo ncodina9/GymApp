@@ -272,7 +272,7 @@ Notas:
 
 ## CSV de estadísticas
 
-Schema actual: `gymapp.statistics-export`, version `3`.
+Schema actual: `gymapp.statistics-export`, version `4`.
 
 La PWA exporta un CSV derivado desde `Ajustes > Estadísticas > CSV`.
 La implementación portable vive en `lib/statisticsExport.ts`.
@@ -291,12 +291,14 @@ Tablas incluidas en el mismo archivo:
 - `exercise_progression`: exposiciones históricas por ejercicio y sesión con carga máxima, trabajo total, series, RIR medio, molestias y decisión.
 - `muscle_volume`: volumen acumulado por grupo muscular principal, con series, reps, segundos y carga registrada.
 - `exercise_volume`: volumen acumulado por ejercicio, con taxonomía de bloque, patrón y músculos principales.
+- `exercise_volume_exposure`: volumen por sesión y ejercicio, usado para reconstruir filtros exactos por semana o sesión.
 
 Notas:
 
 - Este CSV es un formato de análisis y revisión, no sustituye al backup JSON completo.
 - Desde la version 2, `exercise_insight` y `exercise_progression` conservan `load_type`, `planned_equipment` y `actual_equipment` cuando existen. Las filas globales dejan esos campos vacíos.
 - Desde la version 3, el CSV estadistico añade `training_block`, `movement_pattern` y `primary_muscles`, y exporta filas de volumen por músculo y ejercicio.
+- Desde la version 4, el CSV estadistico añade filas `exercise_volume_exposure` con `date`, `week`, `session_id` y `session` para análisis exacto por sesión.
 - Cada fila incluye `schema_name`, `schema_version`, `exported_at` y `app_version` para poder mezclar exports futuros sin perder trazabilidad.
 - Las tablas se reconstruyen desde los agregados documentados en `docs/statistics-aggregates.md`.
 

@@ -101,6 +101,10 @@ export type MuscleVolumeSummary = {
 };
 
 export type ExerciseVolumeSummary = {
+  sessionId?: string;
+  sessionDate?: string;
+  sessionLabel?: string;
+  weekNumber?: number;
   exerciseId: string;
   exerciseName: string;
   trainingBlock?: string;
@@ -113,6 +117,7 @@ export type ExerciseVolumeSummary = {
 };
 
 export type VolumeSummary = {
+  exposures: ExerciseVolumeSummary[];
   byMuscle: MuscleVolumeSummary[];
   byExercise: ExerciseVolumeSummary[];
 };
@@ -611,6 +616,68 @@ export const getExerciseProgressionSummaries = (
     });
 };
 
+export const summarizeVolumeExposures = (
+  exposures: ExerciseVolumeSummary[],
+): Omit<VolumeSummary, 'exposures'> => {
+  const byMuscle = new Map<string, MuscleVolumeSummary>();
+  const byExercise = new Map<string, ExerciseVolumeSummary>();
+
+  exposures.forEach((exposure) => {
+    const exerciseSummary = byExercise.get(exposure.exerciseId) ?? {
+      exerciseId: exposure.exerciseId,
+      exerciseName: exposure.exerciseName,
+      ...(exposure.trainingBlock
+        ? { trainingBlock: exposure.trainingBlock }
+        : {}),
+      ...(exposure.movementPattern
+        ? { movementPattern: exposure.movementPattern }
+        : {}),
+      primaryMuscles: exposure.primaryMuscles,
+      completedSets: 0,
+      totalReps: 0,
+      totalDurationSeconds: 0,
+      totalLoadVolumeKg: 0,
+    };
+
+    exerciseSummary.completedSets += exposure.completedSets;
+    exerciseSummary.totalReps += exposure.totalReps;
+    exerciseSummary.totalDurationSeconds += exposure.totalDurationSeconds;
+    exerciseSummary.totalLoadVolumeKg += exposure.totalLoadVolumeKg;
+    byExercise.set(exposure.exerciseId, exerciseSummary);
+
+    exposure.primaryMuscles.forEach((muscle) => {
+      const muscleSummary = byMuscle.get(muscle) ?? {
+        muscle,
+        completedSets: 0,
+        totalReps: 0,
+        totalDurationSeconds: 0,
+        totalLoadVolumeKg: 0,
+      };
+
+      muscleSummary.completedSets += exposure.completedSets;
+      muscleSummary.totalReps += exposure.totalReps;
+      muscleSummary.totalDurationSeconds += exposure.totalDurationSeconds;
+      muscleSummary.totalLoadVolumeKg += exposure.totalLoadVolumeKg;
+      byMuscle.set(muscle, muscleSummary);
+    });
+  });
+
+  return {
+    byMuscle: Array.from(byMuscle.values()).sort(
+      (a, b) =>
+        b.completedSets - a.completedSets ||
+        b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
+        a.muscle.localeCompare(b.muscle),
+    ),
+    byExercise: Array.from(byExercise.values()).sort(
+      (a, b) =>
+        b.completedSets - a.completedSets ||
+        b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
+        a.exerciseName.localeCompare(b.exerciseName),
+    ),
+  };
+};
+
 export const getVolumeSummary = (
   sessions: ExportTrainingSession[],
   events: StoredSetEvent[],
@@ -618,8 +685,7 @@ export const getVolumeSummary = (
   const sessionsById = new Map(
     sessions.map((session) => [session.sessionId, session]),
   );
-  const byMuscle = new Map<string, MuscleVolumeSummary>();
-  const byExercise = new Map<string, ExerciseVolumeSummary>();
+  const exposuresByExerciseSession = new Map<string, ExerciseVolumeSummary>();
 
   events
     .filter((event) => event.status === 'completed')
@@ -629,7 +695,7 @@ export const getVolumeSummary = (
         (item) => item.exerciseId === event.exerciseId,
       );
 
-      if (!exercise) {
+      if (!session || !exercise) {
         return;
       }
 
@@ -637,7 +703,12 @@ export const getVolumeSummary = (
       const reps =
         event.actualDurationSeconds === undefined ? event.actualReps : 0;
       const durationSeconds = event.actualDurationSeconds ?? 0;
-      const exerciseSummary = byExercise.get(event.exerciseId) ?? {
+      const exposureKey = `${event.sessionId}|${event.exerciseId}`;
+      const exposure = exposuresByExerciseSession.get(exposureKey) ?? {
+        sessionId: session.sessionId,
+        sessionDate: session.date,
+        sessionLabel: session.label,
+        weekNumber: session.week,
         exerciseId: event.exerciseId,
         exerciseName: exercise.name,
         ...(exercise.trainingBlock
@@ -653,42 +724,24 @@ export const getVolumeSummary = (
         totalLoadVolumeKg: 0,
       };
 
-      exerciseSummary.completedSets += 1;
-      exerciseSummary.totalReps += reps;
-      exerciseSummary.totalDurationSeconds += durationSeconds;
-      exerciseSummary.totalLoadVolumeKg += loadVolumeKg;
-      byExercise.set(event.exerciseId, exerciseSummary);
-
-      (exercise.primaryMuscles ?? []).forEach((muscle) => {
-        const muscleSummary = byMuscle.get(muscle) ?? {
-          muscle,
-          completedSets: 0,
-          totalReps: 0,
-          totalDurationSeconds: 0,
-          totalLoadVolumeKg: 0,
-        };
-
-        muscleSummary.completedSets += 1;
-        muscleSummary.totalReps += reps;
-        muscleSummary.totalDurationSeconds += durationSeconds;
-        muscleSummary.totalLoadVolumeKg += loadVolumeKg;
-        byMuscle.set(muscle, muscleSummary);
-      });
+      exposure.completedSets += 1;
+      exposure.totalReps += reps;
+      exposure.totalDurationSeconds += durationSeconds;
+      exposure.totalLoadVolumeKg += loadVolumeKg;
+      exposuresByExerciseSession.set(exposureKey, exposure);
     });
 
+  const exposures = Array.from(exposuresByExerciseSession.values()).sort(
+    (a, b) =>
+      (b.sessionDate ?? '').localeCompare(a.sessionDate ?? '') ||
+      b.completedSets - a.completedSets ||
+      a.exerciseName.localeCompare(b.exerciseName),
+  );
+  const aggregates = summarizeVolumeExposures(exposures);
+
   return {
-    byMuscle: Array.from(byMuscle.values()).sort(
-      (a, b) =>
-        b.completedSets - a.completedSets ||
-        b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
-        a.muscle.localeCompare(b.muscle),
-    ),
-    byExercise: Array.from(byExercise.values()).sort(
-      (a, b) =>
-        b.completedSets - a.completedSets ||
-        b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
-        a.exerciseName.localeCompare(b.exerciseName),
-    ),
+    exposures,
+    ...aggregates,
   };
 };
 

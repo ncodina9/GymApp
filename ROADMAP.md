@@ -1019,6 +1019,7 @@ Estado parcial:
 - Actualizacion v0.1.11: `Ajustes > Estadisticas` queda dividido en secciones compactas: Resumen, Duracion, Revision, Progresion y Exportar. La revision muestra solo senales accionables y un resumen azul de ejercicios a mantener; el detalle completo queda en Progresion para reducir saturacion en movil.
 - Actualizacion v0.1.12: `Revision` muestra todas las senales activas, alinea el contador con las filas visibles y compacta las tarjetas para evitar scroll horizontal en iPhone.
 - Actualizacion v0.1.13: el plan incorpora taxonomia por ejercicio (`trainingBlock`, `movementPattern`, `primaryMuscles`, `secondaryMuscles`). Estadisticas añade seccion `Volumen`, filtros por bloque, patron y musculo, y CSV estadistico schema v3 con filas de volumen por musculo y ejercicio.
+- Actualizacion v0.1.14: `Volumen` pasa a calcularse desde exposiciones por sesion y ejercicio, permitiendo filtrar con precision por semana y sesion. El CSV estadistico sube a schema v4 e incluye `exercise_volume_exposure`.
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 

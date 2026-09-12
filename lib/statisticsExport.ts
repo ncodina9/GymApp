@@ -17,7 +17,7 @@ type StatisticsCsvInput = {
 };
 
 const schemaName = 'gymapp.statistics-export';
-const schemaVersion = 3;
+const schemaVersion = 4;
 
 export const getStatisticsCsvFileName = (exportedAt: string) =>
   `${exportedAt.slice(0, 10)}-gymapp-statistics.csv`;
@@ -159,16 +159,52 @@ export const buildStatisticsCsv = ({
       '',
       `${summary.totalReps} reps · ${summary.totalDurationSeconds}s`,
     ]),
+    ...volumeSummary.exposures.map((summary) => [
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      'exercise_volume_exposure',
+      summary.sessionDate ?? '',
+      summary.weekNumber ?? '',
+      summary.sessionId ?? '',
+      summary.sessionLabel ?? '',
+      summary.exerciseId,
+      summary.exerciseName,
+      '',
+      '',
+      '',
+      '',
+      summary.trainingBlock ?? '',
+      summary.movementPattern ?? '',
+      summary.primaryMuscles.join('|'),
+      'volume',
+      Math.round(summary.totalLoadVolumeKg),
+      `${summary.completedSets} sets`,
+      '',
+      '',
+      '',
+      `${summary.totalReps} reps · ${summary.totalDurationSeconds}s`,
+    ]),
   ];
 
-  return [
+  const rows = [
     headers,
     ...buildSummaryRows({ exportedAt, appVersion, stats }),
     ...buildHistoryRows({ exportedAt, appVersion, history }),
     ...insightRows,
     ...progressionRows,
     ...volumeRows,
-  ]
+  ];
+  const invalidRow = rows.find((row) => row.length !== headers.length);
+
+  if (invalidRow) {
+    throw new Error(
+      `Invalid statistics CSV row length: expected ${headers.length}, got ${invalidRow.length}.`,
+    );
+  }
+
+  return rows
     .map((row) => row.map((value) => csvEscape(value)).join(','))
     .join('\n');
 };
