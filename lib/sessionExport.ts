@@ -37,6 +37,7 @@ export type ExportExercise = {
   name: string;
   type: string;
   block: string;
+  equipment?: string;
   supersetId?: string;
   supersetOrder?: number;
   phase: string;
@@ -140,16 +141,41 @@ export type FullTrainingDataExportInput = {
 };
 
 export const inferLoadType = (
-  exercise: Pick<ExportExercise, 'name' | 'notes' | 'sets'> | undefined,
+  exercise:
+    | Pick<ExportExercise, 'name' | 'notes' | 'sets' | 'equipment'>
+    | undefined,
 ): LoadType => {
+  if (exercise?.equipment === 'dumbbell') {
+    return 'per_dumbbell';
+  }
+
+  if (exercise?.equipment === 'cable') {
+    return 'machine';
+  }
+
+  if (exercise?.equipment === 'plate_loaded_machine') {
+    return 'machine';
+  }
+
+  if (exercise?.equipment === 'external') {
+    return 'external';
+  }
+
+  if (exercise?.equipment === 'bodyweight') {
+    return 'bodyweight';
+  }
+
+  if (
+    exercise?.equipment === 'barbell' ||
+    exercise?.equipment === 'multipower'
+  ) {
+    return 'total';
+  }
+
   const text = `${exercise?.name ?? ''} ${exercise?.notes ?? ''}`.toLowerCase();
 
   if (text.includes('dominadas') && !text.includes('peso corporal')) {
     return 'external';
-  }
-
-  if (text.includes('press banca inclinado con barra o mancuernas')) {
-    return 'total';
   }
 
   if (
@@ -324,7 +350,9 @@ export const buildWorkoutCsv = (
         : record.actualDurationSeconds !== undefined
           ? `${record.actualDurationSeconds}s`
           : record.actualReps,
-      isSkipped ? '' : record.rirLast,
+      isSkipped || record.actualDurationSeconds !== undefined
+        ? ''
+        : record.rirLast,
       record.painKnee,
       record.painWrist,
       record.painShoulder ?? 0,

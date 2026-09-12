@@ -265,12 +265,15 @@ export const getExerciseProgressInsights = (
       const lastDecision = metadataBySession.get(lastEvent.sessionId)
         ?.decisions?.[exerciseId];
       const decisionText = lastDecision?.toLowerCase() ?? '';
+      const completedRirEvents = completedEvents.filter(
+        (event) => event.actualDurationSeconds === undefined,
+      );
       const avgRecentRir =
-        completedEvents.length > 0
-          ? completedEvents
-              .slice(-Math.min(3, completedEvents.length))
+        completedRirEvents.length > 0
+          ? completedRirEvents
+              .slice(-Math.min(3, completedRirEvents.length))
               .reduce((total, event) => total + event.rirLast, 0) /
-            Math.min(3, completedEvents.length)
+            Math.min(3, completedRirEvents.length)
           : 0;
 
       let tone: ExerciseProgressInsight['tone'] = 'neutral';
@@ -315,8 +318,10 @@ export const getExerciseProgressInsights = (
                     lastDurationSeconds:
                       lastCompletedEvent.actualDurationSeconds,
                   }
-                : { lastReps: lastCompletedEvent.actualReps }),
-              lastRir: lastCompletedEvent.rirLast,
+                : {
+                    lastReps: lastCompletedEvent.actualReps,
+                    lastRir: lastCompletedEvent.rirLast,
+                  }),
             }
           : {}),
         ...(lastDecision ? { lastDecision } : {}),
@@ -420,14 +425,17 @@ export const getExerciseProgressionSummaries = (
           const completedLoads = completedEvents
             .map((event) => event.actualWeightKg)
             .filter((weight) => weight > 0);
+          const completedRirEvents = completedEvents.filter(
+            (event) => event.actualDurationSeconds === undefined,
+          );
           const averageRir =
-            completedEvents.length > 0
+            completedRirEvents.length > 0
               ? Math.round(
-                  (completedEvents.reduce(
+                  (completedRirEvents.reduce(
                     (total, event) => total + event.rirLast,
                     0,
                   ) /
-                    completedEvents.length) *
+                    completedRirEvents.length) *
                     10,
                 ) / 10
               : undefined;

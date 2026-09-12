@@ -10,6 +10,29 @@ const planPath = resolve('data/trainingPlan.json');
 const trainingPlan = JSON.parse(readFileSync(planPath, 'utf8'));
 
 const errors = [];
+const barbellWeightKg = 20;
+const multipowerBarWeightKg = 18;
+const dumbbellLoadsKg = [
+  5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30,
+];
+const plateInventoryKg = [
+  { weight: 1.25, count: 4 },
+  { weight: 2.5, count: 4 },
+  { weight: 5, count: 12 },
+  { weight: 10, count: 12 },
+  { weight: 15, count: 2 },
+  { weight: 20, count: 4 },
+];
+const cableLoadsKg = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
+const allowedEquipment = new Set([
+  'barbell',
+  'multipower',
+  'dumbbell',
+  'cable',
+  'plate_loaded_machine',
+  'external',
+  'bodyweight',
+]);
 
 const getSupersetMembers = (session, supersetId) =>
   session.exercises
@@ -124,6 +147,30 @@ for (const session of trainingPlan.sessions ?? []) {
     ) {
       errors.push(`${sessionLabel}: las planchas deben durar siempre 60 s.`);
     }
+
+    if (!allowedEquipment.has(exercise.equipment)) {
+      errors.push(
+        `${sessionLabel}: ${exercise.exerciseId} no tiene equipamiento valido.`,
+      );
+    }
+
+    if (
+      /(barra o mancuernas|barra o remo|agarre cerrado o|prensa\/multipower)/i.test(
+        exercise.name,
+      )
+    ) {
+      errors.push(
+        `${sessionLabel}: ${exercise.exerciseId} mantiene una variante de material ambigua.`,
+      );
+    }
+
+    exercise.sets.forEach((set) => {
+      if (!isAvailableLoad(exercise.equipment, set.targetWeightKg)) {
+        errors.push(
+          `${sessionLabel}: ${exercise.exerciseId} usa ${set.targetWeightKg} kg no montables para ${exercise.equipment}.`,
+        );
+      }
+    });
   }
 
   const supersetIds = [
@@ -199,3 +246,82 @@ console.log('Plan validation OK');
 console.log(`Sessions: ${trainingPlan.sessions.length}`);
 console.log(`Max derived estimate: ${maxEstimate} min`);
 console.log(`Superset blocks checked: ${supersetBlocksChecked}`);
+
+function isAvailableLoad(equipment, weightKg) {
+  if (weightKg === 0) {
+    return equipment === 'bodyweight' || equipment === 'cable';
+  }
+
+  const loads = getAvailableLoads(equipment);
+  return loads.some((load) => Math.abs(load - weightKg) < 0.001);
+}
+
+function getAvailableLoads(equipment) {
+  if (equipment === 'dumbbell') {
+    return dumbbellLoadsKg;
+  }
+
+  if (equipment === 'cable') {
+    return cableLoadsKg;
+  }
+
+  if (equipment === 'external' || equipment === 'plate_loaded_machine') {
+    return buildPlateCombinationLoads();
+  }
+
+  if (equipment === 'multipower') {
+    return buildLoadedBarLoads(multipowerBarWeightKg);
+  }
+
+  if (equipment === 'barbell') {
+    return buildLoadedBarLoads(barbellWeightKg);
+  }
+
+  return [0];
+}
+
+function buildLoadedBarLoads(barWeightKg) {
+  return Array.from(
+    new Set(
+      buildSidePlateLoads().map(
+        (sideLoad) => Math.round((barWeightKg + sideLoad * 2) * 100) / 100,
+      ),
+    ),
+  );
+}
+
+function buildSidePlateLoads() {
+  const pairs = plateInventoryKg.map((plate) => ({
+    weight: plate.weight,
+    count: Math.floor(plate.count / 2),
+  }));
+  const loads = new Set([0]);
+
+  pairs.forEach((plate) => {
+    const existing = Array.from(loads);
+
+    existing.forEach((load) => {
+      Array.from({ length: plate.count }).forEach((_, index) => {
+        loads.add(Math.round((load + plate.weight * (index + 1)) * 100) / 100);
+      });
+    });
+  });
+
+  return Array.from(loads);
+}
+
+function buildPlateCombinationLoads() {
+  const loads = new Set([0]);
+
+  plateInventoryKg.forEach((plate) => {
+    const existing = Array.from(loads);
+
+    existing.forEach((load) => {
+      Array.from({ length: plate.count }).forEach((_, index) => {
+        loads.add(Math.round((load + plate.weight * (index + 1)) * 100) / 100);
+      });
+    });
+  });
+
+  return Array.from(loads);
+}

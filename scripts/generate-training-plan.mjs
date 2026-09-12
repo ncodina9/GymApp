@@ -17,6 +17,7 @@ const sourceDocument =
   '/Users/nstr/Library/Mobile Documents/iCloud~md~obsidian/Documents/LifeOS/10. Gym/Plan entrenamiento 3 meses.md';
 
 const barbellWeightKg = 20;
+const multipowerBarWeightKg = 18;
 const dumbbellLoadsKg = [
   5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30,
 ];
@@ -28,7 +29,8 @@ const plateInventoryKg = [
   { weight: 15, count: 2 },
   { weight: 20, count: 4 },
 ];
-const barbellLoadsKg = buildBarbellLoads();
+const barbellLoadsKg = buildBarbellLoads(barbellWeightKg);
+const multipowerLoadsKg = buildBarbellLoads(multipowerBarWeightKg);
 const externalLoadsKg = buildPlateCombinationLoads();
 const cableLoadsKg = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
 
@@ -51,6 +53,7 @@ const baseSessions = {
           'Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente.',
           'Mantener 1-2 RIR en la última serie.',
         ],
+        { equipment: 'barbell' },
       ),
       exercise(
         'dominadas-lastradas',
@@ -65,6 +68,7 @@ const baseSessions = {
           'Registrar siempre el lastre exacto.',
           'Parar si la barbilla no pasa clara.',
         ],
+        { equipment: 'external' },
       ),
       exercise(
         'remo-inclinado-barra',
@@ -76,6 +80,7 @@ const baseSessions = {
         57.5,
         120,
         ['Torso firme y mismo ángulo en todas las reps.'],
+        { equipment: 'barbell' },
       ),
       exercise(
         'press-militar-sentado',
@@ -89,6 +94,7 @@ const baseSessions = {
         [
           'Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.',
         ],
+        { equipment: 'barbell' },
       ),
       exercise(
         'elevaciones-laterales',
@@ -100,6 +106,7 @@ const baseSessions = {
         9,
         60,
         ['Rango 15-20 reps. Peso por mancuerna.'],
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'curl-biceps-alterno',
@@ -111,6 +118,7 @@ const baseSessions = {
         15,
         60,
         ['Rango 8-10 reps. Peso por mancuerna.'],
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'triceps-polea-simple',
@@ -122,6 +130,7 @@ const baseSessions = {
         0,
         60,
         ['Usar RIR 2 hasta acumular historial de polea.'],
+        { equipment: 'cable' },
       ),
     ],
   },
@@ -141,8 +150,9 @@ const baseSessions = {
         150,
         [
           'Tempo controlado: 2 s bajada y pausa corta abajo.',
-          'Si rodilla molesta, cambiar a multipower o reducir rango.',
+          'Si rodilla molesta, reducir rango o revisar variante antes de subir carga.',
         ],
+        { equipment: 'barbell' },
       ),
       exercise(
         'peso-muerto-rumano-barra',
@@ -154,6 +164,7 @@ const baseSessions = {
         65,
         150,
         ['Cadera atrás, espalda neutra y barra pegada.'],
+        { equipment: 'barbell' },
       ),
       exercise(
         'hip-thrust-barra',
@@ -165,6 +176,7 @@ const baseSessions = {
         90,
         120,
         ['Pausa clara arriba sin sacrificar bloqueo de cadera.'],
+        { equipment: 'barbell' },
       ),
       exercise(
         'extension-cuadriceps',
@@ -176,28 +188,33 @@ const baseSessions = {
         32.5,
         75,
         ['No empujar dolor de rodilla por encima de 3/10.'],
+        { equipment: 'plate_loaded_machine' },
       ),
       exercise(
         'curl-femoral-maquina',
-        'Curl femoral máquina',
+        'Curl femoral en banco con discos',
         'Accesorio',
         'D2',
         3,
         11,
-        0,
+        20,
         75,
-        ['Usar RIR 2 hasta acumular referencia de carga.'],
+        [
+          'Usar el mismo banco que la extensión de cuádriceps y cargar con discos.',
+        ],
+        { equipment: 'plate_loaded_machine' },
       ),
       exercise(
         'gemelos-pie',
-        'Elevación de gemelos de pie',
+        'Elevación de gemelos en multipower',
         'Accesorio',
         'E',
         3,
         12,
-        50,
+        58,
         60,
         ['Pausa 1 s arriba y bajada controlada.'],
+        { equipment: 'multipower' },
       ),
       exercise(
         'core-plancha-dead-bug',
@@ -209,7 +226,7 @@ const baseSessions = {
         0,
         45,
         ['Series de 60 s sin perder posición.'],
-        { measure: 'duration' },
+        { equipment: 'bodyweight', measure: 'duration' },
       ),
     ],
   },
@@ -220,14 +237,15 @@ const baseSessions = {
     exercises: [
       exercise(
         'press-banca-inclinado',
-        'Press banca inclinado con barra o mancuernas',
+        'Press banca inclinado con barra',
         'Básico',
         'A',
         4,
         8,
         47.5,
         90,
-        ['Usar 45-50 kg en barra o 22.5 kg por mancuerna.'],
+        ['Usar barra y mantener recorrido estable.'],
+        { equipment: 'barbell' },
       ),
       exercise(
         'dominadas-peso-corporal',
@@ -239,6 +257,7 @@ const baseSessions = {
         0,
         90,
         ['Rango 8-10 reps, dejando 1-2 reps en recámara.'],
+        { equipment: 'bodyweight' },
       ),
       exercise(
         'press-militar-sentado-velocidad',
@@ -253,17 +272,19 @@ const baseSessions = {
           'Sentado en banco para proteger la espalda.',
           'La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.',
         ],
+        { equipment: 'barbell' },
       ),
       exercise(
         'remo-barra-multipower',
-        'Remo con barra o remo en multipower',
+        'Remo en multipower',
         'Básico',
         'D',
         4,
         10,
-        52.5,
+        53,
         90,
         ['Mantener tensión y recorrido estable.'],
+        { equipment: 'multipower' },
       ),
       exercise(
         'pullover-mancuerna',
@@ -275,6 +296,7 @@ const baseSessions = {
         28.75,
         60,
         ['Rango 10-12 reps.'],
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'elevaciones-laterales-volumen',
@@ -286,6 +308,7 @@ const baseSessions = {
         9,
         45,
         ['Rango 15-20 reps. Peso por mancuerna.'],
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'curl-martillo',
@@ -297,6 +320,7 @@ const baseSessions = {
         15,
         45,
         ['Rango 10-12 reps. Peso por mancuerna.'],
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'triceps-polea-volumen',
@@ -308,6 +332,7 @@ const baseSessions = {
         0,
         45,
         ['Rango 12-15 reps con RIR 2.'],
+        { equipment: 'cable' },
       ),
     ],
   },
@@ -318,7 +343,7 @@ const baseSessions = {
     exercises: [
       exercise(
         'press-cerrado-multipower',
-        'Press banca agarre cerrado o press en multipower',
+        'Press banca agarre cerrado en multipower',
         'Básico',
         'A',
         4,
@@ -326,6 +351,7 @@ const baseSessions = {
         57.5,
         120,
         ['Rango 6-8 reps. Cuidar muñeca.'],
+        { equipment: 'multipower' },
       ),
       exercise(
         'dominadas-supinas',
@@ -336,7 +362,8 @@ const baseSessions = {
         7,
         0,
         120,
-        ['Peso corporal o +2.5 kg si sale limpio.'],
+        ['Peso corporal, dejando 1-2 reps en recámara.'],
+        { equipment: 'bodyweight' },
       ),
       exercise(
         'rdl-tecnico',
@@ -348,6 +375,7 @@ const baseSessions = {
         60,
         90,
         ['Tempo 3 s bajada, 1 s pausa, subida firme.'],
+        { equipment: 'barbell' },
       ),
       exercise(
         'hip-thrust-volumen',
@@ -359,28 +387,31 @@ const baseSessions = {
         85,
         90,
         ['Rango 10-12 reps. Pausa arriba.'],
+        { equipment: 'barbell' },
       ),
       exercise(
         'gemelos-sentado-multipower',
-        'Elevación de gemelos sentado o en prensa/multipower',
+        'Elevación de gemelos sentado en multipower',
         'Accesorio',
         'E',
         2,
         15,
-        0,
+        58,
         60,
-        ['Usar RIR 2 si la máquina no tiene referencia clara.'],
+        ['Pausa 1 s arriba y bajada controlada.'],
+        { equipment: 'multipower' },
       ),
       exercise(
         'curl-biceps-barra-mancuernas',
-        'Curl bíceps barra o mancuernas',
+        'Curl bíceps con mancuernas',
         'Accesorio',
         'F1',
         2,
         11,
         15,
         60,
-        ['Peso por mancuerna si se usan mancuernas.'],
+        ['Peso por mancuerna.'],
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'extension-triceps-polea',
@@ -392,6 +423,7 @@ const baseSessions = {
         0,
         60,
         ['Rango 10-12 reps con RIR 2.'],
+        { equipment: 'cable' },
       ),
       exercise(
         'elevacion-lateral-mecanica',
@@ -405,6 +437,7 @@ const baseSessions = {
         [
           'Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.',
         ],
+        { equipment: 'dumbbell' },
       ),
     ],
   },
@@ -512,6 +545,7 @@ function exercise(
     restSeconds,
     notes,
     measure: options.measure ?? 'reps',
+    equipment: options.equipment,
   };
 }
 
@@ -622,6 +656,7 @@ function adaptExercise(item, week) {
     name: item.name,
     type: item.type,
     block: item.block,
+    equipment: item.equipment,
     supersetId: item.supersetId,
     supersetOrder: item.supersetOrder,
     phase,
@@ -832,6 +867,12 @@ function getRealizationRest(item, fallbackRestSeconds) {
 }
 
 function decisionOptions(item, week, weightKg, options = {}) {
+  if (item.measure === 'duration') {
+    return options.postVacationAdaptation
+      ? ['Mantener 60s suave', 'Mejorar posición', 'Marcar molestia']
+      : ['Mantener 60s', 'Mejorar posición', 'Marcar molestia'];
+  }
+
   if (weightKg === 0) {
     return options.postVacationAdaptation
       ? ['Mantener suave', 'Subir reps si fácil', 'Marcar molestia']
@@ -934,6 +975,10 @@ function getAvailableLoad(item, value) {
     return nearestAvailable(value, externalLoadsKg);
   }
 
+  if (loadKind === 'multipower') {
+    return nearestAvailable(value, multipowerLoadsKg);
+  }
+
   return nearestAvailable(value, barbellLoadsKg);
 }
 
@@ -976,12 +1021,43 @@ function getAvailableLoads(item) {
     return externalLoadsKg;
   }
 
+  if (loadKind === 'multipower') {
+    return multipowerLoadsKg;
+  }
+
   return barbellLoadsKg;
 }
 
 function getLoadKind(item) {
   const text =
     `${item.exerciseId} ${item.name} ${item.notes.join(' ')}`.toLowerCase();
+
+  if (item.equipment === 'dumbbell') {
+    return 'dumbbell';
+  }
+
+  if (item.equipment === 'cable') {
+    return 'machine';
+  }
+
+  if (
+    item.equipment === 'plate_loaded_machine' ||
+    item.equipment === 'external'
+  ) {
+    return 'external';
+  }
+
+  if (item.equipment === 'bodyweight') {
+    return 'bodyweight';
+  }
+
+  if (item.equipment === 'multipower') {
+    return 'multipower';
+  }
+
+  if (item.equipment === 'barbell') {
+    return 'barbell';
+  }
 
   if (item.measure === 'duration') {
     return 'bodyweight';
@@ -997,7 +1073,7 @@ function getLoadKind(item) {
     text.includes('elevación lateral') ||
     text.includes('curl martillo') ||
     text.includes('curl bíceps') ||
-    (text.includes('mancuerna') && !text.includes('barra o mancuernas'))
+    (text.includes('mancuerna') && !text.includes('barra'))
   ) {
     return 'dumbbell';
   }
@@ -1041,12 +1117,10 @@ function nearestAvailable(value, loads) {
   }, loads[0]);
 }
 
-function buildBarbellLoads() {
+function buildBarbellLoads(barWeightKg) {
   const sideLoads = buildSidePlateLoads();
   return Array.from(
-    new Set(
-      sideLoads.map((sideLoad) => roundLoad(barbellWeightKg + sideLoad * 2)),
-    ),
+    new Set(sideLoads.map((sideLoad) => roundLoad(barWeightKg + sideLoad * 2))),
   ).sort((a, b) => a - b);
 }
 

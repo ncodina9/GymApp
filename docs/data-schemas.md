@@ -66,6 +66,7 @@ type Exercise = {
   name: string;
   type: string;
   block: string;
+  equipment?: string;
   supersetId?: string;
   supersetOrder?: number;
   phase: string;
@@ -80,6 +81,7 @@ Notas:
 
 - `exerciseId` debe mantenerse estable entre versiones del plan para poder analizar progresión.
 - `block` conserva el orden de planificación, por ejemplo `A`, `B`, `E1`, `E2`.
+- `equipment` fija el material real previsto para calcular cargas montables: `barbell`, `multipower`, `dumbbell`, `cable`, `plate_loaded_machine`, `external` o `bodyweight`.
 - `supersetId` agrupa ejercicios vinculados.
 - `supersetOrder` define el orden dentro de una superserie.
 - `target` es texto de presentación; para lógica debe usarse `sets`.

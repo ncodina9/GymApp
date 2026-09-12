@@ -307,12 +307,12 @@ Ya esta implementada una primera version funcional de la app:
 - reanudacion de entrenamiento iniciado
 - previsualizacion previa con ejercicios, series, reps/tiempo y pesos
 - pantalla de serie sin teclado, con controles grandes de reps/peso
-- incremento de peso con paso configurable de `1 kg` o `0.5 kg`
+- ajuste de peso segun material real del ejercicio
 - soporte para ejercicios temporizados con cuenta atras circular
 - feedback despues de cada serie, antes del descanso
 - descanso con cuenta atras circular y ajuste de `-15s` / `+15s`
 - persistencia local con IndexedDB y recuperacion del borrador desde `localStorage`
-- ajustes organizados por secciones: apariencia, entrenamiento, instalacion, datos locales, progresion e historial
+- ajustes organizados por secciones: apariencia, entrenamiento, instalacion, datos locales, estadisticas e historial
 - temas claro y oscuro minimalistas
 - iconos PWA y manifest para instalacion en iPhone
 - service worker basico
@@ -321,7 +321,8 @@ Ya esta implementada una primera version funcional de la app:
 - generador del plan en `scripts/generate-training-plan.mjs`
 - superseries v1 mediante bloques `E1/E2`, `F1/F2`, etc.
 - planchas ajustadas a series de 60 s
-- cargas del plan ajustadas al material disponible: mancuernas, discos y polea
+- cargas del plan ajustadas al material disponible: barra, multipower, mancuernas, discos y polea
+- equipamiento elegido por ejercicio en el JSON para evitar alternativas ambiguas y calcular cargas montables
 - textos visibles de la app con acentos y eñes
 - ajuste opcional para mantener la pantalla encendida cuando el navegador lo soporte
 - colores ligeros por tipo de acción secundaria en controles táctiles
@@ -509,7 +510,8 @@ Tareas:
 
 - fijar las planchas a duraciones de 60 s siempre
 - redondear mancuernas a la lista disponible: `5`, `6`, `7.5`, `8`, `9`, `10`, `12.5`, `15`, `17.5`, `20`, `22.5`, `25`, `27.5`, `30`
-- redondear barra/multipower a combinaciones simétricas de barra de 20 kg y discos disponibles
+- redondear barra a combinaciones simétricas de barra de 20 kg y discos disponibles
+- redondear multipower a combinaciones simétricas de barra de 18 kg y discos disponibles
 - redondear lastre a combinaciones de discos disponibles
 - redondear polea a saltos de 5 kg hasta 100 kg cuando haya carga conocida
 - regenerar `data/trainingPlan.json` desde `scripts/generate-training-plan.mjs`
@@ -519,6 +521,7 @@ Criterio de aceptacion:
 
 - todas las planchas del JSON muestran `60s`
 - todo `targetWeightKg` no nulo corresponde a una carga disponible
+- los ejercicios con varias variantes de material quedan fijados a una opcion concreta en el plan
 - las opciones de subir/bajar carga proponen también pesos disponibles
 
 ### Hito 9: Textos completos en español

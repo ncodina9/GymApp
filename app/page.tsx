@@ -139,6 +139,7 @@ type Exercise = {
   name: string;
   type: string;
   block: string;
+  equipment?: string;
   supersetId?: string;
   supersetOrder?: number;
   phase: string;
@@ -250,6 +251,7 @@ const wakeLockStorageKey = 'gymapp:keep-screen-awake';
 const exportedSessionRetentionDays = 30;
 
 const barbellWeightKg = 20;
+const multipowerBarWeightKg = 18;
 const dumbbellLoadsKg = [
   5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30,
 ];
@@ -781,13 +783,17 @@ const buildPlateCombinationLoads = () => {
     .sort((a, b) => a - b);
 };
 
-const barbellLoadsKg = Array.from(
-  new Set(
-    buildSidePlateLoads().map(
-      (sideLoad) => Math.round((barbellWeightKg + sideLoad * 2) * 2) / 2,
+const buildSymmetricLoadedBarLoads = (barWeightKg: number) =>
+  Array.from(
+    new Set(
+      buildSidePlateLoads().map(
+        (sideLoad) => Math.round((barWeightKg + sideLoad * 2) * 2) / 2,
+      ),
     ),
-  ),
-).sort((a, b) => a - b);
+  ).sort((a, b) => a - b);
+
+const barbellLoadsKg = buildSymmetricLoadedBarLoads(barbellWeightKg);
+const multipowerLoadsKg = buildSymmetricLoadedBarLoads(multipowerBarWeightKg);
 const externalLoadsKg = buildPlateCombinationLoads();
 
 const isWeightStep = (value: unknown): value is WeightStep =>
@@ -797,8 +803,15 @@ const isWeightStep = (value: unknown): value is WeightStep =>
   value === 2.5 ||
   value === 5;
 
-const getWeightStepOptions = (loadType: LoadType): WeightStep[] => {
-  if (loadType === 'total' || loadType === 'external') {
+const getWeightStepOptions = (
+  loadType: LoadType,
+  equipment?: Exercise['equipment'],
+): WeightStep[] => {
+  if (
+    loadType === 'total' ||
+    loadType === 'external' ||
+    equipment === 'plate_loaded_machine'
+  ) {
     return [1.25, 2.5, 5];
   }
 
@@ -816,14 +829,22 @@ const getWeightStepOptions = (loadType: LoadType): WeightStep[] => {
 const normalizeWeightStep = (
   value: WeightStep,
   loadType: LoadType,
+  equipment?: Exercise['equipment'],
 ): WeightStep => {
-  const options = getWeightStepOptions(loadType);
+  const options = getWeightStepOptions(loadType, equipment);
   return options.includes(value) ? value : options[0];
 };
 
-const getAvailableLoadsForType = (loadType: LoadType) => {
+const getAvailableLoadsForType = (
+  loadType: LoadType,
+  equipment?: Exercise['equipment'],
+) => {
   if (loadType === 'per_dumbbell') {
     return dumbbellLoadsKg;
+  }
+
+  if (equipment === 'plate_loaded_machine') {
+    return externalLoadsKg;
   }
 
   if (loadType === 'machine') {
@@ -831,6 +852,10 @@ const getAvailableLoadsForType = (loadType: LoadType) => {
   }
 
   if (loadType === 'total') {
+    if (equipment === 'multipower') {
+      return multipowerLoadsKg;
+    }
+
     return barbellLoadsKg;
   }
 
@@ -846,6 +871,7 @@ const getWeightDelta = (loadType: LoadType, step: WeightStep) =>
 
 const getAdjustedWeight = (
   loadType: LoadType,
+  equipment: Exercise['equipment'] | undefined,
   currentWeight: number,
   step: WeightStep,
   direction: -1 | 1,
@@ -854,10 +880,10 @@ const getAdjustedWeight = (
     return 0;
   }
 
-  const normalizedStep = normalizeWeightStep(step, loadType);
+  const normalizedStep = normalizeWeightStep(step, loadType, equipment);
   const target =
     currentWeight + getWeightDelta(loadType, normalizedStep) * direction;
-  const loads = getAvailableLoadsForType(loadType);
+  const loads = getAvailableLoadsForType(loadType, equipment);
 
   if (direction > 0) {
     return (
@@ -871,7 +897,14 @@ const getAdjustedWeight = (
   );
 };
 
-const getPreviewLoadLabel = (loadType: LoadType) => {
+const getPreviewLoadLabel = (
+  loadType: LoadType,
+  equipment?: Exercise['equipment'],
+) => {
+  if (equipment === 'plate_loaded_machine') {
+    return 'discos';
+  }
+
   if (loadType === 'external') {
     return 'lastre';
   }
@@ -909,7 +942,7 @@ const getExercisePreviewMetrics = (exercise: Exercise) => {
       work: durations.join('/'),
       workLabel: 'tiempo',
       load: loads.join('/'),
-      loadLabel: getPreviewLoadLabel(loadType),
+      loadLabel: getPreviewLoadLabel(loadType, exercise.equipment),
     };
   }
 
@@ -922,7 +955,7 @@ const getExercisePreviewMetrics = (exercise: Exercise) => {
     work: reps.join('/'),
     workLabel: 'reps',
     load: loads.join('/'),
-    loadLabel: getPreviewLoadLabel(loadType),
+    loadLabel: getPreviewLoadLabel(loadType, exercise.equipment),
   };
 };
 
@@ -959,7 +992,7 @@ const getNextSetPreview = (
       work: formatClock(set.targetDurationSeconds ?? 0),
       workLabel: 'tiempo',
       load: formatPreviewLoad(set.targetWeightKg, loadType),
-      loadLabel: getPreviewLoadLabel(loadType),
+      loadLabel: getPreviewLoadLabel(loadType, exercise.equipment),
     };
   }
 
@@ -969,7 +1002,7 @@ const getNextSetPreview = (
     work: String(set.targetReps ?? 0),
     workLabel: 'reps',
     load: formatPreviewLoad(set.targetWeightKg, loadType),
-    loadLabel: getPreviewLoadLabel(loadType),
+    loadLabel: getPreviewLoadLabel(loadType, exercise.equipment),
   };
 };
 
@@ -1284,7 +1317,9 @@ export default function Home() {
 
       document.documentElement.classList.toggle('dark', shouldUseDark);
       document.documentElement.dataset.appearanceTheme = appearanceTheme;
-      window.localStorage.setItem(themeStorageKey, appearanceTheme);
+      if (hasLoadedDraft) {
+        window.localStorage.setItem(themeStorageKey, appearanceTheme);
+      }
     };
 
     applyTheme();
@@ -1297,7 +1332,7 @@ export default function Home() {
     media.addEventListener('change', applyTheme);
 
     return () => media.removeEventListener('change', applyTheme);
-  }, [appearanceTheme]);
+  }, [appearanceTheme, hasLoadedDraft]);
 
   useEffect(() => {
     if (!hasLoadedDraft) {
@@ -2083,6 +2118,7 @@ export default function Home() {
             reps={draft.editedReps}
             weight={draft.editedWeight}
             loadType={inferLoadType(currentExercise)}
+            equipment={currentExercise.equipment}
             durationSeconds={draft.editedDurationSeconds}
             timerRemaining={draft.setTimerRemaining}
             isTimerRunning={draft.isSetTimerRunning}
@@ -2133,6 +2169,7 @@ export default function Home() {
             weight={draft.editedWeight}
             durationSeconds={draft.editedDurationSeconds}
             loadType={inferLoadType(currentExercise)}
+            equipment={currentExercise.equipment}
             weightStep={draft.weightStep}
             onCancel={() => patchDraft({ phase: 'set' })}
             onConfirm={({ reps, weight, durationSeconds, weightStep }) =>
@@ -3038,6 +3075,17 @@ function getProgressionCardToneClassName(
   }[tone];
 }
 
+function getProgressionRecommendationToneClassName(
+  tone: ExerciseProgressInsight['tone'],
+  recommendation: string,
+) {
+  if (recommendation.toLowerCase().includes('candidato')) {
+    return 'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]';
+  }
+
+  return getInsightToneClassName(tone);
+}
+
 function StatisticsPanel({
   stats,
   history,
@@ -3696,8 +3744,9 @@ function ExerciseProgressionCard({
       {isExpanded ? (
         <div className="grid gap-1.5 rounded-[1.5rem] border bg-secondary p-2">
           <div
-            className={`rounded-[1.1rem] border px-3 py-2 text-sm font-black leading-tight ${getInsightToneClassName(
+            className={`rounded-[1.1rem] border px-3 py-2 text-sm font-black leading-tight ${getProgressionRecommendationToneClassName(
               progression.tone,
+              progression.recommendation,
             )}`}
           >
             {progression.recommendation}
@@ -3836,6 +3885,7 @@ function SetScreen({
   reps,
   weight,
   loadType,
+  equipment,
   durationSeconds,
   timerRemaining,
   isTimerRunning,
@@ -3862,6 +3912,7 @@ function SetScreen({
   reps: number;
   weight: number;
   loadType: LoadType;
+  equipment?: Exercise['equipment'];
   durationSeconds: number;
   timerRemaining: number;
   isTimerRunning: boolean;
@@ -3946,7 +3997,7 @@ function SetScreen({
           <TappableNumber
             label="Peso"
             value={formatWeight(weight)}
-            hint={getPreviewLoadLabel(loadType)}
+            hint={getPreviewLoadLabel(loadType, equipment)}
             onClick={onEdit}
           />
         </div>
@@ -4306,6 +4357,7 @@ function FeedbackScreen({
       )}
 
       <SetFeedback
+        showRir={!isTimed}
         rir={rir}
         painKnee={painKnee}
         painWrist={painWrist}
@@ -4350,6 +4402,7 @@ function FeedbackScreen({
 const noteOptions = ['OK', 'Pesado', 'Técnica', 'Molestia'];
 
 function SetFeedback({
+  showRir = true,
   rir,
   painKnee,
   painWrist,
@@ -4363,6 +4416,7 @@ function SetFeedback({
   onPainLowerBackChange,
   onSetNoteChange,
 }: {
+  showRir?: boolean;
   rir: number;
   painKnee: number;
   painWrist: number;
@@ -4378,36 +4432,38 @@ function SetFeedback({
 }) {
   return (
     <div className="grid shrink-0 gap-2 rounded-lg border bg-card p-2.5">
-      <div
-        className="grid items-center gap-2"
-        style={{ gridTemplateColumns: 'minmax(0, 1fr) 112px' }}
-      >
-        <span className="text-sm font-black text-muted-foreground">RIR</span>
+      {showRir ? (
         <div
-          className="grid items-center gap-1"
-          style={{ gridTemplateColumns: '44px minmax(0, 1fr) 44px' }}
+          className="grid items-center gap-2"
+          style={{ gridTemplateColumns: 'minmax(0, 1fr) 112px' }}
         >
-          <Button
-            aria-label="Bajar RIR"
-            className={`h-10 w-full rounded-md ${actionStyles.minus}`}
-            variant="secondary"
-            onClick={() => onRirChange(Math.max(0, rir - 1))}
+          <span className="text-sm font-black text-muted-foreground">RIR</span>
+          <div
+            className="grid items-center gap-1"
+            style={{ gridTemplateColumns: '44px minmax(0, 1fr) 44px' }}
           >
-            <Minus className="size-4" />
-          </Button>
-          <span className="text-center text-xl font-black tabular-nums">
-            {rir}
-          </span>
-          <Button
-            aria-label="Subir RIR"
-            className={`h-10 w-full rounded-md ${actionStyles.plus}`}
-            variant="secondary"
-            onClick={() => onRirChange(Math.min(5, rir + 1))}
-          >
-            <Plus className="size-4" />
-          </Button>
+            <Button
+              aria-label="Bajar RIR"
+              className={`h-10 w-full rounded-md ${actionStyles.minus}`}
+              variant="secondary"
+              onClick={() => onRirChange(Math.max(0, rir - 1))}
+            >
+              <Minus className="size-4" />
+            </Button>
+            <span className="text-center text-xl font-black tabular-nums">
+              {rir}
+            </span>
+            <Button
+              aria-label="Subir RIR"
+              className={`h-10 w-full rounded-md ${actionStyles.plus}`}
+              variant="secondary"
+              onClick={() => onRirChange(Math.min(5, rir + 1))}
+            >
+              <Plus className="size-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <PainControl
         label="Rodilla"
@@ -4641,6 +4697,7 @@ function SetEditScreen({
   weight,
   durationSeconds,
   loadType,
+  equipment,
   weightStep,
   onCancel,
   onConfirm,
@@ -4650,6 +4707,7 @@ function SetEditScreen({
   weight: number;
   durationSeconds: number;
   loadType: LoadType;
+  equipment?: Exercise['equipment'];
   weightStep: WeightStep;
   onCancel: () => void;
   onConfirm: (values: SetEditValues) => void;
@@ -4660,14 +4718,19 @@ function SetEditScreen({
   const [localDurationSeconds, setLocalDurationSeconds] =
     useState(durationSeconds);
   const [localWeightStep, setLocalWeightStep] = useState(
-    normalizeWeightStep(weightStep, loadType),
+    normalizeWeightStep(weightStep, loadType, equipment),
   );
-  const normalizedWeightStep = normalizeWeightStep(localWeightStep, loadType);
+  const normalizedWeightStep = normalizeWeightStep(
+    localWeightStep,
+    loadType,
+    equipment,
+  );
 
   const adjustWeight = (direction: -1 | 1) => {
     setLocalWeight((currentWeight) =>
       getAdjustedWeight(
         loadType,
+        equipment,
         currentWeight,
         normalizedWeightStep,
         direction,
@@ -4717,6 +4780,7 @@ function SetEditScreen({
           {loadType === 'bodyweight' || loadType === 'per_dumbbell' ? null : (
             <WeightStepControl
               loadType={loadType}
+              equipment={equipment}
               value={normalizedWeightStep}
               onChange={setLocalWeightStep}
             />
@@ -4834,23 +4898,27 @@ function TappableNumber({
 
 function WeightStepControl({
   loadType,
+  equipment,
   value,
   onChange,
 }: {
   loadType: LoadType;
+  equipment?: Exercise['equipment'];
   value: WeightStep;
   onChange: (value: WeightStep) => void;
 }) {
-  const options = getWeightStepOptions(loadType);
+  const options = getWeightStepOptions(loadType, equipment);
   const isFixed = options.length === 1;
   const label =
-    loadType === 'total'
-      ? 'disco por lado'
-      : loadType === 'machine'
-        ? 'salto'
-        : loadType === 'bodyweight'
-          ? 'fijo'
-          : 'lastre';
+    equipment === 'plate_loaded_machine'
+      ? 'disco'
+      : loadType === 'total'
+        ? 'disco por lado'
+        : loadType === 'machine'
+          ? 'salto'
+          : loadType === 'bodyweight'
+            ? 'fijo'
+            : 'lastre';
 
   if (isFixed) {
     return (
