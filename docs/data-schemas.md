@@ -127,9 +127,11 @@ type StoredSetEvent = {
   plannedReps: number;
   plannedWeightKg: number;
   plannedDurationSeconds?: number;
+  plannedEquipment?: string;
   actualReps: number;
   actualWeightKg: number;
   actualDurationSeconds?: number;
+  actualEquipment?: string;
   restSecondsPlanned: number;
   restSecondsActual: number;
   status: 'completed' | 'skipped';
@@ -150,6 +152,8 @@ Notas:
 - `exerciseIndex` y `setIndex` son 0-based en la PWA.
 - `roundNumber` se usa para reconstruir superseries.
 - `actualWeightKg` debe interpretarse junto con el tipo de carga inferido del ejercicio: `total`, `external`, `per_dumbbell`, `machine` o `bodyweight`.
+- `plannedEquipment` conserva el material previsto por el plan.
+- `actualEquipment` conserva el material usado realmente durante la serie; si falta en registros antiguos, se debe usar `plannedEquipment` o `exercise.equipment`.
 - Si `status` es `skipped`, los campos de resultado pueden contener valores de contexto, pero el importador debe tratar la serie como no completada.
 
 ## StoredSessionMetadata
@@ -245,7 +249,7 @@ La construcción del CSV vive en `lib/sessionExport.ts` para mantenerla fuera de
 Campos actuales:
 
 ```csv
-date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
+date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,planned_equipment,actual_equipment,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
 ```
 
 Notas:

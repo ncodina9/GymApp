@@ -140,36 +140,45 @@ export type FullTrainingDataExportInput = {
   activeWorkout: FullTrainingDataExport['activeWorkout'];
 };
 
+export const inferEquipmentLoadType = (
+  equipment: string | undefined,
+): LoadType | undefined => {
+  if (equipment === 'dumbbell') {
+    return 'per_dumbbell';
+  }
+
+  if (equipment === 'cable') {
+    return 'machine';
+  }
+
+  if (equipment === 'plate_loaded_machine') {
+    return 'machine';
+  }
+
+  if (equipment === 'external') {
+    return 'external';
+  }
+
+  if (equipment === 'bodyweight') {
+    return 'bodyweight';
+  }
+
+  if (equipment === 'barbell' || equipment === 'multipower') {
+    return 'total';
+  }
+
+  return undefined;
+};
+
 export const inferLoadType = (
   exercise:
     | Pick<ExportExercise, 'name' | 'notes' | 'sets' | 'equipment'>
     | undefined,
 ): LoadType => {
-  if (exercise?.equipment === 'dumbbell') {
-    return 'per_dumbbell';
-  }
+  const equipmentLoadType = inferEquipmentLoadType(exercise?.equipment);
 
-  if (exercise?.equipment === 'cable') {
-    return 'machine';
-  }
-
-  if (exercise?.equipment === 'plate_loaded_machine') {
-    return 'machine';
-  }
-
-  if (exercise?.equipment === 'external') {
-    return 'external';
-  }
-
-  if (exercise?.equipment === 'bodyweight') {
-    return 'bodyweight';
-  }
-
-  if (
-    exercise?.equipment === 'barbell' ||
-    exercise?.equipment === 'multipower'
-  ) {
-    return 'total';
+  if (equipmentLoadType !== undefined) {
+    return equipmentLoadType;
   }
 
   const text = `${exercise?.name ?? ''} ${exercise?.notes ?? ''}`.toLowerCase();
@@ -289,6 +298,8 @@ export const buildWorkoutCsv = (
     'status',
     'load_kg',
     'load_type',
+    'planned_equipment',
+    'actual_equipment',
     'reps',
     'rir',
     'pain_knee',
@@ -324,7 +335,11 @@ export const buildWorkoutCsv = (
     const isLastExerciseRow =
       lastRecordKeyByExercise.get(record.exerciseId) ===
       `${record.exerciseIndex}-${record.setIndex}`;
-    const loadType = inferLoadType(exercise);
+    const actualEquipment = record.actualEquipment ?? exercise?.equipment ?? '';
+    const plannedEquipment =
+      record.plannedEquipment ?? exercise?.equipment ?? actualEquipment;
+    const loadType =
+      inferEquipmentLoadType(actualEquipment) ?? inferLoadType(exercise);
     const isUnknownMachineLoad =
       loadType === 'machine' && record.actualWeightKg === 0;
     const setNote = isSkipped
@@ -345,6 +360,8 @@ export const buildWorkoutCsv = (
         ? ''
         : formatExportNumber(record.actualWeightKg),
       loadType,
+      plannedEquipment,
+      actualEquipment,
       isSkipped
         ? ''
         : record.actualDurationSeconds !== undefined

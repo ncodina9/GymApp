@@ -22,6 +22,8 @@ const canonicalHeaders = [
   'status',
   'load_kg',
   'load_type',
+  'planned_equipment',
+  'actual_equipment',
   'reps',
   'rir',
   'pain_knee',

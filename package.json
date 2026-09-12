@@ -1,6 +1,6 @@
 {
   "name": "gymapp",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -14,6 +14,7 @@
     "validate:plan": "node scripts/validate-training-plan.mjs",
     "sync:obsidian": "node scripts/sync-obsidian-gym-data.mjs",
     "import:obsidian-workouts": "node scripts/import-obsidian-workout-exports.mjs",
+    "migrate:obsidian-equipment": "node scripts/migrate-obsidian-equipment-columns.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint app data lib",
     "format": "oxfmt"

@@ -288,7 +288,7 @@ Preparacion para iOS nativo:
 | 21   | Parcial   | Alta     | Alta        | Estadisticas y graficos dentro de la app.                                        |
 | 22   | Pendiente | Media    | Alta        | Generador guiado de planes desde la app.                                         |
 | 23   | Pendiente | Baja     | Alta        | Capa opcional de IA para planificacion y analisis.                               |
-| 24   | Pendiente | Alta     | Alta        | Selector de material por ejercicio y dia con redondeo de cargas.                 |
+| 24   | Parcial   | Alta     | Alta        | Selector de material por ejercicio y dia con redondeo de cargas.                 |
 
 Estados usados:
 
@@ -1099,13 +1099,14 @@ Objetivo: permitir escoger el material usado en una serie o ejercicio cuando el 
 
 Tareas:
 
-- [ ] definir `plannedEquipment` y `actualEquipment` sin romper el schema actual
-- [ ] mostrar un selector segmentado tactil, estilo iOS, encima del cuadro de peso solo en ejercicios con variantes permitidas
-- [ ] recalcular el peso al cambiar material usando la carga montable mas cercana
-- [ ] guardar el material elegido en eventos de serie y exportaciones CSV/JSON
-- [ ] distinguir correctamente `load_type`: `total`, `external`, `per_dumbbell`, `machine` y `bodyweight`
-- [ ] definir variantes permitidas por ejercicio, no globales, para evitar opciones que no tienen sentido
+- [x] definir `plannedEquipment` y `actualEquipment` sin romper el schema actual
+- [x] mostrar un selector segmentado tactil, estilo iOS, encima del cuadro de peso solo en ejercicios con variantes permitidas
+- [x] recalcular el peso al cambiar material usando la carga montable mas cercana
+- [x] guardar el material elegido en eventos de serie y exportaciones CSV/JSON
+- [x] distinguir correctamente `load_type`: `total`, `external`, `per_dumbbell`, `machine` y `bodyweight`
+- [x] definir variantes permitidas por ejercicio, no globales, para evitar opciones que no tienen sentido
 - [ ] validar que la futura app nativa puede cargar el mismo contrato de datos sin inferir desde el nombre
+- [x] migrar exports antiguos de Obsidian para anadir `planned_equipment` y `actual_equipment`
 
 Criterio de aceptacion:
 
@@ -1114,7 +1115,7 @@ Criterio de aceptacion:
 - el historico conserva que variante se uso realmente
 - el plan base no se modifica por una sustitucion puntual
 
-Estado: pendiente. El plan actual ya fija un material por ejercicio; este hito anadira sustituciones puntuales durante la ejecucion.
+Estado: v1 implementada en PWA. El plan actual fija un material por ejercicio y la pantalla de serie permite sustituciones puntuales en ejercicios con variantes reales. Pendiente validar ergonomia en iPhone y llevar el contrato a un prototipo Swift.
 
 ## Riesgos y decisiones pendientes
 
@@ -1163,14 +1164,12 @@ Estado: pendiente. El plan actual ya fija un material por ejercicio; este hito a
 
 ## Proximo hito recomendado
 
-Continuar con el Hito 24: selector de material por ejercicio y dia.
+Continuar con una validacion real del Hito 24 en iPhone y cerrar el contrato para Swift.
 
 Checklist minima de la siguiente iteracion:
 
-- [ ] Definir variantes permitidas por ejercicio.
-- [ ] Anadir selector segmentado tactil en pantalla de serie para ejercicios con alternativa real.
-- [ ] Redondear automaticamente la carga al material elegido: barra, multipower, mancuernas o discos.
-- [ ] Guardar `actualEquipment` en eventos locales y exportaciones.
-- [ ] Mantener el plan base intacto aunque ese dia se use otra variante.
-
-Despues de esta capa, volver al Hito 21 para completar estadisticas y graficos.
+- [ ] Probar en movil que el selector no ocupa demasiado ni provoca cambios accidentales.
+- [ ] Revisar equivalencias barra/multipower/mancuernas ejercicio por ejercicio.
+- [ ] Decidir si el selector debe afectar solo a la serie actual o a todas las series restantes del ejercicio.
+- [ ] Anadir el contrato `plannedEquipment`/`actualEquipment` al plan de migracion Swift.
+- [ ] Tras validar, volver al Hito 21 para completar estadisticas y graficos.

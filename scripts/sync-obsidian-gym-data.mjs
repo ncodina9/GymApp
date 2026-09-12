@@ -128,8 +128,8 @@ Archivo: \`10. Gym/data/Registro entrenamiento series.csv\`
 Formato:
 
 \`\`\`csv
-date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
-2026-09-07,2026-09-07T19:42:10.000+02:00,1,Lunes - Torso fuerza,Press banca con barra,Básico,5x5 @ 65 kg,1,done,65,total,5,2,0,0,0,0,,OK,,,,,
+date,performed_at,week,session,exercise,type,target,set_number,status,load_kg,load_type,planned_equipment,actual_equipment,reps,rir,pain_knee,pain_wrist,pain_shoulder,pain_lumbar,pain_other,set_note,exercise_decision,exercise_note,superset_id,superset_order,round_number
+2026-09-07,2026-09-07T19:42:10.000+02:00,1,Lunes - Torso fuerza,Press banca con barra,Básico,5x5 @ 65 kg,1,done,65,total,barbell,barbell,5,2,0,0,0,0,,OK,,,,,
 \`\`\`
 
 El importador normaliza el CSV maestro a esas cabeceras y omite las series que ya estén registradas.
@@ -147,6 +147,8 @@ ${exerciseNames.map((name) => `- ${name}`).join('\n')}
 - \`per_dumbbell\`: peso por mancuerna.
 - \`machine\`: carga indicada por máquina o polea; vacío si todavía no hay referencia fiable.
 - \`bodyweight\`: peso corporal registrado como \`0 kg\` en la app.
+- \`planned_equipment\`: material previsto en el plan.
+- \`actual_equipment\`: material usado realmente ese día.
 `;
 }
 
@@ -245,8 +247,8 @@ if (logs.length === 0) {
   dv.paragraph("Todavía no hay series registradas desde GymApp.");
 } else {
   dv.table(
-    ["Fecha", "Sesión", "Ejercicio", "Serie", "Estado", "Carga", "Reps", "RIR", "Nota"],
-    logs.slice(-40).reverse().map(r => [r.date, r.session, r.exercise, r.set_number, r.status, r.load_kg, r.reps, r.rir, r.set_note])
+    ["Fecha", "Sesión", "Ejercicio", "Serie", "Estado", "Carga", "Material", "Reps", "RIR", "Nota"],
+    logs.slice(-40).reverse().map(r => [r.date, r.session, r.exercise, r.set_number, r.status, r.load_kg, r.actual_equipment || r.planned_equipment || "", r.reps, r.rir, r.set_note])
   );
 }
 

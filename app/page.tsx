@@ -7,7 +7,10 @@ import {
   ChevronRight,
   Database,
   Download,
+  ArrowDownRight,
   ArrowLeft,
+  ArrowUpRight,
+  Equal,
   History,
   House,
   Minus,
@@ -19,6 +22,7 @@ import {
   Settings,
   Smartphone,
   Trash2,
+  X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -37,6 +41,7 @@ import {
   buildWorkoutCsv,
   getFullJsonExportFileName,
   getWorkoutCsvFileName,
+  inferEquipmentLoadType,
   inferLoadType,
   type ExportPhase,
   type LoadType,
@@ -149,6 +154,8 @@ type Exercise = {
   sets: TrainingSet[];
 };
 
+type ExerciseEquipment = NonNullable<Exercise['equipment']>;
+
 type TrainingSession = {
   sessionId: string;
   date: string;
@@ -187,6 +194,7 @@ type WorkoutDraft = {
   restEndsAt?: string;
   records: StoredSetEvent[];
   decisions: Record<string, string>;
+  equipmentByExercise: Record<string, ExerciseEquipment>;
   startedAt?: string;
   finishedAt?: string;
   transitionExerciseIds: string[];
@@ -507,6 +515,7 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   restRemaining: 0,
   records: [],
   decisions: {},
+  equipmentByExercise: {},
   transitionExerciseIds: [],
   transitionNextPhase: 'set',
   suppressTransitionOnce: false,
@@ -545,6 +554,10 @@ const normalizeDraft = (
       ? draft.records.filter(isStoredSetEvent)
       : [],
     decisions: draft.decisions ?? {},
+    equipmentByExercise:
+      draft.equipmentByExercise && typeof draft.equipmentByExercise === 'object'
+        ? (draft.equipmentByExercise as Record<string, ExerciseEquipment>)
+        : {},
     ...(draft.startedAt ? { startedAt: draft.startedAt } : {}),
     ...(draft.finishedAt ? { finishedAt: draft.finishedAt } : {}),
     transitionExerciseIds: draft.transitionExerciseIds ?? [],
@@ -796,6 +809,41 @@ const barbellLoadsKg = buildSymmetricLoadedBarLoads(barbellWeightKg);
 const multipowerLoadsKg = buildSymmetricLoadedBarLoads(multipowerBarWeightKg);
 const externalLoadsKg = buildPlateCombinationLoads();
 
+const equipmentLabels: Record<ExerciseEquipment, string> = {
+  barbell: 'Barra',
+  multipower: 'Multipower',
+  dumbbell: 'Mancuernas',
+  cable: 'Polea',
+  plate_loaded_machine: 'Discos',
+  external: 'Lastre',
+  bodyweight: 'Peso corporal',
+};
+
+const exerciseEquipmentVariants: Record<string, ExerciseEquipment[]> = {
+  'press-banca-barra': ['barbell', 'multipower', 'dumbbell'],
+  'press-banca-inclinado': ['barbell', 'multipower', 'dumbbell'],
+  'press-militar-sentado': ['barbell', 'multipower', 'dumbbell'],
+  'press-militar-sentado-velocidad': ['barbell', 'multipower', 'dumbbell'],
+  'remo-inclinado-barra': ['barbell', 'multipower'],
+  'remo-barra-multipower': ['multipower', 'barbell'],
+  'press-cerrado-multipower': ['multipower', 'barbell'],
+};
+
+const getExerciseEquipment = (exercise: Exercise): ExerciseEquipment =>
+  (exercise.equipment ?? 'barbell') as ExerciseEquipment;
+
+const getExerciseEquipmentOptions = (exercise: Exercise) => {
+  const plannedEquipment = getExerciseEquipment(exercise);
+  const variants = exerciseEquipmentVariants[exercise.exerciseId] ?? [
+    plannedEquipment,
+  ];
+  const options = variants.includes(plannedEquipment)
+    ? variants
+    : [plannedEquipment, ...variants];
+
+  return Array.from(new Set(options));
+};
+
 const isWeightStep = (value: unknown): value is WeightStep =>
   value === 0.5 ||
   value === 1 ||
@@ -897,6 +945,46 @@ const getAdjustedWeight = (
   );
 };
 
+const getNearestAvailableLoad = (
+  loadType: LoadType,
+  equipment: ExerciseEquipment,
+  targetWeight: number,
+) => {
+  const loads = getAvailableLoadsForType(loadType, equipment);
+
+  return loads.reduce(
+    (nearest, load) =>
+      Math.abs(load - targetWeight) < Math.abs(nearest - targetWeight)
+        ? load
+        : nearest,
+    loads[0] ?? 0,
+  );
+};
+
+const convertWeightForEquipment = (
+  currentWeight: number,
+  currentEquipment: ExerciseEquipment,
+  nextEquipment: ExerciseEquipment,
+) => {
+  const currentLoadType =
+    inferEquipmentLoadType(currentEquipment) ?? 'bodyweight';
+  const nextLoadType = inferEquipmentLoadType(nextEquipment) ?? 'bodyweight';
+
+  if (nextLoadType === 'bodyweight') {
+    return 0;
+  }
+
+  let estimatedWeight = currentWeight;
+
+  if (currentLoadType === 'total' && nextLoadType === 'per_dumbbell') {
+    estimatedWeight = currentWeight / 2;
+  } else if (currentLoadType === 'per_dumbbell' && nextLoadType === 'total') {
+    estimatedWeight = currentWeight * 2;
+  }
+
+  return getNearestAvailableLoad(nextLoadType, nextEquipment, estimatedWeight);
+};
+
 const getPreviewLoadLabel = (
   loadType: LoadType,
   equipment?: Exercise['equipment'],
@@ -958,6 +1046,51 @@ const getExerciseDecisionOptions = (exercise: Exercise) => {
 
 const getDefaultExerciseDecision = (exercise: Exercise) =>
   getExerciseDecisionOptions(exercise)[0] ?? 'Mantener';
+
+const getDecisionVisual = (option: string, selected: boolean) => {
+  const lower = option.toLowerCase();
+  const baseIconClassName = selected
+    ? 'text-current'
+    : lower.includes('bajar') || lower.includes('molestia')
+      ? 'text-red-600'
+      : lower.includes('subir')
+        ? 'text-emerald-600'
+        : 'text-blue-600';
+
+  if (lower.includes('subir')) {
+    return {
+      icon: <ArrowUpRight className={`size-5 ${baseIconClassName}`} />,
+      className: selected
+        ? 'border-emerald-600 bg-emerald-600 text-white'
+        : 'border-emerald-200 bg-emerald-50 text-emerald-950',
+    };
+  }
+
+  if (lower.includes('bajar')) {
+    return {
+      icon: <ArrowDownRight className={`size-5 ${baseIconClassName}`} />,
+      className: selected
+        ? 'border-red-600 bg-red-600 text-white'
+        : 'border-red-200 bg-red-50 text-red-950',
+    };
+  }
+
+  if (lower.includes('molestia')) {
+    return {
+      icon: <X className={`size-5 ${baseIconClassName}`} />,
+      className: selected
+        ? 'border-red-600 bg-red-600 text-white'
+        : 'border-red-200 bg-red-50 text-red-950',
+    };
+  }
+
+  return {
+    icon: <Equal className={`size-5 ${baseIconClassName}`} />,
+    className: selected
+      ? 'border-blue-600 bg-blue-600 text-white'
+      : 'border-blue-200 bg-blue-50 text-blue-950',
+  };
+};
 
 const getExercisePreviewMetrics = (exercise: Exercise) => {
   const loadType = inferLoadType(exercise);
@@ -1083,6 +1216,15 @@ export default function Home() {
   );
   const currentExercise = selectedSession.exercises[draft.exerciseIndex];
   const currentSet = currentExercise?.sets[draft.setIndex];
+  const currentEquipment = currentExercise
+    ? (draft.equipmentByExercise[currentExercise.exerciseId] ??
+      getExerciseEquipment(currentExercise))
+    : undefined;
+  const currentLoadType =
+    currentEquipment !== undefined
+      ? (inferEquipmentLoadType(currentEquipment) ??
+        inferLoadType(currentExercise))
+      : inferLoadType(currentExercise);
   const currentStepIndex = getStepIndex(
     executionSteps,
     draft.exerciseIndex,
@@ -1538,18 +1680,28 @@ export default function Home() {
 
   const applyPlannedTargets = useCallback(
     (nextExerciseIndex: number, nextSetIndex: number) => {
-      const nextSet =
-        selectedSession.exercises[nextExerciseIndex].sets[nextSetIndex];
+      const nextExercise = selectedSession.exercises[nextExerciseIndex];
+      const nextSet = nextExercise.sets[nextSetIndex];
+      const plannedEquipment = getExerciseEquipment(nextExercise);
+      const selectedEquipment =
+        draft.equipmentByExercise[nextExercise.exerciseId] ?? plannedEquipment;
       patchDraft({
         editedReps: nextSet.targetReps ?? 0,
-        editedWeight: nextSet.targetWeightKg,
+        editedWeight:
+          selectedEquipment === plannedEquipment
+            ? nextSet.targetWeightKg
+            : convertWeightForEquipment(
+                nextSet.targetWeightKg,
+                plannedEquipment,
+                selectedEquipment,
+              ),
         editedDurationSeconds: nextSet.targetDurationSeconds ?? 0,
         setTimerRemaining: nextSet.targetDurationSeconds ?? 0,
         isSetTimerRunning: false,
         setTimerEndsAt: undefined,
       });
     },
-    [patchDraft, selectedSession],
+    [draft.equipmentByExercise, patchDraft, selectedSession],
   );
 
   const completeWorkout = useCallback(() => {
@@ -1643,12 +1795,14 @@ export default function Home() {
         plannedReps: currentSet.targetReps ?? 0,
         plannedWeightKg: currentSet.targetWeightKg,
         plannedDurationSeconds: currentSet.targetDurationSeconds,
+        plannedEquipment: currentExercise.equipment,
         actualReps: draft.editedReps,
         actualWeightKg: draft.editedWeight,
         actualDurationSeconds:
           currentSet.type === 'timed'
             ? draft.editedDurationSeconds - draft.setTimerRemaining
             : undefined,
+        actualEquipment: currentEquipment,
         restSecondsPlanned: currentSet.restSeconds,
         restSecondsActual: currentSet.restSeconds,
         status,
@@ -1719,6 +1873,7 @@ export default function Home() {
     [
       currentSet,
       currentStep,
+      currentEquipment,
       draft.editedDurationSeconds,
       draft.editedReps,
       draft.editedWeight,
@@ -2156,8 +2311,9 @@ export default function Home() {
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
-            loadType={inferLoadType(currentExercise)}
-            equipment={currentExercise.equipment}
+            loadType={currentLoadType}
+            equipment={currentEquipment}
+            equipmentOptions={getExerciseEquipmentOptions(currentExercise)}
             durationSeconds={draft.editedDurationSeconds}
             timerRemaining={draft.setTimerRemaining}
             isTimerRunning={draft.isSetTimerRunning}
@@ -2197,6 +2353,29 @@ export default function Home() {
             onContinue={() => patchDraft({ phase: 'feedback' })}
             onSkip={() => void logCurrentSet('skipped')}
             onBack={() => patchDraft({ phase: 'today' })}
+            onEquipmentChange={(nextEquipment) => {
+              if (!currentEquipment) {
+                return;
+              }
+
+              patchDraft({
+                equipmentByExercise: {
+                  ...draft.equipmentByExercise,
+                  [currentExercise.exerciseId]: nextEquipment,
+                },
+                editedWeight: convertWeightForEquipment(
+                  draft.editedWeight,
+                  currentEquipment,
+                  nextEquipment,
+                ),
+                weightStep: normalizeWeightStep(
+                  draft.weightStep,
+                  inferEquipmentLoadType(nextEquipment) ??
+                    inferLoadType(currentExercise),
+                  nextEquipment,
+                ),
+              });
+            }}
             isRegistering={isRegisteringSet}
           />
         ) : null}
@@ -2207,8 +2386,8 @@ export default function Home() {
             reps={draft.editedReps}
             weight={draft.editedWeight}
             durationSeconds={draft.editedDurationSeconds}
-            loadType={inferLoadType(currentExercise)}
-            equipment={currentExercise.equipment}
+            loadType={currentLoadType}
+            equipment={currentEquipment}
             weightStep={draft.weightStep}
             onCancel={() => patchDraft({ phase: 'set' })}
             onConfirm={({ reps, weight, durationSeconds, weightStep }) =>
@@ -3963,6 +4142,7 @@ function SetScreen({
   weight,
   loadType,
   equipment,
+  equipmentOptions,
   durationSeconds,
   timerRemaining,
   isTimerRunning,
@@ -3973,6 +4153,7 @@ function SetScreen({
   onContinue,
   onSkip,
   onBack,
+  onEquipmentChange,
   isRegistering,
 }: {
   exerciseName: string;
@@ -3989,7 +4170,8 @@ function SetScreen({
   reps: number;
   weight: number;
   loadType: LoadType;
-  equipment?: Exercise['equipment'];
+  equipment?: ExerciseEquipment;
+  equipmentOptions: ExerciseEquipment[];
   durationSeconds: number;
   timerRemaining: number;
   isTimerRunning: boolean;
@@ -4000,6 +4182,7 @@ function SetScreen({
   onContinue: () => void;
   onSkip: () => void;
   onBack: () => void;
+  onEquipmentChange: (equipment: ExerciseEquipment) => void;
   isRegistering: boolean;
 }) {
   const isTimed = setType === 'timed';
@@ -4054,6 +4237,14 @@ function SetScreen({
           })}
         </div>
       </div>
+
+      {!isTimed && equipment && equipmentOptions.length > 1 ? (
+        <EquipmentSelector
+          options={equipmentOptions}
+          value={equipment}
+          onChange={onEquipmentChange}
+        />
+      ) : null}
 
       {isTimed ? (
         <TimedSetPanel
@@ -4654,21 +4845,22 @@ function TransitionScreen({
                     const shouldSpan =
                       decisionOptions.length % 2 !== 0 &&
                       option === decisionOptions.at(-1);
+                    const visual = getDecisionVisual(
+                      option,
+                      selectedDecision === option,
+                    );
 
                     return (
                       <button
                         key={option}
-                        className={`h-12 rounded-lg border px-3 text-center text-sm font-black ${
+                        className={`flex h-12 items-center justify-center gap-1.5 rounded-lg border px-3 text-center text-sm font-black ${
                           shouldSpan ? 'col-span-2' : ''
-                        } ${
-                          selectedDecision === option
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border bg-secondary text-secondary-foreground'
-                        }`}
+                        } ${visual.className}`}
                         type="button"
                         onClick={() => onDecision(exercise.exerciseId, option)}
                       >
-                        {option}
+                        {visual.icon}
+                        <span className="min-w-0 truncate">{option}</span>
                       </button>
                     );
                   })}
@@ -4776,6 +4968,39 @@ function DoneScreen({
   );
 }
 
+function EquipmentSelector({
+  options,
+  value,
+  onChange,
+}: {
+  options: ExerciseEquipment[];
+  value: ExerciseEquipment;
+  onChange: (value: ExerciseEquipment) => void;
+}) {
+  return (
+    <div className="grid h-12 shrink-0 grid-flow-col auto-cols-fr gap-1 rounded-[1.4rem] border bg-secondary p-1">
+      {options.map((option) => {
+        const selected = option === value;
+
+        return (
+          <button
+            key={option}
+            className={`min-w-0 rounded-[1.1rem] px-2 text-sm font-black transition active:scale-[0.98] ${
+              selected
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground'
+            }`}
+            type="button"
+            onClick={() => onChange(option)}
+          >
+            <span className="block truncate">{equipmentLabels[option]}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 type SetEditValues = {
   reps: number;
   weight: number;
@@ -4799,7 +5024,7 @@ function SetEditScreen({
   weight: number;
   durationSeconds: number;
   loadType: LoadType;
-  equipment?: Exercise['equipment'];
+  equipment?: ExerciseEquipment;
   weightStep: WeightStep;
   onCancel: () => void;
   onConfirm: (values: SetEditValues) => void;

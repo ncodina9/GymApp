@@ -95,9 +95,12 @@ Campos que deben ser enums Swift:
 
 - `TrainingSet.type`: `working`, `timed`
 - `StoredSetEvent.status`: `completed`, `skipped`
+- `Equipment`: `barbell`, `multipower`, `dumbbell`, `cable`, `plate_loaded_machine`, `external`, `bodyweight`
 - `AppearanceTheme`: `system`, `light`, `dark`
 - `WorkoutPhase`: `today`, `preview`, `set`, `feedback`, `rest`, `transition`, `done`, `settings`
 - `LoadType`: `total`, `external`, `per_dumbbell`, `machine`, `bodyweight`
+
+Los eventos de serie deben conservar `plannedEquipment` y `actualEquipment`. `plannedEquipment` sale del plan; `actualEquipment` refleja la variante usada realmente ese dia. Si un backup antiguo no trae esos campos, Swift debe derivarlos desde `Exercise.equipment` solo como fallback de compatibilidad.
 
 El plan puede seguir estando en JSON plano. SwiftData debe guardar el historico y los datos vivos, no sustituir el plan como fuente de verdad.
 
@@ -164,6 +167,7 @@ Reglas pendientes de separar antes de crear el prototipo SwiftUI:
 - progreso de sesion y resumen historico
 - recomendaciones conservadoras de progresion
 - reglas de material disponible y siguiente carga
+- selector de material por ejercicio y redondeo de carga montable
 - limpieza/purga de sesiones exportadas
 
 ## Equivalencia de flujo
