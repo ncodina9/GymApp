@@ -299,6 +299,7 @@ Notas:
 - Desde la version 2, `exercise_insight` y `exercise_progression` conservan `load_type`, `planned_equipment` y `actual_equipment` cuando existen. Las filas globales dejan esos campos vacíos.
 - Desde la version 3, el CSV estadistico añade `training_block`, `movement_pattern` y `primary_muscles`, y exporta filas de volumen por músculo y ejercicio.
 - Desde la version 4, el CSV estadistico añade filas `exercise_volume_exposure` con `date`, `week`, `session_id` y `session` para análisis exacto por sesión.
+- El script `npm run sync:obsidian` genera `10. Gym/data/Estadisticas entrenamiento.csv` como CSV derivado compatible con la version 4 para que el dashboard de Obsidian pueda leer volumen por sesión sin recalcularlo desde agregados globales.
 - Cada fila incluye `schema_name`, `schema_version`, `exported_at` y `app_version` para poder mezclar exports futuros sin perder trazabilidad.
 - Las tablas se reconstruyen desde los agregados documentados en `docs/statistics-aggregates.md`.
 

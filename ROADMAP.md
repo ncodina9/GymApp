@@ -1020,6 +1020,7 @@ Estado parcial:
 - Actualizacion v0.1.12: `Revision` muestra todas las senales activas, alinea el contador con las filas visibles y compacta las tarjetas para evitar scroll horizontal en iPhone.
 - Actualizacion v0.1.13: el plan incorpora taxonomia por ejercicio (`trainingBlock`, `movementPattern`, `primaryMuscles`, `secondaryMuscles`). Estadisticas añade seccion `Volumen`, filtros por bloque, patron y musculo, y CSV estadistico schema v3 con filas de volumen por musculo y ejercicio.
 - Actualizacion v0.1.14: `Volumen` pasa a calcularse desde exposiciones por sesion y ejercicio, permitiendo filtrar con precision por semana y sesion. El CSV estadistico sube a schema v4 e incluye `exercise_volume_exposure`.
+- Actualizacion v0.1.15: el puente de Obsidian genera `data/Estadisticas entrenamiento.csv` desde el maestro serie-a-serie con schema estadistico v4. El dashboard de Obsidian consume `exercise_volume_exposure` cuando existe y conserva fallback al registro serie-a-serie.
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 

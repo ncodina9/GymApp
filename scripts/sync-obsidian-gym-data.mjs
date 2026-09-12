@@ -1,4 +1,4 @@
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,6 +13,14 @@ const plan = JSON.parse(readFileSync(planPath, 'utf8'));
 const calendarPath = resolve(
   obsidianDataPath,
   'Plan entrenamiento calendario.csv',
+);
+const workoutLogPath = resolve(
+  obsidianDataPath,
+  'Registro entrenamiento series.csv',
+);
+const statisticsPath = resolve(
+  obsidianDataPath,
+  'Estadisticas entrenamiento.csv',
 );
 const legacyCalendarPath = resolve(
   obsidianDataPath,
@@ -83,6 +91,10 @@ const calendarRows = [
 ];
 
 writeFileSync(calendarPath, toCsv(calendarRows));
+writeFileSync(
+  statisticsPath,
+  buildObsidianStatisticsCsv(plan, readWorkoutLogRows(workoutLogPath)),
+);
 
 writeFileSync(
   resolve(obsidianGymPath, 'Registro entrenamiento.md'),
@@ -140,6 +152,12 @@ Estos nombres salen del plan activo:
 
 ${exerciseNames.map((name) => `- ${name}`).join('\n')}
 
+## CSV estadístico derivado
+
+Archivo: \`10. Gym/data/Estadisticas entrenamiento.csv\`
+
+Se genera con \`npm run sync:obsidian\` desde el plan activo y el CSV maestro serie a serie. Usa el schema \`gymapp.statistics-export\` version \`4\` e incluye filas \`exercise_volume_exposure\` para reconstruir volumen por semana, sesión, bloque, patrón y músculo.
+
 ## Reglas de interpretación de carga
 
 - \`total\`: carga total en barra, multipower o movimiento equivalente.
@@ -159,6 +177,7 @@ Datos principales:
 
 - Plan activo: \`10. Gym/data/Plan entrenamiento calendario.csv\`
 - Registro serie a serie: \`10. Gym/data/Registro entrenamiento series.csv\`
+- Estadísticas derivadas: \`10. Gym/data/Estadisticas entrenamiento.csv\`
 - Historial antiguo GymBook: \`10. Gym/data/GymBook logs normalizado.jsonl\`
 - Resumen antiguo GymBook: \`10. Gym/data/GymBook resumen ejercicios.json\`
 
@@ -167,7 +186,11 @@ Datos principales:
 \`\`\`dataviewjs
 const calendar = parseCsv(await app.vault.adapter.read("10. Gym/data/Plan entrenamiento calendario.csv"));
 const logText = await app.vault.adapter.read("10. Gym/data/Registro entrenamiento series.csv").catch(() => "");
+const statisticsText = await app.vault.adapter.read("10. Gym/data/Estadisticas entrenamiento.csv").catch(() => "");
 const logs = parseCsv(logText).filter(row => row.status === "done");
+const statisticsRows = parseCsv(statisticsText);
+const volumeExposures = statisticsRows.filter(row => row.table === "exercise_volume_exposure");
+const volumeSource = volumeExposures.length ? volumeExposures : buildVolumeExposuresFromLogs(logs);
 const today = new Date();
 const todayIso = today.toISOString().slice(0, 10);
 const nextSession = calendar.find(row => row.date >= todayIso) ?? calendar.at(-1);
@@ -177,8 +200,7 @@ const weekLogs = logs.filter(row => Number(row.week) === currentWeek);
 const completedSessionKeys = new Set(weekLogs.map(row => \`\${row.date}|\${row.session}\`));
 const totalSets = logs.length;
 const avgRir = average(logs.map(row => number(row.rir)).filter(value => Number.isFinite(value)));
-const weightedSets = logs.filter(row => number(row.load_kg) > 0 && number(row.reps) > 0);
-const volume = weightedSets.reduce((sum, row) => sum + number(row.load_kg) * number(row.reps), 0);
+const volume = volumeSource.reduce((sum, row) => sum + number(row.value), 0);
 const painSets = logs.filter(row =>
   ["pain_knee", "pain_wrist", "pain_shoulder", "pain_lumbar", "pain_other"]
     .some(key => number(row[key]) > 0)
@@ -201,7 +223,7 @@ const cards = dv.el("div", "", { cls: "training-grid" });
 cards.append(card("Semana", currentWeek, nextSession?.week_focus_label ?? ""));
 cards.append(card("Sesiones semana", \`\${completedSessionKeys.size}/\${weekPlan.length}\`, nextSession?.week_focus ?? ""));
 cards.append(card("Series registradas", totalSets, logs.length ? \`RIR medio \${format(avgRir, 1)}\` : "Sin registros"));
-cards.append(card("Volumen registrado", \`\${Math.round(volume)} kg\`, painSets ? \`\${painSets} series con molestia\` : "Sin molestias registradas"));
+cards.append(card("Volumen registrado", \`\${Math.round(volume)} kg\`, volumeExposures.length ? "Desde CSV estadístico v4" : "Calculado desde series"));
 
 dv.header(3, "Objetivo semanal");
 const weekBox = dv.el("div", "", { cls: "training-list" });
@@ -214,7 +236,7 @@ weekPlan.forEach(session => {
 });
 
 dv.header(3, "Progreso por ejercicio");
-drawExerciseVolumeChart(dv.el("canvas", "", { cls: "training-canvas" }), logs);
+drawExerciseVolumeChart(dv.el("canvas", "", { cls: "training-canvas" }), volumeSource);
 dv.table(
   ["Ejercicio", "Series", "Mejor carga", "Mejores reps", "RIR medio", "Última decisión"],
   exerciseSummary(logs).slice(0, 12).map(row => [
@@ -301,6 +323,11 @@ function format(value, digits = 0) {
   return Number.isFinite(value) ? value.toFixed(digits) : "";
 }
 
+function parseSets(value) {
+  const match = String(value ?? "").match(/^(\\d+)/);
+  return match ? Number(match[1]) : 0;
+}
+
 function card(label, value, sub) {
   const el = document.createElement("div");
   el.className = "training-card";
@@ -331,6 +358,37 @@ function exerciseSummary(logs) {
   }).sort((a, b) => b.volume - a.volume || b.sets - a.sets);
 }
 
+function buildVolumeExposuresFromLogs(logs) {
+  return Object.entries(groupBy(logs, row => \`\${row.date}|\${row.session}|\${row.exercise}\`)).map(([key, rows]) => {
+    const [date, session, exercise] = key.split("|");
+    const loadType = rows.find(row => row.load_type)?.load_type ?? "";
+    const value = rows.reduce((sum, row) => {
+      const load = number(row.load_kg);
+      const effectiveLoad = loadType === "per_dumbbell" ? load * 2 : load;
+      return sum + effectiveLoad * number(row.reps);
+    }, 0);
+    return {
+      table: "exercise_volume_exposure",
+      date,
+      week: rows[0]?.week ?? "",
+      session,
+      exercise,
+      primary_muscles: "",
+      value,
+      value_2: \`\${rows.length} sets\`,
+      notes: \`\${rows.reduce((sum, row) => sum + number(row.reps), 0)} reps · 0s\`,
+    };
+  });
+}
+
+function exerciseVolumeSummary(rows) {
+  return Object.entries(groupBy(rows, row => row.exercise)).map(([exercise, values]) => ({
+    exercise,
+    sets: values.reduce((sum, row) => sum + parseSets(row.value_2), 0),
+    volume: values.reduce((sum, row) => sum + number(row.value), 0),
+  })).sort((a, b) => b.volume - a.volume || b.sets - a.sets);
+}
+
 function groupBy(rows, getKey) {
   return rows.reduce((groups, row) => {
     const key = getKey(row) || "Sin clasificar";
@@ -340,8 +398,8 @@ function groupBy(rows, getKey) {
   }, {});
 }
 
-function drawExerciseVolumeChart(canvas, logs) {
-  const data = exerciseSummary(logs)
+function drawExerciseVolumeChart(canvas, volumeRows) {
+  const data = exerciseVolumeSummary(volumeRows)
     .filter(row => row.volume > 0)
     .slice(0, 8)
     .reverse();
@@ -463,13 +521,499 @@ function escapeHtml(value) {
 `;
 }
 
+function readWorkoutLogRows(filePath) {
+  if (!existsSync(filePath)) {
+    return [];
+  }
+
+  return parseCsv(readFileSync(filePath, 'utf8').replace(/^\uFEFF/, ''))
+    .filter((row) => row.status === 'done' || row.status === 'completed')
+    .map((row) => ({
+      ...row,
+      status: row.status === 'completed' ? 'done' : row.status,
+    }));
+}
+
+function buildObsidianStatisticsCsv(trainingPlan, logs) {
+  const exportedAt = new Date().toISOString();
+  const headers = [
+    'schema_name',
+    'schema_version',
+    'exported_at',
+    'app_version',
+    'table',
+    'date',
+    'week',
+    'session_id',
+    'session',
+    'exercise_id',
+    'exercise',
+    'target',
+    'load_type',
+    'planned_equipment',
+    'actual_equipment',
+    'training_block',
+    'movement_pattern',
+    'primary_muscles',
+    'metric',
+    'value',
+    'value_2',
+    'status',
+    'tone',
+    'recommendation',
+    'notes',
+  ];
+  const schemaName = 'gymapp.statistics-export';
+  const schemaVersion = 4;
+  const appVersion = 'obsidian-sync';
+  const planSessionByKey = new Map();
+  const exerciseBySessionAndName = new Map();
+
+  trainingPlan.sessions.forEach((session) => {
+    const sessionKeys = [
+      `${session.date}|${session.label}`,
+      `${session.date}|${session.sessionLabel}`,
+    ];
+
+    sessionKeys.forEach((key) => planSessionByKey.set(key, session));
+    session.exercises.forEach((exercise) => {
+      sessionKeys.forEach((key) =>
+        exerciseBySessionAndName.set(`${key}|${exercise.name}`, exercise),
+      );
+    });
+  });
+
+  const sessions = aggregateRows(logs, (row) => `${row.date}|${row.session}`);
+  const sessionHistoryRows = sessions.map(([key, rows]) => {
+    const [date, sessionLabel] = key.split('|');
+    const planSession = planSessionByKey.get(key);
+
+    return [
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      'session_history',
+      date,
+      rows[0]?.week ?? planSession?.week ?? '',
+      planSession?.sessionId ?? '',
+      sessionLabel,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'session',
+      '',
+      planSession?.estimatedMinutes ?? '',
+      'complete',
+      '',
+      '',
+      `${rows.length} completed · ${rows.length} attempted`,
+    ];
+  });
+  const exposureRows = aggregateRows(
+    logs,
+    (row) => `${row.date}|${row.session}|${row.exercise}`,
+  ).map(([key, rows]) => {
+    const [date, sessionLabel, exerciseName] = key.split('|');
+    const planSession = planSessionByKey.get(`${date}|${sessionLabel}`);
+    const exercise = exerciseBySessionAndName.get(key);
+    const loadType =
+      rows.find((row) => row.load_type)?.load_type ??
+      inferLoadTypeFromExercise(exercise);
+    const completedSets = rows.length;
+    const totalReps = rows.reduce((sum, row) => sum + number(row.reps), 0);
+    const totalDurationSeconds = rows.reduce(
+      (sum, row) => sum + parseDurationSeconds(row.target),
+      0,
+    );
+    const loadVolume = rows.reduce(
+      (sum, row) => sum + getEffectiveLoadKg(row, loadType) * number(row.reps),
+      0,
+    );
+
+    return [
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      'exercise_volume_exposure',
+      date,
+      rows[0]?.week ?? planSession?.week ?? '',
+      planSession?.sessionId ?? '',
+      sessionLabel,
+      exercise?.exerciseId ?? '',
+      exerciseName,
+      exercise?.target ?? rows[0]?.target ?? '',
+      loadType,
+      rows.find((row) => row.planned_equipment)?.planned_equipment ??
+        exercise?.equipment ??
+        '',
+      rows.find((row) => row.actual_equipment)?.actual_equipment ??
+        rows.find((row) => row.planned_equipment)?.planned_equipment ??
+        exercise?.equipment ??
+        '',
+      exercise?.trainingBlock ?? '',
+      exercise?.movementPattern ?? '',
+      (exercise?.primaryMuscles ?? []).join('|'),
+      'volume',
+      Math.round(loadVolume),
+      `${completedSets} sets`,
+      '',
+      '',
+      '',
+      `${totalReps} reps · ${totalDurationSeconds}s`,
+    ];
+  });
+  const exerciseRows = summarizeExerciseVolume(exposureRows).map((summary) => [
+    schemaName,
+    schemaVersion,
+    exportedAt,
+    appVersion,
+    'exercise_volume',
+    '',
+    '',
+    '',
+    '',
+    summary.exerciseId,
+    summary.exerciseName,
+    '',
+    '',
+    '',
+    '',
+    summary.trainingBlock,
+    summary.movementPattern,
+    summary.primaryMuscles,
+    'volume',
+    Math.round(summary.volume),
+    `${summary.sets} sets`,
+    '',
+    '',
+    '',
+    `${summary.reps} reps · ${summary.seconds}s`,
+  ]);
+  const muscleRows = summarizeMuscleVolume(exposureRows).map((summary) => [
+    schemaName,
+    schemaVersion,
+    exportedAt,
+    appVersion,
+    'muscle_volume',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    summary.muscle,
+    'volume',
+    Math.round(summary.volume),
+    `${summary.sets} sets`,
+    '',
+    '',
+    '',
+    `${summary.reps} reps · ${summary.seconds}s`,
+  ]);
+  const rows = [
+    headers,
+    ...buildStatisticsSummaryRows({
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      trainingPlan,
+      logs,
+    }),
+    ...sessionHistoryRows,
+    ...muscleRows,
+    ...exerciseRows,
+    ...exposureRows,
+  ];
+  const invalidRow = rows.find((row) => row.length !== headers.length);
+
+  if (invalidRow) {
+    throw new Error(
+      `Invalid Obsidian statistics CSV row length: expected ${headers.length}, got ${invalidRow.length}.`,
+    );
+  }
+
+  return toCsv(rows);
+}
+
+function buildStatisticsSummaryRows({
+  schemaName,
+  schemaVersion,
+  exportedAt,
+  appVersion,
+  trainingPlan,
+  logs,
+}) {
+  const currentWeek = Number(logs.at(-1)?.week ?? 1);
+  const weekPlan = trainingPlan.sessions.filter(
+    (session) => session.week === currentWeek,
+  );
+  const weekLogs = logs.filter((row) => Number(row.week) === currentWeek);
+  const completedSessionKeys = new Set(
+    weekLogs.map((row) => `${row.date}|${row.session}`),
+  );
+  const painHits = logs.filter((row) =>
+    [
+      'pain_knee',
+      'pain_wrist',
+      'pain_shoulder',
+      'pain_lumbar',
+      'pain_other',
+    ].some((key) => number(row[key]) > 0),
+  ).length;
+  const metrics = [
+    [
+      'week_adherence',
+      completedSessionKeys.size,
+      weekPlan.length,
+      weekPlan[0]?.weekFocusLabel ?? '',
+    ],
+    ['stored_sessions', new Set(logs.map((row) => row.session)).size, '', ''],
+    ['completed_sessions', completedSessionKeys.size, '', ''],
+    ['skipped_sets', 0, '', ''],
+    ['pain_hits', painHits, '', ''],
+  ];
+
+  return metrics.map(([metric, value, value2, notes]) => [
+    schemaName,
+    schemaVersion,
+    exportedAt,
+    appVersion,
+    'summary',
+    '',
+    currentWeek,
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    metric,
+    value,
+    value2,
+    '',
+    '',
+    '',
+    notes,
+  ]);
+}
+
+function aggregateRows(rows, getKey) {
+  return Array.from(
+    rows
+      .reduce((groups, row) => {
+        const key = getKey(row);
+        const group = groups.get(key) ?? [];
+        group.push(row);
+        groups.set(key, group);
+        return groups;
+      }, new Map())
+      .entries(),
+  ).sort((a, b) => a[0].localeCompare(b[0], 'es'));
+}
+
+function summarizeExerciseVolume(exposureRows) {
+  const summaries = new Map();
+
+  exposureRows.forEach((row) => {
+    const key = row[9] || row[10];
+    const current = summaries.get(key) ?? {
+      exerciseId: row[9],
+      exerciseName: row[10],
+      trainingBlock: row[15],
+      movementPattern: row[16],
+      primaryMuscles: row[17],
+      volume: 0,
+      sets: 0,
+      reps: 0,
+      seconds: 0,
+    };
+    current.volume += number(row[19]);
+    current.sets += parseSets(row[20]);
+    current.reps += parseNotesReps(row[24]);
+    current.seconds += parseNotesSeconds(row[24]);
+    summaries.set(key, current);
+  });
+
+  return Array.from(summaries.values()).sort(
+    (a, b) =>
+      b.sets - a.sets ||
+      b.volume - a.volume ||
+      a.exerciseName.localeCompare(b.exerciseName, 'es'),
+  );
+}
+
+function summarizeMuscleVolume(exposureRows) {
+  const summaries = new Map();
+
+  exposureRows.forEach((row) => {
+    row[17]
+      .split('|')
+      .map((muscle) => muscle.trim())
+      .filter(Boolean)
+      .forEach((muscle) => {
+        const current = summaries.get(muscle) ?? {
+          muscle,
+          volume: 0,
+          sets: 0,
+          reps: 0,
+          seconds: 0,
+        };
+        current.volume += number(row[19]);
+        current.sets += parseSets(row[20]);
+        current.reps += parseNotesReps(row[24]);
+        current.seconds += parseNotesSeconds(row[24]);
+        summaries.set(muscle, current);
+      });
+  });
+
+  return Array.from(summaries.values()).sort(
+    (a, b) =>
+      b.sets - a.sets ||
+      b.volume - a.volume ||
+      a.muscle.localeCompare(b.muscle, 'es'),
+  );
+}
+
+function getEffectiveLoadKg(row, loadType) {
+  if (loadType === 'bodyweight') {
+    return 0;
+  }
+
+  const load = number(row.load_kg);
+
+  if (load <= 0) {
+    return 0;
+  }
+
+  return loadType === 'per_dumbbell' ? load * 2 : load;
+}
+
+function inferLoadTypeFromExercise(exercise) {
+  if (exercise?.equipment === 'dumbbell') {
+    return 'per_dumbbell';
+  }
+
+  if (
+    exercise?.equipment === 'cable' ||
+    exercise?.equipment === 'plate_loaded_machine'
+  ) {
+    return 'machine';
+  }
+
+  if (exercise?.equipment === 'external') {
+    return 'external';
+  }
+
+  if (exercise?.equipment === 'bodyweight') {
+    return 'bodyweight';
+  }
+
+  return 'total';
+}
+
+function parseDurationSeconds(target) {
+  const match = String(target ?? '').match(/(\d+)\s*s\b/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function parseSets(value) {
+  const match = String(value ?? '').match(/^(\d+)/);
+  return match ? Number(match[1]) : 0;
+}
+
+function parseNotesReps(value) {
+  const match = String(value ?? '').match(/(\d+)\s+reps/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function parseNotesSeconds(value) {
+  const match = String(value ?? '').match(/(\d+)s/i);
+  return match ? Number(match[1]) : 0;
+}
+
 function toCsv(rows) {
   return `${rows.map((row) => row.map(csvEscape).join(',')).join('\n')}\n`;
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let current = '';
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (char === '"' && quoted && next === '"') {
+      current += '"';
+      index += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === ',' && !quoted) {
+      row.push(current);
+      current = '';
+    } else if ((char === '\n' || char === '\r') && !quoted) {
+      if (char === '\r' && next === '\n') {
+        index += 1;
+      }
+      row.push(current);
+      rows.push(row);
+      row = [];
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  if (current !== '' || row.length > 0) {
+    row.push(current);
+    rows.push(row);
+  }
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const headers = rows[0];
+  return rows
+    .slice(1)
+    .filter((values) => values.some((value) => value.trim() !== ''))
+    .map((values) =>
+      Object.fromEntries(
+        headers.map((header, index) => [header, values[index] ?? '']),
+      ),
+    );
 }
 
 function csvEscape(value) {
   const text = String(value);
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function number(value) {
+  const parsed = Number(String(value ?? '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function normalize(value) {
