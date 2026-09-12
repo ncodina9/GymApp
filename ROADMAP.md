@@ -1010,6 +1010,7 @@ Estado parcial:
 - `docs/statistics-aggregates.md` documenta los calculos de historial, duracion, adherencia, senales y progresion para futura replica en Swift
 - `Ajustes > Estadisticas > CSV` exporta tablas derivadas de resumen, historial, senales y progresion con schema versionado
 - Actualizacion v0.1.8: el CSV estadistico pasa a `gymapp.statistics-export` version 2 e incluye `load_type`, `planned_equipment` y `actual_equipment` en filas por ejercicio. La vista de progresion muestra el material usado dentro del detalle desplegado.
+- Actualizacion v0.1.9: `Revisión del plan` se simplifica para leerse como revision descriptiva. El detalle de cada ejercicio separa ultimo registro, decision manual del usuario y señal calculada por la app. La vista deja claro que las señales no modifican automaticamente el planning.
 - `Ajustes > Estadisticas` muestra un primer grafico de duracion real vs estimada por sesion, con estado vacio visible hasta que haya dos sesiones cerradas
 
 ### Hito 22: Generador guiado de planes de entrenamiento
@@ -1176,8 +1177,8 @@ Simplificar la vista `Revisión del plan` del Hito 21/16 para que funcione como 
 
 Checklist minima de la siguiente iteracion:
 
-- [ ] Revisar textos y jerarquia visual de `Revisión del plan`.
-- [ ] Separar claramente senal calculada, decision manual y datos reales.
+- [x] Revisar textos y jerarquia visual de `Revisión del plan`.
+- [x] Separar claramente senal calculada, decision manual y datos reales.
 - [ ] Decidir que tarjetas deben mostrarse cerradas y que informacion solo al desplegar.
 - [ ] Reducir ruido de recomendaciones conservadoras hasta que exista revision semanal guiada.
 - [ ] Mantener exportacion estadistica trazable para Obsidian y futura app nativa.

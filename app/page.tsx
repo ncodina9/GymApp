@@ -3520,7 +3520,7 @@ function StatisticsPanel({
         'border-[var(--action-reset-border)] bg-[var(--action-reset)] text-[var(--action-reset-foreground)]',
     },
     {
-      label: 'Subir',
+      label: 'Subida',
       value: String(
         visibleInsights.filter((insight) => insight.tone === 'up').length,
       ),
@@ -3528,7 +3528,7 @@ function StatisticsPanel({
         'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
     },
     {
-      label: 'Bajar',
+      label: 'Bajada',
       value: String(
         visibleInsights.filter((insight) => insight.tone === 'down').length,
       ),
@@ -3700,7 +3700,7 @@ function StatisticsPanel({
         </div>
         <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
           Señales calculadas desde datos reales. La decisión manual aparece al
-          abrir cada ejercicio.
+          abrir cada ejercicio. No modifican el plan automáticamente.
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           {primarySignals.map((signal) => (
@@ -4029,7 +4029,16 @@ function ExerciseProgressionCard({
 
       {isExpanded ? (
         <div className="grid gap-1.5 rounded-[1.5rem] border bg-secondary p-2">
-          <div className="grid gap-1.5 sm:grid-cols-2">
+          <ProgressionReviewSummary progression={progression} />
+          <div className="grid gap-1.5">
+            <div className="rounded-[1.1rem] border bg-card px-3 py-2 leading-tight text-secondary-foreground">
+              <span className="block text-[0.65rem] font-black uppercase text-muted-foreground">
+                Tu decisión
+              </span>
+              <span className="mt-0.5 block text-sm font-black">
+                {progression.lastDecision ?? 'Sin decisión'}
+              </span>
+            </div>
             <div
               className={`rounded-[1.1rem] border px-3 py-2 leading-tight ${getProgressionRecommendationToneClassName(
                 progression.tone,
@@ -4037,18 +4046,10 @@ function ExerciseProgressionCard({
               )}`}
             >
               <span className="block text-[0.65rem] font-black uppercase opacity-75">
-                Señal
+                Señal de la app
               </span>
               <span className="mt-0.5 block text-sm font-black">
                 {progression.recommendation}
-              </span>
-            </div>
-            <div className="rounded-[1.1rem] border bg-card px-3 py-2 leading-tight text-secondary-foreground">
-              <span className="block text-[0.65rem] font-black uppercase text-muted-foreground">
-                Tu decisión
-              </span>
-              <span className="mt-0.5 block text-sm font-black">
-                {progression.lastDecision ?? 'Sin decisión'}
               </span>
             </div>
           </div>
@@ -4060,6 +4061,50 @@ function ExerciseProgressionCard({
           ))}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ProgressionReviewSummary({
+  progression,
+}: {
+  progression: ExerciseProgressionSummary;
+}) {
+  const lastExposure = progression.exposures[0];
+
+  if (!lastExposure) {
+    return (
+      <div className="rounded-[1.1rem] border bg-card px-3 py-2 text-xs font-bold leading-tight text-muted-foreground">
+        Sin exposiciones registradas para este filtro.
+      </div>
+    );
+  }
+
+  const loadLabel =
+    lastExposure.topLoadKg !== undefined
+      ? `${formatCsvNumber(lastExposure.topLoadKg)} kg`
+      : '-';
+  const workLabel =
+    lastExposure.totalDurationSeconds > 0
+      ? formatClock(lastExposure.totalDurationSeconds)
+      : `${lastExposure.totalReps} reps`;
+  const equipmentLabel =
+    formatEquipmentLabel(
+      lastExposure.actualEquipment ?? lastExposure.plannedEquipment,
+    ) ?? 'Material no registrado';
+
+  return (
+    <div className="rounded-[1.1rem] border bg-card px-3 py-2 leading-tight text-secondary-foreground">
+      <span className="block text-[0.65rem] font-black uppercase text-muted-foreground">
+        Último registro
+      </span>
+      <span className="mt-0.5 block text-sm font-black">
+        {formatDate(lastExposure.sessionDate)} · {equipmentLabel}
+      </span>
+      <span className="mt-1 block text-xs font-bold text-muted-foreground">
+        {loadLabel} · {workLabel} · {lastExposure.completedSets}/
+        {lastExposure.plannedSets} series
+      </span>
     </div>
   );
 }
