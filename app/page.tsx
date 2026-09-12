@@ -3644,7 +3644,7 @@ function StatisticsPanel({
 
   return (
     <div className="mt-4 grid gap-3">
-      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+      <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
         <div className="grid gap-2">
           {statisticsSections.map((item) => (
             <button
@@ -3687,7 +3687,7 @@ function StatisticsPanel({
       </div>
 
       {showFilters ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <p className="text-sm font-black leading-tight">Filtros</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <label className="grid gap-1 text-xs font-black text-muted-foreground">
@@ -3736,7 +3736,7 @@ function StatisticsPanel({
       ) : null}
 
       {statisticsSection === 'summary' ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-bold leading-tight text-muted-foreground">
@@ -3762,7 +3762,7 @@ function StatisticsPanel({
       ) : null}
 
       {statisticsSection === 'duration' ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <p className="text-sm font-black leading-tight">Duración real</p>
           <div className="mt-3 grid grid-cols-2 gap-2 text-center">
             <Metric
@@ -3801,13 +3801,13 @@ function StatisticsPanel({
       ) : null}
 
       {statisticsSection === 'review' ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-black leading-tight">
               Revisión del plan
             </p>
             <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
-              {filteredExerciseProgressions.length} ejercicios
+              {filteredSignalProgressions.length} señales
             </span>
           </div>
           <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
@@ -3845,7 +3845,7 @@ function StatisticsPanel({
                 No hay señales activas para este filtro.
               </div>
             ) : null}
-            {filteredSignalProgressions.slice(0, 6).map((progression) => (
+            {filteredSignalProgressions.map((progression) => (
               <PlanSignalRow
                 key={progression.exerciseId}
                 progression={progression}
@@ -3861,7 +3861,7 @@ function StatisticsPanel({
       ) : null}
 
       {statisticsSection === 'progression' ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-black leading-tight">
               Progresión por ejercicio
@@ -3898,7 +3898,7 @@ function StatisticsPanel({
       ) : null}
 
       {statisticsSection === 'summary' ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <p className="text-sm font-black leading-tight">Últimas sesiones</p>
           <div className="mt-2 grid gap-1.5">
             {filteredHistory.length === 0 ? (
@@ -3941,7 +3941,7 @@ function StatisticsPanel({
       ) : null}
 
       {statisticsSection === 'export' ? (
-        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <p className="text-sm font-black leading-tight">Exportar datos</p>
           <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
             Genera un CSV derivado con resumen, historial, señales y progresión.
@@ -4156,22 +4156,22 @@ function PlanSignalRow({
 
   return (
     <div
-      className={`rounded-[1.1rem] border px-3 py-2 text-xs font-bold leading-tight ${getProgressionRecommendationToneClassName(
+      className={`min-w-0 overflow-hidden rounded-[1.1rem] border px-3 py-2 text-xs font-bold leading-tight ${getProgressionRecommendationToneClassName(
         progression.tone,
         progression.recommendation,
       )}`}
     >
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <span className="truncate text-sm font-black">
+      <div className="grid min-w-0 gap-0.5">
+        <span className="min-w-0 truncate text-sm font-black">
           {progression.exerciseName}
         </span>
-        <span className="shrink-0 opacity-75">{nextLabel}</span>
+        <span className="min-w-0 truncate opacity-75">{nextLabel}</span>
       </div>
-      <div className="mt-1 flex min-w-0 items-center justify-between gap-3">
-        <span className="truncate opacity-80">
+      <div className="mt-1 grid min-w-0 gap-0.5">
+        <span className="min-w-0 truncate opacity-80">
           {progression.recommendation}
         </span>
-        <span className="shrink-0 opacity-75">
+        <span className="min-w-0 truncate opacity-75">
           {progression.lastDecision ?? 'sin decisión'}
         </span>
       </div>
