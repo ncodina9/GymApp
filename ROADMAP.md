@@ -1068,6 +1068,7 @@ Casos deseables:
 - [ ] generar un borrador de plan a partir del cuestionario del Hito 22
 - [ ] explicar por que una semana sube, mantiene o baja volumen
 - [ ] proponer ajustes semanales usando cumplimiento, RIR, molestias y duracion real
+- [ ] convertir la `Revision del plan` en un analisis semanal guiado que separe claramente tres capas: datos registrados, decision manual del usuario y propuesta inteligente de ajuste
 - [ ] sugerir sustituciones de ejercicios cuando falta material o aparece molestia
 - [ ] resumir una sesion o semana en lenguaje natural
 - [ ] convertir notas libres o dictadas en etiquetas estructuradas
@@ -1077,6 +1078,7 @@ Limites:
 
 - [ ] no decidir pesos serie a serie en tiempo real sin reglas visibles
 - [ ] no modificar el plan activo sin una pantalla de revision y confirmacion
+- [ ] no presentar el feedback final de ejercicio como si fuera una recomendacion calculada; debe tratarse como dato de entrada para el analisis semanal
 - [ ] no mezclar datos estimados con datos registrados sin indicarlo
 - [ ] no bloquear el uso offline de la app
 - [ ] no depender de respuestas no versionadas para reconstruir el historico
@@ -1086,6 +1088,7 @@ Arquitectura propuesta:
 - [ ] motor determinista local para calculos, validaciones y recomendaciones conservadoras
 - [ ] IA opcional para generar propuestas, explicaciones y resumenes
 - [ ] salida de IA siempre en JSON versionado y validado antes de entrar en el plan
+- [ ] esquema de revision semanal con entradas trazables: cumplimiento real, cargas, RIR, molestias, duracion, saltos, feedback del usuario y recomendacion propuesta
 - [ ] registro de `aiSuggestionId`, modelo/proveedor si aplica, fecha y decision del usuario cuando una sugerencia se acepta
 - [ ] posibilidad de desactivar IA sin perder ninguna funcionalidad principal de registro
 
