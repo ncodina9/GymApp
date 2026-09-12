@@ -1016,6 +1016,7 @@ Estado parcial:
 - Actualizacion v0.1.8: el CSV estadistico pasa a `gymapp.statistics-export` version 2 e incluye `load_type`, `planned_equipment` y `actual_equipment` en filas por ejercicio. La vista de progresion muestra el material usado dentro del detalle desplegado.
 - Actualizacion v0.1.9: `Revisión del plan` se simplifica para leerse como revision descriptiva. El detalle de cada ejercicio separa ultimo registro, decision manual del usuario y señal calculada por la app. La vista deja claro que las señales no modifican automaticamente el planning.
 - `Ajustes > Estadisticas` muestra un primer grafico de duracion real vs estimada por sesion, con estado vacio visible hasta que haya dos sesiones cerradas
+- Actualizacion v0.1.11: `Ajustes > Estadisticas` queda dividido en secciones compactas: Resumen, Duracion, Revision, Progresion y Exportar. La revision muestra solo senales accionables y un resumen azul de ejercicios a mantener; el detalle completo queda en Progresion para reducir saturacion en movil.
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 

@@ -114,6 +114,12 @@ type SettingsSection =
   | 'local-data'
   | 'statistics'
   | 'history';
+type StatisticsSection =
+  | 'summary'
+  | 'duration'
+  | 'review'
+  | 'progression'
+  | 'export';
 type OfflineStatus =
   | 'checking'
   | 'ready'
@@ -3397,6 +3403,8 @@ function StatisticsPanel({
   isLoadingHistory: boolean;
   onExportStatisticsCsv: () => void;
 }) {
+  const [statisticsSection, setStatisticsSection] =
+    useState<StatisticsSection>('summary');
   const [selectedWeekFilter, setSelectedWeekFilter] = useState('all');
   const [selectedExerciseFilter, setSelectedExerciseFilter] = useState('all');
   const [expandedExerciseId, setExpandedExerciseId] = useState(
@@ -3561,6 +3569,56 @@ function StatisticsPanel({
     selectedExerciseFilter === 'all'
       ? stats.painHits
       : visibleInsights.reduce((total, insight) => total + insight.painHits, 0);
+  const filteredSignalProgressions = filteredExerciseProgressions.filter(
+    (progression) => progression.tone !== 'neutral',
+  );
+  const maintainProgressions = filteredExerciseProgressions.filter(
+    (progression) => progression.tone === 'neutral',
+  );
+  const statisticsSections: {
+    section: StatisticsSection;
+    title: string;
+    detail: string;
+    icon: ReactNode;
+  }[] = [
+    {
+      section: 'summary',
+      title: 'Resumen',
+      detail: `${stats.weekCompletedSessions}/${stats.weekTotalSessions} esta semana`,
+      icon: <BarChart3 className="size-5" />,
+    },
+    {
+      section: 'duration',
+      title: 'Duración',
+      detail:
+        filteredAverageDurationMinutes !== undefined
+          ? `${formatDurationMinutes(filteredAverageDurationMinutes)} de media`
+          : 'Sin sesiones cerradas',
+      icon: <History className="size-5" />,
+    },
+    {
+      section: 'review',
+      title: 'Revisión',
+      detail: `${filteredSignalProgressions.length} señales activas`,
+      icon: <ArrowUpRight className="size-5" />,
+    },
+    {
+      section: 'progression',
+      title: 'Progresión',
+      detail: `${filteredExerciseProgressions.length} ejercicios`,
+      icon: <Equal className="size-5" />,
+    },
+    {
+      section: 'export',
+      title: 'Exportar',
+      detail: 'CSV de estadísticas',
+      icon: <Download className="size-5" />,
+    },
+  ];
+  const showFilters =
+    statisticsSection === 'duration' ||
+    statisticsSection === 'review' ||
+    statisticsSection === 'progression';
 
   if (isLoadingHistory) {
     return (
@@ -3587,226 +3645,317 @@ function StatisticsPanel({
   return (
     <div className="mt-4 grid gap-3">
       <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-black leading-tight">Filtros</p>
-          <Button
-            className="h-9 shrink-0 rounded-[1.2rem] px-3 text-xs font-black"
-            variant="secondary"
-            onClick={onExportStatisticsCsv}
-          >
-            <Download className="size-4" />
-            CSV
-          </Button>
-        </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <label className="grid gap-1 text-xs font-black text-muted-foreground">
-            Semana
-            <NativeSelect
-              className="w-full"
-              value={selectedWeekFilter}
-              onChange={(event) => setSelectedWeekFilter(event.target.value)}
+        <div className="grid gap-2">
+          {statisticsSections.map((item) => (
+            <button
+              key={item.section}
+              className={`flex min-h-14 items-center gap-3 rounded-[1.45rem] border px-3 text-left transition active:scale-[0.98] ${
+                statisticsSection === item.section
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-secondary-foreground'
+              }`}
+              type="button"
+              onClick={() => setStatisticsSection(item.section)}
             >
-              <NativeSelectOption value="all">Todas</NativeSelectOption>
-              {weekOptions.map((weekNumber) => (
-                <NativeSelectOption key={weekNumber} value={String(weekNumber)}>
-                  Semana {weekNumber}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </label>
-          <label className="grid gap-1 text-xs font-black text-muted-foreground">
-            Ejercicio
-            <NativeSelect
-              className="w-full"
-              value={selectedExerciseFilter}
-              onChange={(event) => {
-                setSelectedExerciseFilter(event.target.value);
-                setExpandedExerciseId(
-                  event.target.value === 'all' ? '' : event.target.value,
-                );
-              }}
-            >
-              <NativeSelectOption value="all">Todos</NativeSelectOption>
-              {exerciseProgressions.map((progression) => (
-                <NativeSelectOption
-                  key={progression.exerciseId}
-                  value={progression.exerciseId}
-                >
-                  {progression.exerciseName}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </label>
-        </div>
-        <p className="mt-2 text-xs font-bold leading-tight text-muted-foreground">
-          Semana filtra duración, últimas sesiones y exposiciones. Ejercicio
-          filtra señales y progresión.
-        </p>
-      </div>
-
-      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-bold leading-tight text-muted-foreground">
-              Semana {stats.weekNumber}
-            </p>
-            <p className="mt-0.5 truncate text-base font-black leading-tight">
-              {stats.weekFocusLabel}
-            </p>
-          </div>
-          <span className="shrink-0 rounded-full border bg-card px-3 py-1 text-xs font-black text-muted-foreground">
-            {adherenceValue}%
-          </span>
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <Metric
-            label="Semana"
-            value={`${stats.weekCompletedSessions}/${stats.weekTotalSessions}`}
-          />
-          <Metric label="Guardadas" value={String(stats.storedSessions)} />
-          <Metric label="Completas" value={String(stats.completedSessions)} />
-        </div>
-      </div>
-
-      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-        <p className="text-sm font-black leading-tight">Duración real</p>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-          <Metric
-            label="Media"
-            value={
-              filteredAverageDurationMinutes
-                ? formatDurationMinutes(filteredAverageDurationMinutes)
-                : '-'
-            }
-          />
-          <Metric
-            label="Diferencia"
-            value={
-              filteredAverageDeltaMinutes !== undefined
-                ? formatSignedMinutes(filteredAverageDeltaMinutes)
-                : '-'
-            }
-          />
-        </div>
-        <div className="mt-2 grid gap-1.5">
-          <DurationChart data={durationChartData} />
-          {filteredDurationSamples.slice(0, 3).map((sample) => (
-            <div
-              key={sample.sessionId}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
-            >
-              <span className="truncate">{sample.label}</span>
-              <span className="tabular-nums text-muted-foreground">
-                {formatDurationMinutes(sample.actualMinutes)} ·{' '}
-                {formatSignedMinutes(sample.deltaMinutes)}
+              <span
+                className={`grid size-9 shrink-0 place-items-center rounded-full ${
+                  statisticsSection === item.section
+                    ? 'bg-primary-foreground text-primary'
+                    : 'bg-secondary text-muted-foreground'
+                }`}
+              >
+                {item.icon}
               </span>
-            </div>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-black leading-tight">
+                  {item.title}
+                </span>
+                <span
+                  className={`mt-0.5 block truncate text-xs font-bold leading-tight ${
+                    statisticsSection === item.section
+                      ? 'text-primary-foreground/75'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {item.detail}
+                </span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 opacity-70" />
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-black leading-tight">Revisión del plan</p>
-          <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
-            {filteredExerciseProgressions.length} ejercicios
-          </span>
+      {showFilters ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <p className="text-sm font-black leading-tight">Filtros</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <label className="grid gap-1 text-xs font-black text-muted-foreground">
+              Semana
+              <NativeSelect
+                className="w-full"
+                value={selectedWeekFilter}
+                onChange={(event) => setSelectedWeekFilter(event.target.value)}
+              >
+                <NativeSelectOption value="all">Todas</NativeSelectOption>
+                {weekOptions.map((weekNumber) => (
+                  <NativeSelectOption
+                    key={weekNumber}
+                    value={String(weekNumber)}
+                  >
+                    Semana {weekNumber}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </label>
+            <label className="grid gap-1 text-xs font-black text-muted-foreground">
+              Ejercicio
+              <NativeSelect
+                className="w-full"
+                value={selectedExerciseFilter}
+                onChange={(event) => {
+                  setSelectedExerciseFilter(event.target.value);
+                  setExpandedExerciseId(
+                    event.target.value === 'all' ? '' : event.target.value,
+                  );
+                }}
+              >
+                <NativeSelectOption value="all">Todos</NativeSelectOption>
+                {exerciseProgressions.map((progression) => (
+                  <NativeSelectOption
+                    key={progression.exerciseId}
+                    value={progression.exerciseId}
+                  >
+                    {progression.exerciseName}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </label>
+          </div>
         </div>
-        <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
-          Señales calculadas desde datos reales. La decisión manual aparece al
-          abrir cada ejercicio. No modifican el plan automáticamente.
-        </p>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          {primarySignals.map((signal) => (
-            <div
-              key={signal.label}
-              className={`flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.1rem] border px-2 ${signal.className}`}
-            >
-              <p className="text-xs font-bold leading-none opacity-80">
-                {signal.label}
+      ) : null}
+
+      {statisticsSection === 'summary' ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold leading-tight text-muted-foreground">
+                Semana {stats.weekNumber}
               </p>
-              <p className="mt-1 max-w-full text-center text-lg font-black leading-tight">
-                {signal.value}
+              <p className="mt-0.5 truncate text-base font-black leading-tight">
+                {stats.weekFocusLabel}
               </p>
             </div>
-          ))}
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-black">
-          <div className="rounded-[1rem] border bg-card px-3 py-2">
-            <span className="block text-muted-foreground">Saltadas</span>
-            <span className="mt-0.5 block">{visibleSkippedSets} series</span>
+            <span className="shrink-0 rounded-full border bg-card px-3 py-1 text-xs font-black text-muted-foreground">
+              {adherenceValue}%
+            </span>
           </div>
-          <div className="rounded-[1rem] border bg-card px-3 py-2">
-            <span className="block text-muted-foreground">Molestias</span>
-            <span className="mt-0.5 block">{visiblePainHits} marcas</span>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <Metric
+              label="Semana"
+              value={`${stats.weekCompletedSessions}/${stats.weekTotalSessions}`}
+            />
+            <Metric label="Guardadas" value={String(stats.storedSessions)} />
+            <Metric label="Completas" value={String(stats.completedSessions)} />
           </div>
         </div>
-        {filteredExerciseProgressions.length > 0 ? (
-          <div className="mt-3 grid gap-2">
-            {filteredExerciseProgressions.map((progression) => (
-              <ExerciseProgressionCard
-                key={progression.exerciseId}
-                progression={progression}
-                isExpanded={
-                  progression.exerciseId === effectiveExpandedExerciseId
-                }
-                onToggle={() =>
-                  setExpandedExerciseId(
-                    progression.exerciseId === effectiveExpandedExerciseId
-                      ? ''
-                      : progression.exerciseId,
-                  )
-                }
-              />
+      ) : null}
+
+      {statisticsSection === 'duration' ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <p className="text-sm font-black leading-tight">Duración real</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+            <Metric
+              label="Media"
+              value={
+                filteredAverageDurationMinutes
+                  ? formatDurationMinutes(filteredAverageDurationMinutes)
+                  : '-'
+              }
+            />
+            <Metric
+              label="Diferencia"
+              value={
+                filteredAverageDeltaMinutes !== undefined
+                  ? formatSignedMinutes(filteredAverageDeltaMinutes)
+                  : '-'
+              }
+            />
+          </div>
+          <div className="mt-2 grid gap-1.5">
+            <DurationChart data={durationChartData} />
+            {filteredDurationSamples.slice(0, 3).map((sample) => (
+              <div
+                key={sample.sessionId}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
+              >
+                <span className="truncate">{sample.label}</span>
+                <span className="tabular-nums text-muted-foreground">
+                  {formatDurationMinutes(sample.actualMinutes)} ·{' '}
+                  {formatSignedMinutes(sample.deltaMinutes)}
+                </span>
+              </div>
             ))}
           </div>
-        ) : (
-          <div className="mt-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
-            Sin progresión para este filtro.
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
-        <p className="text-sm font-black leading-tight">Últimas sesiones</p>
-        <div className="mt-2 grid gap-1.5">
-          {filteredHistory.length === 0 ? (
-            <div className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
-              Sin sesiones para este filtro.
-            </div>
-          ) : null}
-          {filteredHistory.slice(0, 3).map((summary) => {
-            const durationMinutes = getDurationMinutes(
-              summary.startedAt,
-              summary.finishedAt,
-            );
-
-            return (
-              <div
-                key={summary.sessionId}
-                className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
-              >
-                <div className="flex min-w-0 items-center justify-between gap-3">
-                  <span className="truncate">{summary.sessionLabel}</span>
-                  <span className="shrink-0 text-muted-foreground">
-                    {formatDate(summary.sessionDate)}
-                  </span>
-                </div>
-                <div className="mt-1 flex min-w-0 items-center justify-between gap-3 text-muted-foreground">
-                  <span>
-                    {summary.attemptedSets}/{summary.totalSets} series
-                  </span>
-                  <span>
-                    {durationMinutes
-                      ? formatDurationMinutes(durationMinutes)
-                      : 'sin cerrar'}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
         </div>
-      </div>
+      ) : null}
+
+      {statisticsSection === 'review' ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-black leading-tight">
+              Revisión del plan
+            </p>
+            <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
+              {filteredExerciseProgressions.length} ejercicios
+            </span>
+          </div>
+          <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
+            Señales calculadas desde datos reales. La decisión manual aparece al
+            abrir cada ejercicio. No modifican el plan automáticamente.
+          </p>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            {primarySignals.map((signal) => (
+              <div
+                key={signal.label}
+                className={`flex h-16 min-w-0 flex-col items-center justify-center rounded-[1.1rem] border px-2 ${signal.className}`}
+              >
+                <p className="text-xs font-bold leading-none opacity-80">
+                  {signal.label}
+                </p>
+                <p className="mt-1 max-w-full text-center text-lg font-black leading-tight">
+                  {signal.value}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-black">
+            <div className="rounded-[1rem] border bg-card px-3 py-2">
+              <span className="block text-muted-foreground">Saltadas</span>
+              <span className="mt-0.5 block">{visibleSkippedSets} series</span>
+            </div>
+            <div className="rounded-[1rem] border bg-card px-3 py-2">
+              <span className="block text-muted-foreground">Molestias</span>
+              <span className="mt-0.5 block">{visiblePainHits} marcas</span>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-2">
+            {filteredSignalProgressions.length === 0 ? (
+              <div className="rounded-[1.1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+                No hay señales activas para este filtro.
+              </div>
+            ) : null}
+            {filteredSignalProgressions.slice(0, 6).map((progression) => (
+              <PlanSignalRow
+                key={progression.exerciseId}
+                progression={progression}
+              />
+            ))}
+            {maintainProgressions.length > 0 ? (
+              <div className="rounded-[1.1rem] border border-[var(--signal-maintain-border)] bg-[var(--signal-maintain)] px-3 py-2 text-xs font-black text-[var(--signal-maintain-foreground)]">
+                {maintainProgressions.length} ejercicios sin señal de cambio.
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {statisticsSection === 'progression' ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-black leading-tight">
+              Progresión por ejercicio
+            </p>
+            <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
+              {filteredExerciseProgressions.length}
+            </span>
+          </div>
+          {filteredExerciseProgressions.length > 0 ? (
+            <div className="mt-3 grid gap-2">
+              {filteredExerciseProgressions.map((progression) => (
+                <ExerciseProgressionCard
+                  key={progression.exerciseId}
+                  progression={progression}
+                  isExpanded={
+                    progression.exerciseId === effectiveExpandedExerciseId
+                  }
+                  onToggle={() =>
+                    setExpandedExerciseId(
+                      progression.exerciseId === effectiveExpandedExerciseId
+                        ? ''
+                        : progression.exerciseId,
+                    )
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3 rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+              Sin progresión para este filtro.
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {statisticsSection === 'summary' ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <p className="text-sm font-black leading-tight">Últimas sesiones</p>
+          <div className="mt-2 grid gap-1.5">
+            {filteredHistory.length === 0 ? (
+              <div className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+                Sin sesiones para este filtro.
+              </div>
+            ) : null}
+            {filteredHistory.slice(0, 3).map((summary) => {
+              const durationMinutes = getDurationMinutes(
+                summary.startedAt,
+                summary.finishedAt,
+              );
+
+              return (
+                <div
+                  key={summary.sessionId}
+                  className="rounded-[1rem] border bg-card px-3 py-2 text-xs font-bold"
+                >
+                  <div className="flex min-w-0 items-center justify-between gap-3">
+                    <span className="truncate">{summary.sessionLabel}</span>
+                    <span className="shrink-0 text-muted-foreground">
+                      {formatDate(summary.sessionDate)}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex min-w-0 items-center justify-between gap-3 text-muted-foreground">
+                    <span>
+                      {summary.attemptedSets}/{summary.totalSets} series
+                    </span>
+                    <span>
+                      {durationMinutes
+                        ? formatDurationMinutes(durationMinutes)
+                        : 'sin cerrar'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {statisticsSection === 'export' ? (
+        <div className="rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <p className="text-sm font-black leading-tight">Exportar datos</p>
+          <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
+            Genera un CSV derivado con resumen, historial, señales y progresión.
+            El backup completo sigue en Datos locales.
+          </p>
+          <Button
+            className="mt-3 h-14 w-full rounded-[1.75rem] text-base font-black"
+            onClick={onExportStatisticsCsv}
+          >
+            Exportar estadísticas CSV
+            <Download className="size-5" />
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -3990,6 +4139,40 @@ function DurationChart({ data }: { data: DurationChartPoint[] }) {
             }}
           />
           Estimado
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function PlanSignalRow({
+  progression,
+}: {
+  progression: ExerciseProgressionSummary;
+}) {
+  const nextLabel = progression.nextDate
+    ? formatDate(progression.nextDate)
+    : 'sin fecha';
+
+  return (
+    <div
+      className={`rounded-[1.1rem] border px-3 py-2 text-xs font-bold leading-tight ${getProgressionRecommendationToneClassName(
+        progression.tone,
+        progression.recommendation,
+      )}`}
+    >
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <span className="truncate text-sm font-black">
+          {progression.exerciseName}
+        </span>
+        <span className="shrink-0 opacity-75">{nextLabel}</span>
+      </div>
+      <div className="mt-1 flex min-w-0 items-center justify-between gap-3">
+        <span className="truncate opacity-80">
+          {progression.recommendation}
+        </span>
+        <span className="shrink-0 opacity-75">
+          {progression.lastDecision ?? 'sin decisión'}
         </span>
       </div>
     </div>
