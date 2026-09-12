@@ -2221,7 +2221,7 @@ export default function Home() {
   return (
     <main className="app-screen overflow-hidden bg-background text-foreground">
       <OrientationLockOverlay />
-      <div className="app-screen mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:py-4">
+      <div className="app-screen app-shell mx-auto flex w-full max-w-[480px] flex-col overflow-hidden px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:py-4">
         {draft.phase !== 'settings' ? (
           <header className="mb-1">
             <p className="text-xs font-black uppercase text-muted-foreground">
