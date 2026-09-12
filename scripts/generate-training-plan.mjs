@@ -185,6 +185,59 @@ const exerciseTaxonomy = {
   ),
 };
 
+const exercisePresentation = {
+  'press-banca-barra': presentation('press-banca', 'Press banca', 'Barra'),
+  'press-banca-inclinado': presentation(
+    'press-banca-inclinado',
+    'Press banca inclinado',
+    'Barra',
+  ),
+  'press-cerrado-multipower': presentation(
+    'press-banca-agarre-cerrado',
+    'Press banca agarre cerrado',
+    'Multipower',
+  ),
+  'remo-inclinado-barra': presentation(
+    'remo-inclinado',
+    'Remo inclinado',
+    'Barra',
+  ),
+  'remo-barra-multipower': presentation('remo', 'Remo', 'Multipower'),
+  'press-militar-sentado': presentation(
+    'press-militar-sentado',
+    'Press militar sentado',
+    'Barra',
+  ),
+  'press-militar-sentado-velocidad': presentation(
+    'press-militar-sentado-velocidad',
+    'Press militar sentado velocidad',
+    'Barra',
+  ),
+  'elevaciones-laterales': presentation(
+    'elevaciones-laterales',
+    'Elevaciones laterales',
+  ),
+  'elevaciones-laterales-volumen': presentation(
+    'elevaciones-laterales',
+    'Elevaciones laterales',
+  ),
+  'triceps-polea-simple': presentation(
+    'triceps-polea',
+    'Tríceps en polea',
+    'Simple',
+  ),
+  'triceps-polea-volumen': presentation(
+    'triceps-polea',
+    'Tríceps en polea',
+    'Simple',
+  ),
+  'extension-triceps-polea': presentation(
+    'triceps-polea',
+    'Tríceps en polea',
+    'Extensión',
+  ),
+};
+
 const baseSessions = {
   monday: {
     title: 'Lunes - Torso fuerza',
@@ -714,6 +767,14 @@ function taxonomy(
   };
 }
 
+function presentation(baseExerciseId, baseExerciseName, variantLabel) {
+  return {
+    baseExerciseId,
+    baseExerciseName,
+    variantLabel,
+  };
+}
+
 function getSupersetFromBlock(block) {
   const match = /^([A-Z])(\d+)$/.exec(block);
 
@@ -806,6 +867,7 @@ function adaptExercise(item, week) {
 
   weightKg = getAvailableLoad(item, weightKg);
   const taxonomy = exerciseTaxonomy[item.exerciseId];
+  const presentationInfo = exercisePresentation[item.exerciseId];
 
   const sets = Array.from({ length: setCount }, (_, index) => ({
     setIndex: index + 1,
@@ -820,6 +882,9 @@ function adaptExercise(item, week) {
   return {
     exerciseId: item.exerciseId,
     name: item.name,
+    baseExerciseId: presentationInfo?.baseExerciseId ?? item.exerciseId,
+    baseExerciseName: presentationInfo?.baseExerciseName ?? item.name,
+    variantLabel: presentationInfo?.variantLabel,
     type: item.type,
     block: item.block,
     equipment: item.equipment,

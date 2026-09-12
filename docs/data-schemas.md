@@ -64,6 +64,9 @@ Notas:
 type Exercise = {
   exerciseId: string;
   name: string;
+  baseExerciseId?: string;
+  baseExerciseName?: string;
+  variantLabel?: string;
   type: string;
   block: string;
   equipment?: string;
@@ -84,6 +87,9 @@ type Exercise = {
 Notas:
 
 - `exerciseId` debe mantenerse estable entre versiones del plan para poder analizar progresión.
+- `name` conserva el nombre completo de planificación y exportación histórica.
+- `baseExerciseId` y `baseExerciseName` separan el ejercicio analítico/visible de la variante concreta, por ejemplo `Press banca`.
+- `variantLabel` describe la variante o material previsto cuando aporta contexto, por ejemplo `Barra`, `Multipower` o `Simple`.
 - `block` conserva el orden de planificación, por ejemplo `A`, `B`, `E1`, `E2`.
 - `equipment` fija el material real previsto para calcular cargas montables: `barbell`, `multipower`, `dumbbell`, `cable`, `plate_loaded_machine`, `external` o `bodyweight`.
 - `trainingBlock` clasifica la intención del ejercicio: `fuerza`, `volumen`, `potencia`, `tecnica`, `accesorio` o `core`.

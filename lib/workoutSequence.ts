@@ -5,6 +5,7 @@ export type SequenceSet = {
 export type SequenceExercise = {
   exerciseId: string;
   name: string;
+  baseExerciseName?: string;
   supersetId?: string;
   supersetOrder?: number;
   sets: SequenceSet[];
@@ -143,17 +144,18 @@ export const getNextStepLabel = (
   }
 
   const nextExercise = session.exercises[nextStep.exerciseIndex];
+  const nextExerciseName = nextExercise.baseExerciseName ?? nextExercise.name;
 
   if (
     currentStep?.supersetId &&
     currentStep.supersetId === nextStep.supersetId
   ) {
-    return `${nextExercise.name} · ronda ${nextStep.roundNumber}`;
+    return `${nextExerciseName} · ronda ${nextStep.roundNumber}`;
   }
 
   if (currentStep?.exerciseIndex === nextStep.exerciseIndex) {
-    return `Serie ${nextStep.setIndex + 1} de ${nextExercise.name}`;
+    return `Serie ${nextStep.setIndex + 1} de ${nextExerciseName}`;
   }
 
-  return nextExercise.name;
+  return nextExerciseName;
 };

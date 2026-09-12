@@ -35,6 +35,9 @@ export type ExportTrainingSet = {
 export type ExportExercise = {
   exerciseId: string;
   name: string;
+  baseExerciseId?: string;
+  baseExerciseName?: string;
+  variantLabel?: string;
   type: string;
   block: string;
   equipment?: string;

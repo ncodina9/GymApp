@@ -21,6 +21,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -80,6 +83,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -139,6 +144,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -191,6 +199,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -236,6 +247,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -283,6 +296,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -330,6 +345,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -381,6 +399,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -433,6 +453,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -485,6 +507,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -530,6 +554,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -577,6 +603,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -624,6 +652,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -669,6 +699,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -723,6 +755,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -775,6 +810,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -825,6 +862,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -877,6 +917,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -929,6 +972,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -967,6 +1012,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -1014,6 +1061,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -1061,6 +1110,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -1112,6 +1164,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -1171,6 +1226,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -1230,6 +1287,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -1282,6 +1342,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -1327,6 +1390,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -1374,6 +1439,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -1421,6 +1488,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -1474,6 +1544,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -1526,6 +1598,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -1578,6 +1652,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -1623,6 +1699,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -1670,6 +1748,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -1717,6 +1797,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -1762,6 +1844,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -1816,6 +1900,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -1868,6 +1955,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -1918,6 +2007,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -1970,6 +2062,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -2022,6 +2117,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -2060,6 +2157,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -2107,6 +2206,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -2154,6 +2255,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -2207,6 +2311,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -2259,6 +2366,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -2302,6 +2411,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -2347,6 +2458,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -2392,6 +2505,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -2430,6 +2545,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -2470,6 +2587,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -2510,6 +2630,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -2563,6 +2685,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -2622,6 +2747,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -2681,6 +2808,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -2733,6 +2863,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -2778,6 +2911,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -2825,6 +2960,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -2872,6 +3009,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -2925,6 +3065,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -2977,6 +3119,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -3029,6 +3173,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -3074,6 +3220,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -3121,6 +3269,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -3168,6 +3318,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -3213,6 +3365,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -3267,6 +3421,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -3319,6 +3476,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -3369,6 +3528,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -3421,6 +3583,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -3473,6 +3638,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -3511,6 +3678,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -3558,6 +3727,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -3605,6 +3776,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -3658,6 +3832,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -3710,6 +3887,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -3753,6 +3932,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -3798,6 +3979,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -3843,6 +4026,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -3881,6 +4066,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -3921,6 +4108,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -3961,6 +4151,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -4014,6 +4206,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -4059,6 +4254,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -4104,6 +4301,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -4149,6 +4349,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -4194,6 +4397,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -4234,6 +4439,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -4274,6 +4481,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -4327,6 +4537,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -4372,6 +4584,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -4417,6 +4631,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -4462,6 +4678,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -4502,6 +4720,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -4542,6 +4762,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -4580,6 +4802,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -4634,6 +4858,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -4679,6 +4906,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -4722,6 +4951,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -4767,6 +4999,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -4812,6 +5047,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -4850,6 +5087,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -4890,6 +5129,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -4930,6 +5171,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -4983,6 +5227,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -5028,6 +5275,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -5071,6 +5320,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -5116,6 +5367,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -5161,6 +5414,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -5199,6 +5454,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -5239,6 +5496,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -5279,6 +5539,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -5332,6 +5594,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -5384,6 +5649,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -5436,6 +5703,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -5488,6 +5758,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -5540,6 +5813,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -5587,6 +5862,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -5634,6 +5911,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -5687,6 +5967,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -5739,6 +6021,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -5791,6 +6075,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -5843,6 +6129,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -5890,6 +6178,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -5937,6 +6227,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -5982,6 +6274,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -6036,6 +6330,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -6088,6 +6385,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -6138,6 +6437,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -6183,6 +6484,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -6228,6 +6531,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -6266,6 +6571,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -6306,6 +6613,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -6346,6 +6656,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -6399,6 +6711,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -6451,6 +6766,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -6501,6 +6818,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -6553,6 +6873,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -6605,6 +6928,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -6643,6 +6968,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -6690,6 +7017,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -6737,6 +7066,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -6790,6 +7122,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -6842,6 +7176,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -6894,6 +7230,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -6946,6 +7284,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -6993,6 +7333,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -7040,6 +7382,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -7085,6 +7429,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -7139,6 +7485,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -7191,6 +7540,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -7243,6 +7594,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -7295,6 +7649,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -7347,6 +7704,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -7394,6 +7753,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -7441,6 +7802,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -7494,6 +7858,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -7546,6 +7913,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -7596,6 +7965,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -7648,6 +8020,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -7700,6 +8075,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -7738,6 +8115,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -7785,6 +8164,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -7832,6 +8213,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -7885,6 +8269,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -7937,6 +8324,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -7987,6 +8376,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -8032,6 +8423,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -8077,6 +8470,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -8115,6 +8510,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -8155,6 +8552,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -8195,6 +8595,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -8248,6 +8650,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -8300,6 +8705,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -8352,6 +8759,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -8404,6 +8814,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -8456,6 +8869,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -8503,6 +8918,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -8550,6 +8967,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -8603,6 +9023,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -8655,6 +9077,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -8707,6 +9131,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -8759,6 +9185,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -8806,6 +9234,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -8853,6 +9283,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -8898,6 +9330,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -8952,6 +9386,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -9004,6 +9441,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -9054,6 +9493,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -9106,6 +9548,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -9158,6 +9603,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -9196,6 +9643,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -9243,6 +9692,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -9290,6 +9741,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -9343,6 +9797,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -9395,6 +9852,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -9445,6 +9904,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -9490,6 +9951,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -9535,6 +9998,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -9573,6 +10038,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -9613,6 +10080,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -9653,6 +10123,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -9706,6 +10178,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -9751,6 +10226,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -9796,6 +10273,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -9841,6 +10321,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -9886,6 +10369,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -9926,6 +10411,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -9966,6 +10453,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -10019,6 +10509,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -10064,6 +10556,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -10109,6 +10603,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -10154,6 +10650,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -10194,6 +10692,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -10234,6 +10734,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -10272,6 +10774,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -10326,6 +10830,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -10371,6 +10878,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -10414,6 +10923,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -10459,6 +10971,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -10504,6 +11019,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -10542,6 +11059,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -10582,6 +11101,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -10622,6 +11143,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -10675,6 +11199,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -10720,6 +11247,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -10763,6 +11292,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -10808,6 +11339,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -10853,6 +11386,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -10891,6 +11426,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -10931,6 +11468,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -10971,6 +11511,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -11024,6 +11566,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -11076,6 +11621,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -11128,6 +11675,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -11173,6 +11723,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -11218,6 +11771,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -11265,6 +11820,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -11312,6 +11869,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -11365,6 +11925,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -11417,6 +11979,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -11462,6 +12026,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -11507,6 +12073,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -11554,6 +12122,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -11601,6 +12171,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -11646,6 +12218,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -11700,6 +12274,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -11745,6 +12322,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -11788,6 +12367,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -11833,6 +12415,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -11878,6 +12463,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -11916,6 +12503,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -11963,6 +12552,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -12010,6 +12601,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -12063,6 +12657,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -12108,6 +12705,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -12151,6 +12750,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -12196,6 +12797,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -12241,6 +12844,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -12279,6 +12884,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -12319,6 +12926,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -12359,6 +12969,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -12412,6 +13024,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -12464,6 +13079,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -12516,6 +13133,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -12561,6 +13181,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -12606,6 +13229,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -12653,6 +13278,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -12700,6 +13327,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -12753,6 +13383,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -12805,6 +13437,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -12850,6 +13484,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -12895,6 +13531,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -12942,6 +13580,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -12989,6 +13629,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -13034,6 +13676,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -13088,6 +13732,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -13133,6 +13780,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -13176,6 +13825,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -13221,6 +13873,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -13266,6 +13921,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -13304,6 +13961,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -13351,6 +14010,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -13398,6 +14059,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -13451,6 +14115,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -13496,6 +14163,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -13539,6 +14208,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -13584,6 +14255,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -13629,6 +14302,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -13667,6 +14342,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -13707,6 +14384,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -13747,6 +14427,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -13800,6 +14482,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -13845,6 +14530,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -13890,6 +14577,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -13935,6 +14625,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -13980,6 +14673,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -14020,6 +14715,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -14060,6 +14757,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -14113,6 +14813,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -14158,6 +14860,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -14203,6 +14907,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -14248,6 +14954,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -14288,6 +14996,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -14328,6 +15038,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -14366,6 +15078,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -14420,6 +15134,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -14465,6 +15182,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -14508,6 +15227,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -14553,6 +15275,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -14598,6 +15323,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -14636,6 +15363,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -14676,6 +15405,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -14716,6 +15447,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -14769,6 +15503,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -14814,6 +15551,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -14857,6 +15596,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -14902,6 +15643,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -14947,6 +15690,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -14985,6 +15730,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -15025,6 +15772,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -15065,6 +15815,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -15118,6 +15870,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -15170,6 +15925,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -15222,6 +15979,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -15267,6 +16027,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -15312,6 +16075,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -15359,6 +16124,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -15406,6 +16173,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -15459,6 +16229,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -15511,6 +16283,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -15556,6 +16330,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -15601,6 +16377,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -15648,6 +16426,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -15695,6 +16475,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -15740,6 +16522,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -15794,6 +16578,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -15839,6 +16626,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -15882,6 +16671,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -15927,6 +16719,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -15972,6 +16767,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -16010,6 +16807,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -16057,6 +16856,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -16104,6 +16905,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -16157,6 +16961,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -16202,6 +17009,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -16245,6 +17054,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -16290,6 +17101,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -16335,6 +17148,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -16373,6 +17188,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -16413,6 +17230,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -16453,6 +17273,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",
@@ -16506,6 +17328,9 @@
         {
           "exerciseId": "press-banca-barra",
           "name": "Press banca con barra",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -16544,6 +17369,8 @@
         {
           "exerciseId": "dominadas-lastradas",
           "name": "Dominadas lastradas",
+          "baseExerciseId": "dominadas-lastradas",
+          "baseExerciseName": "Dominadas lastradas",
           "type": "Básico",
           "block": "B",
           "equipment": "external",
@@ -16582,6 +17409,9 @@
         {
           "exerciseId": "remo-inclinado-barra",
           "name": "Remo inclinado con barra",
+          "baseExerciseId": "remo-inclinado",
+          "baseExerciseName": "Remo inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -16620,6 +17450,9 @@
         {
           "exerciseId": "press-militar-sentado",
           "name": "Press militar sentado en banco",
+          "baseExerciseId": "press-militar-sentado",
+          "baseExerciseName": "Press militar sentado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -16658,6 +17491,8 @@
         {
           "exerciseId": "elevaciones-laterales",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "E1",
           "equipment": "dumbbell",
@@ -16698,6 +17533,8 @@
         {
           "exerciseId": "curl-biceps-alterno",
           "name": "Curl bíceps alterno",
+          "baseExerciseId": "curl-biceps-alterno",
+          "baseExerciseName": "Curl bíceps alterno",
           "type": "Accesorio",
           "block": "E2",
           "equipment": "dumbbell",
@@ -16738,6 +17575,9 @@
         {
           "exerciseId": "triceps-polea-simple",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "F",
           "equipment": "cable",
@@ -16791,6 +17631,8 @@
         {
           "exerciseId": "sentadilla-barra",
           "name": "Sentadilla con barra",
+          "baseExerciseId": "sentadilla-barra",
+          "baseExerciseName": "Sentadilla con barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -16829,6 +17671,8 @@
         {
           "exerciseId": "peso-muerto-rumano-barra",
           "name": "Peso muerto rumano con barra",
+          "baseExerciseId": "peso-muerto-rumano-barra",
+          "baseExerciseName": "Peso muerto rumano con barra",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
@@ -16867,6 +17711,8 @@
         {
           "exerciseId": "hip-thrust-barra",
           "name": "Hip thrust / puente con barra",
+          "baseExerciseId": "hip-thrust-barra",
+          "baseExerciseName": "Hip thrust / puente con barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -16905,6 +17751,8 @@
         {
           "exerciseId": "extension-cuadriceps",
           "name": "Extensión de cuádriceps",
+          "baseExerciseId": "extension-cuadriceps",
+          "baseExerciseName": "Extensión de cuádriceps",
           "type": "Accesorio",
           "block": "D1",
           "equipment": "plate_loaded_machine",
@@ -16945,6 +17793,8 @@
         {
           "exerciseId": "curl-femoral-maquina",
           "name": "Curl femoral en banco con discos",
+          "baseExerciseId": "curl-femoral-maquina",
+          "baseExerciseName": "Curl femoral en banco con discos",
           "type": "Accesorio",
           "block": "D2",
           "equipment": "plate_loaded_machine",
@@ -16985,6 +17835,8 @@
         {
           "exerciseId": "gemelos-pie",
           "name": "Elevación de gemelos en multipower",
+          "baseExerciseId": "gemelos-pie",
+          "baseExerciseName": "Elevación de gemelos en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -17023,6 +17875,8 @@
         {
           "exerciseId": "core-plancha-dead-bug",
           "name": "Plancha o dead bug",
+          "baseExerciseId": "core-plancha-dead-bug",
+          "baseExerciseName": "Plancha o dead bug",
           "type": "Accesorio",
           "block": "F",
           "equipment": "bodyweight",
@@ -17077,6 +17931,9 @@
         {
           "exerciseId": "press-banca-inclinado",
           "name": "Press banca inclinado con barra",
+          "baseExerciseId": "press-banca-inclinado",
+          "baseExerciseName": "Press banca inclinado",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
@@ -17115,6 +17972,8 @@
         {
           "exerciseId": "dominadas-peso-corporal",
           "name": "Dominadas peso corporal",
+          "baseExerciseId": "dominadas-peso-corporal",
+          "baseExerciseName": "Dominadas peso corporal",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -17151,6 +18010,9 @@
         {
           "exerciseId": "press-militar-sentado-velocidad",
           "name": "Press militar sentado velocidad",
+          "baseExerciseId": "press-militar-sentado-velocidad",
+          "baseExerciseName": "Press militar sentado velocidad",
+          "variantLabel": "Barra",
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
@@ -17189,6 +18051,9 @@
         {
           "exerciseId": "remo-barra-multipower",
           "name": "Remo en multipower",
+          "baseExerciseId": "remo",
+          "baseExerciseName": "Remo",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "D",
           "equipment": "multipower",
@@ -17227,6 +18092,8 @@
         {
           "exerciseId": "pullover-mancuerna",
           "name": "Pull-over con mancuerna",
+          "baseExerciseId": "pullover-mancuerna",
+          "baseExerciseName": "Pull-over con mancuerna",
           "type": "Accesorio",
           "block": "E",
           "equipment": "dumbbell",
@@ -17265,6 +18132,8 @@
         {
           "exerciseId": "elevaciones-laterales-volumen",
           "name": "Elevaciones laterales",
+          "baseExerciseId": "elevaciones-laterales",
+          "baseExerciseName": "Elevaciones laterales",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -17305,6 +18174,8 @@
         {
           "exerciseId": "curl-martillo",
           "name": "Curl martillo",
+          "baseExerciseId": "curl-martillo",
+          "baseExerciseName": "Curl martillo",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "dumbbell",
@@ -17345,6 +18216,9 @@
         {
           "exerciseId": "triceps-polea-volumen",
           "name": "Tríceps en polea simple",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Simple",
           "type": "Accesorio",
           "block": "G",
           "equipment": "cable",
@@ -17398,6 +18272,9 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
+          "baseExerciseId": "press-banca-agarre-cerrado",
+          "baseExerciseName": "Press banca agarre cerrado",
+          "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
           "equipment": "multipower",
@@ -17436,6 +18313,8 @@
         {
           "exerciseId": "dominadas-supinas",
           "name": "Dominadas supinas",
+          "baseExerciseId": "dominadas-supinas",
+          "baseExerciseName": "Dominadas supinas",
           "type": "Básico",
           "block": "B",
           "equipment": "bodyweight",
@@ -17472,6 +18351,8 @@
         {
           "exerciseId": "rdl-tecnico",
           "name": "Peso muerto rumano técnico",
+          "baseExerciseId": "rdl-tecnico",
+          "baseExerciseName": "Peso muerto rumano técnico",
           "type": "Básico técnico",
           "block": "C",
           "equipment": "barbell",
@@ -17510,6 +18391,8 @@
         {
           "exerciseId": "hip-thrust-volumen",
           "name": "Hip thrust volumen",
+          "baseExerciseId": "hip-thrust-volumen",
+          "baseExerciseName": "Hip thrust volumen",
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
@@ -17548,6 +18431,8 @@
         {
           "exerciseId": "gemelos-sentado-multipower",
           "name": "Elevación de gemelos sentado en multipower",
+          "baseExerciseId": "gemelos-sentado-multipower",
+          "baseExerciseName": "Elevación de gemelos sentado en multipower",
           "type": "Accesorio",
           "block": "E",
           "equipment": "multipower",
@@ -17586,6 +18471,8 @@
         {
           "exerciseId": "curl-biceps-barra-mancuernas",
           "name": "Curl bíceps con mancuernas",
+          "baseExerciseId": "curl-biceps-barra-mancuernas",
+          "baseExerciseName": "Curl bíceps con mancuernas",
           "type": "Accesorio",
           "block": "F1",
           "equipment": "dumbbell",
@@ -17626,6 +18513,9 @@
         {
           "exerciseId": "extension-triceps-polea",
           "name": "Extensión tríceps polea",
+          "baseExerciseId": "triceps-polea",
+          "baseExerciseName": "Tríceps en polea",
+          "variantLabel": "Extensión",
           "type": "Accesorio",
           "block": "F2",
           "equipment": "cable",
@@ -17666,6 +18556,8 @@
         {
           "exerciseId": "elevacion-lateral-mecanica",
           "name": "Elevación lateral mecánica",
+          "baseExerciseId": "elevacion-lateral-mecanica",
+          "baseExerciseName": "Elevación lateral mecánica",
           "type": "Accesorio",
           "block": "G",
           "equipment": "dumbbell",

@@ -1024,11 +1024,12 @@ Estado parcial:
 - Actualizacion v0.1.16: se consolida Obsidian en `Entrenamiento/00 Dashboard.md` como unica entrada principal. `Dashboard entrenamiento.md` deja de generarse y se elimina en `sync:obsidian`; `00 Dashboard` y `02 Estadisticas` consumen `Estadisticas entrenamiento.csv` v4 para volumen cuando esta disponible.
 - Actualizacion v0.1.17: `Ajustes > Estadisticas > Volumen` añade tarjetas desplegables por ejercicio. Cada tarjeta muestra volumen, series, reps/tiempo y, al abrirla, las exposiciones por sesion que componen el total filtrado.
 - Actualizacion v0.1.18: los agregados de volumen agrupan variantes estadisticas equivalentes bajo un ejercicio base, por ejemplo `Elevaciones laterales` y `Triceps en polea`, aunque el plan conserve ids separados por contexto de programacion.
+- Actualizacion v0.1.19: `trainingPlan.json` separa `baseExerciseId`, `baseExerciseName` y `variantLabel`. La UI usa el nombre base como titulo visible y muestra el material/variante como contexto secundario en la previsualizacion. No migra ni modifica exports historicos: el CSV por serie conserva `exerciseId`, `exercise` y `actual_equipment` para compatibilidad con Obsidian.
 
 Pendiente de nomenclatura:
 
-- revisar nombres visibles del plan para separar ejercicio base y material usado: por ejemplo `Press banca` como nombre base, con selector de material `barra`, `multipower` o `mancuernas`
-- mantener ids estables para no romper historico, pero anadir si hace falta campos explicitos tipo `baseExerciseId`, `baseExerciseName` o `variantLabel`
+- [x] revisar nombres visibles del plan para separar ejercicio base y material usado: por ejemplo `Press banca` como nombre base, con selector de material `barra`, `multipower` o `mancuernas`
+- [x] mantener ids estables para no romper historico, pero anadir si hace falta campos explicitos tipo `baseExerciseId`, `baseExerciseName` o `variantLabel`
 - actualizar exportaciones, Obsidian y futura app Swift para leer esa separacion sin depender de strings
 
 ### Hito 22: Generador guiado de planes de entrenamiento

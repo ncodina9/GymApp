@@ -154,6 +154,9 @@ type TrainingSet = {
 type Exercise = {
   exerciseId: string;
   name: string;
+  baseExerciseId?: string;
+  baseExerciseName?: string;
+  variantLabel?: string;
   type: string;
   block: string;
   equipment?: string;
@@ -842,6 +845,10 @@ const formatEquipmentLabel = (equipment?: string) =>
     ? equipmentLabels[equipment as ExerciseEquipment]
     : undefined;
 
+const getExerciseDisplayName = (
+  exercise: Pick<Exercise, 'name' | 'baseExerciseName'>,
+) => exercise.baseExerciseName ?? exercise.name;
+
 const exerciseEquipmentVariants: Record<string, ExerciseEquipment[]> = {
   'press-banca-barra': ['barbell', 'multipower', 'dumbbell'],
   'press-banca-inclinado': ['barbell', 'multipower', 'dumbbell'],
@@ -1182,7 +1189,7 @@ const getNextSetPreview = (
 
   if (set.type === 'timed') {
     return {
-      exerciseName: exercise.name,
+      exerciseName: getExerciseDisplayName(exercise),
       series: `${step.setIndex + 1}/${exercise.sets.length}`,
       work: formatClock(set.targetDurationSeconds ?? 0),
       workLabel: 'tiempo',
@@ -1192,7 +1199,7 @@ const getNextSetPreview = (
   }
 
   return {
-    exerciseName: exercise.name,
+    exerciseName: getExerciseDisplayName(exercise),
     series: `${step.setIndex + 1}/${exercise.sets.length}`,
     work: String(set.targetReps ?? 0),
     workLabel: 'reps',
@@ -2356,7 +2363,7 @@ export default function Home() {
 
         {draft.phase === 'set' && currentSet ? (
           <SetScreen
-            exerciseName={currentExercise.name}
+            exerciseName={getExerciseDisplayName(currentExercise)}
             exerciseNotes={currentExercise.notes}
             setIndex={draft.setIndex}
             totalExerciseSets={currentExercise.sets.length}
@@ -2368,7 +2375,11 @@ export default function Home() {
               currentStep?.supersetId ? currentStep.roundNumber : undefined
             }
             supersetRoundCount={supersetRoundCount}
-            nextLinkedExerciseName={nextLinkedExercise?.name}
+            nextLinkedExerciseName={
+              nextLinkedExercise
+                ? getExerciseDisplayName(nextLinkedExercise)
+                : undefined
+            }
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
@@ -2469,7 +2480,7 @@ export default function Home() {
 
         {draft.phase === 'feedback' && currentSet ? (
           <FeedbackScreen
-            exerciseName={currentExercise.name}
+            exerciseName={getExerciseDisplayName(currentExercise)}
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
@@ -2896,6 +2907,8 @@ function ExercisePlanCard({
   index: number;
 }) {
   const metrics = getExercisePreviewMetrics(exercise);
+  const equipmentLabel =
+    exercise.variantLabel ?? formatEquipmentLabel(exercise.equipment);
   const supersetSize = exercise.supersetId
     ? getSupersetMembers(session, exercise.supersetId).length
     : 0;
@@ -2913,8 +2926,13 @@ function ExercisePlanCard({
             </p>
           ) : null}
           <p className="min-w-0 text-base font-black leading-tight">
-            {exercise.name}
+            {getExerciseDisplayName(exercise)}
           </p>
+          {equipmentLabel ? (
+            <p className="mt-1 w-fit rounded-full bg-secondary px-2 py-1 text-[0.68rem] font-black uppercase leading-none text-muted-foreground">
+              {equipmentLabel}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -5609,7 +5627,7 @@ function TransitionScreen({
             return (
               <div key={exercise.exerciseId}>
                 <h2 className="text-[1.55rem] font-black leading-tight tracking-normal">
-                  {exercise.name}
+                  {getExerciseDisplayName(exercise)}
                 </h2>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {decisionOptions.map((option) => {
@@ -5649,7 +5667,7 @@ function TransitionScreen({
         <div className="rounded-lg bg-secondary px-4 py-3">
           <p className="text-sm font-semibold text-muted-foreground">Después</p>
           <p className="text-2xl font-black tracking-normal">
-            {nextExercise.name}
+            {getExerciseDisplayName(nextExercise)}
           </p>
           <p className="mt-1 text-sm font-medium text-muted-foreground">
             {nextExercise.notes}
