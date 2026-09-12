@@ -980,11 +980,11 @@ Tareas:
 
 - [x] crear una vista de resumen semanal con sesiones completadas, sesiones pendientes y adherencia
 - [x] mostrar duracion real por sesion y compararla con la estimacion operativa sin movilidad previa
-- [ ] mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
+- [x] mostrar volumen por ejercicio y por grupo muscular cuando el plan incluya esa taxonomia
 - [x] mostrar progresion por ejercicio con vista consultable: carga, reps, RIR, saltos y decisiones tomadas
 - [x] detectar tendencias simples: estancamiento, subidas sostenidas, molestias repetidas y series saltadas
 - [x] anadir filtros iniciales por semana y ejercicio
-- [ ] anadir filtros por bloque del plan, tipo de ejercicio y grupo muscular cuando el plan incluya esa taxonomia
+- [x] anadir filtros por bloque del plan, tipo de ejercicio y grupo muscular cuando el plan incluya esa taxonomia
 - [x] permitir exportar las tablas estadisticas principales en CSV reutilizable
 - [ ] permitir exportar graficas principales cuando existan visualizaciones nativas en la app
 - [x] definir que las primeras graficas se generan en la PWA desde agregados exportables
@@ -1018,6 +1018,7 @@ Estado parcial:
 - `Ajustes > Estadisticas` muestra un primer grafico de duracion real vs estimada por sesion, con estado vacio visible hasta que haya dos sesiones cerradas
 - Actualizacion v0.1.11: `Ajustes > Estadisticas` queda dividido en secciones compactas: Resumen, Duracion, Revision, Progresion y Exportar. La revision muestra solo senales accionables y un resumen azul de ejercicios a mantener; el detalle completo queda en Progresion para reducir saturacion en movil.
 - Actualizacion v0.1.12: `Revision` muestra todas las senales activas, alinea el contador con las filas visibles y compacta las tarjetas para evitar scroll horizontal en iPhone.
+- Actualizacion v0.1.13: el plan incorpora taxonomia por ejercicio (`trainingBlock`, `movementPattern`, `primaryMuscles`, `secondaryMuscles`). Estadisticas añade seccion `Volumen`, filtros por bloque, patron y musculo, y CSV estadistico schema v3 con filas de volumen por musculo y ejercicio.
 
 ### Hito 22: Generador guiado de planes de entrenamiento
 

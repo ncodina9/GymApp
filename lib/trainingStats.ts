@@ -79,6 +79,10 @@ export type ExerciseProgressionExposure = {
 export type ExerciseProgressionSummary = {
   exerciseId: string;
   exerciseName: string;
+  trainingBlock?: string;
+  movementPattern?: string;
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
   target: string;
   recommendation: string;
   lastDecision?: string;
@@ -86,6 +90,31 @@ export type ExerciseProgressionSummary = {
   nextDate?: string;
   nextSessionLabel?: string;
   exposures: ExerciseProgressionExposure[];
+};
+
+export type MuscleVolumeSummary = {
+  muscle: string;
+  completedSets: number;
+  totalReps: number;
+  totalDurationSeconds: number;
+  totalLoadVolumeKg: number;
+};
+
+export type ExerciseVolumeSummary = {
+  exerciseId: string;
+  exerciseName: string;
+  trainingBlock?: string;
+  movementPattern?: string;
+  primaryMuscles: string[];
+  completedSets: number;
+  totalReps: number;
+  totalDurationSeconds: number;
+  totalLoadVolumeKg: number;
+};
+
+export type VolumeSummary = {
+  byMuscle: MuscleVolumeSummary[];
+  byExercise: ExerciseVolumeSummary[];
 };
 
 export type TrainingStatsSummary = {
@@ -121,6 +150,37 @@ const getPainHits = (events: StoredSetEvent[]) =>
       (event.painLowerBack ?? 0) > 0 ||
       event.painOther > 0,
   ).length;
+
+const getExerciseVolumeKg = (
+  event: StoredSetEvent,
+  exercise?: ExportTrainingSession['exercises'][number],
+) => {
+  if (
+    event.status !== 'completed' ||
+    event.actualDurationSeconds !== undefined
+  ) {
+    return 0;
+  }
+
+  const actualEquipment = event.actualEquipment ?? exercise?.equipment;
+  const loadType =
+    inferEquipmentLoadType(actualEquipment) ?? inferLoadType(exercise);
+
+  if (
+    loadType === 'bodyweight' ||
+    event.actualWeightKg <= 0 ||
+    event.actualReps <= 0
+  ) {
+    return 0;
+  }
+
+  const effectiveLoadKg =
+    loadType === 'per_dumbbell'
+      ? event.actualWeightKg * 2
+      : event.actualWeightKg;
+
+  return effectiveLoadKg * event.actualReps;
+};
 
 export const getDurationMinutes = (startedAt?: string, finishedAt?: string) => {
   if (!startedAt || !finishedAt) {
@@ -413,9 +473,10 @@ export const getExerciseProgressionSummaries = (
       );
       const exerciseName =
         nextExercise?.name ?? lastExercise?.name ?? exerciseId;
+      const taxonomySource = nextExercise ?? lastExercise;
       const target = formatExportTarget(
-        nextExercise?.target ?? lastExercise?.target ?? '',
-        inferLoadType(nextExercise ?? lastExercise),
+        taxonomySource?.target ?? '',
+        inferLoadType(taxonomySource),
       );
       const eventsBySession = new Map<string, StoredSetEvent[]>();
 
@@ -518,6 +579,14 @@ export const getExerciseProgressionSummaries = (
       return {
         exerciseId,
         exerciseName,
+        ...(taxonomySource?.trainingBlock
+          ? { trainingBlock: taxonomySource.trainingBlock }
+          : {}),
+        ...(taxonomySource?.movementPattern
+          ? { movementPattern: taxonomySource.movementPattern }
+          : {}),
+        primaryMuscles: taxonomySource?.primaryMuscles ?? [],
+        secondaryMuscles: taxonomySource?.secondaryMuscles ?? [],
         target,
         recommendation: insight?.recommendation ?? 'Mantener y observar',
         ...(insight?.lastDecision
@@ -540,6 +609,87 @@ export const getExerciseProgressionSummaries = (
         a.exerciseName.localeCompare(b.exerciseName)
       );
     });
+};
+
+export const getVolumeSummary = (
+  sessions: ExportTrainingSession[],
+  events: StoredSetEvent[],
+): VolumeSummary => {
+  const sessionsById = new Map(
+    sessions.map((session) => [session.sessionId, session]),
+  );
+  const byMuscle = new Map<string, MuscleVolumeSummary>();
+  const byExercise = new Map<string, ExerciseVolumeSummary>();
+
+  events
+    .filter((event) => event.status === 'completed')
+    .forEach((event) => {
+      const session = sessionsById.get(event.sessionId);
+      const exercise = session?.exercises.find(
+        (item) => item.exerciseId === event.exerciseId,
+      );
+
+      if (!exercise) {
+        return;
+      }
+
+      const loadVolumeKg = getExerciseVolumeKg(event, exercise);
+      const reps =
+        event.actualDurationSeconds === undefined ? event.actualReps : 0;
+      const durationSeconds = event.actualDurationSeconds ?? 0;
+      const exerciseSummary = byExercise.get(event.exerciseId) ?? {
+        exerciseId: event.exerciseId,
+        exerciseName: exercise.name,
+        ...(exercise.trainingBlock
+          ? { trainingBlock: exercise.trainingBlock }
+          : {}),
+        ...(exercise.movementPattern
+          ? { movementPattern: exercise.movementPattern }
+          : {}),
+        primaryMuscles: exercise.primaryMuscles ?? [],
+        completedSets: 0,
+        totalReps: 0,
+        totalDurationSeconds: 0,
+        totalLoadVolumeKg: 0,
+      };
+
+      exerciseSummary.completedSets += 1;
+      exerciseSummary.totalReps += reps;
+      exerciseSummary.totalDurationSeconds += durationSeconds;
+      exerciseSummary.totalLoadVolumeKg += loadVolumeKg;
+      byExercise.set(event.exerciseId, exerciseSummary);
+
+      (exercise.primaryMuscles ?? []).forEach((muscle) => {
+        const muscleSummary = byMuscle.get(muscle) ?? {
+          muscle,
+          completedSets: 0,
+          totalReps: 0,
+          totalDurationSeconds: 0,
+          totalLoadVolumeKg: 0,
+        };
+
+        muscleSummary.completedSets += 1;
+        muscleSummary.totalReps += reps;
+        muscleSummary.totalDurationSeconds += durationSeconds;
+        muscleSummary.totalLoadVolumeKg += loadVolumeKg;
+        byMuscle.set(muscle, muscleSummary);
+      });
+    });
+
+  return {
+    byMuscle: Array.from(byMuscle.values()).sort(
+      (a, b) =>
+        b.completedSets - a.completedSets ||
+        b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
+        a.muscle.localeCompare(b.muscle),
+    ),
+    byExercise: Array.from(byExercise.values()).sort(
+      (a, b) =>
+        b.completedSets - a.completedSets ||
+        b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
+        a.exerciseName.localeCompare(b.exerciseName),
+    ),
+  };
 };
 
 export const getTrainingStatsSummary = ({

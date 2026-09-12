@@ -63,11 +63,13 @@ import {
   getExerciseProgressionSummaries,
   getSessionHistorySummaries,
   getTrainingStatsSummary,
+  getVolumeSummary,
   isSessionHistoryComplete,
   type ExerciseProgressInsight,
   type ExerciseProgressionSummary,
   type SessionHistorySummary,
   type TrainingStatsSummary,
+  type VolumeSummary,
 } from '@/lib/trainingStats';
 import {
   buildExecutionSteps,
@@ -117,6 +119,7 @@ type SettingsSection =
 type StatisticsSection =
   | 'summary'
   | 'duration'
+  | 'volume'
   | 'review'
   | 'progression'
   | 'export';
@@ -151,6 +154,10 @@ type Exercise = {
   type: string;
   block: string;
   equipment?: string;
+  trainingBlock?: string;
+  movementPattern?: string;
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
   supersetId?: string;
   supersetOrder?: number;
   phase: string;
@@ -1213,6 +1220,10 @@ export default function Home() {
   const [exerciseProgressions, setExerciseProgressions] = useState<
     ExerciseProgressionSummary[]
   >([]);
+  const [volumeSummary, setVolumeSummary] = useState<VolumeSummary>({
+    byMuscle: [],
+    byExercise: [],
+  });
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isRegisteringSet, setIsRegisteringSet] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
@@ -1344,10 +1355,12 @@ export default function Home() {
           todayIso,
         ),
       );
+      setVolumeSummary(getVolumeSummary(trainingPlan.sessions, events));
     } catch {
       setSessionHistory([]);
       setExerciseInsights([]);
       setExerciseProgressions([]);
+      setVolumeSummary({ byMuscle: [], byExercise: [] });
     } finally {
       setIsLoadingHistory(false);
     }
@@ -2066,6 +2079,7 @@ export default function Home() {
       stats: trainingStats,
       history: sessionHistory,
       exerciseProgressions,
+      volumeSummary,
     });
     const fileName = getStatisticsCsvFileName(exportedAt);
     const file = new File([csv], fileName, {
@@ -2299,6 +2313,7 @@ export default function Home() {
             upcomingSessions={upcomingSessions}
             sessionHistory={sessionHistory}
             exerciseProgressions={exerciseProgressions}
+            volumeSummary={volumeSummary}
             trainingStats={trainingStats}
             isLoadingHistory={isLoadingHistory}
             onSectionChange={setSettingsSection}
@@ -3018,6 +3033,7 @@ function SettingsScreen({
   upcomingSessions,
   sessionHistory,
   exerciseProgressions,
+  volumeSummary,
   trainingStats,
   isLoadingHistory,
   onSectionChange,
@@ -3043,6 +3059,7 @@ function SettingsScreen({
   upcomingSessions: TrainingSession[];
   sessionHistory: SessionHistorySummary[];
   exerciseProgressions: ExerciseProgressionSummary[];
+  volumeSummary: VolumeSummary;
   trainingStats: TrainingStatsSummary;
   isLoadingHistory: boolean;
   onSectionChange: (section: SettingsSection) => void;
@@ -3298,6 +3315,7 @@ function SettingsScreen({
             stats={trainingStats}
             history={sessionHistory}
             exerciseProgressions={exerciseProgressions}
+            volumeSummary={volumeSummary}
             isLoadingHistory={isLoadingHistory}
             onExportStatisticsCsv={onExportStatisticsCsv}
           />
@@ -3394,12 +3412,14 @@ function StatisticsPanel({
   stats,
   history,
   exerciseProgressions,
+  volumeSummary,
   isLoadingHistory,
   onExportStatisticsCsv,
 }: {
   stats: TrainingStatsSummary;
   history: SessionHistorySummary[];
   exerciseProgressions: ExerciseProgressionSummary[];
+  volumeSummary: VolumeSummary;
   isLoadingHistory: boolean;
   onExportStatisticsCsv: () => void;
 }) {
@@ -3407,6 +3427,11 @@ function StatisticsPanel({
     useState<StatisticsSection>('summary');
   const [selectedWeekFilter, setSelectedWeekFilter] = useState('all');
   const [selectedExerciseFilter, setSelectedExerciseFilter] = useState('all');
+  const [selectedTrainingBlockFilter, setSelectedTrainingBlockFilter] =
+    useState('all');
+  const [selectedMovementPatternFilter, setSelectedMovementPatternFilter] =
+    useState('all');
+  const [selectedMuscleFilter, setSelectedMuscleFilter] = useState('all');
   const [expandedExerciseId, setExpandedExerciseId] = useState(
     exerciseProgressions[0]?.exerciseId ?? '',
   );
@@ -3423,6 +3448,40 @@ function StatisticsPanel({
         history.map((summary) => [summary.sessionId, summary.weekNumber]),
       ),
     [history],
+  );
+  const trainingBlockOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          exerciseProgressions
+            .map((progression) => progression.trainingBlock)
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [exerciseProgressions],
+  );
+  const movementPatternOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          exerciseProgressions
+            .map((progression) => progression.movementPattern)
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [exerciseProgressions],
+  );
+  const muscleOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          exerciseProgressions.flatMap((progression) => [
+            ...progression.primaryMuscles,
+            ...progression.secondaryMuscles,
+          ]),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [exerciseProgressions],
   );
   const filteredHistory = useMemo(
     () =>
@@ -3491,6 +3550,22 @@ function StatisticsPanel({
             selectedExerciseFilter === 'all' ||
             progression.exerciseId === selectedExerciseFilter,
         )
+        .filter(
+          (progression) =>
+            selectedTrainingBlockFilter === 'all' ||
+            progression.trainingBlock === selectedTrainingBlockFilter,
+        )
+        .filter(
+          (progression) =>
+            selectedMovementPatternFilter === 'all' ||
+            progression.movementPattern === selectedMovementPatternFilter,
+        )
+        .filter(
+          (progression) =>
+            selectedMuscleFilter === 'all' ||
+            progression.primaryMuscles.includes(selectedMuscleFilter) ||
+            progression.secondaryMuscles.includes(selectedMuscleFilter),
+        )
         .map((progression) => ({
           ...progression,
           exposures:
@@ -3508,10 +3583,62 @@ function StatisticsPanel({
         ),
     [
       exerciseProgressions,
+      selectedTrainingBlockFilter,
       selectedExerciseFilter,
+      selectedMovementPatternFilter,
+      selectedMuscleFilter,
       selectedWeekFilter,
       sessionWeekById,
     ],
+  );
+  const filteredExerciseIds = new Set(
+    filteredExerciseProgressions.map((progression) => progression.exerciseId),
+  );
+  const filteredVolumeByExercise = volumeSummary.byExercise.filter(
+    (summary) =>
+      (filteredExerciseIds.size === 0 ||
+        filteredExerciseIds.has(summary.exerciseId)) &&
+      (selectedTrainingBlockFilter === 'all' ||
+        summary.trainingBlock === selectedTrainingBlockFilter) &&
+      (selectedMovementPatternFilter === 'all' ||
+        summary.movementPattern === selectedMovementPatternFilter) &&
+      (selectedMuscleFilter === 'all' ||
+        summary.primaryMuscles.includes(selectedMuscleFilter)),
+  );
+  const filteredVolumeByMuscle = Array.from(
+    filteredVolumeByExercise
+      .reduce((byMuscle, summary) => {
+        summary.primaryMuscles.forEach((muscle) => {
+          if (
+            selectedMuscleFilter !== 'all' &&
+            selectedMuscleFilter !== muscle
+          ) {
+            return;
+          }
+
+          const current = byMuscle.get(muscle) ?? {
+            muscle,
+            completedSets: 0,
+            totalReps: 0,
+            totalDurationSeconds: 0,
+            totalLoadVolumeKg: 0,
+          };
+
+          current.completedSets += summary.completedSets;
+          current.totalReps += summary.totalReps;
+          current.totalDurationSeconds += summary.totalDurationSeconds;
+          current.totalLoadVolumeKg += summary.totalLoadVolumeKg;
+          byMuscle.set(muscle, current);
+        });
+
+        return byMuscle;
+      }, new Map<string, VolumeSummary['byMuscle'][number]>())
+      .values(),
+  ).sort(
+    (a, b) =>
+      b.completedSets - a.completedSets ||
+      b.totalLoadVolumeKg - a.totalLoadVolumeKg ||
+      a.muscle.localeCompare(b.muscle),
   );
   const selectedProgression = filteredExerciseProgressions.find(
     (progression) => progression.exerciseId === expandedExerciseId,
@@ -3597,6 +3724,12 @@ function StatisticsPanel({
       icon: <History className="size-5" />,
     },
     {
+      section: 'volume',
+      title: 'Volumen',
+      detail: `${filteredVolumeByMuscle.length} grupos`,
+      icon: <BarChart3 className="size-5" />,
+    },
+    {
       section: 'review',
       title: 'Revisión',
       detail: `${filteredSignalProgressions.length} señales activas`,
@@ -3617,6 +3750,15 @@ function StatisticsPanel({
   ];
   const showFilters =
     statisticsSection === 'duration' ||
+    statisticsSection === 'volume' ||
+    statisticsSection === 'review' ||
+    statisticsSection === 'progression';
+  const showWeekFilter =
+    statisticsSection === 'duration' ||
+    statisticsSection === 'review' ||
+    statisticsSection === 'progression';
+  const showTaxonomyFilters =
+    statisticsSection === 'volume' ||
     statisticsSection === 'review' ||
     statisticsSection === 'progression';
 
@@ -3690,24 +3832,28 @@ function StatisticsPanel({
         <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
           <p className="text-sm font-black leading-tight">Filtros</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <label className="grid gap-1 text-xs font-black text-muted-foreground">
-              Semana
-              <NativeSelect
-                className="w-full"
-                value={selectedWeekFilter}
-                onChange={(event) => setSelectedWeekFilter(event.target.value)}
-              >
-                <NativeSelectOption value="all">Todas</NativeSelectOption>
-                {weekOptions.map((weekNumber) => (
-                  <NativeSelectOption
-                    key={weekNumber}
-                    value={String(weekNumber)}
-                  >
-                    Semana {weekNumber}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </label>
+            {showWeekFilter ? (
+              <label className="grid gap-1 text-xs font-black text-muted-foreground">
+                Semana
+                <NativeSelect
+                  className="w-full"
+                  value={selectedWeekFilter}
+                  onChange={(event) =>
+                    setSelectedWeekFilter(event.target.value)
+                  }
+                >
+                  <NativeSelectOption value="all">Todas</NativeSelectOption>
+                  {weekOptions.map((weekNumber) => (
+                    <NativeSelectOption
+                      key={weekNumber}
+                      value={String(weekNumber)}
+                    >
+                      Semana {weekNumber}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </label>
+            ) : null}
             <label className="grid gap-1 text-xs font-black text-muted-foreground">
               Ejercicio
               <NativeSelect
@@ -3731,6 +3877,61 @@ function StatisticsPanel({
                 ))}
               </NativeSelect>
             </label>
+            {showTaxonomyFilters ? (
+              <>
+                <label className="grid gap-1 text-xs font-black text-muted-foreground">
+                  Bloque
+                  <NativeSelect
+                    className="w-full"
+                    value={selectedTrainingBlockFilter}
+                    onChange={(event) =>
+                      setSelectedTrainingBlockFilter(event.target.value)
+                    }
+                  >
+                    <NativeSelectOption value="all">Todos</NativeSelectOption>
+                    {trainingBlockOptions.map((option) => (
+                      <NativeSelectOption key={option} value={option}>
+                        {formatTaxonomyLabel(option)}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </label>
+                <label className="grid gap-1 text-xs font-black text-muted-foreground">
+                  Patrón
+                  <NativeSelect
+                    className="w-full"
+                    value={selectedMovementPatternFilter}
+                    onChange={(event) =>
+                      setSelectedMovementPatternFilter(event.target.value)
+                    }
+                  >
+                    <NativeSelectOption value="all">Todos</NativeSelectOption>
+                    {movementPatternOptions.map((option) => (
+                      <NativeSelectOption key={option} value={option}>
+                        {formatTaxonomyLabel(option)}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </label>
+                <label className="grid gap-1 text-xs font-black text-muted-foreground">
+                  Músculo
+                  <NativeSelect
+                    className="w-full"
+                    value={selectedMuscleFilter}
+                    onChange={(event) =>
+                      setSelectedMuscleFilter(event.target.value)
+                    }
+                  >
+                    <NativeSelectOption value="all">Todos</NativeSelectOption>
+                    {muscleOptions.map((option) => (
+                      <NativeSelectOption key={option} value={option}>
+                        {formatTaxonomyLabel(option)}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </label>
+              </>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -3795,6 +3996,59 @@ function StatisticsPanel({
                   {formatSignedMinutes(sample.deltaMinutes)}
                 </span>
               </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {statisticsSection === 'volume' ? (
+        <div className="min-w-0 overflow-hidden rounded-[1.75rem] border bg-secondary p-3 text-secondary-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-black leading-tight">
+              Volumen acumulado
+            </p>
+            <span className="shrink-0 rounded-full border bg-card px-2.5 py-1 text-xs font-black text-muted-foreground">
+              {filteredVolumeByExercise.length} ejercicios
+            </span>
+          </div>
+          <p className="mt-1 text-xs font-bold leading-tight text-muted-foreground">
+            Calculado desde series completadas. La carga de mancuernas cuenta
+            ambas manos; peso corporal y planchas suman reps o tiempo.
+          </p>
+          <div className="mt-3 grid gap-2">
+            {filteredVolumeByMuscle.length === 0 ? (
+              <div className="rounded-[1.1rem] border bg-card px-3 py-2 text-xs font-bold text-muted-foreground">
+                Sin volumen para este filtro.
+              </div>
+            ) : null}
+            {filteredVolumeByMuscle.slice(0, 8).map((summary) => (
+              <VolumeRow
+                key={summary.muscle}
+                title={formatTaxonomyLabel(summary.muscle)}
+                subtitle={`${summary.completedSets} series · ${summary.totalReps} reps`}
+                value={formatVolumeValue(summary.totalLoadVolumeKg)}
+              />
+            ))}
+          </div>
+          <div className="mt-3 grid gap-2">
+            <p className="text-xs font-black leading-tight text-muted-foreground">
+              Por ejercicio
+            </p>
+            {filteredVolumeByExercise.slice(0, 8).map((summary) => (
+              <VolumeRow
+                key={summary.exerciseId}
+                title={summary.exerciseName}
+                subtitle={[
+                  summary.primaryMuscles.map(formatTaxonomyLabel).join(', '),
+                  `${summary.completedSets} series`,
+                  summary.totalDurationSeconds > 0
+                    ? `${summary.totalDurationSeconds}s`
+                    : `${summary.totalReps} reps`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                value={formatVolumeValue(summary.totalLoadVolumeKg)}
+              />
             ))}
           </div>
         </div>
@@ -3969,6 +4223,45 @@ type DurationChartPoint = {
   estimatedMinutes: number;
   deltaMinutes: number;
 };
+
+function formatTaxonomyLabel(value: string) {
+  return value
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function formatVolumeValue(value: number) {
+  if (value <= 0) {
+    return 'sin kg';
+  }
+
+  return `${Math.round(value).toLocaleString('es-ES')} kg`;
+}
+
+function VolumeRow({
+  title,
+  subtitle,
+  value,
+}: {
+  title: string;
+  subtitle: string;
+  value: string;
+}) {
+  return (
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[1.1rem] border bg-card px-3 py-2">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-black leading-tight">{title}</p>
+        <p className="mt-0.5 truncate text-xs font-bold leading-tight text-muted-foreground">
+          {subtitle}
+        </p>
+      </div>
+      <span className="shrink-0 rounded-full border bg-secondary px-2.5 py-1 text-xs font-black tabular-nums text-secondary-foreground">
+        {value}
+      </span>
+    </div>
+  );
+}
 
 function DurationChart({ data }: { data: DurationChartPoint[] }) {
   if (data.length < 2) {

@@ -67,6 +67,10 @@ type Exercise = {
   type: string;
   block: string;
   equipment?: string;
+  trainingBlock?: string;
+  movementPattern?: string;
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
   supersetId?: string;
   supersetOrder?: number;
   phase: string;
@@ -82,6 +86,9 @@ Notas:
 - `exerciseId` debe mantenerse estable entre versiones del plan para poder analizar progresión.
 - `block` conserva el orden de planificación, por ejemplo `A`, `B`, `E1`, `E2`.
 - `equipment` fija el material real previsto para calcular cargas montables: `barbell`, `multipower`, `dumbbell`, `cable`, `plate_loaded_machine`, `external` o `bodyweight`.
+- `trainingBlock` clasifica la intención del ejercicio: `fuerza`, `volumen`, `potencia`, `tecnica`, `accesorio` o `core`.
+- `movementPattern` permite agrupar patrones como empuje, tracción, bisagra, dominante de rodilla, extensión de codo o flexión plantar.
+- `primaryMuscles` y `secondaryMuscles` son arrays normalizados para estadísticas por grupo muscular y futuros filtros nativos.
 - `decisionOptions` usa etiquetas normalizadas para la decisión final del ejercicio. En ejercicios con carga: `Mantener`, `Subir peso`, `Bajar peso`, `Subir reps`, `Bajar reps`, `Marcar molestia`. En peso corporal sin carga: `Mantener`, `Subir reps`, `Bajar reps`, `Marcar molestia`. En ejercicios temporizados: `Mantener tiempo`, `Subir tiempo`, `Bajar tiempo`, `Mejorar posición`, `Marcar molestia`.
 - `supersetId` agrupa ejercicios vinculados.
 - `supersetOrder` define el orden dentro de una superserie.
@@ -265,7 +272,7 @@ Notas:
 
 ## CSV de estadísticas
 
-Schema actual: `gymapp.statistics-export`, version `2`.
+Schema actual: `gymapp.statistics-export`, version `3`.
 
 La PWA exporta un CSV derivado desde `Ajustes > Estadísticas > CSV`.
 La implementación portable vive en `lib/statisticsExport.ts`.
@@ -273,7 +280,7 @@ La implementación portable vive en `lib/statisticsExport.ts`.
 Campos actuales:
 
 ```csv
-schema_name,schema_version,exported_at,app_version,table,date,week,session_id,session,exercise_id,exercise,target,load_type,planned_equipment,actual_equipment,metric,value,value_2,status,tone,recommendation,notes
+schema_name,schema_version,exported_at,app_version,table,date,week,session_id,session,exercise_id,exercise,target,load_type,planned_equipment,actual_equipment,training_block,movement_pattern,primary_muscles,metric,value,value_2,status,tone,recommendation,notes
 ```
 
 Tablas incluidas en el mismo archivo:
@@ -282,11 +289,14 @@ Tablas incluidas en el mismo archivo:
 - `session_history`: una fila por sesión con duración real, estimación derivada, estado y series completadas.
 - `exercise_insight`: señales conservadoras por ejercicio con recomendación, tono, último valor relevante y notas.
 - `exercise_progression`: exposiciones históricas por ejercicio y sesión con carga máxima, trabajo total, series, RIR medio, molestias y decisión.
+- `muscle_volume`: volumen acumulado por grupo muscular principal, con series, reps, segundos y carga registrada.
+- `exercise_volume`: volumen acumulado por ejercicio, con taxonomía de bloque, patrón y músculos principales.
 
 Notas:
 
 - Este CSV es un formato de análisis y revisión, no sustituye al backup JSON completo.
 - Desde la version 2, `exercise_insight` y `exercise_progression` conservan `load_type`, `planned_equipment` y `actual_equipment` cuando existen. Las filas globales dejan esos campos vacíos.
+- Desde la version 3, el CSV estadistico añade `training_block`, `movement_pattern` y `primary_muscles`, y exporta filas de volumen por músculo y ejercicio.
 - Cada fila incluye `schema_name`, `schema_version`, `exported_at` y `app_version` para poder mezclar exports futuros sin perder trazabilidad.
 - Las tablas se reconstruyen desde los agregados documentados en `docs/statistics-aggregates.md`.
 

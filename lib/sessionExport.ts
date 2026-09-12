@@ -38,6 +38,10 @@ export type ExportExercise = {
   type: string;
   block: string;
   equipment?: string;
+  trainingBlock?: string;
+  movementPattern?: string;
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
   supersetId?: string;
   supersetOrder?: number;
   phase: string;

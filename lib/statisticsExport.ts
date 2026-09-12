@@ -4,6 +4,7 @@ import {
   type ExerciseProgressionSummary,
   type SessionHistorySummary,
   type TrainingStatsSummary,
+  type VolumeSummary,
 } from '@/lib/trainingStats';
 
 type StatisticsCsvInput = {
@@ -12,10 +13,11 @@ type StatisticsCsvInput = {
   stats: TrainingStatsSummary;
   history: SessionHistorySummary[];
   exerciseProgressions: ExerciseProgressionSummary[];
+  volumeSummary: VolumeSummary;
 };
 
 const schemaName = 'gymapp.statistics-export';
-const schemaVersion = 2;
+const schemaVersion = 3;
 
 export const getStatisticsCsvFileName = (exportedAt: string) =>
   `${exportedAt.slice(0, 10)}-gymapp-statistics.csv`;
@@ -26,6 +28,7 @@ export const buildStatisticsCsv = ({
   stats,
   history,
   exerciseProgressions,
+  volumeSummary,
 }: StatisticsCsvInput) => {
   const headers = [
     'schema_name',
@@ -43,6 +46,9 @@ export const buildStatisticsCsv = ({
     'load_type',
     'planned_equipment',
     'actual_equipment',
+    'training_block',
+    'movement_pattern',
+    'primary_muscles',
     'metric',
     'value',
     'value_2',
@@ -73,6 +79,9 @@ export const buildStatisticsCsv = ({
       exposure.loadType ?? '',
       exposure.plannedEquipment ?? '',
       exposure.actualEquipment ?? '',
+      progression.trainingBlock ?? '',
+      progression.movementPattern ?? '',
+      progression.primaryMuscles.join('|'),
       'exposure',
       exposure.topLoadKg ?? '',
       exposure.totalDurationSeconds > 0
@@ -95,6 +104,62 @@ export const buildStatisticsCsv = ({
         .join(' · '),
     ]),
   );
+  const volumeRows = [
+    ...volumeSummary.byMuscle.map((summary) => [
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      'muscle_volume',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      summary.muscle,
+      'volume',
+      Math.round(summary.totalLoadVolumeKg),
+      `${summary.completedSets} sets`,
+      '',
+      '',
+      '',
+      `${summary.totalReps} reps · ${summary.totalDurationSeconds}s`,
+    ]),
+    ...volumeSummary.byExercise.map((summary) => [
+      schemaName,
+      schemaVersion,
+      exportedAt,
+      appVersion,
+      'exercise_volume',
+      '',
+      '',
+      '',
+      '',
+      summary.exerciseId,
+      summary.exerciseName,
+      '',
+      '',
+      '',
+      '',
+      summary.trainingBlock ?? '',
+      summary.movementPattern ?? '',
+      summary.primaryMuscles.join('|'),
+      'volume',
+      Math.round(summary.totalLoadVolumeKg),
+      `${summary.completedSets} sets`,
+      '',
+      '',
+      '',
+      `${summary.totalReps} reps · ${summary.totalDurationSeconds}s`,
+    ]),
+  ];
 
   return [
     headers,
@@ -102,6 +167,7 @@ export const buildStatisticsCsv = ({
     ...buildHistoryRows({ exportedAt, appVersion, history }),
     ...insightRows,
     ...progressionRows,
+    ...volumeRows,
   ]
     .map((row) => row.map((value) => csvEscape(value)).join(','))
     .join('\n');
@@ -140,6 +206,9 @@ const buildSummaryRows = ({
     'summary',
     '',
     stats.weekNumber,
+    '',
+    '',
+    '',
     '',
     '',
     '',
@@ -193,6 +262,9 @@ const buildHistoryRows = ({
       '',
       '',
       '',
+      '',
+      '',
+      '',
       'session',
       actualMinutes ?? '',
       summary.derivedEstimatedMinutes,
@@ -228,6 +300,9 @@ const buildInsightRows = ({
     insight.lastLoadType ?? '',
     insight.lastPlannedEquipment ?? '',
     insight.lastActualEquipment ?? '',
+    '',
+    '',
+    '',
     'signal',
     insight.lastLoadKg ?? '',
     insight.lastDurationSeconds !== undefined

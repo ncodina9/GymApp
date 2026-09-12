@@ -33,6 +33,48 @@ const allowedEquipment = new Set([
   'external',
   'bodyweight',
 ]);
+const allowedTrainingBlocks = new Set([
+  'fuerza',
+  'volumen',
+  'potencia',
+  'tecnica',
+  'accesorio',
+  'core',
+]);
+const allowedMuscles = new Set([
+  'antebrazo',
+  'biceps',
+  'core',
+  'cuadriceps',
+  'deltoides-anterior',
+  'dorsal',
+  'espalda-alta',
+  'gemelos',
+  'gluteo',
+  'hombro',
+  'isquios',
+  'lumbar',
+  'pecho',
+  'trapecio',
+  'triceps',
+]);
+const allowedMovementPatterns = new Set([
+  'abduccion-hombro',
+  'anti-extension',
+  'bisagra-cadera',
+  'dominante-rodilla',
+  'empuje-horizontal',
+  'empuje-vertical',
+  'extension-cadera',
+  'extension-codo',
+  'extension-hombro',
+  'extension-rodilla',
+  'flexion-codo',
+  'flexion-plantar',
+  'flexion-rodilla',
+  'traccion-horizontal',
+  'traccion-vertical',
+]);
 
 const getSupersetMembers = (session, supersetId) =>
   session.exercises
@@ -151,6 +193,37 @@ for (const session of trainingPlan.sessions ?? []) {
     if (!allowedEquipment.has(exercise.equipment)) {
       errors.push(
         `${sessionLabel}: ${exercise.exerciseId} no tiene equipamiento valido.`,
+      );
+    }
+
+    if (!allowedTrainingBlocks.has(exercise.trainingBlock)) {
+      errors.push(
+        `${sessionLabel}: ${exercise.exerciseId} no tiene trainingBlock valido.`,
+      );
+    }
+
+    if (!allowedMovementPatterns.has(exercise.movementPattern)) {
+      errors.push(
+        `${sessionLabel}: ${exercise.exerciseId} no tiene movementPattern valido.`,
+      );
+    }
+
+    if (
+      !Array.isArray(exercise.primaryMuscles) ||
+      exercise.primaryMuscles.length === 0 ||
+      exercise.primaryMuscles.some((muscle) => !allowedMuscles.has(muscle))
+    ) {
+      errors.push(
+        `${sessionLabel}: ${exercise.exerciseId} no tiene primaryMuscles valido.`,
+      );
+    }
+
+    if (
+      !Array.isArray(exercise.secondaryMuscles) ||
+      exercise.secondaryMuscles.some((muscle) => !allowedMuscles.has(muscle))
+    ) {
+      errors.push(
+        `${sessionLabel}: ${exercise.exerciseId} no tiene secondaryMuscles valido.`,
       );
     }
 

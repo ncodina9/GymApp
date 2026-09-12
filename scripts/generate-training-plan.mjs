@@ -33,6 +33,157 @@ const barbellLoadsKg = buildBarbellLoads(barbellWeightKg);
 const multipowerLoadsKg = buildBarbellLoads(multipowerBarWeightKg);
 const externalLoadsKg = buildPlateCombinationLoads();
 const cableLoadsKg = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
+const exerciseTaxonomy = {
+  'press-banca-barra': taxonomy(
+    'fuerza',
+    'empuje-horizontal',
+    ['pecho', 'triceps'],
+    ['deltoides-anterior'],
+  ),
+  'dominadas-lastradas': taxonomy(
+    'fuerza',
+    'traccion-vertical',
+    ['dorsal', 'biceps'],
+    ['espalda-alta'],
+  ),
+  'remo-inclinado-barra': taxonomy(
+    'fuerza',
+    'traccion-horizontal',
+    ['espalda-alta', 'dorsal'],
+    ['biceps', 'lumbar'],
+  ),
+  'press-militar-sentado': taxonomy(
+    'fuerza',
+    'empuje-vertical',
+    ['hombro', 'triceps'],
+    ['core'],
+  ),
+  'elevaciones-laterales': taxonomy(
+    'accesorio',
+    'abduccion-hombro',
+    ['hombro'],
+    ['trapecio'],
+  ),
+  'curl-biceps-alterno': taxonomy(
+    'accesorio',
+    'flexion-codo',
+    ['biceps'],
+    ['antebrazo'],
+  ),
+  'triceps-polea-simple': taxonomy('accesorio', 'extension-codo', ['triceps']),
+  'sentadilla-barra': taxonomy(
+    'fuerza',
+    'dominante-rodilla',
+    ['cuadriceps', 'gluteo'],
+    ['core', 'lumbar'],
+  ),
+  'peso-muerto-rumano-barra': taxonomy(
+    'fuerza',
+    'bisagra-cadera',
+    ['isquios', 'gluteo'],
+    ['lumbar', 'espalda-alta'],
+  ),
+  'hip-thrust-barra': taxonomy(
+    'fuerza',
+    'extension-cadera',
+    ['gluteo'],
+    ['isquios'],
+  ),
+  'extension-cuadriceps': taxonomy('accesorio', 'extension-rodilla', [
+    'cuadriceps',
+  ]),
+  'curl-femoral-maquina': taxonomy('accesorio', 'flexion-rodilla', ['isquios']),
+  'gemelos-pie': taxonomy('accesorio', 'flexion-plantar', ['gemelos']),
+  'core-plancha-dead-bug': taxonomy(
+    'core',
+    'anti-extension',
+    ['core'],
+    ['lumbar'],
+  ),
+  'press-banca-inclinado': taxonomy(
+    'volumen',
+    'empuje-horizontal',
+    ['pecho', 'hombro'],
+    ['triceps'],
+  ),
+  'dominadas-peso-corporal': taxonomy(
+    'volumen',
+    'traccion-vertical',
+    ['dorsal', 'biceps'],
+    ['espalda-alta'],
+  ),
+  'press-militar-sentado-velocidad': taxonomy(
+    'potencia',
+    'empuje-vertical',
+    ['hombro', 'triceps'],
+    ['core'],
+  ),
+  'remo-barra-multipower': taxonomy(
+    'volumen',
+    'traccion-horizontal',
+    ['espalda-alta', 'dorsal'],
+    ['biceps', 'lumbar'],
+  ),
+  'pullover-mancuerna': taxonomy(
+    'accesorio',
+    'extension-hombro',
+    ['dorsal'],
+    ['pecho', 'triceps'],
+  ),
+  'elevaciones-laterales-volumen': taxonomy(
+    'accesorio',
+    'abduccion-hombro',
+    ['hombro'],
+    ['trapecio'],
+  ),
+  'curl-martillo': taxonomy('accesorio', 'flexion-codo', [
+    'biceps',
+    'antebrazo',
+  ]),
+  'triceps-polea-volumen': taxonomy('accesorio', 'extension-codo', ['triceps']),
+  'press-cerrado-multipower': taxonomy(
+    'fuerza',
+    'empuje-horizontal',
+    ['triceps', 'pecho'],
+    ['deltoides-anterior'],
+  ),
+  'dominadas-supinas': taxonomy(
+    'fuerza',
+    'traccion-vertical',
+    ['biceps', 'dorsal'],
+    ['espalda-alta'],
+  ),
+  'rdl-tecnico': taxonomy(
+    'tecnica',
+    'bisagra-cadera',
+    ['isquios', 'gluteo'],
+    ['lumbar'],
+  ),
+  'hip-thrust-volumen': taxonomy(
+    'volumen',
+    'extension-cadera',
+    ['gluteo'],
+    ['isquios'],
+  ),
+  'gemelos-sentado-multipower': taxonomy('accesorio', 'flexion-plantar', [
+    'gemelos',
+  ]),
+  'curl-biceps-barra-mancuernas': taxonomy(
+    'accesorio',
+    'flexion-codo',
+    ['biceps'],
+    ['antebrazo'],
+  ),
+  'extension-triceps-polea': taxonomy('accesorio', 'extension-codo', [
+    'triceps',
+  ]),
+  'elevacion-lateral-mecanica': taxonomy(
+    'accesorio',
+    'abduccion-hombro',
+    ['hombro'],
+    ['trapecio'],
+  ),
+};
 
 const baseSessions = {
   monday: {
@@ -549,6 +700,20 @@ function exercise(
   };
 }
 
+function taxonomy(
+  trainingBlock,
+  movementPattern,
+  primaryMuscles,
+  secondaryMuscles = [],
+) {
+  return {
+    trainingBlock,
+    movementPattern,
+    primaryMuscles,
+    secondaryMuscles,
+  };
+}
+
 function getSupersetFromBlock(block) {
   const match = /^([A-Z])(\d+)$/.exec(block);
 
@@ -640,6 +805,7 @@ function adaptExercise(item, week) {
   }
 
   weightKg = getAvailableLoad(item, weightKg);
+  const taxonomy = exerciseTaxonomy[item.exerciseId];
 
   const sets = Array.from({ length: setCount }, (_, index) => ({
     setIndex: index + 1,
@@ -657,6 +823,10 @@ function adaptExercise(item, week) {
     type: item.type,
     block: item.block,
     equipment: item.equipment,
+    trainingBlock: taxonomy?.trainingBlock,
+    movementPattern: taxonomy?.movementPattern,
+    primaryMuscles: taxonomy?.primaryMuscles,
+    secondaryMuscles: taxonomy?.secondaryMuscles,
     supersetId: item.supersetId,
     supersetOrder: item.supersetOrder,
     phase,
