@@ -26,3 +26,24 @@ Antes del lunes, haz una prueba corta con conexion:
 6. Pulsa `Guardar CSV` y usa la hoja de compartir de iOS para guardarlo en Archivos.
 
 La app guarda el borrador en `localStorage` y las series en IndexedDB dentro del iPhone. El service worker cachea la app despues de la primera carga para que la pantalla y el plan sigan disponibles aunque la cobertura del gimnasio sea mala.
+
+## Guardar CSV en Archivos
+
+Flujo recomendado al terminar una sesion real:
+
+1. En la pantalla final, pulsa `Guardar CSV`. Si ya saliste de la pantalla final, abre `Ajustes > Historial` y usa `Exportar CSV` en la sesion correspondiente.
+2. En la hoja de compartir de iOS, elige `Guardar en Archivos`.
+3. Guarda el archivo en la carpeta de iCloud Drive usada para Obsidian:
+
+```text
+LifeOS/10. Gym/sesiones/exports
+```
+
+4. Conserva el nombre generado por la app: `YYYY-MM-DD-nombre-sesion.csv`.
+5. Cuando vuelvas al Mac, ejecuta el importador si quieres consolidar los exports en el CSV maestro:
+
+```sh
+npm run import:obsidian-workouts
+```
+
+El CSV por serie esta pensado para ser apendable al maestro de Obsidian. Por compatibilidad, no incluye columnas `schema_name` ni `schema_version`; su contrato actual queda documentado como `gymapp.workout-set-export` version `1` en `docs/data-schemas.md`. El backup JSON completo sigue siendo el formato preferente para migracion futura a Swift.

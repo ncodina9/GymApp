@@ -209,6 +209,8 @@ type WorkoutDraft = {
   setNote: string;
 };
 
+type SaveStatus = 'idle' | 'saving' | 'saved';
+
 type WakeLockSentinel = EventTarget & {
   released?: boolean;
   release: () => Promise<void>;
@@ -1207,6 +1209,7 @@ export default function Home() {
   >([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isRegisteringSet, setIsRegisteringSet] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const isRegisteringSetRef = useRef(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const keepScreenAwakeRef = useRef(false);
@@ -1807,6 +1810,7 @@ export default function Home() {
 
       isRegisteringSetRef.current = true;
       setIsRegisteringSet(true);
+      setSaveStatus('saving');
 
       const nextRecord: StoredSetEvent = {
         id: createEventId(),
@@ -1851,8 +1855,12 @@ export default function Home() {
         );
         isRegisteringSetRef.current = false;
         setIsRegisteringSet(false);
+        setSaveStatus('idle');
         return;
       }
+
+      setSaveStatus('saved');
+      window.setTimeout(() => setSaveStatus('idle'), 1800);
 
       setDraft((current) => ({
         ...current,
@@ -2405,6 +2413,7 @@ export default function Home() {
               });
             }}
             isRegistering={isRegisteringSet}
+            saveStatus={saveStatus}
           />
         ) : null}
 
@@ -2463,6 +2472,7 @@ export default function Home() {
             onBack={() => patchDraft({ phase: 'set' })}
             onRegister={() => void logCurrentSet('completed')}
             isRegistering={isRegisteringSet}
+            saveStatus={saveStatus}
           />
         ) : null}
 
@@ -2472,6 +2482,7 @@ export default function Home() {
             restTotal={currentSet?.restSeconds ?? draft.restRemaining}
             nextLabel={getNextStepLabel(selectedSession, currentStep, nextStep)}
             nextSetPreview={getNextSetPreview(selectedSession, nextStep)}
+            saveStatus={saveStatus}
             onAdjustRest={(updater) => {
               setDraft((current) => ({
                 ...current,
@@ -2568,6 +2579,7 @@ export default function Home() {
                   : {}),
               });
             }}
+            saveStatus={saveStatus}
           />
         ) : null}
 
@@ -3329,7 +3341,8 @@ function SettingsScreen({
 
 function getInsightToneClassName(tone: ExerciseProgressInsight['tone']) {
   return {
-    neutral: 'border-border bg-card text-muted-foreground',
+    neutral:
+      'border-[var(--signal-maintain-border)] bg-[var(--signal-maintain)] text-[var(--signal-maintain-foreground)]',
     up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
     down: 'border-[var(--action-down-border)] bg-[var(--action-down)] text-[var(--action-down-foreground)]',
     warning:
@@ -3351,7 +3364,8 @@ function getProgressionCardToneClassName(
   }
 
   return {
-    neutral: 'border-border bg-card text-secondary-foreground',
+    neutral:
+      'border-[var(--signal-maintain-border)] bg-[var(--signal-maintain)] text-[var(--signal-maintain-foreground)]',
     up: 'border-[var(--action-plus-border)] bg-[var(--action-plus)] text-[var(--action-plus-foreground)]',
     down: 'border-[var(--action-down-border)] bg-[var(--action-down)] text-[var(--action-down-foreground)]',
     warning:
@@ -4246,6 +4260,7 @@ function SetScreen({
   onBack,
   onEquipmentChange,
   isRegistering,
+  saveStatus,
 }: {
   exerciseName: string;
   exerciseNotes: string;
@@ -4275,6 +4290,7 @@ function SetScreen({
   onBack: () => void;
   onEquipmentChange: (equipment: ExerciseEquipment) => void;
   isRegistering: boolean;
+  saveStatus: SaveStatus;
 }) {
   const isTimed = setType === 'timed';
   const isSuperset =
@@ -4296,6 +4312,7 @@ function SetScreen({
                 Superserie {supersetPosition}/{supersetSize}
               </span>
             ) : null}
+            <SaveStatusPill status={saveStatus} />
           </div>
           <h2 className="text-[1.65rem] font-black leading-tight tracking-normal">
             {exerciseName}
@@ -4544,11 +4561,39 @@ function CountdownCircle({
   );
 }
 
+function SaveStatusPill({
+  status,
+  className = '',
+}: {
+  status: SaveStatus;
+  className?: string;
+}) {
+  if (status === 'idle') {
+    return null;
+  }
+
+  const isSaved = status === 'saved';
+
+  return (
+    <span
+      className={`inline-flex h-7 items-center justify-center gap-1 rounded-full border px-2.5 text-xs font-black ${
+        isSaved
+          ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
+          : 'border-primary bg-primary text-primary-foreground'
+      } ${className}`}
+    >
+      {isSaved ? <Check className="size-3.5" /> : null}
+      {isSaved ? 'Guardado' : 'Guardando'}
+    </span>
+  );
+}
+
 function RestScreen({
   restRemaining,
   restTotal,
   nextLabel,
   nextSetPreview,
+  saveStatus,
   onAdjustRest,
   onContinue,
 }: {
@@ -4556,6 +4601,7 @@ function RestScreen({
   restTotal: number;
   nextLabel: string;
   nextSetPreview?: NextSetPreview;
+  saveStatus: SaveStatus;
   onAdjustRest: (value: number | ((current: number) => number)) => void;
   onContinue: () => void;
 }) {
@@ -4594,9 +4640,12 @@ function RestScreen({
 
       {nextSetPreview ? (
         <div className="rounded-lg border bg-card p-3">
-          <p className="text-sm font-black leading-none text-muted-foreground">
-            {nextSetPreview.exerciseName}
-          </p>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-sm font-black leading-none text-muted-foreground">
+              {nextSetPreview.exerciseName}
+            </p>
+            <SaveStatusPill status={saveStatus} />
+          </div>
           <div className="mt-2 grid grid-cols-3 gap-2">
             <PreviewMetric label="serie" value={nextSetPreview.series} />
             <PreviewMetric
@@ -4658,6 +4707,7 @@ function FeedbackScreen({
   onBack,
   onRegister,
   isRegistering,
+  saveStatus,
 }: {
   exerciseName: string;
   setType: TrainingSet['type'];
@@ -4679,6 +4729,7 @@ function FeedbackScreen({
   onBack: () => void;
   onRegister: () => void;
   isRegistering: boolean;
+  saveStatus: SaveStatus;
 }) {
   const isTimed = setType === 'timed';
 
@@ -4730,6 +4781,8 @@ function FeedbackScreen({
         onPainLowerBackChange={onPainLowerBackChange}
         onSetNoteChange={onSetNoteChange}
       />
+
+      <SaveStatusPill status={saveStatus} className="justify-self-center" />
 
       <div
         className="mt-auto grid shrink-0 gap-3"
@@ -4904,12 +4957,14 @@ function TransitionScreen({
   decisions,
   onDecision,
   onContinue,
+  saveStatus,
 }: {
   completedExercises: Exercise[];
   nextExercise?: Exercise;
   decisions: Record<string, string>;
   onDecision: (exerciseId: string, value: string) => void;
   onContinue: () => void;
+  saveStatus: SaveStatus;
 }) {
   const isSuperset = completedExercises.length > 1;
 
@@ -4973,6 +5028,8 @@ function TransitionScreen({
           </p>
         </div>
       ) : null}
+
+      <SaveStatusPill status={saveStatus} className="mx-auto" />
 
       <Button
         className="mt-auto h-16 rounded-[1.9rem] text-lg font-black"

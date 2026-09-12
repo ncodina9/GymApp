@@ -6,7 +6,7 @@ Los nombres de campos se mantienen en `camelCase` para que puedan traducirse de 
 
 ## Principios de compatibilidad
 
-- Todo formato exportado debe incluir `schemaVersion`.
+- Todo formato estructurado no apendable debe incluir `schemaVersion`. El CSV maestro por serie mantiene cabecera estable por compatibilidad con Obsidian y documenta su version de contrato fuera de las filas.
 - Los campos nuevos deben ser opcionales para no romper importadores futuros.
 - Los campos existentes no deben cambiar de significado sin subir la version del schema.
 - `trainingPlan.json` es la fuente de verdad del plan que ejecuta la app.
@@ -243,6 +243,8 @@ Notas:
 
 ## CSV por serie
 
+Contrato actual: `gymapp.workout-set-export`, version `1`.
+
 El CSV sigue siendo el formato práctico para Obsidian y análisis manual. No debe usarse como fuente principal para migrar a Swift porque pierde estructura.
 La construcción del CSV vive en `lib/sessionExport.ts` para mantenerla fuera de la UI React.
 
@@ -258,6 +260,8 @@ Notas:
 - `set_number` es 1-based en CSV.
 - `load_type` distingue carga total, lastre, mancuerna, máquina y peso corporal.
 - `exercise_decision` y `exercise_note` solo se rellenan en la última fila exportada de cada ejercicio.
+- No se anaden `schema_name` ni `schema_version` a cada fila para no romper el CSV maestro apendable de Obsidian. Si el contrato cambia, se debe documentar una nueva version y migrar el maestro con script.
+- No se genera un segundo resumen por ejercicio desde el flujo principal: ese resumen se obtiene desde el CSV estadistico y desde el backup JSON completo para evitar duplicar fuentes.
 
 ## CSV de estadísticas
 

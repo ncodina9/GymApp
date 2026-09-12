@@ -274,7 +274,7 @@ Preparacion para iOS nativo:
 | 10   | Cerrado   | Baja     | Media       | Pantalla siempre encendida cuando el navegador lo soporta.                       |
 | 11   | En curso  | Alta     | Media       | Validacion continua con uso real en gimnasio.                                    |
 | 12   | Parcial   | Media    | Media       | Pulido tactil y visual de controles.                                             |
-| 13   | Parcial   | Alta     | Alta        | Robustez de persistencia, exportacion y purga de historico.                      |
+| 13   | Cerrado   | Baja     | Alta        | Robustez de persistencia, exportacion y purga de historico.                      |
 | 14   | Cerrado   | Baja     | Media       | Duracion real y estimacion operativa del entrenamiento.                          |
 | 14b  | Cerrado   | Baja     | Alta        | Planning reajustado a 60-70 min estimados.                                       |
 | 14c  | Cerrado   | Baja     | Alta        | Ajustes tras primera sesion real.                                                |
@@ -620,7 +620,7 @@ Objetivo: hacer mas fiable el ciclo registro local -> CSV -> Obsidian/Archivos.
 
 Tareas:
 
-- [ ] mostrar estado simple de guardado local despues de registrar una serie
+- [x] mostrar estado simple de guardado local despues de registrar una serie
 - [x] proteger contra doble pulsacion accidental en `Registrar serie`
 - [x] permitir reexportar un entrenamiento terminado sin perder datos
 - [x] listar entrenamientos con datos locales desde Ajustes
@@ -632,10 +632,10 @@ Tareas:
 - [x] sustituir chips numericos ambiguos por estado: en curso, completo o exportado
 - [x] guardar metadata basica de sesion: `schemaVersion`, `startedAt`, `finishedAt`, `exportedAt`
 - [x] bloquear el registro mientras se guarda una serie para evitar doble pulsacion
-- [ ] definir si se guarda también un resumen por ejercicio además del CSV por serie
-- [ ] documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
+- [x] definir si se guarda también un resumen por ejercicio además del CSV por serie
+- [x] documentar el flujo recomendado para guardar el CSV en una ruta de Archivos del iPhone
 - [x] revisar compatibilidad del CSV con el fichero maestro de Obsidian
-- [ ] decidir si el CSV debe incluir version de esquema
+- [x] decidir si el CSV debe incluir version de esquema
 - [x] valorar importacion o concatenacion posterior de varios CSV
 
 Criterio de aceptacion:
@@ -644,7 +644,7 @@ Criterio de aceptacion:
 - el usuario entiende donde queda el CSV y como moverlo al repositorio personal
 - los campos exportados permiten analizar volumen, carga, RIR, molestias y superseries
 
-Estado parcial:
+Estado: cerrado para el alcance actual.
 
 - historial local visible desde Ajustes, con scroll permitido en esa pantalla
 - exportacion CSV de sesiones con datos sin depender de estar en la pantalla final
@@ -658,6 +658,10 @@ Estado parcial:
 - chip de historial cambiado a estado legible: en curso, completo o exportado
 - registro de serie protegido contra doble pulsacion con bloqueo visual y bloqueo interno
 - metadata local de sesion ampliada con `schemaVersion`, `startedAt`, `finishedAt` y `exportedAt`
+- estado contextual `Guardando`/`Guardado` visible tras registrar una serie
+- flujo de guardado en Archivos documentado en `docs/vercel-pwa-testing.md`
+- decision cerrada: el CSV por serie conserva cabecera estable sin columnas de schema para seguir siendo apendable al maestro de Obsidian; el contrato queda documentado como `gymapp.workout-set-export` version 1
+- decision cerrada: no se genera un segundo resumen por ejercicio desde el flujo principal porque el CSV estadistico y el backup JSON completo ya cubren ese analisis sin duplicar fuentes
 
 ### Hito 14: Duracion real del entrenamiento
 
