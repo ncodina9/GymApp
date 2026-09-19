@@ -13,6 +13,11 @@
 
 # Swift Package Manager
 **/.build/
+**/.swiftpm/
+
+# Xcode user state
+*.xcuserdatad/
+*.xcworkspace/xcuserdata/
 
 # next.js
 /.next/

@@ -1189,7 +1189,7 @@ Decisiones de compatibilidad:
 
 ### Hito 26: Base nativa verificable
 
-Objetivo: iniciar la migración con una capa Swift sin interfaz que decodifique el plan de producción y fije el contrato de datos antes de crear pantallas SwiftUI.
+Objetivo: iniciar la migración con una capa Swift verificable que decodifique el plan de producción y fijar el primer punto de entrada SwiftUI sobre ese contrato.
 
 Prioridad 1:
 
@@ -1197,6 +1197,8 @@ Prioridad 1:
 - [x] modelar `TrainingPlan`, sesión, ejercicio, serie y material con `Codable` y enums explícitos
 - [x] cargar y validar el `trainingPlan.json` compartido desde una prueba automatizada
 - [x] documentar la incorporación de este paquete en el futuro proyecto Xcode y el copiado del JSON como recurso del bundle
+- [x] crear el proyecto iPhone-only `GymAppNative` y enlazar `GymAppNativeCore` como paquete local
+- [x] empaquetar el `trainingPlan.json` compartido sin duplicar su fuente de verdad y mostrar `TodayView` en simulador
 
 Prioridad 2:
 
@@ -1205,11 +1207,11 @@ Prioridad 2:
 
 Fuera de este hito:
 
-- SwiftUI, SwiftData, navegación y diseño visual
+- SwiftData, flujo de registro, navegación completa y paridad visual
 - instalación en dispositivo o firma de Xcode
 - iconografía: se resolverá con SF Symbols al crear las vistas nativas
 
-Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas contra el JSON de producción. `swift test` pasa con Xcode y valida las 51 sesiones, una superserie, ejercicios temporizados y el material planificado.
+Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas contra el JSON de producción. `swift test` pasa con Xcode y valida las 51 sesiones, una superserie, ejercicios temporizados y el material planificado. `ios/GymAppNative` es un proyecto SwiftUI iPhone-only que enlaza ese paquete, incluye el JSON mediante un enlace a la fuente de verdad y ejecuta `TodayView` correctamente en un simulador de iPhone.
 
 ## Riesgos y decisiones pendientes
 
@@ -1222,7 +1224,6 @@ Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas 
 - Definir mas adelante como tratar superseries con distinto numero de series por ejercicio.
 - Decidir si el plan tendra correcciones manuales, versiones generadas desde la app o sugerencias asistidas por IA.
 - Decidir cuando IndexedDB deja de ser suficiente en PWA y conviene una copia local exportable mas directa.
-- Decidir cuando iniciar el prototipo SwiftUI: despues de validar el flujo principal en gimnasio o antes para probar ventajas nativas concretas.
 - Revisar la decision inicial de SwiftData si aparecen requisitos fuertes de portabilidad o control manual de base de datos.
 - Definir que datos deben sincronizarse por iCloud y cuales pueden quedarse solo en el dispositivo.
 - Definir que estadisticas son imprescindibles en local y cuales pueden esperar a exportaciones externas.
@@ -1232,7 +1233,7 @@ Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas 
 ## Backlog futuro
 
 - Integracion opcional con Atajos de iOS.
-- Prototipo SwiftUI que cargue `trainingPlan.json` y permita completar una sesion minima.
+- Paridad nativa del flujo principal: preview, serie, feedback, descanso y finalizacion.
 - Live Activity para temporizador de descanso.
 - Integracion con HealthKit para registrar entrenamientos.
 - App companion de Apple Watch para registrar series y descansos.
@@ -1256,12 +1257,12 @@ Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas 
 - Sincronizacion multi-dispositivo, solo si el uso local se queda corto.
 - Autenticacion, solo si aparece backend o sincronizacion.
 
-## Proximo hito recomendado
+## Próximo hito recomendado
 
-Crear `GymAppNativeCore` como paquete Swift verificable contra el `trainingPlan.json` real. Una vez fijada esa capa, el siguiente paso será abrir el proyecto SwiftUI/Xcode y construir `TodayView` sobre el mismo contrato.
+Construir `SessionPreviewView` en SwiftUI desde `TodayView`: listado con scroll permitido, ejercicio base, chip de material, series, repeticiones y carga. Es el siguiente paso con mejor relación entre esfuerzo y validación, porque confirma la navegación y el contrato completo del plan antes de introducir persistencia, feedback o temporizadores.
 
-Checklist minima de la siguiente iteracion:
+Checklist mínima de la siguiente iteración:
 
-- [ ] Añadir modelos `Codable` para el plan y sus enums de dominio.
-- [ ] Decodificar el plan real en tests y verificar sesiones, superseries, series temporizadas y material.
-- [ ] Documentar cómo se comparte el JSON con un target iOS sin duplicar su fuente de verdad.
+- [ ] Añadir navegación desde `TodayView` a la sesión seleccionada.
+- [ ] Mostrar los bloques de la sesión, incluidas superseries, sin inferir material desde el nombre.
+- [ ] Reutilizar la terminología y jerarquía visual ya validada en la PWA, adaptada a controles SwiftUI nativos.

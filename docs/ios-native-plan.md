@@ -24,8 +24,13 @@ La primera version nativa debe buscar paridad funcional, no acumular integracion
 `ios/GymAppNativeCore` es el primer artefacto Swift del repositorio. Es un paquete
 sin UI que define los modelos `Codable` del plan y un decodificador probado contra
 el JSON de producción compartido. `swift test` valida las 51 sesiones, una
-superserie, ejercicios temporizados y material. Al crear el proyecto Xcode se
-añadirá como dependencia local, antes de incorporar SwiftUI o SwiftData.
+superserie, ejercicios temporizados y material.
+
+`ios/GymAppNative/GymAppNative.xcodeproj` es el proyecto SwiftUI iPhone-only.
+Declara `GymAppNativeCore` como dependencia local y añade un enlace simbólico a
+`data/trainingPlan.json` como recurso del bundle, por lo que el archivo original
+sigue siendo la única fuente de verdad. Su `TodayView` carga el plan real y se ha
+verificado ejecutándolo en el simulador de iPhone.
 
 ## Principios
 
