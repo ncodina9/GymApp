@@ -1195,7 +1195,7 @@ Prioridad 1:
 
 - [x] crear un paquete Swift `GymAppNativeCore` dentro de `ios/`
 - [x] modelar `TrainingPlan`, sesión, ejercicio, serie y material con `Codable` y enums explícitos
-- [ ] cargar y validar el `trainingPlan.json` compartido desde una prueba automatizada
+- [x] cargar y validar el `trainingPlan.json` compartido desde una prueba automatizada
 - [x] documentar la incorporación de este paquete en el futuro proyecto Xcode y el copiado del JSON como recurso del bundle
 
 Prioridad 2:
@@ -1209,7 +1209,7 @@ Fuera de este hito:
 - instalación en dispositivo o firma de Xcode
 - iconografía: se resolverá con SF Symbols al crear las vistas nativas
 
-Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas contra el JSON de producción. La ejecución de `swift test` queda pendiente de una instalación de Xcode/Command Line Tools coherente; el entorno actual tiene un compilador Swift y SDK con versiones incompatibles.
+Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas contra el JSON de producción. `swift test` pasa con Xcode y valida las 51 sesiones, una superserie, ejercicios temporizados y el material planificado.
 
 ## Riesgos y decisiones pendientes
 

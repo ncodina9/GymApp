@@ -23,12 +23,9 @@ La primera version nativa debe buscar paridad funcional, no acumular integracion
 
 `ios/GymAppNativeCore` es el primer artefacto Swift del repositorio. Es un paquete
 sin UI que define los modelos `Codable` del plan y un decodificador probado contra
-el JSON de producción compartido. Al crear el proyecto Xcode se añadirá como
-dependencia local, antes de incorporar SwiftUI o SwiftData.
-
-La validación de `swift test` requiere que Xcode y Command Line Tools usen una
-toolchain compatible. No se debe considerar la base validada en dispositivo hasta
-ejecutar esa prueba y compilarla desde un proyecto iOS.
+el JSON de producción compartido. `swift test` valida las 51 sesiones, una
+superserie, ejercicios temporizados y material. Al crear el proyecto Xcode se
+añadirá como dependencia local, antes de incorporar SwiftUI o SwiftData.
 
 ## Principios
 
