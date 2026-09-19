@@ -304,10 +304,10 @@ const baseSessions = {
         'D',
         3,
         6,
-        17.5,
+        35,
         90,
         [
-          'Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.',
+          'Sentado en banco para proteger la espalda. Usar mancuernas hasta 30 kg por lado; después, barra. Bloquear abdomen antes de despegar.',
         ],
         { equipment: 'dumbbell' },
       ),
@@ -481,11 +481,11 @@ const baseSessions = {
         'C',
         4,
         3,
-        15,
+        30,
         60,
         [
           'Sentado en banco para proteger la espalda.',
-          'Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.',
+          'Usar mancuernas hasta 30 kg por lado; después, barra. Debe moverse rápido; si se ralentiza, bajar 2.5-5 kg.',
         ],
         { equipment: 'dumbbell' },
       ),
@@ -662,7 +662,7 @@ const progressions = {
   'press-banca-barra': { step: 2.5, max: 82.5 },
   'dominadas-lastradas': { step: 2.5, max: 15 },
   'remo-inclinado-barra': { step: 2.5, max: 67.5 },
-  'press-militar-sentado': { step: 2.5, max: 30 },
+  'press-militar-sentado': { step: 5, max: 70 },
   'sentadilla-barra': { step: 2.5, max: 82.5 },
   'peso-muerto-rumano-barra': { step: 5, max: 85 },
   'hip-thrust-barra': { step: 5, max: 115 },
@@ -791,6 +791,39 @@ function presentation(baseExerciseId, baseExerciseName, variantLabel) {
   };
 }
 
+function isSeatedMilitaryPress(item) {
+  return (
+    item.exerciseId === 'press-militar-sentado' ||
+    item.exerciseId === 'press-militar-sentado-velocidad'
+  );
+}
+
+function getEquipmentLabel(equipment) {
+  return (
+    {
+      barbell: 'Barra',
+      multipower: 'Multipower',
+      dumbbell: 'Mancuernas',
+    }[equipment] ?? undefined
+  );
+}
+
+function getPlannedEquipmentForTarget(item, referenceWeightKg) {
+  if (isSeatedMilitaryPress(item) && referenceWeightKg > 60) {
+    return 'barbell';
+  }
+
+  return item.equipment;
+}
+
+function getPlannedWeightForTarget(item, referenceWeightKg, equipment) {
+  if (isSeatedMilitaryPress(item) && equipment === 'dumbbell') {
+    return referenceWeightKg / 2;
+  }
+
+  return referenceWeightKg;
+}
+
 function getSupersetFromBlock(block) {
   const match = /^([A-Z])(\d+)$/.exec(block);
 
@@ -886,7 +919,11 @@ function adaptExercise(item, week) {
     durationSeconds = 60;
   }
 
-  weightKg = getAvailableLoad(item, weightKg);
+  const plannedEquipment = getPlannedEquipmentForTarget(item, weightKg);
+  weightKg = getAvailableLoad(
+    { ...item, equipment: plannedEquipment },
+    getPlannedWeightForTarget(item, weightKg, plannedEquipment),
+  );
   const taxonomy = exerciseTaxonomy[item.exerciseId];
   const presentationInfo = exercisePresentation[item.exerciseId];
 
@@ -905,10 +942,12 @@ function adaptExercise(item, week) {
     name: item.name,
     baseExerciseId: presentationInfo?.baseExerciseId ?? item.exerciseId,
     baseExerciseName: presentationInfo?.baseExerciseName ?? item.name,
-    variantLabel: presentationInfo?.variantLabel,
+    variantLabel: isSeatedMilitaryPress(item)
+      ? (getEquipmentLabel(plannedEquipment) ?? presentationInfo?.variantLabel)
+      : presentationInfo?.variantLabel,
     type: item.type,
     block: item.block,
-    equipment: item.equipment,
+    equipment: plannedEquipment,
     trainingBlock: taxonomy?.trainingBlock,
     movementPattern: taxonomy?.movementPattern,
     primaryMuscles: taxonomy?.primaryMuscles,
@@ -934,7 +973,7 @@ function applyFeedbackLoadAdjustment(item, weightKg) {
   }
 
   if (item.exerciseId === 'press-militar-sentado-velocidad') {
-    return 15;
+    return 30;
   }
 
   if (item.exerciseId === 'pullover-mancuerna') {
@@ -997,7 +1036,7 @@ function applyWeek3LoadAdjustment(item, weightKg) {
   }
 
   if (item.exerciseId === 'press-militar-sentado') {
-    return 20;
+    return 40;
   }
 
   if (item.exerciseId === 'peso-muerto-rumano-barra') {
