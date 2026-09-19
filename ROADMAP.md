@@ -1177,7 +1177,7 @@ Prioridad 2:
 
 Prioridad 3:
 
-- [ ] para barra y multipower, mostrar discos necesarios por lado a partir de la carga y el material seleccionado
+- [x] para barra y multipower, mostrar discos necesarios por lado a partir de la carga y el material seleccionado
 
 Decisiones de compatibilidad:
 
@@ -1232,10 +1232,10 @@ Decisiones de compatibilidad:
 
 ## Proximo hito recomendado
 
-Mostrar los discos necesarios por lado para ejercicios con barra y multipower, partiendo de la carga total y del material seleccionado.
+Completar la sustitución gradual de los iconos de la PWA por Heroicons, conservando los tamaños táctiles y las etiquetas de accesibilidad actuales.
 
 Checklist minima de la siguiente iteracion:
 
-- [ ] Definir una combinación de discos por lado determinista y compatible con el inventario actual.
-- [ ] Mostrarla de forma compacta bajo el peso en serie, feedback y próxima acción cuando aporte valor.
-- [ ] No mostrar el desglose para mancuernas, poleas, máquinas o ejercicios de peso corporal.
+- [ ] Inventariar los iconos de navegación y acciones que siguen perteneciendo a otras familias.
+- [ ] Sustituirlos por sus equivalentes de Heroicons sin alterar las acciones ni la semántica de color.
+- [ ] Verificar visualmente los flujos de Hoy, serie, feedback, descanso y Ajustes en ambos temas.

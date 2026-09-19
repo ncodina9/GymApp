@@ -22,6 +22,11 @@ export type SetTargetOverride = Pick<
   'editedReps' | 'editedWeight' | 'editedDurationSeconds'
 >;
 
+export type BarbellPlateLayout = {
+  barWeightKg: number;
+  sidePlatesKg: number[];
+};
+
 export const getSetTargetKey = (exerciseId: string, setIndex: number) =>
   `${exerciseId}:${setIndex}`;
 
@@ -130,6 +135,50 @@ const buildSymmetricLoadedBarLoads = (barWeightKg: number) =>
 const barbellLoadsKg = buildSymmetricLoadedBarLoads(barbellWeightKg);
 const multipowerLoadsKg = buildSymmetricLoadedBarLoads(multipowerBarWeightKg);
 const externalLoadsKg = buildPlateCombinationLoads();
+
+export const getBarbellPlateLayout = (
+  totalWeightKg: number,
+  equipment?: ExportExercise['equipment'],
+): BarbellPlateLayout | undefined => {
+  const barWeightKg =
+    equipment === 'multipower'
+      ? multipowerBarWeightKg
+      : equipment === 'barbell'
+        ? barbellWeightKg
+        : undefined;
+
+  if (barWeightKg === undefined || totalWeightKg < barWeightKg) {
+    return undefined;
+  }
+
+  let remainingSideWeight = roundEquipmentLoad(
+    (totalWeightKg - barWeightKg) / 2,
+  );
+  const sidePlatesKg: number[] = [];
+
+  [...plateInventoryKg]
+    .sort((a, b) => b.weight - a.weight)
+    .forEach((plate) => {
+      const availablePerSide = Math.floor(plate.count / 2);
+
+      for (
+        let index = 0;
+        index < availablePerSide && remainingSideWeight >= plate.weight;
+        index += 1
+      ) {
+        sidePlatesKg.push(plate.weight);
+        remainingSideWeight = roundEquipmentLoad(
+          remainingSideWeight - plate.weight,
+        );
+      }
+    });
+
+  if (remainingSideWeight !== 0) {
+    return undefined;
+  }
+
+  return { barWeightKg, sidePlatesKg };
+};
 
 export const getExerciseEquipment = (
   exercise: Pick<ExportExercise, 'equipment'>,

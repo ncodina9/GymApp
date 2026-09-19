@@ -89,6 +89,7 @@ import {
 import { getWorkoutProgressSummary } from '@/lib/workoutProgress';
 import {
   convertWeightForEquipment,
+  getBarbellPlateLayout,
   getHomogeneousFutureSetIndexes,
   getAdjustedWeight,
   getExerciseEquipment,
@@ -5008,8 +5009,9 @@ function SetScreen({
         <div className="grid min-h-0 flex-1 grid-rows-2 gap-2">
           <TappableNumber label="reps" value={String(reps)} onClick={onEdit} />
           <TappableNumber
-            label="peso"
-            value={formatWeight(weight)}
+            label="kg"
+            value={formatDecimal(weight)}
+            plateLayout={getBarbellPlateLayout(weight, equipment)}
             onClick={onEdit}
           />
         </div>
@@ -6099,10 +6101,12 @@ function AdjustmentControl({
 function TappableNumber({
   label,
   value,
+  plateLayout,
   onClick,
 }: {
   label: string;
   value: string;
+  plateLayout?: ReturnType<typeof getBarbellPlateLayout>;
   onClick: () => void;
 }) {
   return (
@@ -6112,13 +6116,59 @@ function TappableNumber({
       onClick={onClick}
       aria-label={`Ajustar ${label}`}
     >
-      <span className="flex min-h-0 items-center justify-center text-[clamp(3rem,17vw,4.9rem)] font-black leading-none tracking-normal">
-        {value}
+      <span className="relative flex min-h-0 items-center justify-center px-12 text-[clamp(3rem,17vw,4.9rem)] font-black leading-none tracking-normal">
+        {plateLayout && plateLayout.sidePlatesKg.length > 0 ? (
+          <PlateStack plates={plateLayout.sidePlatesKg} side="left" />
+        ) : null}
+        <span className="relative z-10 tabular-nums">{value}</span>
+        {plateLayout && plateLayout.sidePlatesKg.length > 0 ? (
+          <PlateStack plates={plateLayout.sidePlatesKg} side="right" />
+        ) : null}
       </span>
       <span className="text-sm font-black uppercase leading-none text-muted-foreground">
         {label}
       </span>
     </button>
+  );
+}
+
+const plateVisualSizes: Record<number, { width: number; height: number }> = {
+  1.25: { width: 20, height: 18 },
+  2.5: { width: 24, height: 20 },
+  5: { width: 28, height: 22 },
+  10: { width: 32, height: 25 },
+  15: { width: 36, height: 28 },
+  20: { width: 40, height: 30 },
+};
+
+function PlateStack({
+  plates,
+  side,
+}: {
+  plates: number[];
+  side: 'left' | 'right';
+}) {
+  return (
+    <span
+      className={`absolute top-1/2 z-0 flex -translate-y-1/2 flex-col gap-1 ${
+        side === 'left' ? 'left-2 items-end' : 'right-2 items-start'
+      }`}
+      aria-label={`Discos ${side === 'left' ? 'izquierdos' : 'derechos'}: ${plates.join(', ')} kg`}
+    >
+      {plates.map((plate, index) => {
+        const size = plateVisualSizes[plate] ?? plateVisualSizes[1.25];
+
+        return (
+          <span
+            key={`${plate}-${index}`}
+            className="flex items-center justify-center rounded-[0.45rem] border border-[var(--plate-border)] bg-[var(--plate-fill)] text-[0.55rem] font-black leading-none text-[var(--plate-foreground)] shadow-sm"
+            style={{ width: `${size.width}px`, height: `${size.height}px` }}
+          >
+            {formatDecimal(plate)}
+          </span>
+        );
+      })}
+    </span>
   );
 }
 
