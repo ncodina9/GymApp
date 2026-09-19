@@ -60,9 +60,7 @@ struct SessionPreviewView: View {
       .padding(20)
       .padding(.bottom, 116)
     }
-    .navigationTitle("Previsualización")
-    .navigationBarTitleDisplayMode(.inline)
-    .navigationBarBackButtonHidden(true)
+    .toolbar(.hidden, for: .navigationBar)
     .overlay(alignment: .bottom) {
       GlassEffectContainer(spacing: 16) {
         HStack(spacing: 16) {

@@ -93,8 +93,7 @@ struct SetExecutionView: View {
         )
       }
     }
-    .navigationBarTitleDisplayMode(.inline)
-    .navigationBarBackButtonHidden(true)
+    .toolbar(.hidden, for: .navigationBar)
   }
 
   private func weightUnit(for equipment: Equipment) -> String {
@@ -159,30 +158,34 @@ private struct SetHeader: View {
 private struct MaterialSelector: View {
   @Binding var selection: Equipment
   let options: [Equipment]
+  @Namespace private var selectionNamespace
 
   var body: some View {
-    GlassEffectContainer(spacing: 6) {
-      HStack(spacing: 4) {
-      ForEach(options, id: \.self) { equipment in
-        let isSelected = selection == equipment
-        Button {
-          selection = equipment
-        } label: {
-          Text(equipment.executionLabel)
-            .font(.caption.weight(.bold))
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            .frame(maxWidth: .infinity, minHeight: 40)
-            .foregroundStyle(isSelected ? .white : .primary)
-            .glassEffect(
-              isSelected
-                ? .regular.tint(.accentColor).interactive()
-                : .clear,
-              in: Capsule()
-            )
+    GlassEffectContainer(spacing: 0) {
+      HStack(spacing: 0) {
+        ForEach(options, id: \.self) { equipment in
+          let isSelected = selection == equipment
+          Button {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
+              selection = equipment
+            }
+          } label: {
+            Text(equipment.executionLabel)
+              .font(.caption.weight(.bold))
+              .lineLimit(1)
+              .minimumScaleFactor(0.7)
+              .frame(maxWidth: .infinity, minHeight: 42)
+              .foregroundStyle(isSelected ? .white : .primary)
+              .background {
+                if isSelected {
+                  Capsule()
+                    .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+                    .matchedGeometryEffect(id: "selected-material", in: selectionNamespace)
+                }
+              }
+          }
+          .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
-      }
       }
       .padding(4)
       .glassEffect(.regular, in: Capsule())

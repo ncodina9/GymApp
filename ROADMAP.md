@@ -1174,7 +1174,7 @@ Prioridad 2:
 
 - [x] blindar la pantalla de feedback de superseries contra nombres de más de una línea, con un patrón compacto que no requiera scroll
 - [x] mostrar todos los ejercicios vinculados al bloque de una superserie en las tarjetas de próxima acción, tanto durante el descanso como en la transición de ejercicio
-- [ ] sustituir iconos por una familia nativa de SF Symbols durante la implementación SwiftUI; no invertir más trabajo de iconografía en la PWA
+- [ ] sustituir los SF Symbols provisionales por Heroicons locales al cerrar la paridad visual de SwiftUI; no invertir más trabajo de iconografía en la PWA
 - [x] revisar en dispositivo real los temporizadores con la app en segundo plano y documentar la limitación de PWA que solo se resolverá del todo de forma nativa
 
 Prioridad 3:
@@ -1209,7 +1209,7 @@ Fuera de este hito:
 
 - SwiftData, flujo de registro, navegación completa y paridad visual
 - instalación en dispositivo o firma de Xcode
-- iconografía: se resolverá con SF Symbols al crear las vistas nativas
+- iconografía: los nuevos iconos nativos usarán Heroicons como assets locales; los SF Symbols actuales son provisionales
 
 Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas contra el JSON de producción. `swift test` pasa con Xcode y valida las 51 sesiones, una superserie, ejercicios temporizados y el material planificado. `ios/GymAppNative` es un proyecto SwiftUI iPhone-only que enlaza ese paquete, incluye el JSON mediante un enlace a la fuente de verdad y ejecuta `TodayView` correctamente en un simulador de iPhone.
 
@@ -1226,6 +1226,8 @@ Actualización v0.1.46: cada tarjeta de la previsualización recupera su borde s
 Actualización v0.1.47: fecha de `Hoy toca` pasa a ancho completo y estimado/bloques se muestran debajo en dos columnas, tanto en React como en SwiftUI. La app nativa requiere iOS 26 para adoptar Liquid Glass en selectores y botones. `SetExecutionView` incorpora selector de material basado en las variantes existentes de la PWA y destaca los objetivos de reps y peso como controles editables. La equivalencia y el redondeo de cargas entre materiales se portarán junto con las reglas de carga, antes de habilitar su persistencia.
 
 Actualización v0.1.48: las notas compartidas del plan dejan de anticipar futuras subidas o bajadas; ahora describen exclusivamente la ejecucion de cada ejercicio y se regeneran para React y SwiftUI desde la misma fuente. `Hoy toca` mantiene fecha a ancho completo y permite desplazar de forma contenida semanas de cuatro o mas sesiones sin invadir la navegacion inferior. La previsualizacion nativa fija `Atrás` y `Empezar entrenamiento` flotando sobre su contenido, oculta la flecha de navegacion duplicada y vuelve realmente a `Hoy`. La pantalla de serie sustituye el menu de material por una pildora horizontal de variantes, equivalente a la PWA y construida con Liquid Glass.
+
+Actualización v0.1.49: las pantallas nativas de previsualizacion y serie ocultan por completo la barra superior; toda vuelta ocurre abajo a la izquierda y esta regla queda establecida para las futuras pantallas del flujo. El selector de material se convierte en un control segmentado real: una superficie compartida y un unico indicador de Liquid Glass que se desliza entre opciones. La iconografia nativa se estandariza en Heroicons locales para los proximos desarrollos; los SF Symbols actuales permanecen solo como sustitutos temporales.
 
 ## Riesgos y decisiones pendientes
 
