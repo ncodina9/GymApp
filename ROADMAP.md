@@ -1231,6 +1231,8 @@ Actualización v0.1.49: las pantallas nativas de previsualizacion y serie oculta
 
 Actualización v0.1.50: el selector segmentado de material permite arrastrar directamente el indicador de Liquid Glass y encaja en el segmento mas cercano al soltarlo; el toque en cada segmento se mantiene como alternativa.
 
+Actualización v0.1.51: el gesto de arrastre pasa a toda la superficie segmentada, eliminando la capa transparente que podia interceptar una opcion al cambiar varias veces de material. Los toques y el arrastre se separan con un umbral minimo para que siempre se pueda volver a cualquier segmento.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

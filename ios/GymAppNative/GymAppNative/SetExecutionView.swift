@@ -193,13 +193,7 @@ private struct MaterialSelector: View {
               .buttonStyle(.plain)
             }
           }
-        }
-        .overlay(alignment: .leading) {
-          Color.clear
-            .frame(width: segmentWidth, height: 42)
-            .offset(x: indicatorOffset)
-            .contentShape(Capsule())
-            .highPriorityGesture(dragGesture(segmentWidth: segmentWidth))
+          .simultaneousGesture(dragGesture(segmentWidth: segmentWidth))
         }
       }
       .frame(height: 42)
@@ -217,7 +211,7 @@ private struct MaterialSelector: View {
   }
 
   private func dragGesture(segmentWidth: CGFloat) -> some Gesture {
-    DragGesture(minimumDistance: 0)
+    DragGesture(minimumDistance: 6)
       .onChanged { gesture in
         dragOffset = gesture.translation.width
       }
