@@ -6,6 +6,7 @@ struct SetExecutionView: View {
   let exerciseIndex: Int
   let setIndex: Int
   @State private var selectedEquipment: Equipment
+  @Environment(\.dismiss) private var dismiss
 
   init(session: TrainingSession, exerciseIndex: Int = 0, setIndex: Int = 0) {
     self.session = session
@@ -65,9 +66,7 @@ struct SetExecutionView: View {
           .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
 
           HStack(spacing: 12) {
-            NavigationLink {
-              SessionPreviewView(session: session)
-            } label: {
+            Button(action: { dismiss() }) {
               Image(systemName: "chevron.left")
                 .font(.headline.weight(.bold))
                 .frame(width: 64, height: 64)
@@ -95,6 +94,7 @@ struct SetExecutionView: View {
       }
     }
     .navigationBarTitleDisplayMode(.inline)
+    .navigationBarBackButtonHidden(true)
   }
 
   private func weightUnit(for equipment: Equipment) -> String {
@@ -161,23 +161,31 @@ private struct MaterialSelector: View {
   let options: [Equipment]
 
   var body: some View {
-    Menu {
+    GlassEffectContainer(spacing: 6) {
+      HStack(spacing: 4) {
       ForEach(options, id: \.self) { equipment in
-        Button(equipment.executionLabel) {
+        let isSelected = selection == equipment
+        Button {
           selection = equipment
+        } label: {
+          Text(equipment.executionLabel)
+            .font(.caption.weight(.bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity, minHeight: 40)
+            .foregroundStyle(isSelected ? .white : .primary)
+            .glassEffect(
+              isSelected
+                ? .regular.tint(.accentColor).interactive()
+                : .clear,
+              in: Capsule()
+            )
         }
+        .buttonStyle(.plain)
       }
-    } label: {
-      HStack(spacing: 8) {
-        Text(selection.executionLabel)
-          .font(.subheadline.weight(.bold))
-        Image(systemName: "chevron.up.chevron.down")
-          .font(.caption.weight(.bold))
       }
-      .foregroundStyle(.primary)
-      .padding(.horizontal, 14)
-      .padding(.vertical, 10)
-      .glassEffect(.regular.interactive(), in: Capsule())
+      .padding(4)
+      .glassEffect(.regular, in: Capsule())
     }
     .disabled(options.count == 1)
   }
@@ -225,7 +233,11 @@ private struct TimedSetTarget: View {
         .font(.system(size: 64, weight: .bold))
         .monospacedDigit()
       Button("Iniciar") {}
-        .buttonStyle(.borderedProminent)
+        .font(.headline.weight(.bold))
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .buttonStyle(.plain)
         .disabled(true)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)

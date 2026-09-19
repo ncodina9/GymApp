@@ -265,8 +265,7 @@ const baseSessions = {
         65,
         135,
         [
-          'Si queda demasiado fácil, subir solo 2.5 kg la semana siguiente.',
-          'Mantener 1-2 RIR en la última serie.',
+          'Descenso controlado y recorrido completo. Mantener 1-2 RIR en la última serie.',
         ],
         { equipment: 'barbell' },
       ),
@@ -307,7 +306,7 @@ const baseSessions = {
         35,
         90,
         [
-          'Sentado en banco para proteger la espalda. Usar mancuernas hasta 30 kg por lado; después, barra. Bloquear abdomen antes de despegar.',
+          'Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar.',
         ],
         { equipment: 'dumbbell' },
       ),
@@ -344,7 +343,7 @@ const baseSessions = {
         11,
         0,
         60,
-        ['Usar RIR 2 hasta acumular historial de polea.'],
+        ['Mantener RIR 2 y el recorrido estable.'],
         { equipment: 'cable' },
       ),
     ],
@@ -365,7 +364,7 @@ const baseSessions = {
         150,
         [
           'Tempo controlado: 2 s bajada y pausa corta abajo.',
-          'Si rodilla molesta, reducir rango o revisar variante antes de subir carga.',
+          'Si la rodilla molesta, reducir el rango o revisar la variante.',
         ],
         { equipment: 'barbell' },
       ),
@@ -485,7 +484,7 @@ const baseSessions = {
         60,
         [
           'Sentado en banco para proteger la espalda.',
-          'Usar mancuernas hasta 30 kg por lado; después, barra. Debe moverse rápido; si se ralentiza, bajar 2.5-5 kg.',
+          'Mantener trayectoria estable y subir con intención rápida.',
         ],
         { equipment: 'dumbbell' },
       ),

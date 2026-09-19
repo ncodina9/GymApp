@@ -32,16 +32,10 @@ struct TodayView: View {
 
             TodaySessionCard(session: selectedSession)
 
-            VStack(spacing: 8) {
-              ForEach(weekSessions) { session in
-                Button {
-                  selectedSessionID = session.sessionID
-                } label: {
-                  WeekSessionRow(session: session, isSelected: session.sessionID == selectedSessionID)
-                }
-                .buttonStyle(.plain)
-              }
-            }
+            WeekSessionsList(
+              sessions: weekSessions,
+              selectedSessionID: $selectedSessionID
+            )
 
             Spacer(minLength: 0)
 
@@ -76,6 +70,38 @@ struct TodayView: View {
     formatter.timeZone = .current
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.string(from: Date())
+  }
+}
+
+private struct WeekSessionsList: View {
+  let sessions: [TrainingSession]
+  @Binding var selectedSessionID: String
+
+  var body: some View {
+    Group {
+      if sessions.count > 3 {
+        ScrollView {
+          rows
+        }
+        .scrollIndicators(.hidden)
+        .frame(maxHeight: .infinity)
+      } else {
+        rows
+      }
+    }
+  }
+
+  private var rows: some View {
+    VStack(spacing: 8) {
+      ForEach(sessions) { session in
+        Button {
+          selectedSessionID = session.sessionID
+        } label: {
+          WeekSessionRow(session: session, isSelected: session.sessionID == selectedSessionID)
+        }
+        .buttonStyle(.plain)
+      }
+    }
   }
 }
 

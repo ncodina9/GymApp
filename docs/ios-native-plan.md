@@ -41,6 +41,7 @@ material explícito del plan.
 - La experiencia debe seguir siendo tactil y directa: numeros grandes, botones grandes, sin teclado durante el entrenamiento.
 - Las vistas SwiftUI reutilizan la jerarquia visual validada en la PWA: tarjetas densas, metricas en tres columnas, navegacion inferior estable y la misma terminologia. Los controles nativos se usan para comportamiento y accesibilidad, no para redefinir el diseño.
 - El destino nativo exige iOS 26 o posterior para adoptar Liquid Glass con la API oficial de SwiftUI. Se aplica primero a controles tactiles y selectores, nunca como decoracion que reduzca el contraste de cifras de entrenamiento.
+- Las notas del ejercicio se limitan a tecnica, rango, ritmo y seguridad durante la ejecucion. Las recomendaciones de progresion y los ajustes del plan pertenecen al planificador, no a la pantalla de serie.
 - La PWA no debe incorporar complejidad web-only que despues haya que descartar.
 - El CSV es formato de analisis; el JSON completo es formato de migracion.
 

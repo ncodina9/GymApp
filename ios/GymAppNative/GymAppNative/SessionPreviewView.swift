@@ -3,6 +3,7 @@ import GymAppNativeCore
 
 struct SessionPreviewView: View {
   let session: TrainingSession
+  @Environment(\.dismiss) private var dismiss
 
   private var blocks: [PreviewBlock] {
     session.exercises.reduce(into: []) { result, exercise in
@@ -57,24 +58,37 @@ struct SessionPreviewView: View {
         }
       }
       .padding(20)
-      .padding(.bottom, 28)
+      .padding(.bottom, 116)
     }
     .navigationTitle("Previsualización")
     .navigationBarTitleDisplayMode(.inline)
-    .safeAreaInset(edge: .bottom) {
-      NavigationLink {
-        SetExecutionView(session: session)
-      } label: {
-        Label("Empezar entrenamiento", systemImage: "chevron.right")
-          .font(.headline.weight(.bold))
-          .frame(maxWidth: .infinity, minHeight: 56)
-          .foregroundStyle(.white)
-          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+    .navigationBarBackButtonHidden(true)
+    .overlay(alignment: .bottom) {
+      GlassEffectContainer(spacing: 16) {
+        HStack(spacing: 16) {
+          Button(action: { dismiss() }) {
+            Image(systemName: "house")
+              .font(.headline.weight(.bold))
+              .frame(width: 56, height: 56)
+              .foregroundStyle(.primary)
+              .glassEffect(.regular.interactive(), in: Circle())
+          }
+          .buttonStyle(.plain)
+
+          NavigationLink {
+            SetExecutionView(session: session)
+          } label: {
+            Label("Empezar entrenamiento", systemImage: "chevron.right")
+              .font(.headline.weight(.bold))
+              .frame(maxWidth: .infinity, minHeight: 56)
+              .foregroundStyle(.white)
+              .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          }
+          .buttonStyle(.plain)
+        }
       }
-      .buttonStyle(.plain)
       .padding(.horizontal, 20)
-      .padding(.top, 8)
-      .background(.background)
+      .padding(.bottom, 8)
     }
   }
 

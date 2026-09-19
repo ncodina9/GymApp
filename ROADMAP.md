@@ -1225,6 +1225,8 @@ Actualización v0.1.46: cada tarjeta de la previsualización recupera su borde s
 
 Actualización v0.1.47: fecha de `Hoy toca` pasa a ancho completo y estimado/bloques se muestran debajo en dos columnas, tanto en React como en SwiftUI. La app nativa requiere iOS 26 para adoptar Liquid Glass en selectores y botones. `SetExecutionView` incorpora selector de material basado en las variantes existentes de la PWA y destaca los objetivos de reps y peso como controles editables. La equivalencia y el redondeo de cargas entre materiales se portarán junto con las reglas de carga, antes de habilitar su persistencia.
 
+Actualización v0.1.48: las notas compartidas del plan dejan de anticipar futuras subidas o bajadas; ahora describen exclusivamente la ejecucion de cada ejercicio y se regeneran para React y SwiftUI desde la misma fuente. `Hoy toca` mantiene fecha a ancho completo y permite desplazar de forma contenida semanas de cuatro o mas sesiones sin invadir la navegacion inferior. La previsualizacion nativa fija `Atrás` y `Empezar entrenamiento` flotando sobre su contenido, oculta la flecha de navegacion duplicada y vuelve realmente a `Hoy`. La pantalla de serie sustituye el menu de material por una pildora horizontal de variantes, equivalente a la PWA y construida con Liquid Glass.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
