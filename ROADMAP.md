@@ -1219,6 +1219,8 @@ Actualización v0.1.43: se retiran los bloques normales de la previsualización 
 
 Actualización v0.1.44: la previsualización nativa recupera la jerarquía de tarjetas validada en React: indicador de orden, nombre, material y tres métricas de series, reps o tiempo y peso. Se mantienen eliminados los encabezados de bloque normales.
 
+Actualización v0.1.45: `TodayView` adopta la composición de la PWA: semana y foco, tarjeta fija de entrenamiento recomendado, métricas de fecha/estimado/bloques, sesiones semanales apiladas y navegación inferior estable. Este lenguaje visual será la referencia de todas las pantallas SwiftUI.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

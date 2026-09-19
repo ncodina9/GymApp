@@ -39,6 +39,7 @@ material explícito del plan.
 - El contrato de datos manda sobre la UI: `trainingPlan.json`, eventos de serie, metadata y export JSON deben ser compatibles con Swift `Codable`.
 - La app nativa debe interpretar superseries, descansos, progreso y duracion con las mismas reglas que la PWA.
 - La experiencia debe seguir siendo tactil y directa: numeros grandes, botones grandes, sin teclado durante el entrenamiento.
+- Las vistas SwiftUI reutilizan la jerarquia visual validada en la PWA: tarjetas densas, metricas en tres columnas, navegacion inferior estable y la misma terminologia. Los controles nativos se usan para comportamiento y accesibilidad, no para redefinir el diseño.
 - La PWA no debe incorporar complejidad web-only que despues haya que descartar.
 - El CSV es formato de analisis; el JSON completo es formato de migracion.
 
