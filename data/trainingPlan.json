@@ -2815,7 +2815,7 @@
           "secondaryMuscles": ["biceps", "lumbar"],
           "phase": "acumulacion",
           "notes": "Torso firme y mismo ángulo en todas las reps.",
-          "target": "4x6 @ 62.5 kg",
+          "target": "4x7 @ 60 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -2827,29 +2827,29 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 6,
-              "targetWeightKg": 62.5,
+              "targetReps": 7,
+              "targetWeightKg": 60,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 6,
-              "targetWeightKg": 62.5,
+              "targetReps": 7,
+              "targetWeightKg": 60,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 6,
-              "targetWeightKg": 62.5,
+              "targetReps": 7,
+              "targetWeightKg": 60,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 4,
-              "targetReps": 6,
-              "targetWeightKg": 62.5,
+              "targetReps": 7,
+              "targetWeightKg": 60,
               "restSeconds": 120,
               "type": "working"
             }
@@ -2870,7 +2870,7 @@
           "secondaryMuscles": ["core"],
           "phase": "acumulacion",
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x6 @ 40 kg",
+          "target": "3x7 @ 37.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -2882,22 +2882,22 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 6,
-              "targetWeightKg": 40,
+              "targetReps": 7,
+              "targetWeightKg": 37.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 6,
-              "targetWeightKg": 40,
+              "targetReps": 7,
+              "targetWeightKg": 37.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 6,
-              "targetWeightKg": 40,
+              "targetReps": 7,
+              "targetWeightKg": 37.5,
               "restSeconds": 90,
               "type": "working"
             }
@@ -2919,7 +2919,7 @@
           "supersetOrder": 1,
           "phase": "acumulacion",
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
-          "target": "3x15 @ 7.5 kg",
+          "target": "3x12 @ 7.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -2931,21 +2931,21 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 15,
+              "targetReps": 12,
               "targetWeightKg": 7.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 15,
+              "targetReps": 12,
               "targetWeightKg": 7.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 15,
+              "targetReps": 12,
               "targetWeightKg": 7.5,
               "restSeconds": 60,
               "type": "working"
@@ -3124,7 +3124,7 @@
           "secondaryMuscles": ["lumbar", "espalda-alta"],
           "phase": "acumulacion",
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
-          "target": "4x6 @ 75 kg",
+          "target": "4x6 @ 70 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -3137,28 +3137,28 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 75,
+              "targetWeightKg": 70,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 75,
+              "targetWeightKg": 70,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 75,
+              "targetWeightKg": 70,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 6,
-              "targetWeightKg": 75,
+              "targetWeightKg": 70,
               "restSeconds": 150,
               "type": "working"
             }
@@ -3276,7 +3276,7 @@
           "supersetOrder": 2,
           "phase": "acumulacion",
           "notes": "Usar el mismo banco que la extensión de cuádriceps y cargar con discos.",
-          "target": "3x12 @ 10 kg",
+          "target": "3x12 @ 12.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -3289,21 +3289,21 @@
             {
               "setIndex": 1,
               "targetReps": 12,
-              "targetWeightKg": 10,
+              "targetWeightKg": 12.5,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 12,
-              "targetWeightKg": 10,
+              "targetWeightKg": 12.5,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 12,
-              "targetWeightKg": 10,
+              "targetWeightKg": 12.5,
               "restSeconds": 75,
               "type": "working"
             }
@@ -3323,7 +3323,7 @@
           "secondaryMuscles": [],
           "phase": "acumulacion",
           "notes": "Pausa 1 s arriba y bajada controlada.",
-          "target": "3x12 @ 63 kg",
+          "target": "3x14 @ 63 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -3335,21 +3335,21 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 12,
+              "targetReps": 14,
               "targetWeightKg": 63,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 12,
+              "targetReps": 14,
               "targetWeightKg": 63,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 12,
+              "targetReps": 14,
               "targetWeightKg": 63,
               "restSeconds": 60,
               "type": "working"
@@ -3685,7 +3685,7 @@
           "supersetOrder": 1,
           "phase": "acumulacion",
           "notes": "Rango 15-20 reps. Peso por mancuerna.",
-          "target": "3x15 @ 7.5 kg",
+          "target": "3x12 @ 7.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -3697,21 +3697,21 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 15,
+              "targetReps": 12,
               "targetWeightKg": 7.5,
               "restSeconds": 45,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 15,
+              "targetReps": 12,
               "targetWeightKg": 7.5,
               "restSeconds": 45,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 15,
+              "targetReps": 12,
               "targetWeightKg": 7.5,
               "restSeconds": 45,
               "type": "working"
@@ -3781,7 +3781,7 @@
           "secondaryMuscles": [],
           "phase": "acumulacion",
           "notes": "Rango 12-15 reps con RIR 2.",
-          "target": "2x13 @ 70 kg",
+          "target": "2x12 @ 70 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -3793,14 +3793,14 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 13,
+              "targetReps": 12,
               "targetWeightKg": 70,
               "restSeconds": 45,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 13,
+              "targetReps": 12,
               "targetWeightKg": 70,
               "restSeconds": 45,
               "type": "working"
@@ -4030,7 +4030,7 @@
           "secondaryMuscles": [],
           "phase": "acumulacion",
           "notes": "Pausa 1 s arriba y bajada controlada.",
-          "target": "2x15 @ 58 kg",
+          "target": "2x15 @ 63 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -4043,14 +4043,14 @@
             {
               "setIndex": 1,
               "targetReps": 15,
-              "targetWeightKg": 58,
+              "targetWeightKg": 63,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 15,
-              "targetWeightKg": 58,
+              "targetWeightKg": 63,
               "restSeconds": 60,
               "type": "working"
             }
@@ -4154,7 +4154,7 @@
           "secondaryMuscles": ["trapecio"],
           "phase": "acumulacion",
           "notes": "Ronda: 10 estrictas, 8 parciales altas/medias, 10 parciales bajas/medias.",
-          "target": "2x28 @ 7.5 kg",
+          "target": "2x24 @ 7.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -4166,14 +4166,14 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 28,
+              "targetReps": 24,
               "targetWeightKg": 7.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 28,
+              "targetReps": 24,
               "targetWeightKg": 7.5,
               "restSeconds": 60,
               "type": "working"

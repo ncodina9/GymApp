@@ -845,6 +845,11 @@ function adaptExercise(item, week) {
     reps = applyFeedbackRepAdjustment(item, reps);
   }
 
+  if (week === 3) {
+    weightKg = applyWeek3LoadAdjustment(item, weightKg);
+    reps = applyWeek3RepAdjustment(item, reps);
+  }
+
   if (templateWeek >= 5 && templateWeek <= 7 && isBasic(item)) {
     setCount = getIntensificationSetCount(item);
     reps = getIntensificationReps(item);
@@ -984,6 +989,60 @@ function applyFeedbackRepAdjustment(item, reps) {
 
   if (item.exerciseId === 'curl-femoral-maquina') {
     return 12;
+  }
+
+  return reps;
+}
+
+function applyWeek3LoadAdjustment(item, weightKg) {
+  if (item.exerciseId === 'remo-inclinado-barra') {
+    return 60;
+  }
+
+  if (item.exerciseId === 'press-militar-sentado') {
+    return 37.5;
+  }
+
+  if (item.exerciseId === 'peso-muerto-rumano-barra') {
+    return 70;
+  }
+
+  if (item.exerciseId === 'curl-femoral-maquina') {
+    return 12.5;
+  }
+
+  if (item.exerciseId === 'gemelos-sentado-multipower') {
+    return 63;
+  }
+
+  return weightKg;
+}
+
+function applyWeek3RepAdjustment(item, reps) {
+  if (
+    item.exerciseId === 'remo-inclinado-barra' ||
+    item.exerciseId === 'press-militar-sentado'
+  ) {
+    return 7;
+  }
+
+  if (
+    item.exerciseId === 'elevaciones-laterales' ||
+    item.exerciseId === 'elevaciones-laterales-volumen'
+  ) {
+    return 12;
+  }
+
+  if (item.exerciseId === 'gemelos-pie') {
+    return 14;
+  }
+
+  if (item.exerciseId === 'triceps-polea-volumen') {
+    return 12;
+  }
+
+  if (item.exerciseId === 'elevacion-lateral-mecanica') {
+    return 24;
   }
 
   return reps;
