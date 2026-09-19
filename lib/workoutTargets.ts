@@ -17,6 +17,45 @@ export type PreparedSetTargets = {
   setTimerEndsAt: undefined;
 };
 
+export type SetTargetOverride = Pick<
+  PreparedSetTargets,
+  'editedReps' | 'editedWeight' | 'editedDurationSeconds'
+>;
+
+export const getSetTargetKey = (exerciseId: string, setIndex: number) =>
+  `${exerciseId}:${setIndex}`;
+
+export const haveSamePlannedTarget = (
+  previousSet: ExportTrainingSet,
+  nextSet: ExportTrainingSet,
+) =>
+  previousSet.targetReps === nextSet.targetReps &&
+  previousSet.targetWeightKg === nextSet.targetWeightKg &&
+  previousSet.targetDurationSeconds === nextSet.targetDurationSeconds;
+
+export const getHomogeneousFutureSetIndexes = (
+  sets: ExportTrainingSet[],
+  currentSetIndex: number,
+) => {
+  const currentSet = sets[currentSetIndex];
+
+  if (!currentSet) {
+    return [];
+  }
+
+  const indexes: number[] = [];
+
+  for (let index = currentSetIndex + 1; index < sets.length; index += 1) {
+    if (!haveSamePlannedTarget(currentSet, sets[index])) {
+      break;
+    }
+
+    indexes.push(index);
+  }
+
+  return indexes;
+};
+
 export const isWeightStep = (value: unknown): value is WeightStep =>
   value === 0.5 ||
   value === 1 ||

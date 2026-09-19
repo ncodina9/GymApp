@@ -1166,7 +1166,7 @@ Prioridad 1:
 - [x] mostrar el material elegido en la tarjeta de próxima serie durante el descanso
 - [x] resaltar el material seleccionado en la pantalla de serie con el color principal del tema
 - [x] permitir, tras un descanso entre ejercicios, elegir otro ejercicio pendiente sin registrar como saltadas las series no realizadas
-- [ ] propagar automáticamente cambios manuales de reps, carga o duración a las series homogéneas pendientes; detener la propagación cuando el planning cambie el objetivo
+- [x] propagar automáticamente cambios manuales de reps, carga o duración a las series homogéneas pendientes; detener la propagación cuando el planning cambie el objetivo
 
 Prioridad 2:
 
@@ -1231,12 +1231,10 @@ Decisiones de compatibilidad:
 
 ## Proximo hito recomendado
 
-Simplificar la vista `Revisión del plan` del Hito 21/16 para que funcione como lectura descriptiva mientras no exista todavía revision semanal inteligente ni ajuste automatico del planning.
+Completar el siguiente punto de prioridad 2 del Hito 25: blindar el feedback de superseries para nombres largos, manteniendo la pantalla sin scroll y sin restar espacio a las acciones táctiles.
 
 Checklist minima de la siguiente iteracion:
 
-- [x] Revisar textos y jerarquia visual de `Revisión del plan`.
-- [x] Separar claramente senal calculada, decision manual y datos reales.
-- [ ] Decidir que tarjetas deben mostrarse cerradas y que informacion solo al desplegar.
-- [ ] Reducir ruido de recomendaciones conservadoras hasta que exista revision semanal guiada.
-- [ ] Mantener exportacion estadistica trazable para Obsidian y futura app nativa.
+- [ ] Definir una jerarquía compacta para nombre, material y número de serie.
+- [ ] Limitar el título de ejercicio a dos líneas sin desplazar los controles de feedback.
+- [ ] Verificar el flujo con una superserie y nombres largos en un viewport de iPhone 14 Pro.

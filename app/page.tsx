@@ -89,13 +89,16 @@ import {
 import { getWorkoutProgressSummary } from '@/lib/workoutProgress';
 import {
   convertWeightForEquipment,
+  getHomogeneousFutureSetIndexes,
   getAdjustedWeight,
   getExerciseEquipment,
   getPreparedSetTargets,
+  getSetTargetKey,
   getWeightStepOptions,
   isWeightStep,
   normalizeWeightStep,
   type ExerciseEquipment,
+  type SetTargetOverride,
   type WeightStep,
 } from '@/lib/workoutTargets';
 import {
@@ -227,6 +230,7 @@ type WorkoutDraft = {
   records: StoredSetEvent[];
   decisions: Record<string, string>;
   equipmentByExercise: Record<string, ExerciseEquipment>;
+  targetOverrides: Record<string, SetTargetOverride>;
   startedAt?: string;
   finishedAt?: string;
   transitionExerciseIds: string[];
@@ -533,6 +537,7 @@ const makeDraft = (session = getRecommendedSession()): WorkoutDraft => ({
   records: [],
   decisions: {},
   equipmentByExercise: {},
+  targetOverrides: {},
   transitionExerciseIds: [],
   transitionNextPhase: 'set',
   suppressTransitionOnce: false,
@@ -574,6 +579,10 @@ const normalizeDraft = (
     equipmentByExercise:
       draft.equipmentByExercise && typeof draft.equipmentByExercise === 'object'
         ? (draft.equipmentByExercise as Record<string, ExerciseEquipment>)
+        : {},
+    targetOverrides:
+      draft.targetOverrides && typeof draft.targetOverrides === 'object'
+        ? (draft.targetOverrides as Record<string, SetTargetOverride>)
         : {},
     ...(draft.startedAt ? { startedAt: draft.startedAt } : {}),
     ...(draft.finishedAt ? { finishedAt: draft.finishedAt } : {}),
@@ -988,10 +997,48 @@ type PendingExerciseOption = PendingExecutionOption & {
   equipmentLabels: string[];
 };
 
+const applySetTargetOverride = (
+  targets: ReturnType<typeof getPreparedSetTargets>,
+  override?: SetTargetOverride,
+) => {
+  if (!override) {
+    return targets;
+  }
+
+  return {
+    ...targets,
+    ...override,
+    setTimerRemaining: override.editedDurationSeconds,
+  };
+};
+
+const getPreparedExerciseSetTargets = ({
+  exercise,
+  set,
+  setIndex,
+  selectedEquipment,
+  targetOverrides,
+}: {
+  exercise: Exercise;
+  set: TrainingSet;
+  setIndex: number;
+  selectedEquipment?: ExerciseEquipment;
+  targetOverrides: Record<string, SetTargetOverride>;
+}) =>
+  applySetTargetOverride(
+    getPreparedSetTargets({
+      exercise,
+      set,
+      selectedEquipment,
+    }),
+    targetOverrides[getSetTargetKey(exercise.exerciseId, setIndex)],
+  );
+
 const getNextSetPreview = (
   session: TrainingSession,
   step: ReturnType<typeof buildExecutionSteps>[number] | undefined,
   equipmentByExercise: Record<string, ExerciseEquipment> = {},
+  targetOverrides: Record<string, SetTargetOverride> = {},
 ): NextSetPreview | undefined => {
   if (!step) {
     return undefined;
@@ -1007,20 +1054,22 @@ const getNextSetPreview = (
   const equipment =
     equipmentByExercise[exercise.exerciseId] ?? getExerciseEquipment(exercise);
   const loadType = inferEquipmentLoadType(equipment) ?? inferLoadType(exercise);
-  const weight = convertWeightForEquipment(
-    set.targetWeightKg,
-    getExerciseEquipment(exercise),
-    equipment,
-  );
+  const preparedTargets = getPreparedExerciseSetTargets({
+    exercise,
+    set,
+    setIndex: step.setIndex,
+    selectedEquipment: equipment,
+    targetOverrides,
+  });
 
   if (set.type === 'timed') {
     return {
       exerciseName: getExerciseDisplayName(exercise),
       equipmentLabel: formatEquipmentLabel(equipment),
       series: `${step.setIndex + 1}/${exercise.sets.length}`,
-      work: formatClock(set.targetDurationSeconds ?? 0),
+      work: formatClock(preparedTargets.editedDurationSeconds),
       workLabel: 'tiempo',
-      load: formatPreviewLoad(weight, loadType),
+      load: formatPreviewLoad(preparedTargets.editedWeight, loadType),
       loadLabel: getPreviewLoadLabel(loadType, equipment),
     };
   }
@@ -1029,9 +1078,9 @@ const getNextSetPreview = (
     exerciseName: getExerciseDisplayName(exercise),
     equipmentLabel: formatEquipmentLabel(equipment),
     series: `${step.setIndex + 1}/${exercise.sets.length}`,
-    work: String(set.targetReps ?? 0),
+    work: String(preparedTargets.editedReps),
     workLabel: 'reps',
-    load: formatPreviewLoad(weight, loadType),
+    load: formatPreviewLoad(preparedTargets.editedWeight, loadType),
     loadLabel: getPreviewLoadLabel(loadType, equipment),
   };
 };
@@ -1602,14 +1651,21 @@ export default function Home() {
       const nextExercise = selectedSession.exercises[nextExerciseIndex];
       const nextSet = nextExercise.sets[nextSetIndex];
       patchDraft(
-        getPreparedSetTargets({
+        getPreparedExerciseSetTargets({
           exercise: nextExercise,
           set: nextSet,
+          setIndex: nextSetIndex,
           selectedEquipment: draft.equipmentByExercise[nextExercise.exerciseId],
+          targetOverrides: draft.targetOverrides,
         }),
       );
     },
-    [draft.equipmentByExercise, patchDraft, selectedSession],
+    [
+      draft.equipmentByExercise,
+      draft.targetOverrides,
+      patchDraft,
+      selectedSession,
+    ],
   );
 
   const completeWorkout = useCallback(() => {
@@ -1681,10 +1737,12 @@ export default function Home() {
       const nextSet = nextExercise.sets[option.step.setIndex];
 
       patchDraft({
-        ...getPreparedSetTargets({
+        ...getPreparedExerciseSetTargets({
           exercise: nextExercise,
           set: nextSet,
+          setIndex: option.step.setIndex,
           selectedEquipment: draft.equipmentByExercise[nextExercise.exerciseId],
+          targetOverrides: draft.targetOverrides,
         }),
         exerciseIndex: option.step.exerciseIndex,
         setIndex: option.step.setIndex,
@@ -1696,7 +1754,12 @@ export default function Home() {
         suppressTransitionOnce: false,
       });
     },
-    [draft.equipmentByExercise, patchDraft, selectedSession],
+    [
+      draft.equipmentByExercise,
+      draft.targetOverrides,
+      patchDraft,
+      selectedSession,
+    ],
   );
 
   const logCurrentSet = useCallback(
@@ -2274,11 +2337,29 @@ export default function Home() {
                 return;
               }
 
+              const exerciseOverridePrefix = `${currentExercise.exerciseId}:`;
+              const nextTargetOverrides = Object.fromEntries(
+                Object.entries(draft.targetOverrides).map(([key, override]) => [
+                  key,
+                  key.startsWith(exerciseOverridePrefix)
+                    ? {
+                        ...override,
+                        editedWeight: convertWeightForEquipment(
+                          override.editedWeight,
+                          currentEquipment,
+                          nextEquipment,
+                        ),
+                      }
+                    : override,
+                ]),
+              );
+
               patchDraft({
                 equipmentByExercise: {
                   ...draft.equipmentByExercise,
                   [currentExercise.exerciseId]: nextEquipment,
                 },
+                targetOverrides: nextTargetOverrides,
                 editedWeight: convertWeightForEquipment(
                   draft.editedWeight,
                   currentEquipment,
@@ -2316,6 +2397,25 @@ export default function Home() {
                 isSetTimerRunning: false,
                 setTimerEndsAt: undefined,
                 weightStep,
+                targetOverrides: {
+                  ...draft.targetOverrides,
+                  ...getHomogeneousFutureSetIndexes(
+                    currentExercise.sets,
+                    draft.setIndex,
+                  ).reduce<Record<string, SetTargetOverride>>(
+                    (overrides, setIndex) => {
+                      overrides[
+                        getSetTargetKey(currentExercise.exerciseId, setIndex)
+                      ] = {
+                        editedReps: reps,
+                        editedWeight: weight,
+                        editedDurationSeconds: durationSeconds,
+                      };
+                      return overrides;
+                    },
+                    {},
+                  ),
+                },
                 phase: 'set',
               })
             }
@@ -2365,6 +2465,7 @@ export default function Home() {
               selectedSession,
               nextStep,
               draft.equipmentByExercise,
+              draft.targetOverrides,
             )}
             saveStatus={saveStatus}
             pendingExerciseOptions={
