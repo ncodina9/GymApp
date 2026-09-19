@@ -285,7 +285,7 @@ Preparacion para iOS nativo:
 | 18   | Pendiente | Baja     | Media       | Layout movil horizontal; de momento la app bloquea vertical.                     |
 | 19   | Parcial   | Media    | Media       | Historial dentro de la app con exportacion y borrado.                            |
 | 20   | Parcial   | Alta     | Alta        | Preparacion PWA -> app nativa iOS y contrato JSON completo.                      |
-| 21   | Parcial   | Alta     | Alta        | Estadisticas y graficos dentro de la app.                                        |
+| 21   | En pausa  | Baja     | Alta        | Estadisticas y graficos locales, retirados temporalmente de la UI PWA.           |
 | 22   | Pendiente | Media    | Alta        | Generador guiado de planes desde la app.                                         |
 | 23   | Pendiente | Baja     | Alta        | Capa opcional de IA para planificacion y analisis.                               |
 | 24   | Parcial   | Alta     | Alta        | Selector de material por ejercicio y dia con redondeo de cargas.                 |
@@ -311,7 +311,7 @@ Ya esta implementada una primera version funcional de la app:
 - ajuste de peso segun material real del ejercicio
 - soporte para ejercicios temporizados con cuenta atras circular
 - feedback despues de cada serie, antes del descanso
-- descanso con cuenta atras circular y ajuste de `-15s` / `+15s`
+- descanso con cuenta atras horizontal y ajuste de `-15s` / `+15s`
 - persistencia local con IndexedDB y recuperacion del borrador desde `localStorage`
 - ajustes organizados por secciones: apariencia, entrenamiento, instalacion, datos locales, estadisticas e historial
 - temas claro y oscuro minimalistas
@@ -1153,6 +1153,36 @@ Criterio de aceptacion:
 - el plan base no se modifica por una sustitucion puntual
 
 Estado: v1 implementada en PWA. El plan actual fija un material por ejercicio y la pantalla de serie permite sustituciones puntuales en ejercicios con variantes reales. La variante seleccionada se guarda en el borrador del entrenamiento y se mantiene durante el resto del ejercicio. CSV, backup JSON, CSV estadistico, roadmap y plan Swift documentan `plannedEquipment`/`actualEquipment`. Pendiente validar ergonomia en iPhone con mas sesiones reales.
+
+### Hito 25: Segunda validación real en gimnasio
+
+Objetivo: ajustar el flujo probado en dos semanas sin añadir analítica móvil que no aporte valor antes de SwiftUI.
+
+Prioridad 1:
+
+- [x] retirar de Ajustes la sección de estadísticas, progresión y señales; se conserva la exportación y el cálculo para Obsidian y futura app nativa
+- [x] normalizar los nombres visibles para que el título describa solo el ejercicio y el material aparezca siempre como chip
+- [x] rediseñar el descanso con barra horizontal, controles `-15s`/`+15s` debajo y acción táctil al terminar
+- [x] mostrar el material elegido en la tarjeta de próxima serie durante el descanso
+- [x] resaltar el material seleccionado en la pantalla de serie con el color principal del tema
+- [ ] permitir, tras un descanso entre ejercicios, elegir otro ejercicio pendiente sin registrar como saltadas las series no realizadas
+- [ ] propagar automáticamente cambios manuales de reps, carga o duración a las series homogéneas pendientes; detener la propagación cuando el planning cambie el objetivo
+
+Prioridad 2:
+
+- [ ] blindar la pantalla de feedback de superseries contra nombres de más de una línea, con un patrón compacto que no requiera scroll
+- [ ] sustituir gradualmente los iconos de la UI por Heroicons antes del prototipo SwiftUI, manteniendo una única familia visual
+- [ ] revisar en dispositivo real los temporizadores con la app en segundo plano y documentar la limitación de PWA que solo se resolverá del todo de forma nativa
+
+Prioridad 3:
+
+- [ ] para barra y multipower, mostrar discos necesarios por lado a partir de la carga y el material seleccionado
+
+Decisiones de compatibilidad:
+
+- los nombres visibles se normalizan mediante `baseExerciseName`; los identificadores, cargas, material planeado y material real de exports no cambian
+- la analítica se mantiene en librerías y exportaciones para Obsidian, pero no se muestra en la PWA hasta que tenga una presentación adecuada en SwiftUI
+- el cambio de orden pendiente debe vivir en el secuenciador y registrarse como orden real de ejecución, nunca simularse como una serie saltada
 
 ## Riesgos y decisiones pendientes
 

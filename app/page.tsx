@@ -80,11 +80,7 @@ import {
   type TrainingStatsSummary,
   type VolumeSummary,
 } from '@/lib/trainingStats';
-import {
-  buildExecutionSteps,
-  getNextStepLabel,
-  getSupersetMembers,
-} from '@/lib/workoutSequence';
+import { buildExecutionSteps, getSupersetMembers } from '@/lib/workoutSequence';
 import { getWorkoutProgressSummary } from '@/lib/workoutProgress';
 import {
   convertWeightForEquipment,
@@ -132,7 +128,6 @@ type SettingsSection =
   | 'installation'
   | 'upcoming'
   | 'local-data'
-  | 'statistics'
   | 'history';
 type StatisticsSection =
   | 'summary'
@@ -788,6 +783,20 @@ const formatEquipmentLabel = (equipment?: string) =>
     ? equipmentLabels[equipment as ExerciseEquipment]
     : undefined;
 
+function EquipmentChip({ equipment }: { equipment?: string }) {
+  const label = formatEquipmentLabel(equipment);
+
+  if (!label) {
+    return null;
+  }
+
+  return (
+    <span className="inline-flex rounded-full bg-secondary px-2 py-1 text-[0.65rem] font-black uppercase leading-none text-muted-foreground">
+      {label}
+    </span>
+  );
+}
+
 const getExerciseDisplayName = (
   exercise: Pick<Exercise, 'name' | 'baseExerciseName'>,
 ) => exercise.baseExerciseName ?? exercise.name;
@@ -962,6 +971,7 @@ const getExercisePreviewMetrics = (exercise: Exercise) => {
 
 type NextSetPreview = {
   exerciseName: string;
+  equipmentLabel?: string;
   series: string;
   work: string;
   workLabel: string;
@@ -972,6 +982,7 @@ type NextSetPreview = {
 const getNextSetPreview = (
   session: TrainingSession,
   step: ReturnType<typeof buildExecutionSteps>[number] | undefined,
+  equipmentByExercise: Record<string, ExerciseEquipment> = {},
 ): NextSetPreview | undefined => {
   if (!step) {
     return undefined;
@@ -984,26 +995,35 @@ const getNextSetPreview = (
     return undefined;
   }
 
-  const loadType = inferLoadType(exercise);
+  const equipment =
+    equipmentByExercise[exercise.exerciseId] ?? getExerciseEquipment(exercise);
+  const loadType = inferEquipmentLoadType(equipment) ?? inferLoadType(exercise);
+  const weight = convertWeightForEquipment(
+    set.targetWeightKg,
+    getExerciseEquipment(exercise),
+    equipment,
+  );
 
   if (set.type === 'timed') {
     return {
       exerciseName: getExerciseDisplayName(exercise),
+      equipmentLabel: formatEquipmentLabel(equipment),
       series: `${step.setIndex + 1}/${exercise.sets.length}`,
       work: formatClock(set.targetDurationSeconds ?? 0),
       workLabel: 'tiempo',
-      load: formatPreviewLoad(set.targetWeightKg, loadType),
-      loadLabel: getPreviewLoadLabel(loadType, exercise.equipment),
+      load: formatPreviewLoad(weight, loadType),
+      loadLabel: getPreviewLoadLabel(loadType, equipment),
     };
   }
 
   return {
     exerciseName: getExerciseDisplayName(exercise),
+    equipmentLabel: formatEquipmentLabel(equipment),
     series: `${step.setIndex + 1}/${exercise.sets.length}`,
     work: String(set.targetReps ?? 0),
     workLabel: 'reps',
-    load: formatPreviewLoad(set.targetWeightKg, loadType),
-    loadLabel: getPreviewLoadLabel(loadType, exercise.equipment),
+    load: formatPreviewLoad(weight, loadType),
+    loadLabel: getPreviewLoadLabel(loadType, equipment),
   };
 };
 
@@ -2087,9 +2107,6 @@ export default function Home() {
             selectedSessionLabel={selectedSession.label}
             upcomingSessions={upcomingSessions}
             sessionHistory={sessionHistory}
-            exerciseProgressions={exerciseProgressions}
-            volumeSummary={volumeSummary}
-            trainingStats={trainingStats}
             isLoadingHistory={isLoadingHistory}
             onSectionChange={setSettingsSection}
             onThemeChange={setAppearanceTheme}
@@ -2242,6 +2259,7 @@ export default function Home() {
         {draft.phase === 'feedback' && currentSet ? (
           <FeedbackScreen
             exerciseName={getExerciseDisplayName(currentExercise)}
+            equipment={currentEquipment}
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
@@ -2277,8 +2295,11 @@ export default function Home() {
           <RestScreen
             restRemaining={draft.restRemaining}
             restTotal={currentSet?.restSeconds ?? draft.restRemaining}
-            nextLabel={getNextStepLabel(selectedSession, currentStep, nextStep)}
-            nextSetPreview={getNextSetPreview(selectedSession, nextStep)}
+            nextSetPreview={getNextSetPreview(
+              selectedSession,
+              nextStep,
+              draft.equipmentByExercise,
+            )}
             saveStatus={saveStatus}
             onAdjustRest={(updater) => {
               setDraft((current) => ({
@@ -2668,8 +2689,7 @@ function ExercisePlanCard({
   index: number;
 }) {
   const metrics = getExercisePreviewMetrics(exercise);
-  const equipmentLabel =
-    exercise.variantLabel ?? formatEquipmentLabel(exercise.equipment);
+  const equipmentLabel = formatEquipmentLabel(exercise.equipment);
   const supersetSize = exercise.supersetId
     ? getSupersetMembers(session, exercise.supersetId).length
     : 0;
@@ -2815,9 +2835,6 @@ function SettingsScreen({
   selectedSessionLabel,
   upcomingSessions,
   sessionHistory,
-  exerciseProgressions,
-  volumeSummary,
-  trainingStats,
   isLoadingHistory,
   onSectionChange,
   onThemeChange,
@@ -2841,9 +2858,6 @@ function SettingsScreen({
   selectedSessionLabel: string;
   upcomingSessions: TrainingSession[];
   sessionHistory: SessionHistorySummary[];
-  exerciseProgressions: ExerciseProgressionSummary[];
-  volumeSummary: VolumeSummary;
-  trainingStats: TrainingStatsSummary;
   isLoadingHistory: boolean;
   onSectionChange: (section: SettingsSection) => void;
   onThemeChange: (theme: AppearanceTheme) => void;
@@ -2865,7 +2879,6 @@ function SettingsScreen({
     installation: 'Instalación',
     upcoming: 'Próximos',
     'local-data': 'Datos locales',
-    statistics: 'Estadísticas',
     history: 'Historial local',
   }[section];
   const sectionItems: {
@@ -2905,14 +2918,6 @@ function SettingsScreen({
       title: 'Datos locales',
       detail: selectedSessionLabel,
       icon: <Database className="size-5" />,
-    },
-    {
-      section: 'statistics',
-      title: 'Estadísticas',
-      detail: sessionHistory.length
-        ? `${trainingStats.weekCompletedSessions}/${trainingStats.weekTotalSessions} esta semana`
-        : 'Sin datos todavía',
-      icon: <BarChart3 className="size-5" />,
     },
     {
       section: 'history',
@@ -3083,6 +3088,14 @@ function SettingsScreen({
               Exportar backup JSON
             </Button>
             <Button
+              className="h-14 justify-start rounded-[1.75rem] px-5 text-left font-black"
+              variant="secondary"
+              onClick={onExportStatisticsCsv}
+            >
+              <Download className="size-5" />
+              Exportar estadísticas CSV
+            </Button>
+            <Button
               className={`h-14 justify-start rounded-[1.75rem] px-5 text-left font-black ${actionStyles.delete}`}
               variant="outline"
               onClick={onClearAllData}
@@ -3091,17 +3104,6 @@ function SettingsScreen({
               Borrar todo local
             </Button>
           </div>
-        ) : null}
-
-        {section === 'statistics' ? (
-          <StatisticsPanel
-            stats={trainingStats}
-            history={sessionHistory}
-            exerciseProgressions={exerciseProgressions}
-            volumeSummary={volumeSummary}
-            isLoadingHistory={isLoadingHistory}
-            onExportStatisticsCsv={onExportStatisticsCsv}
-          />
         ) : null}
 
         {section === 'history' ? (
@@ -3191,7 +3193,7 @@ function getProgressionRecommendationToneClassName(
   return getInsightToneClassName(tone);
 }
 
-function StatisticsPanel({
+export function StatisticsPanel({
   stats,
   history,
   exerciseProgressions,
@@ -4722,6 +4724,11 @@ function SetScreen({
           <h2 className="text-[1.65rem] font-black leading-tight tracking-normal">
             {exerciseName}
           </h2>
+          {equipment && equipmentOptions.length === 1 ? (
+            <div className="mt-1">
+              <EquipmentChip equipment={equipment} />
+            </div>
+          ) : null}
           {isSuperset ? (
             <p className="mt-1 truncate text-sm font-semibold text-muted-foreground">
               Ronda {supersetRound}/{supersetRoundCount}
@@ -4990,7 +4997,6 @@ function SaveStatusPill({
 function RestScreen({
   restRemaining,
   restTotal,
-  nextLabel,
   nextSetPreview,
   saveStatus,
   onAdjustRest,
@@ -4998,51 +5004,91 @@ function RestScreen({
 }: {
   restRemaining: number;
   restTotal: number;
-  nextLabel: string;
   nextSetPreview?: NextSetPreview;
   saveStatus: SaveStatus;
   onAdjustRest: (value: number | ((current: number) => number)) => void;
   onContinue: () => void;
 }) {
   const isFinished = restRemaining === 0;
+  const progress = Math.round(
+    (restRemaining / Math.max(restTotal, restRemaining, 1)) * 100,
+  );
 
   return (
     <section className="flex flex-1 flex-col justify-between gap-3 py-2">
-      <div
-        className={`rounded-lg border p-3 text-center shadow-sm transition-colors ${
+      <button
+        className={`relative h-32 shrink-0 overflow-hidden rounded-[1.9rem] border text-center shadow-sm transition-colors ${
           isFinished
             ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
-            : 'border-transparent bg-transparent'
+            : 'border-transparent bg-secondary text-secondary-foreground'
         }`}
+        type="button"
+        disabled={!isFinished}
+        onClick={isFinished ? onContinue : undefined}
+        aria-label={
+          isFinished
+            ? 'Descanso terminado. Ir a la siguiente serie'
+            : 'Descanso en curso'
+        }
       >
-        <p
-          className={`text-lg font-bold ${
-            isFinished
-              ? 'text-[var(--complete-foreground)]'
-              : 'text-muted-foreground'
+        <span
+          className={`absolute inset-y-0 left-0 transition-[width] duration-1000 ${
+            isFinished ? 'bg-[var(--complete)]' : 'bg-primary'
           }`}
-        >
-          {isFinished ? 'Descanso terminado' : 'Descanso'}
-        </p>
-        <CountdownCircle
-          label="Descanso"
-          remainingSeconds={restRemaining}
-          totalSeconds={Math.max(restTotal, restRemaining)}
-          sizeClassName="mx-auto mt-3 size-56"
-          textClassName="text-[4.5rem]"
-          isFinished={isFinished}
+          style={{ width: `${progress}%` }}
         />
-        {!nextSetPreview ? (
-          <p className="mt-3 text-lg font-bold">Siguiente: {nextLabel}</p>
-        ) : null}
+        <span className="relative flex h-full flex-col items-center justify-center">
+          <span
+            className={`text-lg font-bold ${
+              isFinished
+                ? 'text-[var(--complete-foreground)]'
+                : 'text-muted-foreground'
+            }`}
+          >
+            {isFinished ? 'Descanso terminado' : 'Descanso'}
+          </span>
+          <span
+            className={`mt-1 text-[4.5rem] font-black leading-none tabular-nums ${
+              isFinished
+                ? 'text-[var(--complete-foreground)]'
+                : 'text-secondary-foreground'
+            }`}
+          >
+            {formatClock(restRemaining)}
+          </span>
+        </span>
+      </button>
+
+      <div className="grid shrink-0 grid-cols-2 gap-3">
+        <Button
+          className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.rest}`}
+          variant="secondary"
+          onClick={() => onAdjustRest((value) => Math.max(0, value - 15))}
+        >
+          -15s
+        </Button>
+        <Button
+          className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.rest}`}
+          variant="secondary"
+          onClick={() => onAdjustRest((value) => value + 15)}
+        >
+          +15s
+        </Button>
       </div>
 
       {nextSetPreview ? (
         <div className="rounded-lg border bg-card p-3">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="text-sm font-black leading-none text-muted-foreground">
-              {nextSetPreview.exerciseName}
-            </p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black leading-none text-muted-foreground">
+                {nextSetPreview.exerciseName}
+              </p>
+              {nextSetPreview.equipmentLabel ? (
+                <span className="mt-1 inline-flex rounded-full bg-secondary px-2 py-1 text-[0.65rem] font-black uppercase leading-none text-muted-foreground">
+                  {nextSetPreview.equipmentLabel}
+                </span>
+              ) : null}
+            </div>
             <SaveStatusPill status={saveStatus} />
           </div>
           <div className="mt-2 grid grid-cols-3 gap-2">
@@ -5059,26 +5105,12 @@ function RestScreen({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="shrink-0">
         <Button
-          className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.rest}`}
-          variant="secondary"
-          onClick={() => onAdjustRest((value) => Math.max(0, value - 15))}
-        >
-          -15s
-        </Button>
-        <Button
-          className="h-16 rounded-[1.9rem] text-lg font-black"
+          className="h-16 w-full rounded-[1.9rem] text-lg font-black"
           onClick={onContinue}
         >
-          Seguir
-        </Button>
-        <Button
-          className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.rest}`}
-          variant="secondary"
-          onClick={() => onAdjustRest((value) => value + 15)}
-        >
-          +15s
+          Siguiente
         </Button>
       </div>
     </section>
@@ -5087,6 +5119,7 @@ function RestScreen({
 
 function FeedbackScreen({
   exerciseName,
+  equipment,
   setType,
   reps,
   weight,
@@ -5109,6 +5142,7 @@ function FeedbackScreen({
   saveStatus,
 }: {
   exerciseName: string;
+  equipment?: ExerciseEquipment;
   setType: TrainingSet['type'];
   reps: number;
   weight: number;
@@ -5141,6 +5175,9 @@ function FeedbackScreen({
         <h2 className="text-[1.75rem] font-black leading-tight tracking-normal">
           {exerciseName}
         </h2>
+        <div className="mt-1">
+          <EquipmentChip equipment={equipment} />
+        </div>
       </div>
 
       {isTimed ? (
@@ -5382,6 +5419,9 @@ function TransitionScreen({
                 <h2 className="text-[1.55rem] font-black leading-tight tracking-normal">
                   {getExerciseDisplayName(exercise)}
                 </h2>
+                <div className="mt-1">
+                  <EquipmentChip equipment={exercise.equipment} />
+                </div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {decisionOptions.map((option) => {
                     const selectedDecision =
@@ -5422,6 +5462,9 @@ function TransitionScreen({
           <p className="text-2xl font-black tracking-normal">
             {getExerciseDisplayName(nextExercise)}
           </p>
+          <div className="mt-1">
+            <EquipmentChip equipment={nextExercise.equipment} />
+          </div>
           <p className="mt-1 text-sm font-medium text-muted-foreground">
             {nextExercise.notes}
           </p>
@@ -5534,7 +5577,7 @@ function EquipmentSelector({
             key={option}
             className={`min-w-0 rounded-[1.1rem] px-2 text-sm font-black transition active:scale-[0.98] ${
               selected
-                ? 'bg-card text-foreground shadow-sm'
+                ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground'
             }`}
             type="button"

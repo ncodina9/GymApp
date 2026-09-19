@@ -187,6 +187,7 @@ const exerciseTaxonomy = {
 
 const exercisePresentation = {
   'press-banca-barra': presentation('press-banca', 'Press banca', 'Barra'),
+  'dominadas-lastradas': presentation('dominadas', 'Dominadas'),
   'press-banca-inclinado': presentation(
     'press-banca-inclinado',
     'Press banca inclinado',
@@ -213,6 +214,22 @@ const exercisePresentation = {
     'Press militar sentado velocidad',
     'Barra',
   ),
+  'sentadilla-barra': presentation('sentadilla', 'Sentadilla'),
+  'peso-muerto-rumano': presentation(
+    'peso-muerto-rumano',
+    'Peso muerto rumano',
+  ),
+  'hip-thrust-barra': presentation('hip-thrust', 'Hip thrust'),
+  'hip-thrust-volumen': presentation('hip-thrust', 'Hip thrust'),
+  'curl-femoral-banco-discos': presentation('curl-femoral', 'Curl femoral'),
+  'gemelos-pie': presentation('elevacion-gemelos', 'Elevación de gemelos'),
+  'gemelos-sentado-multipower': presentation(
+    'elevacion-gemelos-sentado',
+    'Elevación de gemelos sentado',
+  ),
+  'dominadas-peso-corporal': presentation('dominadas', 'Dominadas'),
+  'pullover-mancuerna': presentation('pullover', 'Pull-over'),
+  'curl-biceps-barra-mancuernas': presentation('curl-biceps', 'Curl bíceps'),
   'elevaciones-laterales': presentation(
     'elevaciones-laterales',
     'Elevaciones laterales',
@@ -221,20 +238,14 @@ const exercisePresentation = {
     'elevaciones-laterales',
     'Elevaciones laterales',
   ),
-  'triceps-polea-simple': presentation(
-    'triceps-polea',
-    'Tríceps en polea',
-    'Simple',
-  ),
+  'triceps-polea-simple': presentation('triceps-polea', 'Extensión de tríceps'),
   'triceps-polea-volumen': presentation(
     'triceps-polea',
-    'Tríceps en polea',
-    'Simple',
+    'Extensión de tríceps',
   ),
   'extension-triceps-polea': presentation(
     'triceps-polea',
-    'Tríceps en polea',
-    'Extensión',
+    'Extensión de tríceps',
   ),
 };
 
@@ -706,20 +717,28 @@ for (let week = 1; week <= 13; week += 1) {
 
 sessions.sort((a, b) => a.date.localeCompare(b.date));
 
+const planJson = JSON.stringify(
+  {
+    planId: 'training-plan-2026-q4',
+    sourceDocument,
+    startsOn: '2026-09-07',
+    endsOn: '2026-12-18',
+    durationWeeks: 13,
+    sessions,
+  },
+  null,
+  2,
+).replace(
+  /"(primaryMuscles|secondaryMuscles)": \[\n((?:\s+"[^"]+",?\n)+)\s+\]/g,
+  (_, field, values) => {
+    const muscles = values.match(/"[^"]+"/g) ?? [];
+    return `"${field}": [${muscles.join(', ')}]`;
+  },
+);
+
 writeFileSync(
   outputPath,
-  `${JSON.stringify(
-    {
-      planId: 'training-plan-2026-q4',
-      sourceDocument,
-      startsOn: '2026-09-07',
-      endsOn: '2026-12-18',
-      durationWeeks: 13,
-      sessions,
-    },
-    null,
-    2,
-  )}\n`,
+  `${planJson}\n`,
 );
 
 function exercise(
