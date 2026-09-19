@@ -27,6 +27,12 @@ Antes del lunes, haz una prueba corta con conexion:
 
 La app guarda el borrador en `localStorage` y las series en IndexedDB dentro del iPhone. El service worker cachea la app despues de la primera carga para que la pantalla y el plan sigan disponibles aunque la cobertura del gimnasio sea mala.
 
+## Temporizadores en segundo plano
+
+Validado en uso real el 19 de septiembre de 2026: los temporizadores de serie y descanso conservan correctamente el tiempo al bloquear el iPhone o al devolver la PWA a primer plano. La implementación guarda una hora final (`endsAt`) y recalcula el restante al recuperar el foco, en lugar de depender de intervalos de JavaScript que iOS puede pausar.
+
+Esta validación no convierte la PWA en una aplicación nativa: futuras mejoras como alertas garantizadas fuera de pantalla, respuestas hápticas del sistema o Live Activities siguen siendo alcance de SwiftUI/iOS nativo.
+
 ## Forzar actualización de la PWA en iPhone
 
 Usa este flujo cuando Vercel ya haya desplegado una versión nueva, pero la app instalada siga mostrando una versión anterior en `Ajustes`.

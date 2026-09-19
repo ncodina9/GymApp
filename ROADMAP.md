@@ -1173,7 +1173,7 @@ Prioridad 2:
 - [x] blindar la pantalla de feedback de superseries contra nombres de más de una línea, con un patrón compacto que no requiera scroll
 - [x] mostrar todos los ejercicios vinculados al bloque de una superserie en las tarjetas de próxima acción, tanto durante el descanso como en la transición de ejercicio
 - [ ] sustituir gradualmente los iconos de la UI por Heroicons antes del prototipo SwiftUI, manteniendo una única familia visual
-- [ ] revisar en dispositivo real los temporizadores con la app en segundo plano y documentar la limitación de PWA que solo se resolverá del todo de forma nativa
+- [x] revisar en dispositivo real los temporizadores con la app en segundo plano y documentar la limitación de PWA que solo se resolverá del todo de forma nativa
 
 Prioridad 3:
 
@@ -1232,10 +1232,10 @@ Decisiones de compatibilidad:
 
 ## Proximo hito recomendado
 
-Validar en dispositivo real los temporizadores con la PWA en segundo plano y documentar con precisión la limitación que solo podrá resolverse completamente en la futura app nativa.
+Mostrar los discos necesarios por lado para ejercicios con barra y multipower, partiendo de la carga total y del material seleccionado.
 
 Checklist minima de la siguiente iteracion:
 
-- [ ] Medir un temporizador de serie y uno de descanso con la pantalla bloqueada durante varios minutos.
-- [ ] Comparar el tiempo mostrado al volver a la PWA con la hora final calculada.
-- [ ] Documentar el comportamiento observado y el límite técnico de la PWA frente a notificaciones y Live Activities nativas.
+- [ ] Definir una combinación de discos por lado determinista y compatible con el inventario actual.
+- [ ] Mostrarla de forma compacta bajo el peso en serie, feedback y próxima acción cuando aporte valor.
+- [ ] No mostrar el desglose para mancuernas, poleas, máquinas o ejercicios de peso corporal.
