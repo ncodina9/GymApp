@@ -74,6 +74,33 @@ struct TrainingPlanDecodingTests {
     #expect(draft.targets(for: exercise.exerciseID, setIndex: 2)?.weightKg == 68)
   }
 
+  @Test("Alterna superseries y descansa solo al completar la ronda")
+  func sequencesSupersetsAndRest() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let firstSupersetIndex = try #require(
+      session.exercises.firstIndex { $0.supersetID != nil }
+    )
+    var state = WorkoutExecutionState(session: session)
+
+    while state.current?.exerciseIndex != firstSupersetIndex {
+      _ = state.recordCurrent(feedback: .ok)
+    }
+
+    let firstAdvance = state.recordCurrent(feedback: .ok)
+    #expect(firstAdvance != nil)
+    guard let firstAdvance else { return }
+    #expect(firstAdvance.restSeconds == nil)
+    #expect(firstAdvance.next?.exerciseIndex == firstSupersetIndex + 1)
+
+    let secondAdvance = state.recordCurrent(feedback: .ok)
+    #expect(secondAdvance != nil)
+    guard let secondAdvance else { return }
+    #expect(secondAdvance.restSeconds != nil)
+    #expect(secondAdvance.next?.exerciseIndex == firstSupersetIndex)
+    #expect(secondAdvance.next?.setIndex == 2)
+  }
+
   private var sharedPlanURL: URL {
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0 ..< 5 {

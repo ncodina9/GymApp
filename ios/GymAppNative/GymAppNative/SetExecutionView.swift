@@ -3,54 +3,97 @@ import GymAppNativeCore
 
 struct SetExecutionView: View {
   let session: TrainingSession
-  let exerciseIndex: Int
-  let setIndex: Int
-  @State private var workoutDraft: WorkoutSessionDraft
+  @State private var execution: WorkoutExecutionState
+  @State private var phase: ExecutionPhase = .workingSet
+  @State private var feedback: WorkoutSetFeedback = .ok
+  @State private var restEndsAt: Date?
   @Environment(\.dismiss) private var dismiss
 
-  init(session: TrainingSession, exerciseIndex: Int = 0, setIndex: Int = 0) {
+  init(session: TrainingSession) {
     self.session = session
-    self.exerciseIndex = exerciseIndex
-    self.setIndex = setIndex
-    _workoutDraft = State(initialValue: WorkoutSessionDraft(session: session))
+    _execution = State(initialValue: WorkoutExecutionState(session: session))
   }
 
-  private var exercise: TrainingExercise? {
-    session.exercises.indices.contains(exerciseIndex) ? session.exercises[exerciseIndex] : nil
+  var body: some View {
+    Group {
+      switch phase {
+      case .workingSet:
+        if let locator = execution.current {
+          WorkingSetView(
+            execution: $execution,
+            locator: locator,
+            onContinue: { phase = .feedback }
+          )
+        } else {
+          FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
+        }
+      case .feedback:
+        FeedbackView(feedback: $feedback, onBack: { phase = .workingSet }, onRegister: registerCurrentSet)
+      case .rest:
+        if let restEndsAt, let next = execution.current {
+          RestView(
+            execution: execution,
+            next: next,
+            endsAt: restEndsAt,
+            onContinue: { phase = .workingSet }
+          )
+        }
+      case .finished:
+        FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
+      }
+    }
+    .toolbar(.hidden, for: .navigationBar)
   }
 
-  private var trainingSet: TrainingSet? {
-    guard let exercise, exercise.sets.indices.contains(setIndex) else { return nil }
-    return exercise.sets[setIndex]
-  }
+  private func registerCurrentSet() {
+    guard let advance = execution.recordCurrent(feedback: feedback) else {
+      phase = .finished
+      return
+    }
 
-  private var activeEquipment: Equipment {
-    guard let exercise else { return .barbell }
-    return workoutDraft.equipment(for: exercise.exerciseID) ?? exercise.equipment
-  }
+    feedback = .ok
+    guard advance.next != nil else {
+      phase = .finished
+      return
+    }
 
-  private var activeTargets: WorkoutSetTargets? {
-    guard let exercise, let trainingSet else { return nil }
-    return workoutDraft.targets(
-      for: exercise.exerciseID,
-      setIndex: trainingSet.setIndex
-    )
+    if let restSeconds = advance.restSeconds, restSeconds > 0 {
+      restEndsAt = Date().addingTimeInterval(TimeInterval(restSeconds))
+      phase = .rest
+    } else {
+      phase = .workingSet
+    }
   }
+}
+
+private enum ExecutionPhase {
+  case workingSet
+  case feedback
+  case rest
+  case finished
+}
+
+private struct WorkingSetView: View {
+  @Binding var execution: WorkoutExecutionState
+  let locator: WorkoutSetLocator
+  let onContinue: () -> Void
+
+  private var exercise: TrainingExercise? { execution.exercise(for: locator) }
+  private var trainingSet: TrainingSet? { execution.trainingSet(for: locator) }
+  private var activeEquipment: Equipment { execution.equipment(for: locator) ?? .barbell }
+  private var activeTargets: WorkoutSetTargets? { execution.targets(for: locator) }
 
   var body: some View {
     Group {
       if let exercise, let trainingSet {
         VStack(alignment: .leading, spacing: 12) {
-          SetHeader(exercise: exercise, setIndex: setIndex)
+          SetHeader(exercise: exercise, setIndex: trainingSet.setIndex - 1)
 
           MaterialSelector(
             selection: Binding(
               get: { activeEquipment },
               set: { selectedEquipment in
-                _ = workoutDraft.selectEquipment(
-                  selectedEquipment,
-                  for: exercise.exerciseID
-                )
+                _ = execution.selectEquipment(selectedEquipment, for: locator)
               }
             ),
             options: equipmentOptions(for: exercise),
@@ -58,7 +101,7 @@ struct SetExecutionView: View {
           )
 
           if trainingSet.type == .timed {
-            TimedSetTarget(seconds: trainingSet.targetDurationSeconds ?? 0)
+            TimedSetTarget(seconds: activeTargets?.durationSeconds ?? 0)
           } else {
             VStack(spacing: 10) {
               SetTargetCard(label: "Reps", value: activeTargets?.reps.map(String.init) ?? "-")
@@ -72,48 +115,21 @@ struct SetExecutionView: View {
             .frame(maxHeight: .infinity)
           }
 
-          VStack(alignment: .leading, spacing: 4) {
-            Text(exercise.notes)
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-              .lineLimit(2)
-            Text("Descanso propuesto: \(trainingSet.restSeconds)s")
-              .font(.subheadline.weight(.medium))
-              .foregroundStyle(.secondary)
-          }
-          .padding(14)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
+          Text(exercise.notes)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
 
-          HStack(spacing: 12) {
-            Button(action: { dismiss() }) {
-              Image(systemName: "chevron.left")
-                .font(.headline.weight(.bold))
-                .frame(width: 64, height: 64)
-                .foregroundStyle(.primary)
-                .glassEffect(.regular.interactive(), in: Circle())
-            }
-            .buttonStyle(.plain)
-
-            Button("Continuar") {}
-              .font(.headline.weight(.bold))
-              .frame(maxWidth: .infinity, minHeight: 64)
-              .foregroundStyle(.white)
-              .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
-              .buttonStyle(.plain)
-              .disabled(true)
-          }
+          BottomActions(primaryTitle: "Continuar", primaryAction: onContinue)
         }
         .padding(16)
       } else {
-        ContentUnavailableView(
-          "Serie no disponible",
-          systemImage: "exclamationmark.triangle",
-          description: Text("No se ha podido resolver la primera serie del entrenamiento.")
-        )
+        ContentUnavailableView("Serie no disponible", systemImage: "exclamationmark.triangle")
       }
     }
-    .toolbar(.hidden, for: .navigationBar)
   }
 
   private func weightUnit(for equipment: Equipment) -> String {
@@ -145,9 +161,213 @@ struct SetExecutionView: View {
   private func unavailableEquipment(for exercise: TrainingExercise) -> Set<Equipment> {
     Set(
       equipmentOptions(for: exercise).filter {
-        !workoutDraft.canSelectEquipment($0, for: exercise.exerciseID)
+        !execution.canSelectEquipment($0, for: locator)
       }
     )
+  }
+}
+
+private struct FeedbackView: View {
+  @Binding var feedback: WorkoutSetFeedback
+  let onBack: () -> Void
+  let onRegister: () -> Void
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      VStack(alignment: .leading, spacing: 6) {
+        Text("Feedback de la serie")
+          .font(.largeTitle.weight(.bold))
+        Text("Marca lo que mejor describa esta ejecución.")
+          .foregroundStyle(.secondary)
+      }
+
+      VStack(spacing: 10) {
+        FeedbackChoice(title: "OK", detail: "Objetivo completado", value: .ok, selection: $feedback)
+        FeedbackChoice(title: "Costó", detail: "Requiere revisar la progresión", value: .effort, selection: $feedback)
+        FeedbackChoice(title: "Molestia", detail: "Registrar para revisarla después", value: .discomfort, selection: $feedback)
+      }
+      .frame(maxHeight: .infinity, alignment: .top)
+
+      HStack(spacing: 12) {
+        Button(action: onBack) {
+          Image(systemName: "chevron.left")
+            .font(.headline.weight(.bold))
+            .frame(width: 64, height: 64)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Circle())
+        }
+        .buttonStyle(.plain)
+
+        Button("Registrar serie", action: onRegister)
+          .font(.headline.weight(.bold))
+          .frame(maxWidth: .infinity, minHeight: 64)
+          .foregroundStyle(.white)
+          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          .buttonStyle(.plain)
+      }
+    }
+    .padding(16)
+  }
+}
+
+private struct FeedbackChoice: View {
+  let title: String
+  let detail: String
+  let value: WorkoutSetFeedback
+  @Binding var selection: WorkoutSetFeedback
+
+  var body: some View {
+    Button { selection = value } label: {
+      HStack {
+        VStack(alignment: .leading, spacing: 3) {
+          Text(title).font(.headline.weight(.bold))
+          Text(detail).font(.subheadline).foregroundStyle(.secondary)
+        }
+        Spacer()
+        Image(systemName: selection == value ? "checkmark.circle.fill" : "circle")
+          .font(.title2)
+          .foregroundStyle(selection == value ? Color.accentColor : .secondary)
+      }
+      .padding(18)
+      .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
+      .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 20))
+      .overlay {
+        RoundedRectangle(cornerRadius: 20)
+          .stroke(
+            selection == value ? Color.accentColor : Color.secondary.opacity(0.28),
+            lineWidth: selection == value ? 2 : 1
+          )
+      }
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+private struct RestView: View {
+  let execution: WorkoutExecutionState
+  let next: WorkoutSetLocator
+  let endsAt: Date
+  let onContinue: () -> Void
+
+  var body: some View {
+    TimelineView(.periodic(from: .now, by: 1)) { context in
+      let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
+      VStack(spacing: 16) {
+        Text(remaining == 0 ? "Descanso terminado" : "Descanso")
+          .font(.title2.weight(.bold))
+          .foregroundStyle(remaining == 0 ? .green : .secondary)
+
+        Text(timeLabel(remaining))
+          .font(.system(size: 68, weight: .bold))
+          .monospacedDigit()
+          .frame(maxWidth: .infinity, minHeight: 148)
+          .foregroundStyle(.white)
+          .background(remaining == 0 ? .green : Color.accentColor, in: RoundedRectangle(cornerRadius: 28))
+
+        NextSetCard(execution: execution, locator: next)
+          .frame(maxHeight: .infinity, alignment: .top)
+
+        BottomActions(
+          primaryTitle: "Siguiente",
+          primaryAction: onContinue,
+          primaryDisabled: remaining > 0
+        )
+      }
+      .padding(16)
+    }
+  }
+
+  private func timeLabel(_ seconds: Int) -> String {
+    "\(seconds / 60):\(String(format: "%02d", seconds % 60))"
+  }
+}
+
+private struct NextSetCard: View {
+  let execution: WorkoutExecutionState
+  let locator: WorkoutSetLocator
+
+  var body: some View {
+    if let exercise = execution.exercise(for: locator),
+       let targets = execution.targets(for: locator) {
+      VStack(alignment: .leading, spacing: 8) {
+        Text("A continuación")
+          .font(.caption.weight(.bold))
+          .foregroundStyle(.secondary)
+          .textCase(.uppercase)
+        Text(exercise.baseExerciseName)
+          .font(.title3.weight(.bold))
+          .lineLimit(2)
+        Text("Serie \(locator.setIndex) de \(exercise.sets.count) · \(summary(targets, equipment: execution.equipment(for: locator) ?? exercise.equipment))")
+          .font(.subheadline.weight(.medium))
+          .foregroundStyle(.secondary)
+      }
+      .padding(16)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 20))
+    }
+  }
+
+  private func summary(_ targets: WorkoutSetTargets, equipment: Equipment) -> String {
+    if let duration = targets.durationSeconds {
+      return "\(duration / 60):\(String(format: "%02d", duration % 60))"
+    }
+    let reps = targets.reps.map(String.init) ?? "-"
+    let weight = targets.weightKg.formatted(.number.precision(.fractionLength(0...1)))
+    return "\(reps) reps · \(equipment == .external ? "+" : "")\(weight) kg"
+  }
+}
+
+private struct FinishedWorkoutView: View {
+  let completedSetCount: Int
+  let onFinish: () -> Void
+
+  var body: some View {
+    VStack(spacing: 18) {
+      Spacer()
+      Image(systemName: "checkmark.circle.fill")
+        .font(.system(size: 72))
+        .foregroundStyle(.green)
+      Text("Entrenamiento completado")
+        .font(.largeTitle.weight(.bold))
+      Text("\(completedSetCount) series registradas en esta sesión.")
+        .foregroundStyle(.secondary)
+      Spacer()
+      Button("Volver a Hoy", action: onFinish)
+        .font(.headline.weight(.bold))
+        .frame(maxWidth: .infinity, minHeight: 64)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .buttonStyle(.plain)
+    }
+    .padding(16)
+  }
+}
+
+private struct BottomActions: View {
+  let primaryTitle: String
+  let primaryAction: () -> Void
+  var primaryDisabled = false
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    HStack(spacing: 12) {
+      Button(action: { dismiss() }) {
+        Image(systemName: "chevron.left")
+          .font(.headline.weight(.bold))
+          .frame(width: 64, height: 64)
+          .foregroundStyle(.primary)
+          .glassEffect(.regular.interactive(), in: Circle())
+      }
+      .buttonStyle(.plain)
+
+      Button(primaryTitle, action: primaryAction)
+        .font(.headline.weight(.bold))
+        .frame(maxWidth: .infinity, minHeight: 64)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .buttonStyle(.plain)
+        .disabled(primaryDisabled)
+    }
   }
 }
 

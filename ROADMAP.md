@@ -1239,6 +1239,8 @@ Actualización v0.1.53: `GymAppNativeCore` incorpora reglas puras de carga equiv
 
 Actualización v0.1.54: `WorkoutSessionDraft` concentra el estado de ejecucion nativo en memoria. El material seleccionado se conserva durante todo el ejercicio y los objetivos se recalculan desde una carga equivalente estable, sin encadenar redondeos entre variantes. Los cambios de reps o peso se propagan automaticamente solo a las series consecutivas que eran identicas en el plan; los cambios de objetivo ya previstos por el planning se respetan. Queda preparado para conectarse con el flujo real de serie, feedback y descanso.
 
+Actualización v0.1.55: la app nativa ejecuta ya una sesión completa en memoria: serie, feedback, registro temporal, descanso y siguiente serie. `WorkoutExecutionState` construye el orden de trabajo, alterna los ejercicios de cada superserie por rondas y evita descansos entre ejercicios vinculados. Al cerrar una ronda o una serie normal muestra el temporizador y el resumen de la siguiente serie; al terminar muestra el cierre de entrenamiento. La persistencia y recuperación de este estado quedan como siguiente tramo.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
