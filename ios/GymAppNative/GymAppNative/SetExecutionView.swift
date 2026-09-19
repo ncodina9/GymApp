@@ -158,39 +158,88 @@ private struct SetHeader: View {
 private struct MaterialSelector: View {
   @Binding var selection: Equipment
   let options: [Equipment]
-  @Namespace private var selectionNamespace
+  @State private var dragOffset: CGFloat = 0
+
+  private var selectedIndex: Int {
+    options.firstIndex(of: selection) ?? 0
+  }
 
   var body: some View {
     GlassEffectContainer(spacing: 0) {
-      HStack(spacing: 0) {
-        ForEach(options, id: \.self) { equipment in
-          let isSelected = selection == equipment
-          Button {
-            withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
-              selection = equipment
-            }
-          } label: {
-            Text(equipment.executionLabel)
-              .font(.caption.weight(.bold))
-              .lineLimit(1)
-              .minimumScaleFactor(0.7)
-              .frame(maxWidth: .infinity, minHeight: 42)
-              .foregroundStyle(isSelected ? .white : .primary)
-              .background {
-                if isSelected {
-                  Capsule()
-                    .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
-                    .matchedGeometryEffect(id: "selected-material", in: selectionNamespace)
-                }
+      GeometryReader { geometry in
+        let segmentWidth = geometry.size.width / CGFloat(max(options.count, 1))
+        let indicatorOffset = clampedIndicatorOffset(segmentWidth: segmentWidth)
+
+        ZStack(alignment: .leading) {
+          Capsule()
+            .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+            .frame(width: segmentWidth, height: 42)
+            .offset(x: indicatorOffset)
+            .allowsHitTesting(false)
+
+          HStack(spacing: 0) {
+            ForEach(options, id: \.self) { equipment in
+              let isSelected = selection == equipment
+              Button {
+                select(equipment)
+              } label: {
+                Text(equipment.executionLabel)
+                  .font(.caption.weight(.bold))
+                  .lineLimit(1)
+                  .minimumScaleFactor(0.7)
+                  .frame(maxWidth: .infinity, minHeight: 42)
+                  .foregroundStyle(isSelected ? .white : .primary)
               }
+              .buttonStyle(.plain)
+            }
           }
-          .buttonStyle(.plain)
+        }
+        .overlay(alignment: .leading) {
+          Color.clear
+            .frame(width: segmentWidth, height: 42)
+            .offset(x: indicatorOffset)
+            .contentShape(Capsule())
+            .highPriorityGesture(dragGesture(segmentWidth: segmentWidth))
         }
       }
+      .frame(height: 42)
       .padding(4)
       .glassEffect(.regular, in: Capsule())
     }
     .disabled(options.count == 1)
+  }
+
+  private func clampedIndicatorOffset(segmentWidth: CGFloat) -> CGFloat {
+    let minimum = CGFloat.zero
+    let maximum = segmentWidth * CGFloat(max(options.count - 1, 0))
+    let proposed = CGFloat(selectedIndex) * segmentWidth + dragOffset
+    return min(max(proposed, minimum), maximum)
+  }
+
+  private func dragGesture(segmentWidth: CGFloat) -> some Gesture {
+    DragGesture(minimumDistance: 0)
+      .onChanged { gesture in
+        dragOffset = gesture.translation.width
+      }
+      .onEnded { _ in
+        let offset = clampedIndicatorOffset(segmentWidth: segmentWidth)
+        let targetIndex = min(
+          max(Int((offset / segmentWidth).rounded()), 0),
+          max(options.count - 1, 0)
+        )
+
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
+          selection = options[targetIndex]
+          dragOffset = 0
+        }
+      }
+  }
+
+  private func select(_ equipment: Equipment) {
+    withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
+      selection = equipment
+      dragOffset = 0
+    }
   }
 }
 

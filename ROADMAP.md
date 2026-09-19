@@ -1229,6 +1229,8 @@ Actualización v0.1.48: las notas compartidas del plan dejan de anticipar futura
 
 Actualización v0.1.49: las pantallas nativas de previsualizacion y serie ocultan por completo la barra superior; toda vuelta ocurre abajo a la izquierda y esta regla queda establecida para las futuras pantallas del flujo. El selector de material se convierte en un control segmentado real: una superficie compartida y un unico indicador de Liquid Glass que se desliza entre opciones. La iconografia nativa se estandariza en Heroicons locales para los proximos desarrollos; los SF Symbols actuales permanecen solo como sustitutos temporales.
 
+Actualización v0.1.50: el selector segmentado de material permite arrastrar directamente el indicador de Liquid Glass y encaja en el segmento mas cercano al soltarlo; el toque en cada segmento se mantiene como alternativa.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
