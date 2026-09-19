@@ -47,6 +47,7 @@ material explícito del plan.
 - Las conversiones de carga viven en reglas Swift puras compartibles y comprobables: la referencia de mancuernas es la carga total equivalente, cada variante se redondea a su inventario real y las variantes que no alcancen el objetivo quedan deshabilitadas.
 - El estado de una sesion conserva el material elegido por ejercicio y los ajustes manuales como carga equivalente. Un ajuste se propaga solo por las series consecutivas cuyo objetivo original sea identico; una serie que el plan ya diferenciaba conserva su objetivo propio.
 - El secuenciador nativo entrega una serie cada vez, alterna los ejercicios de una superserie por rondas y solo propone descanso al terminar la ronda. El registro y feedback se mantienen de momento en memoria y pasaran a SwiftData antes de cerrar la paridad funcional.
+- La PWA es la referencia visual y de interacción para toda pantalla nueva de SwiftUI. Las pantallas ya alineadas se conservan; cualquier vista nueva debe trasladar su jerarquia, controles, datos y navegacion antes de adoptar detalles nativos como Liquid Glass.
 - La PWA no debe incorporar complejidad web-only que despues haya que descartar.
 - El CSV es formato de analisis; el JSON completo es formato de migracion.
 

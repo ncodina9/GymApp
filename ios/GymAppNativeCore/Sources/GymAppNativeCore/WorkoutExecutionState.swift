@@ -10,10 +10,38 @@ public struct WorkoutSetLocator: Equatable, Hashable, Sendable {
   }
 }
 
-public enum WorkoutSetFeedback: String, CaseIterable, Sendable {
-  case ok
-  case effort
-  case discomfort
+public struct WorkoutSetFeedback: Equatable, Sendable {
+  public let rir: Int?
+  public let painKnee: Int
+  public let painWrist: Int
+  public let painShoulder: Int
+  public let painLowerBack: Int
+  public let note: String
+
+  public init(
+    rir: Int?,
+    painKnee: Int,
+    painWrist: Int,
+    painShoulder: Int,
+    painLowerBack: Int,
+    note: String
+  ) {
+    self.rir = rir
+    self.painKnee = painKnee
+    self.painWrist = painWrist
+    self.painShoulder = painShoulder
+    self.painLowerBack = painLowerBack
+    self.note = note
+  }
+
+  public static let ok = WorkoutSetFeedback(
+    rir: 2,
+    painKnee: 0,
+    painWrist: 0,
+    painShoulder: 0,
+    painLowerBack: 0,
+    note: "OK"
+  )
 }
 
 public struct WorkoutSetRecord: Equatable, Sendable {

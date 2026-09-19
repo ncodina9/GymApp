@@ -9,7 +9,7 @@ ni APIs exclusivas de iOS para que pueda verificarse también con `swift test`.
 - enums de material y tipo de serie
 - reglas puras de material para convertir cargas entre barra, multipower y mancuernas con el inventario real
 - borrador de sesion en memoria que conserva el material por ejercicio y propaga ajustes por series planificadas homogeneas
-- secuenciador de series que alterna superseries, registra feedback temporal y aplica descanso solo al cerrar cada ronda
+- secuenciador de series que alterna superseries, registra RIR, molestias y nota temporal por serie, y aplica descanso solo al cerrar cada ronda
 - decodificador del `trainingPlan.json` de producción
 - pruebas que consumen el JSON compartido de la raíz del repositorio
 

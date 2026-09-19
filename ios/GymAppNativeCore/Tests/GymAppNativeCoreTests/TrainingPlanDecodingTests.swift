@@ -101,6 +101,26 @@ struct TrainingPlanDecodingTests {
     #expect(secondAdvance.next?.setIndex == 2)
   }
 
+  @Test("Conserva el feedback detallado de cada serie")
+  func keepsDetailedSetFeedback() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    var state = WorkoutExecutionState(session: session)
+    let feedback = WorkoutSetFeedback(
+      rir: 1,
+      painKnee: 0,
+      painWrist: 2,
+      painShoulder: 1,
+      painLowerBack: 0,
+      note: "Técnica"
+    )
+
+    _ = state.recordCurrent(feedback: feedback)
+
+    #expect(state.records.count == 1)
+    #expect(state.records.first?.feedback == feedback)
+  }
+
   private var sharedPlanURL: URL {
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0 ..< 5 {
