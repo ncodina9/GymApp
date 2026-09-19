@@ -1217,6 +1217,8 @@ Actualización v0.1.42: `TodayView` navega a `SessionPreviewView`. La previsuali
 
 Actualización v0.1.43: se retiran los bloques normales de la previsualización nativa. Cada ejercicio se resume en una tarjeta plana de nombre, material y objetivo; solo las superseries mantienen un contenedor común visible.
 
+Actualización v0.1.44: la previsualización nativa recupera la jerarquía de tarjetas validada en React: indicador de orden, nombre, material y tres métricas de series, reps o tiempo y peso. Se mantienen eliminados los encabezados de bloque normales.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

@@ -46,13 +46,13 @@ struct SessionPreviewView: View {
                 .textCase(.uppercase)
 
               ForEach(block.exercises) { exercise in
-                ExercisePreviewRow(exercise: exercise)
+                ExercisePreviewRow(exercise: exercise, order: exerciseOrder(exercise))
               }
             }
             .padding(16)
             .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 22))
           } else if let exercise = block.exercises.first {
-            ExercisePreviewRow(exercise: exercise)
+            ExercisePreviewRow(exercise: exercise, order: exerciseOrder(exercise))
           }
         }
       }
@@ -61,6 +61,10 @@ struct SessionPreviewView: View {
     }
     .navigationTitle("Previsualización")
     .navigationBarTitleDisplayMode(.inline)
+  }
+
+  private func exerciseOrder(_ exercise: TrainingExercise) -> Int {
+    (session.exercises.firstIndex { $0.id == exercise.id } ?? 0) + 1
   }
 }
 
@@ -74,52 +78,71 @@ private struct PreviewBlock: Identifiable {
 
 private struct ExercisePreviewRow: View {
   let exercise: TrainingExercise
-
-  private var firstSet: TrainingSet? { exercise.sets.first }
+  let order: Int
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 7) {
-      HStack(alignment: .firstTextBaseline, spacing: 10) {
-        Text(exercise.baseExerciseName)
-          .font(.headline.weight(.semibold))
-          .lineLimit(2)
-          .frame(maxWidth: .infinity, alignment: .leading)
+    VStack(alignment: .leading, spacing: 14) {
+      HStack(alignment: .center, spacing: 12) {
+        Text("\(order)")
+          .font(.subheadline.weight(.bold))
+          .frame(width: 32, height: 32)
+          .background(.fill.tertiary, in: Circle())
 
-        EquipmentChip(equipment: exercise.equipment, variantLabel: exercise.variantLabel)
+        VStack(alignment: .leading, spacing: 7) {
+          Text(exercise.baseExerciseName)
+            .font(.headline.weight(.semibold))
+            .lineLimit(2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+          EquipmentChip(equipment: exercise.equipment, variantLabel: exercise.variantLabel)
+        }
       }
 
-      Text(targetSummary)
-        .font(.subheadline.weight(.medium))
-        .foregroundStyle(.secondary)
+      HStack(spacing: 8) {
+        PreviewMetric(label: "Series", value: "\(exercise.sets.count)")
+        PreviewMetric(label: workLabel, value: workValue)
+        PreviewMetric(label: loadLabel, value: loadValue)
+      }
     }
     .padding(14)
     .background(.background, in: RoundedRectangle(cornerRadius: 18))
   }
 
-  private var targetSummary: String {
-    guard let firstSet else { return "-" }
-    if firstSet.type == .timed {
-      let duration = firstSet.targetDurationSeconds ?? 0
-      return "\(exercise.sets.count) series · \(duration / 60):\(String(format: "%02d", duration % 60))"
+  private var workLabel: String {
+    exercise.sets.first?.type == .timed ? "Tiempo" : "Reps"
+  }
+
+  private var workValue: String {
+    if exercise.sets.first?.type == .timed {
+      return uniqueValues(exercise.sets.map { set in
+        let seconds = set.targetDurationSeconds ?? 0
+        return "\(seconds / 60):\(String(format: "%02d", seconds % 60))"
+      })
     }
 
-    let reps = firstSet.targetReps.map(String.init) ?? "-"
-    return "\(exercise.sets.count) × \(reps) · \(loadValue)"
+    return uniqueValues(exercise.sets.map { $0.targetReps.map(String.init) ?? "-" })
   }
 
   private var loadValue: String {
-    guard let firstSet else { return "-" }
     guard exercise.equipment != .bodyweight else { return "0 kg" }
 
-    let amount = firstSet.targetWeightKg.formatted(.number.precision(.fractionLength(0...1)))
-    switch exercise.equipment {
-    case .external:
-      return "+\(amount) kg"
-    case .dumbbell:
-      return "\(amount) kg c/u"
-    default:
-      return "\(amount) kg"
+    return uniqueValues(exercise.sets.map { set in
+      let amount = set.targetWeightKg.formatted(.number.precision(.fractionLength(0...1)))
+      return exercise.equipment == .external ? "+\(amount) kg" : "\(amount) kg"
+    })
+  }
+
+  private var loadLabel: String {
+    exercise.equipment == .dumbbell ? "Peso c/u" : "Peso"
+  }
+
+  private func uniqueValues(_ values: [String]) -> String {
+    values.reduce(into: [String]()) { unique, value in
+      if !unique.contains(value) {
+        unique.append(value)
+      }
     }
+    .joined(separator: "/")
   }
 }
 
@@ -134,6 +157,27 @@ private struct EquipmentChip: View {
       .padding(.horizontal, 10)
       .padding(.vertical, 6)
       .background(.fill.quaternary, in: Capsule())
+  }
+}
+
+private struct PreviewMetric: View {
+  let label: String
+  let value: String
+
+  var body: some View {
+    VStack(spacing: 5) {
+      Text(label)
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+      Text(value)
+        .font(.subheadline.weight(.bold))
+        .monospacedDigit()
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+    }
+    .frame(maxWidth: .infinity, minHeight: 58)
+    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
   }
 }
 
