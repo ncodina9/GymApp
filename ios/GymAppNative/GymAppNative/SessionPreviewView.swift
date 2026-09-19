@@ -14,7 +14,6 @@ struct SessionPreviewView: View {
           PreviewBlock(
             id: exercise.supersetID ?? exercise.exerciseID,
             supersetID: exercise.supersetID,
-            blockLabel: exercise.block,
             exercises: [exercise]
           )
         )
@@ -39,18 +38,22 @@ struct SessionPreviewView: View {
         }
 
         ForEach(blocks) { block in
-          VStack(alignment: .leading, spacing: 12) {
-            Text(block.title)
-              .font(.caption.weight(.bold))
-              .foregroundStyle(.secondary)
-              .textCase(.uppercase)
+          if block.isSuperset {
+            VStack(alignment: .leading, spacing: 12) {
+              Text("Superserie")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
 
-            ForEach(block.exercises) { exercise in
-              ExercisePreviewRow(exercise: exercise)
+              ForEach(block.exercises) { exercise in
+                ExercisePreviewRow(exercise: exercise)
+              }
             }
+            .padding(16)
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 22))
+          } else if let exercise = block.exercises.first {
+            ExercisePreviewRow(exercise: exercise)
           }
-          .padding(16)
-          .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 22))
         }
       }
       .padding(20)
@@ -64,15 +67,9 @@ struct SessionPreviewView: View {
 private struct PreviewBlock: Identifiable {
   let id: String
   let supersetID: String?
-  let blockLabel: String
   var exercises: [TrainingExercise]
 
-  var title: String {
-    if exercises.count > 1 {
-      return "Superserie"
-    }
-    return "Bloque \(blockLabel)"
-  }
+  var isSuperset: Bool { supersetID != nil }
 }
 
 private struct ExercisePreviewRow: View {
@@ -81,32 +78,33 @@ private struct ExercisePreviewRow: View {
   private var firstSet: TrainingSet? { exercise.sets.first }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading, spacing: 7) {
       HStack(alignment: .firstTextBaseline, spacing: 10) {
         Text(exercise.baseExerciseName)
           .font(.headline.weight(.semibold))
+          .lineLimit(2)
           .frame(maxWidth: .infinity, alignment: .leading)
 
         EquipmentChip(equipment: exercise.equipment, variantLabel: exercise.variantLabel)
       }
 
-      HStack(spacing: 8) {
-        PreviewMetric(label: "Series", value: "\(exercise.sets.count)")
-        PreviewMetric(label: firstSet?.type == .timed ? "Tiempo" : "Reps", value: targetValue)
-        PreviewMetric(label: "Peso", value: loadValue)
-      }
+      Text(targetSummary)
+        .font(.subheadline.weight(.medium))
+        .foregroundStyle(.secondary)
     }
     .padding(14)
     .background(.background, in: RoundedRectangle(cornerRadius: 18))
   }
 
-  private var targetValue: String {
+  private var targetSummary: String {
     guard let firstSet else { return "-" }
     if firstSet.type == .timed {
       let duration = firstSet.targetDurationSeconds ?? 0
-      return "\(duration / 60):\(String(format: "%02d", duration % 60))"
+      return "\(exercise.sets.count) series · \(duration / 60):\(String(format: "%02d", duration % 60))"
     }
-    return firstSet.targetReps.map(String.init) ?? "-"
+
+    let reps = firstSet.targetReps.map(String.init) ?? "-"
+    return "\(exercise.sets.count) × \(reps) · \(loadValue)"
   }
 
   private var loadValue: String {
@@ -136,25 +134,6 @@ private struct EquipmentChip: View {
       .padding(.horizontal, 10)
       .padding(.vertical, 6)
       .background(.fill.quaternary, in: Capsule())
-  }
-}
-
-private struct PreviewMetric: View {
-  let label: String
-  let value: String
-
-  var body: some View {
-    VStack(spacing: 4) {
-      Text(label)
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(.secondary)
-      Text(value)
-        .font(.subheadline.weight(.bold))
-        .lineLimit(1)
-        .minimumScaleFactor(0.7)
-    }
-    .frame(maxWidth: .infinity, minHeight: 56)
-    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
   }
 }
 

@@ -1215,6 +1215,8 @@ Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas 
 
 Actualización v0.1.42: `TodayView` navega a `SessionPreviewView`. La previsualización permite scroll, agrupa superseries, muestra el nombre base de cada ejercicio y presenta material, series, repeticiones o duración y carga sin depender del nombre histórico del ejercicio.
 
+Actualización v0.1.43: se retiran los bloques normales de la previsualización nativa. Cada ejercicio se resume en una tarjeta plana de nombre, material y objetivo; solo las superseries mantienen un contenedor común visible.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
