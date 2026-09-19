@@ -1174,7 +1174,7 @@ Prioridad 2:
 
 - [x] blindar la pantalla de feedback de superseries contra nombres de más de una línea, con un patrón compacto que no requiera scroll
 - [x] mostrar todos los ejercicios vinculados al bloque de una superserie en las tarjetas de próxima acción, tanto durante el descanso como en la transición de ejercicio
-- [ ] sustituir gradualmente los iconos de la UI por Heroicons antes del prototipo SwiftUI, manteniendo una única familia visual
+- [ ] sustituir iconos por una familia nativa de SF Symbols durante la implementación SwiftUI; no invertir más trabajo de iconografía en la PWA
 - [x] revisar en dispositivo real los temporizadores con la app en segundo plano y documentar la limitación de PWA que solo se resolverá del todo de forma nativa
 
 Prioridad 3:
@@ -1186,6 +1186,30 @@ Decisiones de compatibilidad:
 - los nombres visibles se normalizan mediante `baseExerciseName`; los identificadores, cargas, material planeado y material real de exports no cambian
 - la analítica se mantiene en librerías y exportaciones para Obsidian, pero no se muestra en la PWA hasta que tenga una presentación adecuada en SwiftUI
 - el cambio de orden pendiente debe vivir en el secuenciador y registrarse como orden real de ejecución, nunca simularse como una serie saltada
+
+### Hito 26: Base nativa verificable
+
+Objetivo: iniciar la migración con una capa Swift sin interfaz que decodifique el plan de producción y fije el contrato de datos antes de crear pantallas SwiftUI.
+
+Prioridad 1:
+
+- [x] crear un paquete Swift `GymAppNativeCore` dentro de `ios/`
+- [x] modelar `TrainingPlan`, sesión, ejercicio, serie y material con `Codable` y enums explícitos
+- [ ] cargar y validar el `trainingPlan.json` compartido desde una prueba automatizada
+- [x] documentar la incorporación de este paquete en el futuro proyecto Xcode y el copiado del JSON como recurso del bundle
+
+Prioridad 2:
+
+- [ ] modelar el backup JSON completo de la PWA y validar una importación de ejemplo sin persistir todavía
+- [ ] portar como reglas Swift puras el selector de sesión y el secuenciador de superseries, con tests equivalentes a los del plan JavaScript
+
+Fuera de este hito:
+
+- SwiftUI, SwiftData, navegación y diseño visual
+- instalación en dispositivo o firma de Xcode
+- iconografía: se resolverá con SF Symbols al crear las vistas nativas
+
+Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas contra el JSON de producción. La ejecución de `swift test` queda pendiente de una instalación de Xcode/Command Line Tools coherente; el entorno actual tiene un compilador Swift y SDK con versiones incompatibles.
 
 ## Riesgos y decisiones pendientes
 
@@ -1234,10 +1258,10 @@ Decisiones de compatibilidad:
 
 ## Proximo hito recomendado
 
-Completar la sustitución gradual de los iconos de la PWA por Heroicons, conservando los tamaños táctiles y las etiquetas de accesibilidad actuales.
+Crear `GymAppNativeCore` como paquete Swift verificable contra el `trainingPlan.json` real. Una vez fijada esa capa, el siguiente paso será abrir el proyecto SwiftUI/Xcode y construir `TodayView` sobre el mismo contrato.
 
 Checklist minima de la siguiente iteracion:
 
-- [ ] Inventariar los iconos de navegación y acciones que siguen perteneciendo a otras familias.
-- [ ] Sustituirlos por sus equivalentes de Heroicons sin alterar las acciones ni la semántica de color.
-- [ ] Verificar visualmente los flujos de Hoy, serie, feedback, descanso y Ajustes en ambos temas.
+- [ ] Añadir modelos `Codable` para el plan y sus enums de dominio.
+- [ ] Decodificar el plan real en tests y verificar sesiones, superseries, series temporizadas y material.
+- [ ] Documentar cómo se comparte el JSON con un target iOS sin duplicar su fuente de verdad.

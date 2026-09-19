@@ -19,6 +19,17 @@ Crear una primera app iOS nativa que replique el flujo esencial validado en la P
 
 La primera version nativa debe buscar paridad funcional, no acumular integraciones iOS avanzadas desde el inicio.
 
+## Estado de implementación
+
+`ios/GymAppNativeCore` es el primer artefacto Swift del repositorio. Es un paquete
+sin UI que define los modelos `Codable` del plan y un decodificador probado contra
+el JSON de producción compartido. Al crear el proyecto Xcode se añadirá como
+dependencia local, antes de incorporar SwiftUI o SwiftData.
+
+La validación de `swift test` requiere que Xcode y Command Line Tools usen una
+toolchain compatible. No se debe considerar la base validada en dispositivo hasta
+ejecutar esa prueba y compilarla desde un proyecto iOS.
+
 ## Principios
 
 - El contrato de datos manda sobre la UI: `trainingPlan.json`, eventos de serie, metadata y export JSON deben ser compatibles con Swift `Codable`.
@@ -247,6 +258,7 @@ GymApp/
   app/                    PWA actual
   data/trainingPlan.json  Plan fuente de verdad
   docs/
+  ios/GymAppNativeCore/  Paquete Swift de modelos y reglas puras
   ios/GymAppNative/       Futuro proyecto SwiftUI
   lib/                    Reglas TypeScript/JavaScript portables
   scripts/                Generacion y validacion del plan

@@ -11,6 +11,9 @@
 # testing
 /coverage
 
+# Swift Package Manager
+**/.build/
+
 # next.js
 /.next/
 /.vinext/
