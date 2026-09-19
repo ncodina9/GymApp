@@ -80,7 +80,12 @@ import {
   type TrainingStatsSummary,
   type VolumeSummary,
 } from '@/lib/trainingStats';
-import { buildExecutionSteps, getSupersetMembers } from '@/lib/workoutSequence';
+import {
+  buildExecutionSteps,
+  getPendingExecutionOptions,
+  getSupersetMembers,
+  type PendingExecutionOption,
+} from '@/lib/workoutSequence';
 import { getWorkoutProgressSummary } from '@/lib/workoutProgress';
 import {
   convertWeightForEquipment,
@@ -979,6 +984,10 @@ type NextSetPreview = {
   loadLabel: string;
 };
 
+type PendingExerciseOption = PendingExecutionOption & {
+  equipmentLabels: string[];
+};
+
 const getNextSetPreview = (
   session: TrainingSession,
   step: ReturnType<typeof buildExecutionSteps>[number] | undefined,
@@ -1114,6 +1123,39 @@ export default function Home() {
     hasStarted,
     completedSetIndexes,
   } = workoutProgress;
+  const pendingExerciseOptions = useMemo<PendingExerciseOption[]>(
+    () =>
+      getPendingExecutionOptions({
+        session: selectedSession,
+        steps: executionSteps,
+        records: draft.records,
+        currentStepIndex: workoutProgress.currentStepIndex,
+      }).map((option) => ({
+        ...option,
+        equipmentLabels: option.exerciseIndexes
+          .map((exerciseIndex) => {
+            const exercise = selectedSession.exercises[exerciseIndex];
+            return formatEquipmentLabel(
+              draft.equipmentByExercise[exercise.exerciseId] ??
+                getExerciseEquipment(exercise),
+            );
+          })
+          .filter((label): label is string => Boolean(label)),
+      })),
+    [
+      draft.equipmentByExercise,
+      draft.records,
+      executionSteps,
+      selectedSession,
+      workoutProgress.currentStepIndex,
+    ],
+  );
+  const canChoosePendingExercise =
+    draft.phase === 'rest' &&
+    currentStep !== undefined &&
+    nextStep !== undefined &&
+    nextStep.setIndex === 0 &&
+    (currentStep.completesExercise || currentStep.completesSuperset);
   const nextLinkedExercise =
     nextLinkedStep !== undefined
       ? selectedSession.exercises[nextLinkedStep.exerciseIndex]
@@ -1632,6 +1674,30 @@ export default function Home() {
     nextStep,
     selectedSession,
   ]);
+
+  const selectPendingExercise = useCallback(
+    (option: PendingExecutionOption) => {
+      const nextExercise = selectedSession.exercises[option.step.exerciseIndex];
+      const nextSet = nextExercise.sets[option.step.setIndex];
+
+      patchDraft({
+        ...getPreparedSetTargets({
+          exercise: nextExercise,
+          set: nextSet,
+          selectedEquipment: draft.equipmentByExercise[nextExercise.exerciseId],
+        }),
+        exerciseIndex: option.step.exerciseIndex,
+        setIndex: option.step.setIndex,
+        phase: 'set',
+        restRemaining: 0,
+        restEndsAt: undefined,
+        transitionExerciseIds: [],
+        transitionNextPhase: 'set',
+        suppressTransitionOnce: false,
+      });
+    },
+    [draft.equipmentByExercise, patchDraft, selectedSession],
+  );
 
   const logCurrentSet = useCallback(
     async (status: SetLogStatus) => {
@@ -2301,6 +2367,9 @@ export default function Home() {
               draft.equipmentByExercise,
             )}
             saveStatus={saveStatus}
+            pendingExerciseOptions={
+              canChoosePendingExercise ? pendingExerciseOptions : []
+            }
             onAdjustRest={(updater) => {
               setDraft((current) => ({
                 ...current,
@@ -2323,6 +2392,7 @@ export default function Home() {
               }));
             }}
             onContinue={moveForward}
+            onSelectPendingExercise={selectPendingExercise}
           />
         ) : null}
 
@@ -4999,15 +5069,19 @@ function RestScreen({
   restTotal,
   nextSetPreview,
   saveStatus,
+  pendingExerciseOptions,
   onAdjustRest,
   onContinue,
+  onSelectPendingExercise,
 }: {
   restRemaining: number;
   restTotal: number;
   nextSetPreview?: NextSetPreview;
   saveStatus: SaveStatus;
+  pendingExerciseOptions: PendingExerciseOption[];
   onAdjustRest: (value: number | ((current: number) => number)) => void;
   onContinue: () => void;
+  onSelectPendingExercise: (option: PendingExecutionOption) => void;
 }) {
   const isFinished = restRemaining === 0;
   const progress = Math.round(
@@ -5015,12 +5089,12 @@ function RestScreen({
   );
 
   return (
-    <section className="flex flex-1 flex-col justify-between gap-3 py-2">
+    <section className="flex min-h-0 flex-1 flex-col gap-1.5 py-1">
       <button
         className={`relative h-32 shrink-0 overflow-hidden rounded-[1.9rem] border text-center shadow-sm transition-colors ${
           isFinished
             ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
-            : 'border-transparent bg-secondary text-secondary-foreground'
+            : 'border-transparent bg-primary/70 text-primary-foreground'
         }`}
         type="button"
         disabled={!isFinished}
@@ -5038,28 +5112,16 @@ function RestScreen({
           style={{ width: `${progress}%` }}
         />
         <span className="relative flex h-full flex-col items-center justify-center">
-          <span
-            className={`text-lg font-bold ${
-              isFinished
-                ? 'text-[var(--complete-foreground)]'
-                : 'text-muted-foreground'
-            }`}
-          >
+          <span className="text-lg font-bold text-white drop-shadow-sm">
             {isFinished ? 'Descanso terminado' : 'Descanso'}
           </span>
-          <span
-            className={`mt-1 text-[4.5rem] font-black leading-none tabular-nums ${
-              isFinished
-                ? 'text-[var(--complete-foreground)]'
-                : 'text-secondary-foreground'
-            }`}
-          >
+          <span className="mt-1 text-[4.5rem] font-black leading-none tabular-nums text-white drop-shadow-sm">
             {formatClock(restRemaining)}
           </span>
         </span>
       </button>
 
-      <div className="grid shrink-0 grid-cols-2 gap-3">
+      <div className="grid shrink-0 grid-cols-2 gap-2">
         <Button
           className={`h-16 rounded-[1.9rem] text-lg font-black ${actionStyles.rest}`}
           variant="secondary"
@@ -5077,7 +5139,7 @@ function RestScreen({
       </div>
 
       {nextSetPreview ? (
-        <div className="rounded-lg border bg-card p-3">
+        <div className="mt-1 shrink-0 rounded-lg border bg-card p-3">
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-black leading-none text-muted-foreground">
@@ -5105,7 +5167,48 @@ function RestScreen({
         </div>
       ) : null}
 
-      <div className="shrink-0">
+      {pendingExerciseOptions.length > 1 ? (
+        <div className="min-h-0 flex-1 overflow-y-auto pt-1">
+          <p className="mb-1.5 text-xs font-black uppercase text-muted-foreground">
+            Cambiar siguiente bloque
+          </p>
+          <div className="grid gap-1.5">
+            {pendingExerciseOptions.map((option) => (
+              <button
+                key={option.id}
+                className="flex min-h-11 items-center justify-between gap-3 rounded-[1.35rem] border bg-secondary px-3 text-left text-secondary-foreground transition active:scale-[0.98] disabled:opacity-45"
+                type="button"
+                disabled={!isFinished}
+                onClick={() => onSelectPendingExercise(option)}
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-black leading-tight">
+                    {option.label}
+                  </span>
+                  <span className="mt-0.5 flex flex-wrap gap-1">
+                    {option.isSuperset ? (
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-primary">
+                        Superserie
+                      </span>
+                    ) : null}
+                    {option.equipmentLabels.map((label) => (
+                      <span
+                        key={label}
+                        className="rounded-full bg-card px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-muted-foreground"
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-auto shrink-0 pt-1">
         <Button
           className="h-16 w-full rounded-[1.9rem] text-lg font-black"
           onClick={onContinue}

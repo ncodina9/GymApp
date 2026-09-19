@@ -1165,7 +1165,7 @@ Prioridad 1:
 - [x] rediseñar el descanso con barra horizontal, controles `-15s`/`+15s` debajo y acción táctil al terminar
 - [x] mostrar el material elegido en la tarjeta de próxima serie durante el descanso
 - [x] resaltar el material seleccionado en la pantalla de serie con el color principal del tema
-- [ ] permitir, tras un descanso entre ejercicios, elegir otro ejercicio pendiente sin registrar como saltadas las series no realizadas
+- [x] permitir, tras un descanso entre ejercicios, elegir otro ejercicio pendiente sin registrar como saltadas las series no realizadas
 - [ ] propagar automáticamente cambios manuales de reps, carga o duración a las series homogéneas pendientes; detener la propagación cuando el planning cambie el objetivo
 
 Prioridad 2:

@@ -1,4 +1,5 @@
 import {
+  getNextPendingStep,
   getStepIndex,
   getSupersetMembers,
   getSupersetRoundCount,
@@ -58,8 +59,11 @@ export const getWorkoutProgressSummary = ({
   );
   const currentStep =
     currentStepIndex >= 0 ? steps[currentStepIndex] : undefined;
-  const nextStep =
-    currentStepIndex >= 0 ? steps[currentStepIndex + 1] : undefined;
+  const nextStep = getNextPendingStep({
+    steps,
+    records,
+    currentStepIndex,
+  });
   const supersetMembers =
     currentStep?.supersetId !== undefined
       ? getSupersetMembers(session, currentStep.supersetId)
