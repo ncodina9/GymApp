@@ -45,6 +45,7 @@ material explícito del plan.
 - Ninguna pantalla de flujo muestra una barra superior de navegacion. La accion para volver aparece siempre abajo a la izquierda; la barra inferior puede flotar sobre contenido con scroll cuando sea necesario.
 - Los nuevos iconos nativos se incorporan desde Heroicons como assets locales. Los SF Symbols provisionales se retiraran antes de cerrar la paridad visual nativa.
 - Las conversiones de carga viven en reglas Swift puras compartibles y comprobables: la referencia de mancuernas es la carga total equivalente, cada variante se redondea a su inventario real y las variantes que no alcancen el objetivo quedan deshabilitadas.
+- El estado de una sesion conserva el material elegido por ejercicio y los ajustes manuales como carga equivalente. Un ajuste se propaga solo por las series consecutivas cuyo objetivo original sea identico; una serie que el plan ya diferenciaba conserva su objetivo propio.
 - La PWA no debe incorporar complejidad web-only que despues haya que descartar.
 - El CSV es formato de analisis; el JSON completo es formato de migracion.
 

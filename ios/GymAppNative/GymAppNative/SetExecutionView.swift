@@ -5,17 +5,14 @@ struct SetExecutionView: View {
   let session: TrainingSession
   let exerciseIndex: Int
   let setIndex: Int
-  @State private var selectedEquipment: Equipment
+  @State private var workoutDraft: WorkoutSessionDraft
   @Environment(\.dismiss) private var dismiss
 
   init(session: TrainingSession, exerciseIndex: Int = 0, setIndex: Int = 0) {
     self.session = session
     self.exerciseIndex = exerciseIndex
     self.setIndex = setIndex
-    let equipment = session.exercises.indices.contains(exerciseIndex)
-      ? session.exercises[exerciseIndex].equipment
-      : .barbell
-    _selectedEquipment = State(initialValue: equipment)
+    _workoutDraft = State(initialValue: WorkoutSessionDraft(session: session))
   }
 
   private var exercise: TrainingExercise? {
@@ -27,18 +24,16 @@ struct SetExecutionView: View {
     return exercise.sets[setIndex]
   }
 
-  private var referenceWeightKg: Double {
-    guard let exercise, let trainingSet else { return 0 }
-    return EquipmentLoadRules.referenceWeightKg(
-      trainingSet.targetWeightKg,
-      equipment: exercise.equipment
-    )
+  private var activeEquipment: Equipment {
+    guard let exercise else { return .barbell }
+    return workoutDraft.equipment(for: exercise.exerciseID) ?? exercise.equipment
   }
 
-  private var activeWeightKg: Double {
-    EquipmentLoadRules.weightForReferenceWeight(
-      referenceWeightKg,
-      equipment: selectedEquipment
+  private var activeTargets: WorkoutSetTargets? {
+    guard let exercise, let trainingSet else { return nil }
+    return workoutDraft.targets(
+      for: exercise.exerciseID,
+      setIndex: trainingSet.setIndex
     )
   }
 
@@ -49,7 +44,15 @@ struct SetExecutionView: View {
           SetHeader(exercise: exercise, setIndex: setIndex)
 
           MaterialSelector(
-            selection: $selectedEquipment,
+            selection: Binding(
+              get: { activeEquipment },
+              set: { selectedEquipment in
+                _ = workoutDraft.selectEquipment(
+                  selectedEquipment,
+                  for: exercise.exerciseID
+                )
+              }
+            ),
             options: equipmentOptions(for: exercise),
             unavailableOptions: unavailableEquipment(for: exercise)
           )
@@ -58,11 +61,12 @@ struct SetExecutionView: View {
             TimedSetTarget(seconds: trainingSet.targetDurationSeconds ?? 0)
           } else {
             VStack(spacing: 10) {
-              SetTargetCard(label: "Reps", value: trainingSet.targetReps.map(String.init) ?? "-")
+              SetTargetCard(label: "Reps", value: activeTargets?.reps.map(String.init) ?? "-")
               SetTargetCard(
                 label: "Peso",
-                value: activeWeightKg.formatted(.number.precision(.fractionLength(0...1))),
-                unit: weightUnit(for: selectedEquipment)
+                value: (activeTargets?.weightKg ?? trainingSet.targetWeightKg)
+                  .formatted(.number.precision(.fractionLength(0...1))),
+                unit: weightUnit(for: activeEquipment)
               )
             }
             .frame(maxHeight: .infinity)
@@ -141,10 +145,7 @@ struct SetExecutionView: View {
   private func unavailableEquipment(for exercise: TrainingExercise) -> Set<Equipment> {
     Set(
       equipmentOptions(for: exercise).filter {
-        !EquipmentLoadRules.canUse(
-          equipment: $0,
-          referenceWeightKg: referenceWeightKg
-        )
+        !workoutDraft.canSelectEquipment($0, for: exercise.exerciseID)
       }
     )
   }

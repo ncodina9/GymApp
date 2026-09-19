@@ -46,6 +46,34 @@ struct TrainingPlanDecodingTests {
     #expect(!EquipmentLoadRules.canUse(equipment: .dumbbell, referenceWeightKg: 65))
   }
 
+  @Test("Conserva material y propaga objetivos homogéneos en una sesión")
+  func keepsSessionMaterialAndTargets() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let exercise = try #require(
+      session.exercises.first { $0.exerciseID == "press-banca-barra" }
+    )
+    var draft = WorkoutSessionDraft(session: session)
+
+    let selectedMultipower = draft.selectEquipment(.multipower, for: exercise.exerciseID)
+    #expect(selectedMultipower)
+    #expect(draft.equipment(for: exercise.exerciseID) == .multipower)
+    #expect(draft.targets(for: exercise.exerciseID, setIndex: 1)?.weightKg == 65.5)
+    let selectedDumbbells = draft.selectEquipment(.dumbbell, for: exercise.exerciseID)
+    #expect(!selectedDumbbells)
+
+    draft.updateWorkingTargets(
+      for: exercise.exerciseID,
+      setIndex: 1,
+      reps: 6,
+      weightKg: 67.5
+    )
+
+    #expect(draft.targets(for: exercise.exerciseID, setIndex: 1)?.reps == 6)
+    #expect(draft.targets(for: exercise.exerciseID, setIndex: 2)?.reps == 6)
+    #expect(draft.targets(for: exercise.exerciseID, setIndex: 2)?.weightKg == 68)
+  }
+
   private var sharedPlanURL: URL {
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0 ..< 5 {
