@@ -291,11 +291,11 @@ private struct FeedbackHeader: View {
           .font(.title3.weight(.bold))
           .lineLimit(2)
         Text(equipment.executionLabel)
-          .font(.subheadline.weight(.bold))
-          .foregroundStyle(Color.accentColor)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
           .padding(.horizontal, 10)
-          .padding(.vertical, 5)
-          .background(Color.accentColor.opacity(0.12), in: Capsule())
+          .padding(.vertical, 6)
+          .background(.fill.quaternary, in: Capsule())
       }
       Spacer(minLength: 0)
       VStack(alignment: .trailing, spacing: 5) {
@@ -565,12 +565,8 @@ private struct SetHeader: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
-      HStack(alignment: .center, spacing: 12) {
-        Text("Serie \(setIndex + 1) de \(exercise.sets.count)")
-          .font(.subheadline.weight(.semibold))
-          .foregroundStyle(.secondary)
-          .frame(maxWidth: .infinity, alignment: .leading)
-
+      HStack {
+        Spacer()
         HStack(spacing: 6) {
           ForEach(exercise.sets.indices, id: \.self) { index in
             Circle()

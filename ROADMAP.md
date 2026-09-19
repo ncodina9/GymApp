@@ -1245,6 +1245,8 @@ Actualización v0.1.56: se corrige la pantalla nativa de feedback para trasladar
 
 Actualización v0.1.57: el encabezado del feedback nativo reutiliza los círculos de progreso de la pantalla de serie en lugar del chip textual de serie. El material pasa bajo el nombre del ejercicio como chip de lectura más grande, manteniendo la superserie como información secundaria.
 
+Actualización v0.1.58: la pantalla de serie elimina el texto redundante `Serie x de y` y conserva solo sus círculos de progreso para ganar altura útil. El material de feedback adopta el mismo chip neutro de la previsualización, evitando usar el color de acción para una etiqueta informativa.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
