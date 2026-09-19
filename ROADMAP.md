@@ -1213,6 +1213,8 @@ Fuera de este hito:
 
 Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas contra el JSON de producción. `swift test` pasa con Xcode y valida las 51 sesiones, una superserie, ejercicios temporizados y el material planificado. `ios/GymAppNative` es un proyecto SwiftUI iPhone-only que enlaza ese paquete, incluye el JSON mediante un enlace a la fuente de verdad y ejecuta `TodayView` correctamente en un simulador de iPhone.
 
+Actualización v0.1.42: `TodayView` navega a `SessionPreviewView`. La previsualización permite scroll, agrupa superseries, muestra el nombre base de cada ejercicio y presenta material, series, repeticiones o duración y carga sin depender del nombre histórico del ejercicio.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
@@ -1259,10 +1261,10 @@ Estado: `ios/GymAppNativeCore` contiene los modelos, el decodificador y pruebas 
 
 ## Próximo hito recomendado
 
-Construir `SessionPreviewView` en SwiftUI desde `TodayView`: listado con scroll permitido, ejercicio base, chip de material, series, repeticiones y carga. Es el siguiente paso con mejor relación entre esfuerzo y validación, porque confirma la navegación y el contrato completo del plan antes de introducir persistencia, feedback o temporizadores.
+Crear el recorrido nativo `preview → primera serie`: un botón de inicio desde la previsualización y una pantalla de serie estática con números grandes, ejercicio, material, objetivo y progreso. La sesión puede vivir aún solo en memoria; el objetivo es validar la jerarquía y los controles táctiles antes de decidir SwiftData y registro de eventos.
 
 Checklist mínima de la siguiente iteración:
 
-- [ ] Añadir navegación desde `TodayView` a la sesión seleccionada.
-- [ ] Mostrar los bloques de la sesión, incluidas superseries, sin inferir material desde el nombre.
-- [ ] Reutilizar la terminología y jerarquía visual ya validada en la PWA, adaptada a controles SwiftUI nativos.
+- [ ] Añadir la acción explícita de comenzar desde `SessionPreviewView`.
+- [ ] Resolver la primera serie, incluido el primer ejercicio de una superserie.
+- [ ] Diseñar la pantalla táctil de serie sin teclado ni persistencia definitiva.

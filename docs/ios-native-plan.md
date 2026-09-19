@@ -30,7 +30,9 @@ superserie, ejercicios temporizados y material.
 Declara `GymAppNativeCore` como dependencia local y añade un enlace simbólico a
 `data/trainingPlan.json` como recurso del bundle, por lo que el archivo original
 sigue siendo la única fuente de verdad. Su `TodayView` carga el plan real y se ha
-verificado ejecutándolo en el simulador de iPhone.
+verificado ejecutándolo en el simulador de iPhone. `TodayView` navega ya a
+`SessionPreviewView`, que agrupa superseries y muestra los objetivos junto con el
+material explícito del plan.
 
 ## Principios
 

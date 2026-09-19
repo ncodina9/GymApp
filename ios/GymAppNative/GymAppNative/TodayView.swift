@@ -34,6 +34,17 @@ struct TodayView: View {
             }
 
             Spacer()
+
+            NavigationLink {
+              SessionPreviewView(session: session)
+            } label: {
+              Label("Ver entrenamiento", systemImage: "chevron.right")
+                .font(.headline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 18)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.primary)
           }
           .padding(24)
           .navigationTitle("Hoy")
