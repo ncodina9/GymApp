@@ -565,6 +565,11 @@ private struct SetHeader: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
+      Text(exercise.baseExerciseName)
+        .font(.system(size: 27, weight: .bold))
+        .lineLimit(2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
       HStack {
         Spacer()
         HStack(spacing: 6) {
@@ -578,11 +583,6 @@ private struct SetHeader: View {
           }
         }
       }
-
-      Text(exercise.baseExerciseName)
-        .font(.system(size: 27, weight: .bold))
-        .lineLimit(2)
-
     }
   }
 }
