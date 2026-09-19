@@ -1171,6 +1171,7 @@ Prioridad 1:
 Prioridad 2:
 
 - [x] blindar la pantalla de feedback de superseries contra nombres de más de una línea, con un patrón compacto que no requiera scroll
+- [x] mostrar todos los ejercicios vinculados al bloque de una superserie en la tarjeta de próxima acción durante el descanso
 - [ ] sustituir gradualmente los iconos de la UI por Heroicons antes del prototipo SwiftUI, manteniendo una única familia visual
 - [ ] revisar en dispositivo real los temporizadores con la app en segundo plano y documentar la limitación de PWA que solo se resolverá del todo de forma nativa
 

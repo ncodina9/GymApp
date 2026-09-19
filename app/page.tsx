@@ -1034,16 +1034,15 @@ const getPreparedExerciseSetTargets = ({
     targetOverrides[getSetTargetKey(exercise.exerciseId, setIndex)],
   );
 
-const getNextSetPreview = (
+const getSetPreview = (
   session: TrainingSession,
-  step: ReturnType<typeof buildExecutionSteps>[number] | undefined,
+  step: Pick<
+    ReturnType<typeof buildExecutionSteps>[number],
+    'exerciseIndex' | 'setIndex'
+  >,
   equipmentByExercise: Record<string, ExerciseEquipment> = {},
   targetOverrides: Record<string, SetTargetOverride> = {},
 ): NextSetPreview | undefined => {
-  if (!step) {
-    return undefined;
-  }
-
   const exercise = session.exercises[step.exerciseIndex];
   const set = exercise?.sets[step.setIndex];
 
@@ -1083,6 +1082,37 @@ const getNextSetPreview = (
     load: formatPreviewLoad(preparedTargets.editedWeight, loadType),
     loadLabel: getPreviewLoadLabel(loadType, equipment),
   };
+};
+
+const getNextSetPreviews = (
+  session: TrainingSession,
+  step: ReturnType<typeof buildExecutionSteps>[number] | undefined,
+  equipmentByExercise: Record<string, ExerciseEquipment> = {},
+  targetOverrides: Record<string, SetTargetOverride> = {},
+) => {
+  if (!step) {
+    return [];
+  }
+
+  const steps = step.supersetId
+    ? getSupersetMembers(session, step.supersetId)
+        .filter(({ exercise }) => exercise.sets[step.setIndex] !== undefined)
+        .map(({ exerciseIndex }) => ({
+          exerciseIndex,
+          setIndex: step.setIndex,
+        }))
+    : [step];
+
+  return steps.flatMap((nextStep) => {
+    const preview = getSetPreview(
+      session,
+      nextStep,
+      equipmentByExercise,
+      targetOverrides,
+    );
+
+    return preview ? [preview] : [];
+  });
 };
 
 export default function Home() {
@@ -2471,7 +2501,7 @@ export default function Home() {
           <RestScreen
             restRemaining={draft.restRemaining}
             restTotal={currentSet?.restSeconds ?? draft.restRemaining}
-            nextSetPreview={getNextSetPreview(
+            nextSetPreviews={getNextSetPreviews(
               selectedSession,
               nextStep,
               draft.equipmentByExercise,
@@ -5178,7 +5208,7 @@ function SaveStatusPill({
 function RestScreen({
   restRemaining,
   restTotal,
-  nextSetPreview,
+  nextSetPreviews,
   saveStatus,
   pendingExerciseOptions,
   onAdjustRest,
@@ -5187,7 +5217,7 @@ function RestScreen({
 }: {
   restRemaining: number;
   restTotal: number;
-  nextSetPreview?: NextSetPreview;
+  nextSetPreviews: NextSetPreview[];
   saveStatus: SaveStatus;
   pendingExerciseOptions: PendingExerciseOption[];
   onAdjustRest: (value: number | ((current: number) => number)) => void;
@@ -5249,31 +5279,49 @@ function RestScreen({
         </Button>
       </div>
 
-      {nextSetPreview ? (
-        <div className="mt-1 shrink-0 rounded-lg border bg-card p-3">
+      {nextSetPreviews.length > 0 ? (
+        <div className="mt-1 shrink-0">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-black leading-none text-muted-foreground">
-                {nextSetPreview.exerciseName}
-              </p>
-              {nextSetPreview.equipmentLabel ? (
-                <span className="mt-1 inline-flex rounded-full bg-secondary px-2 py-1 text-[0.65rem] font-black uppercase leading-none text-muted-foreground">
-                  {nextSetPreview.equipmentLabel}
-                </span>
-              ) : null}
-            </div>
+            <p className="text-sm font-black leading-none text-muted-foreground">
+              {nextSetPreviews.length > 1
+                ? 'Próxima superserie'
+                : 'Próxima serie'}
+            </p>
             <SaveStatusPill status={saveStatus} />
           </div>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            <PreviewMetric label="serie" value={nextSetPreview.series} />
-            <PreviewMetric
-              label={nextSetPreview.workLabel}
-              value={nextSetPreview.work}
-            />
-            <PreviewMetric
-              label={nextSetPreview.loadLabel}
-              value={nextSetPreview.load}
-            />
+          <div
+            className={`grid gap-2 ${
+              nextSetPreviews.length > 1 ? 'max-h-56 overflow-y-auto pr-1' : ''
+            }`}
+          >
+            {nextSetPreviews.map((nextSetPreview) => (
+              <div
+                key={`${nextSetPreview.exerciseName}:${nextSetPreview.series}`}
+                className="rounded-[1.2rem] border bg-secondary p-2.5"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="min-w-0 truncate text-sm font-black leading-none text-secondary-foreground">
+                    {nextSetPreview.exerciseName}
+                  </p>
+                  {nextSetPreview.equipmentLabel ? (
+                    <span className="shrink-0 rounded-full bg-card px-2 py-1 text-[0.6rem] font-black uppercase leading-none text-muted-foreground">
+                      {nextSetPreview.equipmentLabel}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  <PreviewMetric label="serie" value={nextSetPreview.series} />
+                  <PreviewMetric
+                    label={nextSetPreview.workLabel}
+                    value={nextSetPreview.work}
+                  />
+                  <PreviewMetric
+                    label={nextSetPreview.loadLabel}
+                    value={nextSetPreview.load}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ) : null}
