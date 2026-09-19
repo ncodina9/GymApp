@@ -5191,9 +5191,9 @@ function RestScreen({
                         Superserie
                       </span>
                     ) : null}
-                    {option.equipmentLabels.map((label) => (
+                    {option.equipmentLabels.map((label, index) => (
                       <span
-                        key={label}
+                        key={`${label}-${index}`}
                         className="rounded-full bg-card px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-muted-foreground"
                       >
                         {label}
