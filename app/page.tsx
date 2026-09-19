@@ -2746,7 +2746,7 @@ function TodayScreen({
 }) {
   return (
     <section className="flex flex-1 flex-col gap-3">
-      <div className="flex h-[280px] flex-col rounded-lg border bg-card p-4 shadow-sm">
+      <div className="flex h-[344px] flex-col rounded-lg border bg-card p-4 shadow-sm">
         <p className="text-sm font-semibold leading-none text-muted-foreground">
           Hoy toca
         </p>
@@ -2756,8 +2756,9 @@ function TodayScreen({
         <p className="mt-2 h-12 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.focus}
         </p>
-        <div className="mt-auto grid grid-cols-3 gap-2 text-center">
+        <div className="mt-auto grid gap-2 text-center">
           <Metric label="Fecha" value={formatDate(selectedSession.date)} />
+          <div className="grid grid-cols-2 gap-2">
           <Metric
             label="Estimado"
             value={`${durationEstimate.totalMinutes}m`}
@@ -2766,6 +2767,7 @@ function TodayScreen({
             label="Bloques"
             value={`${selectedSession.exercises.length}`}
           />
+          </div>
         </div>
       </div>
 

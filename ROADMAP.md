@@ -1223,6 +1223,8 @@ Actualización v0.1.45: `TodayView` adopta la composición de la PWA: semana y f
 
 Actualización v0.1.46: cada tarjeta de la previsualización recupera su borde separador. `SessionPreviewView` permite empezar el entrenamiento y `SetExecutionView` resuelve la primera serie en memoria con progreso, ejercicio, material, objetivos grandes, notas, descanso y navegación inferior. Registrar, feedback y temporizador quedan para el siguiente tramo del flujo.
 
+Actualización v0.1.47: fecha de `Hoy toca` pasa a ancho completo y estimado/bloques se muestran debajo en dos columnas, tanto en React como en SwiftUI. La app nativa requiere iOS 26 para adoptar Liquid Glass en selectores y botones. `SetExecutionView` incorpora selector de material basado en las variantes existentes de la PWA y destaca los objetivos de reps y peso como controles editables. La equivalencia y el redondeo de cargas entre materiales se portarán junto con las reglas de carga, antes de habilitar su persistencia.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

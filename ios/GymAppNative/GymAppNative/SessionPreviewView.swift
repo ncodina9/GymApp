@@ -68,8 +68,10 @@ struct SessionPreviewView: View {
         Label("Empezar entrenamiento", systemImage: "chevron.right")
           .font(.headline.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 56)
+          .foregroundStyle(.white)
+          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
       }
-      .buttonStyle(.borderedProminent)
+      .buttonStyle(.plain)
       .padding(.horizontal, 20)
       .padding(.top, 8)
       .background(.background)

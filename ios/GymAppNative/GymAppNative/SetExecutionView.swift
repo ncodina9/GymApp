@@ -5,11 +5,16 @@ struct SetExecutionView: View {
   let session: TrainingSession
   let exerciseIndex: Int
   let setIndex: Int
+  @State private var selectedEquipment: Equipment
 
   init(session: TrainingSession, exerciseIndex: Int = 0, setIndex: Int = 0) {
     self.session = session
     self.exerciseIndex = exerciseIndex
     self.setIndex = setIndex
+    let equipment = session.exercises.indices.contains(exerciseIndex)
+      ? session.exercises[exerciseIndex].equipment
+      : .barbell
+    _selectedEquipment = State(initialValue: equipment)
   }
 
   private var exercise: TrainingExercise? {
@@ -27,6 +32,11 @@ struct SetExecutionView: View {
         VStack(alignment: .leading, spacing: 12) {
           SetHeader(exercise: exercise, setIndex: setIndex)
 
+          MaterialSelector(
+            selection: $selectedEquipment,
+            options: equipmentOptions(for: exercise)
+          )
+
           if trainingSet.type == .timed {
             TimedSetTarget(seconds: trainingSet.targetDurationSeconds ?? 0)
           } else {
@@ -35,7 +45,7 @@ struct SetExecutionView: View {
               SetTargetCard(
                 label: "Peso",
                 value: trainingSet.targetWeightKg.formatted(.number.precision(.fractionLength(0...1))),
-                unit: weightUnit(for: exercise.equipment)
+                unit: weightUnit(for: selectedEquipment)
               )
             }
             .frame(maxHeight: .infinity)
@@ -61,13 +71,17 @@ struct SetExecutionView: View {
               Image(systemName: "chevron.left")
                 .font(.headline.weight(.bold))
                 .frame(width: 64, height: 64)
+                .foregroundStyle(.primary)
+                .glassEffect(.regular.interactive(), in: Circle())
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.plain)
 
             Button("Continuar") {}
               .font(.headline.weight(.bold))
               .frame(maxWidth: .infinity, minHeight: 64)
-              .buttonStyle(.borderedProminent)
+              .foregroundStyle(.white)
+              .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+              .buttonStyle(.plain)
               .disabled(true)
           }
         }
@@ -92,6 +106,21 @@ struct SetExecutionView: View {
     default:
       return "kg"
     }
+  }
+
+  private func equipmentOptions(for exercise: TrainingExercise) -> [Equipment] {
+    let variants: [Equipment] = switch exercise.exerciseID {
+    case "press-banca-barra", "press-banca-inclinado", "press-militar-sentado", "press-militar-sentado-velocidad":
+      [.barbell, .multipower, .dumbbell]
+    case "remo-inclinado-barra", "remo-barra-multipower", "press-cerrado-multipower":
+      [.barbell, .multipower]
+    default:
+      [exercise.equipment]
+    }
+
+    return variants.contains(exercise.equipment)
+      ? variants
+      : [exercise.equipment] + variants
   }
 }
 
@@ -123,13 +152,34 @@ private struct SetHeader: View {
         .font(.system(size: 27, weight: .bold))
         .lineLimit(2)
 
-      Text(exercise.variantLabel ?? exercise.equipment.executionLabel)
-        .font(.caption.weight(.bold))
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.fill.quaternary, in: Capsule())
     }
+  }
+}
+
+private struct MaterialSelector: View {
+  @Binding var selection: Equipment
+  let options: [Equipment]
+
+  var body: some View {
+    Menu {
+      ForEach(options, id: \.self) { equipment in
+        Button(equipment.executionLabel) {
+          selection = equipment
+        }
+      }
+    } label: {
+      HStack(spacing: 8) {
+        Text(selection.executionLabel)
+          .font(.subheadline.weight(.bold))
+        Image(systemName: "chevron.up.chevron.down")
+          .font(.caption.weight(.bold))
+      }
+      .foregroundStyle(.primary)
+      .padding(.horizontal, 14)
+      .padding(.vertical, 10)
+      .glassEffect(.regular.interactive(), in: Capsule())
+    }
+    .disabled(options.count == 1)
   }
 }
 
@@ -158,7 +208,7 @@ private struct SetTargetCard: View {
     .background(.background, in: RoundedRectangle(cornerRadius: 22))
     .overlay {
       RoundedRectangle(cornerRadius: 22)
-        .stroke(.separator, lineWidth: 1.5)
+        .stroke(Color.accentColor, lineWidth: 2)
     }
   }
 }

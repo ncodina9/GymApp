@@ -51,8 +51,10 @@ struct TodayView: View {
               Label("Siguiente", systemImage: "chevron.right")
                 .font(.headline.weight(.bold))
                 .frame(maxWidth: .infinity, minHeight: 56)
+                .foregroundStyle(.white)
+                .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.plain)
           }
           .padding(.horizontal, 16)
           .padding(.top, 12)
@@ -99,15 +101,16 @@ private struct TodaySessionCard: View {
         .frame(height: 48, alignment: .topLeading)
         .padding(.top, 8)
 
+      TodayMetric(label: "Fecha", value: Self.dateLabel(session.date))
+
       HStack(spacing: 8) {
-        TodayMetric(label: "Fecha", value: Self.dateLabel(session.date))
         TodayMetric(label: "Estimado", value: "\(session.estimatedMinutes)m")
         TodayMetric(label: "Bloques", value: "\(session.exercises.count)")
       }
-      .padding(.top, 12)
+      .padding(.top, 8)
     }
     .padding(16)
-    .frame(height: 280)
+    .frame(height: 340)
     .background(.background, in: RoundedRectangle(cornerRadius: 20))
     .overlay {
       RoundedRectangle(cornerRadius: 20)
@@ -144,7 +147,7 @@ private struct TodayMetric: View {
         .lineLimit(1)
         .minimumScaleFactor(0.7)
     }
-    .frame(maxWidth: .infinity, minHeight: 72)
+    .frame(maxWidth: .infinity, minHeight: 58)
     .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
   }
 }

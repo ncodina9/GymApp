@@ -1,6 +1,6 @@
 import Foundation
 
-public enum Equipment: String, Codable, CaseIterable, Sendable {
+public enum Equipment: String, Codable, CaseIterable, Sendable, Hashable {
   case barbell
   case multipower
   case dumbbell
