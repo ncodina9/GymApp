@@ -20,7 +20,10 @@ export type PreparedSetTargets = {
 export type SetTargetOverride = Pick<
   PreparedSetTargets,
   'editedReps' | 'editedWeight' | 'editedDurationSeconds'
->;
+> & {
+  // Equivalencia total usada al cambiar entre variantes de material.
+  referenceWeightKg?: number;
+};
 
 export type BarbellPlateLayout = {
   barWeightKg: number;
@@ -294,29 +297,63 @@ const getNearestAvailableLoad = (
   );
 };
 
+export const getReferenceWeightKg = (
+  weightKg: number,
+  equipment?: ExerciseEquipment,
+) =>
+  (inferEquipmentLoadType(equipment) ?? 'bodyweight') === 'per_dumbbell'
+    ? weightKg * 2
+    : weightKg;
+
+const getEquipmentWeightFromReference = (
+  referenceWeightKg: number,
+  equipment: ExerciseEquipment,
+) => {
+  const loadType = inferEquipmentLoadType(equipment) ?? 'bodyweight';
+
+  if (loadType === 'bodyweight') {
+    return 0;
+  }
+
+  const requestedWeight =
+    loadType === 'per_dumbbell' ? referenceWeightKg / 2 : referenceWeightKg;
+
+  return getNearestAvailableLoad(loadType, equipment, requestedWeight);
+};
+
+export const canUseEquipmentForReferenceWeight = (
+  referenceWeightKg: number,
+  equipment: ExerciseEquipment,
+) => {
+  const loadType = inferEquipmentLoadType(equipment) ?? 'bodyweight';
+
+  if (loadType === 'bodyweight') {
+    return referenceWeightKg === 0;
+  }
+
+  const requestedWeight =
+    loadType === 'per_dumbbell' ? referenceWeightKg / 2 : referenceWeightKg;
+  const availableLoads = getAvailableLoadsForType(loadType, equipment);
+  const maximumWeight = availableLoads.at(-1) ?? 0;
+
+  return requestedWeight <= maximumWeight;
+};
+
 export const convertWeightForEquipment = (
   currentWeight: number,
   currentEquipment: ExerciseEquipment,
   nextEquipment: ExerciseEquipment,
 ) => {
-  const currentLoadType =
-    inferEquipmentLoadType(currentEquipment) ?? 'bodyweight';
-  const nextLoadType = inferEquipmentLoadType(nextEquipment) ?? 'bodyweight';
-
-  if (nextLoadType === 'bodyweight') {
-    return 0;
-  }
-
-  let estimatedWeight = currentWeight;
-
-  if (currentLoadType === 'total' && nextLoadType === 'per_dumbbell') {
-    estimatedWeight = currentWeight / 2;
-  } else if (currentLoadType === 'per_dumbbell' && nextLoadType === 'total') {
-    estimatedWeight = currentWeight * 2;
-  }
-
-  return getNearestAvailableLoad(nextLoadType, nextEquipment, estimatedWeight);
+  return getEquipmentWeightFromReference(
+    getReferenceWeightKg(currentWeight, currentEquipment),
+    nextEquipment,
+  );
 };
+
+export const getWeightForEquipmentReference = (
+  referenceWeightKg: number,
+  equipment: ExerciseEquipment,
+) => getEquipmentWeightFromReference(referenceWeightKg, equipment);
 
 export const getPreparedSetTargets = ({
   exercise,

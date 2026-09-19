@@ -88,13 +88,15 @@ import {
 } from '@/lib/workoutSequence';
 import { getWorkoutProgressSummary } from '@/lib/workoutProgress';
 import {
-  convertWeightForEquipment,
+  canUseEquipmentForReferenceWeight,
   getBarbellPlateLayout,
   getHomogeneousFutureSetIndexes,
   getAdjustedWeight,
   getExerciseEquipment,
   getPreparedSetTargets,
+  getReferenceWeightKg,
   getSetTargetKey,
+  getWeightForEquipmentReference,
   getWeightStepOptions,
   isWeightStep,
   normalizeWeightStep,
@@ -1006,10 +1008,12 @@ const applySetTargetOverride = (
     return targets;
   }
 
+  const { referenceWeightKg: _, ...targetOverride } = override;
+
   return {
     ...targets,
-    ...override,
-    setTimerRemaining: override.editedDurationSeconds,
+    ...targetOverride,
+    setTimerRemaining: targetOverride.editedDurationSeconds,
   };
 };
 
@@ -1186,6 +1190,15 @@ export default function Home() {
       ? (inferEquipmentLoadType(currentEquipment) ??
         inferLoadType(currentExercise))
       : inferLoadType(currentExercise);
+  const currentTargetOverride = currentExercise
+    ? draft.targetOverrides[
+        getSetTargetKey(currentExercise.exerciseId, draft.setIndex)
+      ]
+    : undefined;
+  const currentReferenceWeightKg = currentEquipment
+    ? (currentTargetOverride?.referenceWeightKg ??
+      getReferenceWeightKg(draft.editedWeight, currentEquipment))
+    : 0;
   const workoutProgress = useMemo(
     () =>
       getWorkoutProgressSummary({
@@ -2347,6 +2360,7 @@ export default function Home() {
             weight={draft.editedWeight}
             equipment={currentEquipment}
             equipmentOptions={getExerciseEquipmentOptions(currentExercise)}
+            equipmentReferenceWeightKg={currentReferenceWeightKg}
             durationSeconds={draft.editedDurationSeconds}
             timerRemaining={draft.setTimerRemaining}
             isTimerRunning={draft.isSetTimerRunning}
@@ -2389,6 +2403,15 @@ export default function Home() {
                 return;
               }
 
+              if (
+                !canUseEquipmentForReferenceWeight(
+                  currentReferenceWeightKg,
+                  nextEquipment,
+                )
+              ) {
+                return;
+              }
+
               const exerciseOverridePrefix = `${currentExercise.exerciseId}:`;
               const nextTargetOverrides = Object.fromEntries(
                 Object.entries(draft.targetOverrides).map(([key, override]) => [
@@ -2396,15 +2419,36 @@ export default function Home() {
                   key.startsWith(exerciseOverridePrefix)
                     ? {
                         ...override,
-                        editedWeight: convertWeightForEquipment(
-                          override.editedWeight,
-                          currentEquipment,
+                        referenceWeightKg:
+                          override.referenceWeightKg ??
+                          getReferenceWeightKg(
+                            override.editedWeight,
+                            currentEquipment,
+                          ),
+                        editedWeight: getWeightForEquipmentReference(
+                          override.referenceWeightKg ??
+                            getReferenceWeightKg(
+                              override.editedWeight,
+                              currentEquipment,
+                            ),
                           nextEquipment,
                         ),
                       }
                     : override,
                 ]),
               );
+              const currentTargetKey = getSetTargetKey(
+                currentExercise.exerciseId,
+                draft.setIndex,
+              );
+              nextTargetOverrides[currentTargetKey] = {
+                ...nextTargetOverrides[currentTargetKey],
+                editedWeight: getWeightForEquipmentReference(
+                  currentReferenceWeightKg,
+                  nextEquipment,
+                ),
+                referenceWeightKg: currentReferenceWeightKg,
+              };
 
               patchDraft({
                 equipmentByExercise: {
@@ -2412,9 +2456,8 @@ export default function Home() {
                   [currentExercise.exerciseId]: nextEquipment,
                 },
                 targetOverrides: nextTargetOverrides,
-                editedWeight: convertWeightForEquipment(
-                  draft.editedWeight,
-                  currentEquipment,
+                editedWeight: getWeightForEquipmentReference(
+                  currentReferenceWeightKg,
                   nextEquipment,
                 ),
                 weightStep: normalizeWeightStep(
@@ -2462,6 +2505,10 @@ export default function Home() {
                         editedReps: reps,
                         editedWeight: weight,
                         editedDurationSeconds: durationSeconds,
+                        referenceWeightKg: getReferenceWeightKg(
+                          weight,
+                          currentEquipment,
+                        ),
                       };
                       return overrides;
                     },
@@ -4887,6 +4934,7 @@ function SetScreen({
   weight,
   equipment,
   equipmentOptions,
+  equipmentReferenceWeightKg,
   durationSeconds,
   timerRemaining,
   isTimerRunning,
@@ -4916,6 +4964,7 @@ function SetScreen({
   weight: number;
   equipment?: ExerciseEquipment;
   equipmentOptions: ExerciseEquipment[];
+  equipmentReferenceWeightKg: number;
   durationSeconds: number;
   timerRemaining: number;
   isTimerRunning: boolean;
@@ -4993,6 +5042,7 @@ function SetScreen({
         <EquipmentSelector
           options={equipmentOptions}
           value={equipment}
+          referenceWeightKg={equipmentReferenceWeightKg}
           onChange={onEquipmentChange}
         />
       ) : null}
@@ -5885,27 +5935,41 @@ function DoneScreen({
 function EquipmentSelector({
   options,
   value,
+  referenceWeightKg,
   onChange,
 }: {
   options: ExerciseEquipment[];
   value: ExerciseEquipment;
+  referenceWeightKg: number;
   onChange: (value: ExerciseEquipment) => void;
 }) {
   return (
     <div className="grid h-12 shrink-0 grid-flow-col auto-cols-fr gap-1 rounded-[1.4rem] border bg-secondary p-1">
       {options.map((option) => {
         const selected = option === value;
+        const unavailable = !canUseEquipmentForReferenceWeight(
+          referenceWeightKg,
+          option,
+        );
 
         return (
           <button
             key={option}
-            className={`min-w-0 rounded-[1.1rem] px-2 text-sm font-black transition active:scale-[0.98] ${
-              selected
+            className={`min-w-0 rounded-[1.1rem] px-2 text-sm font-black transition active:scale-[0.98] disabled:cursor-not-allowed ${
+              selected && !unavailable
                 ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground'
+                : unavailable
+                  ? 'bg-destructive/10 text-destructive line-through opacity-90'
+                  : 'text-muted-foreground'
             }`}
             type="button"
             onClick={() => onChange(option)}
+            disabled={unavailable}
+            title={
+              unavailable
+                ? `No hay carga disponible para ${equipmentLabels[option]} con este objetivo.`
+                : undefined
+            }
           >
             <span className="block truncate">{equipmentLabels[option]}</span>
           </button>

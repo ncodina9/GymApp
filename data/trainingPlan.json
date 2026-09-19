@@ -201,17 +201,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "acumulacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x6 @ 35 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x6 @ 17.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -224,21 +224,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 35,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 35,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 35,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             }
@@ -863,17 +863,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "acumulacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "4x3 @ 30 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "4x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -886,28 +886,28 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 30,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 30,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 30,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 3,
-              "targetWeightKg": 30,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             }
@@ -1342,17 +1342,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "acumulacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x6 @ 37.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x6 @ 20 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -1365,21 +1365,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 20,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 20,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 20,
               "restSeconds": 90,
               "type": "working"
             }
@@ -2006,17 +2006,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "acumulacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "4x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "4x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -2029,28 +2029,28 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             }
@@ -2860,17 +2860,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "acumulacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x7 @ 37.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x7 @ 20 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -2883,21 +2883,21 @@
             {
               "setIndex": 1,
               "targetReps": 7,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 20,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 7,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 20,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 7,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 20,
               "restSeconds": 90,
               "type": "working"
             }
@@ -3524,17 +3524,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "acumulacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "4x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "4x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -3547,28 +3547,28 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 60,
               "type": "working"
             }
@@ -4343,17 +4343,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "descarga",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x6 @ 37.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x6 @ 22.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -4366,21 +4366,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 22.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 22.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 22.5,
               "restSeconds": 90,
               "type": "working"
             }
@@ -4944,17 +4944,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "descarga",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "3x6 @ 27.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "3x6 @ 12.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -4967,21 +4967,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             }
@@ -5749,17 +5749,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "intensificacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "4x5 @ 42.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "4x5 @ 25 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -5772,28 +5772,28 @@
             {
               "setIndex": 1,
               "targetReps": 5,
-              "targetWeightKg": 42.5,
+              "targetWeightKg": 25,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 5,
-              "targetWeightKg": 42.5,
+              "targetWeightKg": 25,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 5,
-              "targetWeightKg": 42.5,
+              "targetWeightKg": 25,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 5,
-              "targetWeightKg": 42.5,
+              "targetWeightKg": 25,
               "restSeconds": 120,
               "type": "working"
             }
@@ -6807,17 +6807,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "intensificacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "4x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "4x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -6830,28 +6830,28 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             }
@@ -7637,17 +7637,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "intensificacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "4x5 @ 45 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "4x5 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -7660,28 +7660,28 @@
             {
               "setIndex": 1,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 27.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 27.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 27.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 27.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -7952,17 +7952,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "intensificacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "4x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "4x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -7975,28 +7975,28 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             }
@@ -8799,17 +8799,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "intensificacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "4x5 @ 45 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "4x5 @ 30 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -8822,28 +8822,28 @@
             {
               "setIndex": 1,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 5,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             }
@@ -9477,17 +9477,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "intensificacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "4x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "4x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -9500,28 +9500,28 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 75,
               "type": "working"
             }
@@ -10303,17 +10303,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "descarga",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x6 @ 40 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x6 @ 27.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -10326,21 +10326,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 40,
+              "targetWeightKg": 27.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 40,
+              "targetWeightKg": 27.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 40,
+              "targetWeightKg": 27.5,
               "restSeconds": 90,
               "type": "working"
             }
@@ -10904,17 +10904,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "descarga",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "3x6 @ 27.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "3x6 @ 12.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -10927,21 +10927,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             }
@@ -11702,17 +11702,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "realizacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x3 @ 45 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -11725,21 +11725,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             }
@@ -12345,17 +12345,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "realizacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "3x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "3x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -12368,21 +12368,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             }
@@ -13157,17 +13157,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "realizacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x3 @ 45 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -13180,21 +13180,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             }
@@ -13800,17 +13800,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "realizacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "3x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "3x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -13823,21 +13823,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             }
@@ -14598,17 +14598,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "readaptacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x6 @ 37.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x6 @ 25 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -14621,21 +14621,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 25,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 25,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 25,
               "restSeconds": 120,
               "type": "working"
             }
@@ -15199,17 +15199,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "readaptacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "3x3 @ 27.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "3x3 @ 12.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -15222,21 +15222,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 12.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -15997,17 +15997,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "realizacion",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "3x3 @ 45 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "3x3 @ 30 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -16020,21 +16020,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 120,
               "type": "working"
             }
@@ -16640,17 +16640,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "realizacion",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "3x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "3x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -16663,21 +16663,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 120,
               "type": "working"
             }
@@ -17417,17 +17417,17 @@
           "name": "Press militar sentado en banco",
           "baseExerciseId": "press-militar-sentado",
           "baseExerciseName": "Press militar sentado",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "D",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "test",
-          "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.",
-          "target": "2x6 @ 45 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.",
+          "target": "2x6 @ 30 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -17440,14 +17440,14 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 180,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 45,
+              "targetWeightKg": 30,
               "restSeconds": 180,
               "type": "working"
             }
@@ -17976,17 +17976,17 @@
           "name": "Press militar sentado velocidad",
           "baseExerciseId": "press-militar-sentado-velocidad",
           "baseExerciseName": "Press militar sentado velocidad",
-          "variantLabel": "Barra",
+          "variantLabel": "Mancuernas",
           "type": "Básico",
           "block": "C",
-          "equipment": "barbell",
+          "equipment": "dumbbell",
           "trainingBlock": "potencia",
           "movementPattern": "empuje-vertical",
           "primaryMuscles": ["hombro", "triceps"],
           "secondaryMuscles": ["core"],
           "phase": "test",
-          "notes": "Sentado en banco para proteger la espalda. La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.",
-          "target": "2x3 @ 32.5 kg",
+          "notes": "Sentado en banco para proteger la espalda. Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.",
+          "target": "2x3 @ 15 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -17999,14 +17999,14 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 180,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 32.5,
+              "targetWeightKg": 15,
               "restSeconds": 180,
               "type": "working"
             }

@@ -207,12 +207,12 @@ const exercisePresentation = {
   'press-militar-sentado': presentation(
     'press-militar-sentado',
     'Press militar sentado',
-    'Barra',
+    'Mancuernas',
   ),
   'press-militar-sentado-velocidad': presentation(
     'press-militar-sentado-velocidad',
     'Press militar sentado velocidad',
-    'Barra',
+    'Mancuernas',
   ),
   'sentadilla-barra': presentation('sentadilla', 'Sentadilla'),
   'peso-muerto-rumano': presentation(
@@ -304,12 +304,12 @@ const baseSessions = {
         'D',
         3,
         6,
-        35,
+        17.5,
         90,
         [
-          'Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar la barra.',
+          'Sentado en banco para proteger la espalda. Peso por mancuerna. Bloquear abdomen antes de despegar.',
         ],
-        { equipment: 'barbell' },
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'elevaciones-laterales',
@@ -481,13 +481,13 @@ const baseSessions = {
         'C',
         4,
         3,
-        30,
+        15,
         60,
         [
           'Sentado en banco para proteger la espalda.',
-          'La barra debe moverse rápido. Si se ralentiza, bajar 2.5-5 kg.',
+          'Peso por mancuerna. Deben moverse rápido; si se ralentizan, bajar 2.5-5 kg.',
         ],
-        { equipment: 'barbell' },
+        { equipment: 'dumbbell' },
       ),
       exercise(
         'remo-barra-multipower',
@@ -662,7 +662,7 @@ const progressions = {
   'press-banca-barra': { step: 2.5, max: 82.5 },
   'dominadas-lastradas': { step: 2.5, max: 15 },
   'remo-inclinado-barra': { step: 2.5, max: 67.5 },
-  'press-militar-sentado': { step: 2.5, max: 45 },
+  'press-militar-sentado': { step: 2.5, max: 30 },
   'sentadilla-barra': { step: 2.5, max: 82.5 },
   'peso-muerto-rumano-barra': { step: 5, max: 85 },
   'hip-thrust-barra': { step: 5, max: 115 },
@@ -736,10 +736,7 @@ const planJson = JSON.stringify(
   },
 );
 
-writeFileSync(
-  outputPath,
-  `${planJson}\n`,
-);
+writeFileSync(outputPath, `${planJson}\n`);
 
 function exercise(
   exerciseId,
@@ -937,7 +934,7 @@ function applyFeedbackLoadAdjustment(item, weightKg) {
   }
 
   if (item.exerciseId === 'press-militar-sentado-velocidad') {
-    return 32.5;
+    return 15;
   }
 
   if (item.exerciseId === 'pullover-mancuerna') {
@@ -1000,7 +997,7 @@ function applyWeek3LoadAdjustment(item, weightKg) {
   }
 
   if (item.exerciseId === 'press-militar-sentado') {
-    return 37.5;
+    return 20;
   }
 
   if (item.exerciseId === 'peso-muerto-rumano-barra') {
