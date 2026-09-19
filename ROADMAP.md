@@ -1235,6 +1235,8 @@ Actualización v0.1.51: el gesto de arrastre pasa a toda la superficie segmentad
 
 Actualización v0.1.52: el contraste del selector segmentado se sincroniza con la posicion visual del indicador durante el arrastre: el texto blanco siempre acompaña a la superficie de Liquid Glass y no queda camuflado sobre el fondo.
 
+Actualización v0.1.53: `GymAppNativeCore` incorpora reglas puras de carga equivalentes a las de la PWA. Barra (20 kg), multipower (18 kg), mancuernas de 5 a 30 kg, polea y discos usan el inventario real para redondear objetivos. La pantalla de serie muestra el peso convertido de la variante activa y deshabilita en rojo las opciones que no alcanzan la carga equivalente; las reglas se cubren con pruebas Swift.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

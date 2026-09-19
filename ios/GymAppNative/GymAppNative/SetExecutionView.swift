@@ -27,6 +27,21 @@ struct SetExecutionView: View {
     return exercise.sets[setIndex]
   }
 
+  private var referenceWeightKg: Double {
+    guard let exercise, let trainingSet else { return 0 }
+    return EquipmentLoadRules.referenceWeightKg(
+      trainingSet.targetWeightKg,
+      equipment: exercise.equipment
+    )
+  }
+
+  private var activeWeightKg: Double {
+    EquipmentLoadRules.weightForReferenceWeight(
+      referenceWeightKg,
+      equipment: selectedEquipment
+    )
+  }
+
   var body: some View {
     Group {
       if let exercise, let trainingSet {
@@ -35,7 +50,8 @@ struct SetExecutionView: View {
 
           MaterialSelector(
             selection: $selectedEquipment,
-            options: equipmentOptions(for: exercise)
+            options: equipmentOptions(for: exercise),
+            unavailableOptions: unavailableEquipment(for: exercise)
           )
 
           if trainingSet.type == .timed {
@@ -45,7 +61,7 @@ struct SetExecutionView: View {
               SetTargetCard(label: "Reps", value: trainingSet.targetReps.map(String.init) ?? "-")
               SetTargetCard(
                 label: "Peso",
-                value: trainingSet.targetWeightKg.formatted(.number.precision(.fractionLength(0...1))),
+                value: activeWeightKg.formatted(.number.precision(.fractionLength(0...1))),
                 unit: weightUnit(for: selectedEquipment)
               )
             }
@@ -121,6 +137,17 @@ struct SetExecutionView: View {
       ? variants
       : [exercise.equipment] + variants
   }
+
+  private func unavailableEquipment(for exercise: TrainingExercise) -> Set<Equipment> {
+    Set(
+      equipmentOptions(for: exercise).filter {
+        !EquipmentLoadRules.canUse(
+          equipment: $0,
+          referenceWeightKg: referenceWeightKg
+        )
+      }
+    )
+  }
 }
 
 private struct SetHeader: View {
@@ -158,6 +185,7 @@ private struct SetHeader: View {
 private struct MaterialSelector: View {
   @Binding var selection: Equipment
   let options: [Equipment]
+  let unavailableOptions: Set<Equipment>
   @State private var dragOffset: CGFloat = 0
 
   private var selectedIndex: Int {
@@ -179,6 +207,7 @@ private struct MaterialSelector: View {
 
           HStack(spacing: 0) {
             ForEach(options, id: \.self) { equipment in
+              let isAvailable = !unavailableOptions.contains(equipment)
               let isSelected = isVisuallySelected(
                 equipment,
                 segmentWidth: segmentWidth
@@ -191,9 +220,12 @@ private struct MaterialSelector: View {
                   .lineLimit(1)
                   .minimumScaleFactor(0.7)
                   .frame(maxWidth: .infinity, minHeight: 42)
-                  .foregroundStyle(isSelected ? .white : .primary)
+                  .foregroundStyle(
+                    isSelected ? .white : (isAvailable ? .primary : .red)
+                  )
               }
               .buttonStyle(.plain)
+              .disabled(!isAvailable)
             }
           }
           .simultaneousGesture(dragGesture(segmentWidth: segmentWidth))
@@ -207,8 +239,11 @@ private struct MaterialSelector: View {
   }
 
   private func clampedIndicatorOffset(segmentWidth: CGFloat) -> CGFloat {
-    let minimum = CGFloat.zero
-    let maximum = segmentWidth * CGFloat(max(options.count - 1, 0))
+    let availableIndexes = options.indices.filter {
+      !unavailableOptions.contains(options[$0])
+    }
+    let minimum = segmentWidth * CGFloat(availableIndexes.first ?? 0)
+    let maximum = segmentWidth * CGFloat(availableIndexes.last ?? 0)
     let proposed = CGFloat(selectedIndex) * segmentWidth + dragOffset
     return min(max(proposed, minimum), maximum)
   }
@@ -245,6 +280,7 @@ private struct MaterialSelector: View {
   }
 
   private func select(_ equipment: Equipment) {
+    guard !unavailableOptions.contains(equipment) else { return }
     withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
       selection = equipment
       dragOffset = 0

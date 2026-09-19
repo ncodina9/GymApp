@@ -31,6 +31,21 @@ struct TrainingPlanDecodingTests {
     #expect(timedExercise.sets.allSatisfy { $0.targetDurationSeconds == 60 })
   }
 
+  @Test("Convierte cargas entre variantes con el material disponible")
+  func convertsLoadsForEquipment() {
+    #expect(
+      EquipmentLoadRules.weightForReferenceWeight(70, equipment: .multipower) == 70.5,
+    )
+    #expect(
+      EquipmentLoadRules.weightForReferenceWeight(60, equipment: .dumbbell) == 30,
+    )
+    #expect(
+      EquipmentLoadRules.referenceWeightKg(20, equipment: .dumbbell) == 40,
+    )
+    #expect(EquipmentLoadRules.canUse(equipment: .dumbbell, referenceWeightKg: 60))
+    #expect(!EquipmentLoadRules.canUse(equipment: .dumbbell, referenceWeightKg: 65))
+  }
+
   private var sharedPlanURL: URL {
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0 ..< 5 {

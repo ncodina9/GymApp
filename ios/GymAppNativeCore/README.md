@@ -7,6 +7,7 @@ ni APIs exclusivas de iOS para que pueda verificarse también con `swift test`.
 
 - modelos `Codable` para el plan: plan, sesiones, ejercicios, series y material
 - enums de material y tipo de serie
+- reglas puras de material para convertir cargas entre barra, multipower y mancuernas con el inventario real
 - decodificador del `trainingPlan.json` de producción
 - pruebas que consumen el JSON compartido de la raíz del repositorio
 
