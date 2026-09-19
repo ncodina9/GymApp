@@ -179,7 +179,10 @@ private struct MaterialSelector: View {
 
           HStack(spacing: 0) {
             ForEach(options, id: \.self) { equipment in
-              let isSelected = selection == equipment
+              let isSelected = isVisuallySelected(
+                equipment,
+                segmentWidth: segmentWidth
+              )
               Button {
                 select(equipment)
               } label: {
@@ -208,6 +211,18 @@ private struct MaterialSelector: View {
     let maximum = segmentWidth * CGFloat(max(options.count - 1, 0))
     let proposed = CGFloat(selectedIndex) * segmentWidth + dragOffset
     return min(max(proposed, minimum), maximum)
+  }
+
+  private func isVisuallySelected(
+    _ equipment: Equipment,
+    segmentWidth: CGFloat
+  ) -> Bool {
+    let indicatorOffset = clampedIndicatorOffset(segmentWidth: segmentWidth)
+    let indicatorIndex = min(
+      max(Int((indicatorOffset / segmentWidth).rounded()), 0),
+      max(options.count - 1, 0)
+    )
+    return equipment == options[indicatorIndex]
   }
 
   private func dragGesture(segmentWidth: CGFloat) -> some Gesture {
