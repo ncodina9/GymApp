@@ -1221,6 +1221,8 @@ Actualización v0.1.44: la previsualización nativa recupera la jerarquía de ta
 
 Actualización v0.1.45: `TodayView` adopta la composición de la PWA: semana y foco, tarjeta fija de entrenamiento recomendado, métricas de fecha/estimado/bloques, sesiones semanales apiladas y navegación inferior estable. Este lenguaje visual será la referencia de todas las pantallas SwiftUI.
 
+Actualización v0.1.46: cada tarjeta de la previsualización recupera su borde separador. `SessionPreviewView` permite empezar el entrenamiento y `SetExecutionView` resuelve la primera serie en memoria con progreso, ejercicio, material, objetivos grandes, notas, descanso y navegación inferior. Registrar, feedback y temporizador quedan para el siguiente tramo del flujo.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

@@ -61,6 +61,19 @@ struct SessionPreviewView: View {
     }
     .navigationTitle("Previsualización")
     .navigationBarTitleDisplayMode(.inline)
+    .safeAreaInset(edge: .bottom) {
+      NavigationLink {
+        SetExecutionView(session: session)
+      } label: {
+        Label("Empezar entrenamiento", systemImage: "chevron.right")
+          .font(.headline.weight(.bold))
+          .frame(maxWidth: .infinity, minHeight: 56)
+      }
+      .buttonStyle(.borderedProminent)
+      .padding(.horizontal, 20)
+      .padding(.top, 8)
+      .background(.background)
+    }
   }
 
   private func exerciseOrder(_ exercise: TrainingExercise) -> Int {
@@ -106,6 +119,10 @@ private struct ExercisePreviewRow: View {
     }
     .padding(14)
     .background(.background, in: RoundedRectangle(cornerRadius: 18))
+    .overlay {
+      RoundedRectangle(cornerRadius: 18)
+        .stroke(.separator, lineWidth: 1)
+    }
   }
 
   private var workLabel: String {
