@@ -1115,6 +1115,23 @@ const getNextSetPreviews = (
   });
 };
 
+const getExerciseBlock = (
+  session: TrainingSession,
+  step: ReturnType<typeof buildExecutionSteps>[number] | undefined,
+) => {
+  if (!step) {
+    return [];
+  }
+
+  if (!step.supersetId) {
+    return [session.exercises[step.exerciseIndex]];
+  }
+
+  return getSupersetMembers(session, step.supersetId)
+    .map(({ exerciseIndex }) => session.exercises[exerciseIndex])
+    .filter((exercise): exercise is Exercise => Boolean(exercise));
+};
+
 export default function Home() {
   const [draft, setDraft] = useState<WorkoutDraft>(() => makeDraft());
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
@@ -1239,6 +1256,10 @@ export default function Home() {
     nextLinkedStep !== undefined
       ? selectedSession.exercises[nextLinkedStep.exerciseIndex]
       : undefined;
+  const transitionNextExercises = getExerciseBlock(
+    selectedSession,
+    draft.transitionNextPhase === 'set' ? currentStep : nextStep,
+  );
   const workoutDurationMinutes = getDurationMinutes(
     draft.startedAt,
     draft.finishedAt,
@@ -2546,12 +2567,10 @@ export default function Home() {
                 ),
               )
               .filter((exercise): exercise is Exercise => Boolean(exercise))}
-            nextExercise={
-              draft.transitionNextPhase === 'set'
-                ? currentExercise
-                : draft.transitionNextPhase === 'rest' && nextStep
-                  ? selectedSession.exercises[nextStep.exerciseIndex]
-                  : undefined
+            nextExercises={
+              draft.transitionNextPhase === 'done'
+                ? []
+                : transitionNextExercises
             }
             decisions={draft.decisions}
             onDecision={chooseDecision}
@@ -5680,14 +5699,14 @@ function PainControl({
 
 function TransitionScreen({
   completedExercises,
-  nextExercise,
+  nextExercises,
   decisions,
   onDecision,
   onContinue,
   saveStatus,
 }: {
   completedExercises: Exercise[];
-  nextExercise?: Exercise;
+  nextExercises: Exercise[];
   decisions: Record<string, string>;
   onDecision: (exerciseId: string, value: string) => void;
   onContinue: () => void;
@@ -5747,18 +5766,30 @@ function TransitionScreen({
         </div>
       </div>
 
-      {nextExercise ? (
+      {nextExercises.length > 0 ? (
         <div className="rounded-lg bg-secondary px-4 py-3">
-          <p className="text-sm font-semibold text-muted-foreground">Después</p>
-          <p className="text-2xl font-black tracking-normal">
-            {getExerciseDisplayName(nextExercise)}
+          <p className="text-sm font-semibold text-muted-foreground">
+            {nextExercises.length > 1 ? 'Después · Superserie' : 'Después'}
           </p>
-          <div className="mt-1">
-            <EquipmentChip equipment={nextExercise.equipment} />
+          <div
+            className={`mt-2 grid gap-2 ${
+              nextExercises.length > 1 ? 'max-h-40 overflow-y-auto pr-1' : ''
+            }`}
+          >
+            {nextExercises.map((exercise) => (
+              <div key={exercise.exerciseId} className="min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="min-w-0 truncate text-lg font-black leading-tight tracking-normal">
+                    {getExerciseDisplayName(exercise)}
+                  </p>
+                  <EquipmentChip equipment={exercise.equipment} />
+                </div>
+                <p className="mt-1 text-sm font-medium text-muted-foreground">
+                  {exercise.notes}
+                </p>
+              </div>
+            ))}
           </div>
-          <p className="mt-1 text-sm font-medium text-muted-foreground">
-            {nextExercise.notes}
-          </p>
         </div>
       ) : null}
 
@@ -5768,7 +5799,7 @@ function TransitionScreen({
         className="mt-auto h-16 rounded-[1.9rem] text-lg font-black"
         onClick={onContinue}
       >
-        {nextExercise ? 'Continuar' : 'Cerrar entrenamiento'}
+        {nextExercises.length > 0 ? 'Continuar' : 'Cerrar entrenamiento'}
         <ChevronRight className="size-6" />
       </Button>
     </section>
