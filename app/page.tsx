@@ -2426,6 +2426,16 @@ export default function Home() {
           <FeedbackScreen
             exerciseName={getExerciseDisplayName(currentExercise)}
             equipment={currentEquipment}
+            setIndex={draft.setIndex}
+            totalExerciseSets={currentExercise.sets.length}
+            supersetPosition={currentStep?.supersetOrder}
+            supersetSize={
+              supersetMembers.length > 0 ? supersetMembers.length : undefined
+            }
+            supersetRound={
+              currentStep?.supersetId ? currentStep.roundNumber : undefined
+            }
+            supersetRoundCount={supersetRoundCount}
             setType={currentSet.type}
             reps={draft.editedReps}
             weight={draft.editedWeight}
@@ -5324,6 +5334,12 @@ function RestScreen({
 function FeedbackScreen({
   exerciseName,
   equipment,
+  setIndex,
+  totalExerciseSets,
+  supersetPosition,
+  supersetSize,
+  supersetRound,
+  supersetRoundCount,
   setType,
   reps,
   weight,
@@ -5347,6 +5363,12 @@ function FeedbackScreen({
 }: {
   exerciseName: string;
   equipment?: ExerciseEquipment;
+  setIndex: number;
+  totalExerciseSets: number;
+  supersetPosition?: number;
+  supersetSize?: number;
+  supersetRound?: number;
+  supersetRoundCount?: number;
   setType: TrainingSet['type'];
   reps: number;
   weight: number;
@@ -5372,15 +5394,32 @@ function FeedbackScreen({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-      <div>
-        <p className="text-sm font-semibold text-muted-foreground">
-          Feedback serie
-        </p>
-        <h2 className="text-[1.75rem] font-black leading-tight tracking-normal">
-          {exerciseName}
-        </h2>
-        <div className="mt-1">
-          <EquipmentChip equipment={equipment} />
+      <div className="grid h-[4.75rem] shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-3 overflow-hidden">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase leading-none text-muted-foreground">
+            Feedback serie
+          </p>
+          <h2 className="mt-1 overflow-hidden text-[1.3rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            {exerciseName}
+          </h2>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className="inline-flex h-5 items-center rounded-full bg-secondary px-2 text-[0.65rem] font-black uppercase leading-none text-secondary-foreground">
+            Serie {setIndex + 1}/{totalExerciseSets}
+          </span>
+          {supersetPosition !== undefined && supersetSize !== undefined ? (
+            <span className="inline-flex h-5 items-center rounded-full bg-primary/10 px-2 text-[0.65rem] font-black uppercase leading-none text-primary">
+              Superserie {supersetPosition}/{supersetSize}
+              {supersetRound !== undefined && supersetRoundCount !== undefined
+                ? ` · ${supersetRound}/${supersetRoundCount}`
+                : ''}
+            </span>
+          ) : null}
+          {equipment ? (
+            <span className="inline-flex h-5 items-center rounded-full bg-secondary px-2 text-[0.65rem] font-black uppercase leading-none text-muted-foreground">
+              {formatEquipmentLabel(equipment)}
+            </span>
+          ) : null}
         </div>
       </div>
 

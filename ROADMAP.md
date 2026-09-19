@@ -1170,7 +1170,7 @@ Prioridad 1:
 
 Prioridad 2:
 
-- [ ] blindar la pantalla de feedback de superseries contra nombres de más de una línea, con un patrón compacto que no requiera scroll
+- [x] blindar la pantalla de feedback de superseries contra nombres de más de una línea, con un patrón compacto que no requiera scroll
 - [ ] sustituir gradualmente los iconos de la UI por Heroicons antes del prototipo SwiftUI, manteniendo una única familia visual
 - [ ] revisar en dispositivo real los temporizadores con la app en segundo plano y documentar la limitación de PWA que solo se resolverá del todo de forma nativa
 
@@ -1231,10 +1231,10 @@ Decisiones de compatibilidad:
 
 ## Proximo hito recomendado
 
-Completar el siguiente punto de prioridad 2 del Hito 25: blindar el feedback de superseries para nombres largos, manteniendo la pantalla sin scroll y sin restar espacio a las acciones táctiles.
+Validar en dispositivo real los temporizadores con la PWA en segundo plano y documentar con precisión la limitación que solo podrá resolverse completamente en la futura app nativa.
 
 Checklist minima de la siguiente iteracion:
 
-- [ ] Definir una jerarquía compacta para nombre, material y número de serie.
-- [ ] Limitar el título de ejercicio a dos líneas sin desplazar los controles de feedback.
-- [ ] Verificar el flujo con una superserie y nombres largos en un viewport de iPhone 14 Pro.
+- [ ] Medir un temporizador de serie y uno de descanso con la pantalla bloqueada durante varios minutos.
+- [ ] Comparar el tiempo mostrado al volver a la PWA con la hora final calculada.
+- [ ] Documentar el comportamiento observado y el límite técnico de la PWA frente a notificaciones y Live Activities nativas.
