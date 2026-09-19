@@ -290,19 +290,43 @@ private struct FeedbackHeader: View {
         Text(exercise?.baseExerciseName ?? "Ejercicio")
           .font(.title3.weight(.bold))
           .lineLimit(2)
+        Text(equipment.executionLabel)
+          .font(.subheadline.weight(.bold))
+          .foregroundStyle(Color.accentColor)
+          .padding(.horizontal, 10)
+          .padding(.vertical, 5)
+          .background(Color.accentColor.opacity(0.12), in: Capsule())
       }
       Spacer(minLength: 0)
       VStack(alignment: .trailing, spacing: 5) {
-        FeedbackChip(text: "Serie \(locator.setIndex)/\(exercise?.sets.count ?? 0)")
+        FeedbackSetProgress(
+          setCount: exercise?.sets.count ?? 0,
+          currentSetIndex: locator.setIndex
+        )
         if let exercise, let supersetID = exercise.supersetID {
           let members = execution.session.exercises.filter { $0.supersetID == supersetID }
           let position = (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
           FeedbackChip(text: "Superserie \(position)/\(members.count)", accent: true)
         }
-        FeedbackChip(text: equipment.executionLabel)
       }
     }
-    .frame(height: 76, alignment: .top)
+    .frame(height: 86, alignment: .top)
+  }
+}
+
+private struct FeedbackSetProgress: View {
+  let setCount: Int
+  let currentSetIndex: Int
+
+  var body: some View {
+    HStack(spacing: 6) {
+      ForEach(1 ... max(setCount, 1), id: \.self) { index in
+        Circle()
+          .strokeBorder(index == currentSetIndex ? Color.accentColor : .secondary.opacity(0.35), lineWidth: 2)
+          .background(Circle().fill(index < currentSetIndex ? Color.accentColor : .clear))
+          .frame(width: 14, height: 14)
+      }
+    }
   }
 }
 

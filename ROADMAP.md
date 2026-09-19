@@ -1243,6 +1243,8 @@ Actualización v0.1.55: la app nativa ejecuta ya una sesión completa en memoria
 
 Actualización v0.1.56: se corrige la pantalla nativa de feedback para trasladar la referencia PWA: encabezado compacto con ejercicio, serie, superserie y material; métricas de la serie; RIR cuando procede; controles de rodilla, muñeca, hombro y lumbar; y notas rápidas `OK`, `Pesado`, `Técnica` y `Molestia`. El registro en memoria conserva ahora esos campos detallados. Se establece explícitamente que toda pantalla nueva de SwiftUI debe replicar la jerarquía visual e interacción validada en la PWA, salvo los detalles nativos necesarios.
 
+Actualización v0.1.57: el encabezado del feedback nativo reutiliza los círculos de progreso de la pantalla de serie en lugar del chip textual de serie. El material pasa bajo el nombre del ejercicio como chip de lectura más grande, manteniendo la superserie como información secundaria.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
