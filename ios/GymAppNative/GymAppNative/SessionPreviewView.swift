@@ -49,19 +49,6 @@ struct SessionPreviewView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Semana \(session.week) · \(session.weekFocusLabel)")
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.secondary)
-
-          Text(session.label)
-            .font(.largeTitle.weight(.bold))
-
-          Text("\(session.exercises.count) ejercicios · \(session.estimatedMinutes) min estimados")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-        }
-
         ForEach(blocks) { block in
           if block.isSuperset {
             VStack(alignment: .leading, spacing: 12) {
@@ -86,6 +73,9 @@ struct SessionPreviewView: View {
     }
     .background(GymCanvas())
     .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) {
+      PreviewContextHeader(session: session)
+    }
     .navigationDestination(isPresented: $startsNewWorkout) {
       SetExecutionView(session: session, onFinishToToday: returnToToday)
     }
@@ -164,6 +154,33 @@ struct SessionPreviewView: View {
   private func returnToToday() {
     startsNewWorkout = false
     onReturnHome()
+  }
+}
+
+private struct PreviewContextHeader: View {
+  let session: TrainingSession
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 5) {
+      Text("Semana \(session.week) · \(session.weekFocusLabel)")
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+
+      Text(session.label)
+        .font(.title2.weight(.bold))
+        .lineLimit(2)
+        .minimumScaleFactor(0.85)
+
+      Text("\(session.exercises.count) ejercicios · \(session.estimatedMinutes) min estimados")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 20)
+    .padding(.vertical, 12)
+    .background(.ultraThinMaterial)
   }
 }
 

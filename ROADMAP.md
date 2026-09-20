@@ -1295,6 +1295,8 @@ Actualización v0.1.79: cambiar de tema ya no reconstruye la jerarquía de naveg
 
 Actualización v0.1.80: el proyecto nativo requiere iOS 27. La barra de estado adopta la preferencia oficial de contraste del tema. Para asegurar continuidad visual también cuando el sistema conserva su propio fondo en los extremos, los temas claros comparten canvas blanco puro y los oscuros canvas negro puro; las variantes White/Light y Dark/Black siguen distinguiéndose mediante superficies y color de realce.
 
+Actualización v0.1.81: Próximos entrenamientos elimina el título duplicado del contenido y conserva la cabecera nativa. La previsualización fija el contexto de semana, sesión y estimación en una cabecera translúcida, mientras los ejercicios permanecen como contenido desplazable.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
