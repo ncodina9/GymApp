@@ -169,6 +169,32 @@ struct TrainingPlanDecodingTests {
     #expect(selected)
     #expect(state.current == WorkoutSetLocator(exerciseIndex: 2, setIndex: 1))
     #expect(state.records.isEmpty)
+
+    _ = state.recordCurrent(feedback: .ok)
+    #expect(state.current == WorkoutSetLocator(exerciseIndex: 2, setIndex: 2))
+  }
+
+  @Test("Propaga el ajuste temporal a las series homogeneas restantes")
+  func propagatesTimedDurationToRemainingMatchingSets() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first(where: {
+      $0.exercises.contains(where: { $0.sets.first?.type == .timed && $0.sets.count > 1 })
+    }))
+    let exerciseIndex = try #require(session.exercises.firstIndex(where: {
+      $0.sets.first?.type == .timed && $0.sets.count > 1
+    }))
+    let exercise = session.exercises[exerciseIndex]
+    var state = WorkoutExecutionState(session: session)
+    let locator = WorkoutSetLocator(exerciseIndex: exerciseIndex, setIndex: 1)
+
+    while state.current != locator {
+      _ = state.recordCurrent(feedback: .ok)
+    }
+    state.updateTimedDuration(for: locator, durationSeconds: 75)
+
+    #expect(state.targets(for: locator)?.durationSeconds == 75)
+    #expect(state.targets(for: WorkoutSetLocator(exerciseIndex: exerciseIndex, setIndex: 2))?.durationSeconds == 75)
+    #expect(exercise.sets.count == 2)
   }
 
   @Test("Codifica el borrador ejecutable para recuperar una sesión activa")

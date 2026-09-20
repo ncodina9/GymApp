@@ -114,6 +114,7 @@ struct SetExecutionView: View {
       .transition(transition)
       .zIndex(1)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .toolbar(.hidden, for: .navigationBar)
     .overlay(alignment: .top) {
       WorkoutProgressBar(
@@ -342,13 +343,13 @@ private struct WorkoutProgressBar: View {
   var body: some View {
     GeometryReader { geometry in
       ZStack(alignment: .leading) {
-        Rectangle().fill(Color.secondary.opacity(0.18))
+        Rectangle().fill(.clear)
         Rectangle()
           .fill(Color.accentColor)
           .frame(width: geometry.size.width * progress)
       }
     }
-    .frame(height: 44)
+    .frame(height: 59)
     .accessibilityLabel("Progreso del entrenamiento: \(completed) de \(total) series")
   }
 }
@@ -372,6 +373,7 @@ private struct WorkingSetView: View {
   @Binding var timerRemaining: Int
   let onExecutionChanged: () -> Void
   @State private var editField: SetEditField?
+  @State private var timedSetFinished = false
 
   private var exercise: TrainingExercise? { execution.exercise(for: locator) }
   private var trainingSet: TrainingSet? { execution.trainingSet(for: locator) }
@@ -407,7 +409,8 @@ private struct WorkingSetView: View {
               endsAt: $timerEndsAt,
               pausedRemaining: $timerRemaining,
               onAdjustDuration: adjustTimedDuration,
-              onFinishedTap: onContinue
+              onFinishedTap: onContinue,
+              onFinishedChanged: { timedSetFinished = $0 }
             )
           } else {
             VStack(spacing: 10) {
@@ -444,7 +447,7 @@ private struct WorkingSetView: View {
             primaryTitle: "Continuar",
             primaryAction: onContinue,
             skipAction: onSkip,
-            primaryDisabled: trainingSet.type == .timed
+            primaryDisabled: trainingSet.type == .timed && !timedSetFinished
           )
         }
         .padding(16)
@@ -942,8 +945,10 @@ private struct RestView: View {
             isRestFinished: remaining == 0,
             onSelect: onSelectBlock
           )
-          .frame(maxHeight: hasNextSuperset ? .infinity : 148, alignment: .top)
+          .frame(maxHeight: hasNextSuperset ? 180 : 148, alignment: .top)
         }
+
+        Spacer(minLength: 0)
 
         Button("Siguiente", action: onContinue)
           .font(.headline.weight(.bold))
@@ -953,6 +958,7 @@ private struct RestView: View {
           .buttonStyle(.plain)
       }
       .padding(16)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
   }
 
@@ -1652,6 +1658,8 @@ private struct TimedSetTarget: View {
   @Binding var pausedRemaining: Int
   let onAdjustDuration: (Int) -> Void
   let onFinishedTap: () -> Void
+  let onFinishedChanged: (Bool) -> Void
+  @State private var hasStarted = false
 
   private var isRunning: Bool { endsAt != nil }
 
@@ -1730,6 +1738,10 @@ private struct TimedSetTarget: View {
         if pausedRemaining == 0, endsAt == nil {
           pausedRemaining = seconds
         }
+        onFinishedChanged(false)
+      }
+      .onChange(of: remaining) { _, newValue in
+        onFinishedChanged(hasStarted && newValue == 0)
       }
     }
   }
@@ -1749,12 +1761,15 @@ private struct TimedSetTarget: View {
       let duration = pausedRemaining > 0 ? pausedRemaining : seconds
       pausedRemaining = duration
       endsAt = .now.addingTimeInterval(TimeInterval(duration))
+      hasStarted = true
     }
   }
 
   private func reset() {
     endsAt = nil
     pausedRemaining = seconds
+    hasStarted = false
+    onFinishedChanged(false)
   }
 
   private func clock(_ totalSeconds: Int) -> String {

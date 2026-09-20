@@ -1269,6 +1269,8 @@ Actualización v0.1.67: SwiftData separa el borrador único de entrenamiento de 
 
 Actualización v0.1.68: la pantalla nativa cierra la sesión de forma transaccional después de la evaluación final, guardando su marca `Completado` antes de limpiar el borrador activo. El CTA de esa evaluación pasa a `Finalizar`. Las transiciones de flujo conservan una dirección única para la pantalla entrante y desvanecen la saliente, incluyendo la primera ronda de superserie. Las barras de descanso se unifican en una altura compacta de aproximadamente el 20% de la pantalla; el borde solo agrupa la tarjeta de próxima serie o superserie. La barra de progreso global ocupa la zona segura superior sin animación vertical. En series temporizadas, los ajustes de duración preservan el temporizador en marcha y el avance manual queda bloqueado hasta que termine para evitar registros duplicados.
 
+Actualización v0.1.69: la raíz de ejecución ocupa toda la ventana nativa y fija la barra global de progreso en la zona de estado, con el fondo natural de la app y altura completa de esa zona. El descanso reserva el espacio flexible antes de su navegación inferior para que `Siguiente` vuelva a la parte baja tanto en series simples como en superseries. Al priorizar un bloque alternativo, el secuenciador mueve el bloque completo de sus series pendientes en lugar de intercambiar solo la primera, evitando saltar a otro ejercicio antes de completarlo. Las series temporizadas notifican su finalización al CTA inferior, que se activa al llegar a cero; el ajuste de duración se mantiene propagado a las series homogéneas posteriores.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

@@ -132,14 +132,28 @@ public struct WorkoutExecutionState: Codable, Sendable {
           current.setIndex == 1,
           session.exercises.indices.contains(exerciseIndex),
           !records.contains(where: { $0.locator.exerciseIndex == exerciseIndex }),
-          let targetPosition = order[currentPosition...].firstIndex(
+          order[currentPosition...].contains(
             where: { $0.exerciseIndex == exerciseIndex && $0.setIndex == 1 }
           )
     else {
       return false
     }
 
-    order.swapAt(currentPosition, targetPosition)
+    let selectedIndexes: Set<Int>
+    if let supersetID = session.exercises[exerciseIndex].supersetID {
+      selectedIndexes = Set(
+        session.exercises.indices.filter { session.exercises[$0].supersetID == supersetID }
+      )
+    } else {
+      selectedIndexes = [exerciseIndex]
+    }
+
+    // Move the entire pending block so a selected exercise cannot be split by another block.
+    let completedPrefix = Array(order[..<currentPosition])
+    let pending = Array(order[currentPosition...])
+    let selected = pending.filter { selectedIndexes.contains($0.exerciseIndex) }
+    let remaining = pending.filter { !selectedIndexes.contains($0.exerciseIndex) }
+    order = completedPrefix + selected + remaining
     return true
   }
 
