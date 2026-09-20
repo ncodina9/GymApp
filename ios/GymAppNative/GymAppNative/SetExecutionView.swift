@@ -103,6 +103,7 @@ struct SetExecutionView: View {
           ExerciseReviewView(
             exercises: reviewExerciseIndexes.compactMap { execution.session.exercises.indices.contains($0) ? execution.session.exercises[$0] : nil },
             decisions: $exerciseDecisions,
+            isFinalReview: execution.current == nil,
             onContinue: continueAfterExerciseReview
           )
         case .finished:
@@ -203,6 +204,10 @@ struct SetExecutionView: View {
 
   private func continueAfterExerciseReview() {
     reviewExerciseIndexes = []
+    guard execution.current != nil else {
+      finishWorkout()
+      return
+    }
     if reviewRestSeconds > 0 {
       restEndsAt = Date().addingTimeInterval(TimeInterval(reviewRestSeconds))
       restTotalSeconds = reviewRestSeconds
@@ -319,21 +324,6 @@ private extension ActiveWorkoutPhase {
 private enum FlowDirection {
   case forward
   case backward
-
-  var transition: AnyTransition {
-    switch self {
-    case .forward:
-      .asymmetric(
-        insertion: .move(edge: .trailing).combined(with: .opacity),
-        removal: .move(edge: .leading).combined(with: .opacity)
-      )
-    case .backward:
-      .asymmetric(
-        insertion: .move(edge: .leading).combined(with: .opacity),
-        removal: .move(edge: .trailing).combined(with: .opacity)
-      )
-    }
-  }
 }
 
 private struct TransitionKey: Hashable {
@@ -358,15 +348,18 @@ private struct WorkoutProgressBar: View {
           .frame(width: geometry.size.width * progress)
       }
     }
-    .frame(height: 4)
-    .animation(.easeInOut(duration: 0.28), value: completed)
+    .frame(height: 44)
     .accessibilityLabel("Progreso del entrenamiento: \(completed) de \(total) series")
   }
 }
 
 private extension SetExecutionView {
   var transition: AnyTransition {
-    transitionDirection.transition
+    let insertionEdge: Edge = transitionDirection == .forward ? .trailing : .leading
+    return .asymmetric(
+      insertion: .move(edge: insertionEdge).combined(with: .opacity),
+      removal: .opacity
+    )
   }
 }
 
@@ -450,7 +443,8 @@ private struct WorkingSetView: View {
           BottomActions(
             primaryTitle: "Continuar",
             primaryAction: onContinue,
-            skipAction: onSkip
+            skipAction: onSkip,
+            primaryDisabled: trainingSet.type == .timed
           )
         }
         .padding(16)
@@ -541,8 +535,14 @@ private struct WorkingSetView: View {
     guard let targets = activeTargets else { return }
     let duration = max(15, (targets.durationSeconds ?? 60) + seconds)
     execution.updateTimedDuration(for: locator, durationSeconds: duration)
-    timerEndsAt = nil
-    timerRemaining = duration
+    if let timerEndsAt {
+      let remaining = max(0, Int(timerEndsAt.timeIntervalSinceNow.rounded(.up)))
+      let adjustedRemaining = max(0, remaining + seconds)
+      self.timerEndsAt = .now.addingTimeInterval(TimeInterval(adjustedRemaining))
+      timerRemaining = adjustedRemaining
+    } else {
+      timerRemaining = duration
+    }
     onExecutionChanged()
   }
 }
@@ -795,6 +795,7 @@ private func feedbackTimeLabel(_ seconds: Int) -> String {
 private struct ExerciseReviewView: View {
   let exercises: [TrainingExercise]
   @Binding var decisions: [String: String]
+  let isFinalReview: Bool
   let onContinue: () -> Void
 
   var body: some View {
@@ -818,7 +819,7 @@ private struct ExerciseReviewView: View {
       }
       .scrollIndicators(.hidden)
 
-      Button("Continuar", action: onContinue)
+      Button(isFinalReview ? "Finalizar" : "Continuar", action: onContinue)
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(.white)
@@ -929,6 +930,11 @@ private struct RestView: View {
         VStack(spacing: hasNextSuperset ? 8 : 3) {
           NextSetPreview(execution: execution, locator: next)
             .frame(maxHeight: hasNextSuperset ? 186 : 132, alignment: .top)
+            .padding(10)
+            .overlay {
+              RoundedRectangle(cornerRadius: 18)
+                .stroke(.separator.opacity(0.7), lineWidth: 1)
+            }
 
           PendingBlockSelector(
             execution: execution,
@@ -937,11 +943,6 @@ private struct RestView: View {
             onSelect: onSelectBlock
           )
           .frame(maxHeight: hasNextSuperset ? .infinity : 148, alignment: .top)
-        }
-        .padding(10)
-        .overlay {
-          RoundedRectangle(cornerRadius: 18)
-            .stroke(.separator.opacity(0.7), lineWidth: 1)
         }
 
         Button("Siguiente", action: onContinue)
@@ -993,7 +994,7 @@ private struct RestCountdownBar: View {
         .foregroundStyle(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .frame(maxWidth: .infinity, minHeight: 104)
+      .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 160)
       .clipShape(RoundedRectangle(cornerRadius: 30))
     }
     .buttonStyle(.plain)

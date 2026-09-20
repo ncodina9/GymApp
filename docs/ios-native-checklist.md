@@ -37,7 +37,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [~] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | `Hoy` marca las sesiones terminadas con borde y chip verdes; falta una vista de detalle con series, material y feedback. |
 | [ ] | P1 | M | Completar exportación CSV por serie y backup JSON desde iOS. | El CSV nativo ya se comparte desde el cierre; falta validar contra `docs/data-schemas.md` y añadir el backup JSON. |
 | [ ] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados e informa del resultado. |
-| [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano y muestran estado terminado. |
+| [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano, mantienen la marcha al ajustar duracion y muestran estado terminado. |
 | [x] | P1 | M | Edición táctil de objetivos y evaluación final de ejercicio. | Reps y peso se ajustan en una hoja inferior con los incrementos reales del material, se propagan a series homogéneas y se evalúa cada ejercicio o superserie antes del descanso. |
 | [x] | P1 | S | Reordenar el siguiente bloque durante un descanso. | Tras acabar un descanso se puede priorizar un bloque no iniciado; no se crean series saltadas y el bloque originalmente propuesto permanece pendiente. |
 | [ ] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la primera serie y compara con el estimado operativo, sin contar movilidad. |
