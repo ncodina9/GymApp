@@ -1297,6 +1297,8 @@ Actualización v0.1.80: el proyecto nativo requiere iOS 27. La barra de estado a
 
 Actualización v0.1.81: Próximos entrenamientos elimina el título duplicado del contenido y conserva la cabecera nativa. La previsualización fija el contexto de semana, sesión y estimación en una cabecera translúcida, mientras los ejercicios permanecen como contenido desplazable.
 
+Actualización v0.1.82: se corrige la asignación de superficies en los temas claros. White usa superficies blancas y Light superficies gris claro, manteniendo el canvas blanco común que asegura la continuidad con las regiones de sistema.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

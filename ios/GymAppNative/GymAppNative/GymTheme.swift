@@ -56,10 +56,10 @@ enum GymTheme {
 
     switch (lightPalette, role) {
     case (.white, .canvas): return UIColor.white
-    case (.white, .surface): return UIColor(red: 0.955, green: 0.961, blue: 0.969, alpha: 1)
+    case (.white, .surface): return UIColor.white
     case (.white, .accent): return UIColor(red: 0.20, green: 0.23, blue: 0.27, alpha: 1)
     case (.light, .canvas): return UIColor.white
-    case (.light, .surface): return UIColor.white
+    case (.light, .surface): return UIColor(red: 0.955, green: 0.961, blue: 0.969, alpha: 1)
     case (.light, .accent): return UIColor(red: 0.24, green: 0.28, blue: 0.33, alpha: 1)
     }
   }
