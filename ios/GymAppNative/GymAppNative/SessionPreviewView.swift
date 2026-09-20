@@ -4,6 +4,7 @@ import GymAppNativeCore
 struct SessionPreviewView: View {
   let session: TrainingSession
   let activeWorkout: ActiveWorkoutSnapshot?
+  let onReturnHome: () -> Void
   @State private var startsNewWorkout = false
   @State private var showsRestartConfirmation = false
   @Environment(\.dismiss) private var dismiss
@@ -70,7 +71,7 @@ struct SessionPreviewView: View {
     }
     .toolbar(.hidden, for: .navigationBar)
     .navigationDestination(isPresented: $startsNewWorkout) {
-      SetExecutionView(session: session)
+      SetExecutionView(session: session, onFinishToToday: returnToToday)
     }
     .alert("Empezar de nuevo", isPresented: $showsRestartConfirmation) {
       Button("Cancelar", role: .cancel) {}
@@ -94,7 +95,7 @@ struct SessionPreviewView: View {
 
           if let resumableWorkout {
             NavigationLink {
-              SetExecutionView(snapshot: resumableWorkout)
+              SetExecutionView(snapshot: resumableWorkout, onFinishToToday: returnToToday)
             } label: {
               Label("Reanudar", systemImage: "play.fill")
                 .font(.subheadline.weight(.bold))
@@ -128,6 +129,11 @@ struct SessionPreviewView: View {
 
   private func exerciseOrder(_ exercise: TrainingExercise) -> Int {
     (session.exercises.firstIndex { $0.id == exercise.id } ?? 0) + 1
+  }
+
+  private func returnToToday() {
+    startsNewWorkout = false
+    onReturnHome()
   }
 }
 

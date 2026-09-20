@@ -46,6 +46,15 @@ struct TrainingPlanDecodingTests {
     #expect(!EquipmentLoadRules.canUse(equipment: .dumbbell, referenceWeightKg: 65))
   }
 
+  @Test("Desglosa los discos de una barra por lado")
+  func createsPlateLayoutForBarbell() {
+    let layout = EquipmentLoadRules.plateLayout(totalWeightKg: 70, equipment: .barbell)
+
+    #expect(layout?.barWeightKg == 20)
+    #expect(layout?.sidePlatesKg == [20, 5])
+    #expect(EquipmentLoadRules.plateLayout(totalWeightKg: 70, equipment: .dumbbell) == nil)
+  }
+
   @Test("Conserva material y propaga objetivos homogéneos en una sesión")
   func keepsSessionMaterialAndTargets() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
@@ -132,6 +141,21 @@ struct TrainingPlanDecodingTests {
     #expect(state.records.count == 1)
     #expect(state.records.first?.status == .skipped)
     #expect(advance?.next?.setIndex == 2)
+  }
+
+  @Test("Solicita la evaluación al terminar un ejercicio")
+  func requestsExerciseReviewAfterFinalSet() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let firstExercise = try #require(session.exercises.first)
+    var state = WorkoutExecutionState(session: session)
+    var advance: WorkoutAdvance?
+
+    for _ in firstExercise.sets {
+      advance = state.recordCurrent(feedback: .ok)
+    }
+
+    #expect(advance?.reviewExerciseIndexes == [0])
   }
 
   @Test("Codifica el borrador ejecutable para recuperar una sesión activa")

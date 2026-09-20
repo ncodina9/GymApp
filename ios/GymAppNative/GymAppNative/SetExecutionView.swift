@@ -4,6 +4,7 @@ import GymAppNativeCore
 
 struct SetExecutionView: View {
   let session: TrainingSession
+  let onFinishToToday: () -> Void
   @State private var execution: WorkoutExecutionState
   @State private var phase: ExecutionPhase = .workingSet
   @State private var feedbackRir = 2
@@ -16,19 +17,24 @@ struct SetExecutionView: View {
   @State private var restTotalSeconds = 0
   @State private var setTimerEndsAt: Date?
   @State private var setTimerRemaining = 0
+  @State private var reviewExerciseIndexes: [Int] = []
+  @State private var reviewRestSeconds = 0
+  @State private var exerciseDecisions: [String: String] = [:]
   @State private var transitionOrigin: ExecutionPhase = .workingSet
   @State private var startedAt: Date
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
 
-  init(session: TrainingSession) {
+  init(session: TrainingSession, onFinishToToday: @escaping () -> Void = {}) {
     self.session = session
+    self.onFinishToToday = onFinishToToday
     _execution = State(initialValue: WorkoutExecutionState(session: session))
     _startedAt = State(initialValue: .now)
   }
 
-  init(snapshot: ActiveWorkoutSnapshot) {
+  init(snapshot: ActiveWorkoutSnapshot, onFinishToToday: @escaping () -> Void = {}) {
     session = snapshot.execution.session
+    self.onFinishToToday = onFinishToToday
     _execution = State(initialValue: snapshot.execution)
     _phase = State(initialValue: ExecutionPhase(snapshot.phase))
     _feedbackRir = State(initialValue: snapshot.feedback.rir)
@@ -41,6 +47,9 @@ struct SetExecutionView: View {
     _restTotalSeconds = State(initialValue: snapshot.restTotalSeconds)
     _setTimerEndsAt = State(initialValue: snapshot.setTimerEndsAt)
     _setTimerRemaining = State(initialValue: snapshot.setTimerRemaining)
+    _reviewExerciseIndexes = State(initialValue: snapshot.reviewExerciseIndexes)
+    _reviewRestSeconds = State(initialValue: snapshot.reviewRestSeconds)
+    _exerciseDecisions = State(initialValue: snapshot.exerciseDecisions)
     _startedAt = State(initialValue: snapshot.startedAt)
   }
 
@@ -60,7 +69,7 @@ struct SetExecutionView: View {
               onExecutionChanged: persistActiveWorkout
             )
           } else {
-            FinishedWorkoutView(execution: execution, onFinish: { dismiss() })
+            FinishedWorkoutView(execution: execution, onFinish: onFinishToToday)
           }
         case .feedback:
           if let locator = execution.current {
@@ -88,8 +97,14 @@ struct SetExecutionView: View {
               onContinue: continueFromRest
             )
           }
+        case .exerciseReview:
+          ExerciseReviewView(
+            exercises: reviewExerciseIndexes.compactMap { execution.session.exercises.indices.contains($0) ? execution.session.exercises[$0] : nil },
+            decisions: $exerciseDecisions,
+            onContinue: continueAfterExerciseReview
+          )
         case .finished:
-          FinishedWorkoutView(execution: execution, onFinish: { dismiss() })
+          FinishedWorkoutView(execution: execution, onFinish: onFinishToToday)
         }
       }
       .id(TransitionKey(origin: transitionOrigin, destination: phase))
@@ -111,6 +126,7 @@ struct SetExecutionView: View {
     .onChange(of: feedbackNote) { _, _ in persistActiveWorkout() }
     .onChange(of: setTimerEndsAt) { _, _ in persistActiveWorkout() }
     .onChange(of: setTimerRemaining) { _, _ in persistActiveWorkout() }
+    .onChange(of: exerciseDecisions) { _, _ in persistActiveWorkout() }
   }
 
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
@@ -139,6 +155,9 @@ struct SetExecutionView: View {
         restTotalSeconds: restTotalSeconds,
         setTimerEndsAt: setTimerEndsAt,
         setTimerRemaining: setTimerRemaining,
+        reviewExerciseIndexes: reviewExerciseIndexes,
+        reviewRestSeconds: reviewRestSeconds,
+        exerciseDecisions: exerciseDecisions,
         startedAt: startedAt
       ),
       in: modelContext
@@ -166,18 +185,42 @@ struct SetExecutionView: View {
     move(to: .workingSet, direction: .forward)
   }
 
+  private func continueAfterExerciseReview() {
+    reviewExerciseIndexes = []
+    if reviewRestSeconds > 0 {
+      restEndsAt = Date().addingTimeInterval(TimeInterval(reviewRestSeconds))
+      restTotalSeconds = reviewRestSeconds
+      reviewRestSeconds = 0
+      move(to: .rest, direction: .forward)
+    } else {
+      move(to: .workingSet, direction: .forward)
+    }
+  }
+
   private func skipCurrentSet() {
     guard let advance = execution.skipCurrent() else {
       finishWorkout()
       return
     }
 
+    if !advance.reviewExerciseIndexes.isEmpty {
+      advanceAfterRecord(advance)
+      return
+    }
     guard advance.next != nil else {
       finishWorkout()
       return
     }
 
-    if let restSeconds = advance.restSeconds, restSeconds > 0 {
+    advanceAfterRecord(advance)
+  }
+
+  private func advanceAfterRecord(_ advance: WorkoutAdvance) {
+    if !advance.reviewExerciseIndexes.isEmpty {
+      reviewExerciseIndexes = advance.reviewExerciseIndexes
+      reviewRestSeconds = advance.restSeconds ?? 0
+      move(to: .exerciseReview, direction: .forward)
+    } else if let restSeconds = advance.restSeconds, restSeconds > 0 {
       restEndsAt = Date().addingTimeInterval(TimeInterval(restSeconds))
       restTotalSeconds = restSeconds
       move(to: .rest, direction: .forward)
@@ -213,18 +256,16 @@ struct SetExecutionView: View {
     feedbackNote = "OK"
     setTimerEndsAt = nil
     setTimerRemaining = 0
+    if !advance.reviewExerciseIndexes.isEmpty {
+      advanceAfterRecord(advance)
+      return
+    }
     guard advance.next != nil else {
       finishWorkout()
       return
     }
 
-    if let restSeconds = advance.restSeconds, restSeconds > 0 {
-      restEndsAt = Date().addingTimeInterval(TimeInterval(restSeconds))
-      restTotalSeconds = restSeconds
-      move(to: .rest, direction: .forward)
-    } else {
-      move(to: .workingSet, direction: .forward)
-    }
+    advanceAfterRecord(advance)
   }
 }
 
@@ -232,6 +273,7 @@ private enum ExecutionPhase: Hashable {
   case workingSet
   case feedback
   case rest
+  case exerciseReview
   case finished
 }
 
@@ -241,6 +283,7 @@ private extension ExecutionPhase {
     case .workingSet: self = .workingSet
     case .feedback: self = .feedback
     case .rest: self = .rest
+    case .exerciseReview: self = .exerciseReview
     }
   }
 }
@@ -251,6 +294,7 @@ private extension ActiveWorkoutPhase {
     case .workingSet: self = .workingSet
     case .feedback: self = .feedback
     case .rest: self = .rest
+    case .exerciseReview: self = .exerciseReview
     case .finished: self = .workingSet
     }
   }
@@ -287,17 +331,17 @@ private extension SetExecutionView {
     case (.workingSet, .feedback):
       .asymmetric(
         insertion: .move(edge: .trailing).combined(with: .opacity),
-        removal: .move(edge: .leading).combined(with: .opacity)
+        removal: .opacity
       )
     case (.feedback, .workingSet):
       .asymmetric(
         insertion: .move(edge: .leading).combined(with: .opacity),
-        removal: .move(edge: .trailing).combined(with: .opacity)
+        removal: .opacity
       )
     default:
       .asymmetric(
         insertion: .move(edge: .trailing).combined(with: .opacity),
-        removal: .move(edge: .leading).combined(with: .opacity)
+        removal: .opacity
       )
     }
   }
@@ -311,6 +355,7 @@ private struct WorkingSetView: View {
   @Binding var timerEndsAt: Date?
   @Binding var timerRemaining: Int
   let onExecutionChanged: () -> Void
+  @State private var editField: SetEditField?
 
   private var exercise: TrainingExercise? { execution.exercise(for: locator) }
   private var trainingSet: TrainingSet? { execution.trainingSet(for: locator) }
@@ -344,17 +389,27 @@ private struct WorkingSetView: View {
             TimedSetTarget(
               seconds: activeTargets?.durationSeconds ?? 0,
               endsAt: $timerEndsAt,
-              pausedRemaining: $timerRemaining
+              pausedRemaining: $timerRemaining,
+              onAdjustDuration: adjustTimedDuration
             )
           } else {
             VStack(spacing: 10) {
-              SetTargetCard(label: "Reps", value: activeTargets?.reps.map(String.init) ?? "-")
+              SetTargetCard(
+                label: "Reps",
+                value: activeTargets?.reps.map(String.init) ?? "-",
+                action: { editField = .reps }
+              )
               SetTargetCard(
                 label: "Peso",
                 value: (activeTargets?.weightKg ?? trainingSet.targetWeightKg)
                   .formatted(.number.precision(.fractionLength(0...1))),
                 unit: weightUnit(for: activeEquipment),
-                numericValue: activeTargets?.weightKg ?? trainingSet.targetWeightKg
+                numericValue: activeTargets?.weightKg ?? trainingSet.targetWeightKg,
+                plateLayout: EquipmentLoadRules.plateLayout(
+                  totalWeightKg: activeTargets?.weightKg ?? trainingSet.targetWeightKg,
+                  equipment: activeEquipment
+                ),
+                action: { editField = .weight }
               )
             }
             .frame(maxHeight: .infinity)
@@ -377,6 +432,34 @@ private struct WorkingSetView: View {
         .padding(16)
       } else {
         ContentUnavailableView("Serie no disponible", systemImage: "exclamationmark.triangle")
+      }
+    }
+    .sheet(item: $editField) { field in
+      if let targets = activeTargets {
+        SetTargetEditor(
+          field: field,
+          initialValue: field == .reps ? Double(targets.reps ?? 0) : targets.weightKg,
+          equipment: activeEquipment,
+          onConfirm: { value in
+            switch field {
+            case .reps:
+              execution.updateWorkingTargets(
+                for: locator,
+                reps: max(1, Int(value)),
+                weightKg: targets.weightKg
+              )
+            case .weight:
+              execution.updateWorkingTargets(
+                for: locator,
+                reps: targets.reps,
+                weightKg: value
+              )
+            }
+            onExecutionChanged()
+          }
+        )
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
       }
     }
   }
@@ -421,15 +504,31 @@ private struct WorkingSetView: View {
 
   private func supersetPosition(for exercise: TrainingExercise) -> Int? {
     guard let supersetID = exercise.supersetID else { return nil }
-    return (execution.session.exercises.firstIndex {
-      $0.supersetID == supersetID && $0.exerciseID == exercise.exerciseID
-    } ?? 0) + 1
+    let members = execution.session.exercises.filter { $0.supersetID == supersetID }
+    return (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
   }
 
   private func supersetSize(for exercise: TrainingExercise) -> Int? {
     guard let supersetID = exercise.supersetID else { return nil }
     return execution.session.exercises.filter { $0.supersetID == supersetID }.count
   }
+
+  private func adjustTimedDuration(by seconds: Int) {
+    guard let targets = activeTargets else { return }
+    let duration = max(15, (targets.durationSeconds ?? 60) + seconds)
+    execution.updateTimedDuration(for: locator, durationSeconds: duration)
+    timerEndsAt = nil
+    timerRemaining = duration
+    onExecutionChanged()
+  }
+}
+
+private enum SetEditField: String, Identifiable {
+  case reps
+  case weight
+
+  var id: String { rawValue }
+  var title: String { self == .reps ? "Reps" : "Peso" }
 }
 
 private struct FeedbackView: View {
@@ -452,7 +551,7 @@ private struct FeedbackView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      FeedbackHeader(execution: execution, locator: locator, exercise: exercise, equipment: equipment)
+      FeedbackHeader(execution: execution, locator: locator, exercise: exercise)
 
       if isTimed {
         FeedbackMetric(label: "Tiempo", value: feedbackTimeLabel(targets?.durationSeconds ?? 0))
@@ -461,7 +560,8 @@ private struct FeedbackView: View {
           FeedbackMetric(label: "Reps", value: targets?.reps.map(String.init) ?? "-")
           FeedbackMetric(
             label: "Peso",
-            value: "\(targets?.weightKg.formatted(.number.precision(.fractionLength(0...1))) ?? "-") kg"
+            value: "\(targets?.weightKg.formatted(.number.precision(.fractionLength(0...1))) ?? "-") kg",
+            footer: equipment.executionLabel
           )
         }
       }
@@ -507,29 +607,23 @@ private struct FeedbackHeader: View {
   let execution: WorkoutExecutionState
   let locator: WorkoutSetLocator
   let exercise: TrainingExercise?
-  let equipment: Equipment
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
       HStack(alignment: .top, spacing: 12) {
-        Text(exercise?.baseExerciseName ?? "Ejercicio")
+        VStack(alignment: .leading, spacing: 5) {
+          Text(exercise?.baseExerciseName ?? "Ejercicio")
           .font(.system(size: 27, weight: .bold))
           .lineLimit(2)
           .frame(maxWidth: .infinity, alignment: .leading)
-
-        VStack(alignment: .trailing, spacing: 7) {
-          Text(equipment.executionLabel)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(.fill.quaternary, in: Capsule())
-
-          SetProgressIndicators(
-            setCount: exercise?.sets.count ?? 0,
-            currentSetIndex: locator.setIndex - 1
-          )
         }
+        .frame(maxWidth: .infinity, minHeight: 66, alignment: .topLeading)
+
+        SetProgressIndicators(
+          setCount: exercise?.sets.count ?? 0,
+          currentSetIndex: locator.setIndex - 1
+        )
+        .padding(.top, 5)
       }
 
       if let exercise, let supersetID = exercise.supersetID {
@@ -585,13 +679,19 @@ private struct FeedbackChip: View {
 private struct FeedbackMetric: View {
   let label: String
   let value: String
+  var footer: String? = nil
 
   var body: some View {
     VStack(spacing: 5) {
       Text(label).font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
       Text(value).font(.system(size: 31, weight: .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+      Text(footer ?? "Material")
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+        .opacity(footer == nil ? 0 : 1)
     }
-    .frame(maxWidth: .infinity, minHeight: 78)
+    .frame(maxWidth: .infinity, minHeight: 94)
     .background(.background, in: RoundedRectangle(cornerRadius: 12))
     .overlay { RoundedRectangle(cornerRadius: 12).stroke(.separator, lineWidth: 1) }
   }
@@ -666,6 +766,97 @@ private extension View {
 
 private func feedbackTimeLabel(_ seconds: Int) -> String {
   "\(seconds / 60):\(String(format: "%02d", seconds % 60))"
+}
+
+private struct ExerciseReviewView: View {
+  let exercises: [TrainingExercise]
+  @Binding var decisions: [String: String]
+  let onContinue: () -> Void
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      Text(exercises.count > 1 ? "Evaluar superserie" : "Evaluar ejercicio")
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(.secondary)
+
+      ScrollView {
+        VStack(alignment: .leading, spacing: 16) {
+          ForEach(exercises) { exercise in
+            ExerciseDecisionSection(
+              exercise: exercise,
+              selection: Binding(
+                get: { decisions[exercise.exerciseID] ?? ExerciseDecisionSection.defaultDecision(for: exercise) },
+                set: { decisions[exercise.exerciseID] = $0 }
+              )
+            )
+          }
+        }
+      }
+      .scrollIndicators(.hidden)
+
+      Button("Continuar", action: onContinue)
+        .font(.headline.weight(.bold))
+        .frame(maxWidth: .infinity, minHeight: 64)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .buttonStyle(.plain)
+    }
+    .padding(16)
+  }
+}
+
+private struct ExerciseDecisionSection: View {
+  let exercise: TrainingExercise
+  @Binding var selection: String
+
+  private var isTimed: Bool { exercise.sets.first?.type == .timed }
+
+  static func defaultDecision(for exercise: TrainingExercise) -> String {
+    exercise.sets.first?.type == .timed ? "Mantener tiempo" : "Mantener"
+  }
+  private var options: [String] {
+    if isTimed {
+      return ["Mantener tiempo", "Subir tiempo", "Bajar tiempo", "Mejorar posición", "Marcar molestia"]
+    }
+    let canChangeWeight = exercise.equipment != .bodyweight && exercise.equipment != .cable
+    return canChangeWeight
+      ? ["Mantener", "Subir peso", "Bajar peso", "Subir reps", "Bajar reps", "Marcar molestia"]
+      : ["Mantener", "Subir reps", "Bajar reps", "Marcar molestia"]
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Text(exercise.baseExerciseName)
+        .font(.title3.weight(.bold))
+        .lineLimit(2)
+      LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+        ForEach(options, id: \.self) { option in
+          decisionButton(option)
+        }
+      }
+    }
+  }
+
+  private func decisionButton(_ option: String) -> some View {
+    Button(option) { selection = option }
+      .font(.caption.weight(.bold))
+      .lineLimit(1)
+      .minimumScaleFactor(0.75)
+      .frame(maxWidth: .infinity, minHeight: 46)
+      .foregroundStyle(selection == option ? .white : decisionColor(option))
+      .background(
+        selection == option ? decisionColor(option) : decisionColor(option).opacity(0.12),
+        in: RoundedRectangle(cornerRadius: 12)
+      )
+      .buttonStyle(.plain)
+  }
+
+  private func decisionColor(_ option: String) -> Color {
+    let lower = option.lowercased()
+    if lower.contains("bajar") || lower.contains("molestia") { return .red }
+    if lower.contains("subir") { return .green }
+    return Color.accentColor
+  }
 }
 
 private struct RestView: View {
@@ -1134,30 +1325,164 @@ private struct SetTargetCard: View {
   let value: String
   var unit: String? = nil
   var numericValue: Double? = nil
+  var plateLayout: BarbellPlateLayout? = nil
+  let action: () -> Void
 
   var body: some View {
-    VStack(spacing: 8) {
+    Button(action: action) {
+      VStack(spacing: 8) {
       Text(label)
         .font(.headline.weight(.semibold))
         .foregroundStyle(.secondary)
-      Text(value)
-        .font(.system(size: 58, weight: .bold))
-        .monospacedDigit()
-        .lineLimit(1)
-        .minimumScaleFactor(0.65)
-        .contentTransition(numericValue.map { .numericText(value: $0) } ?? .identity)
-        .animation(.snappy(duration: 0.32, extraBounce: 0.04), value: numericValue)
+      ZStack {
+        if let plateLayout, !plateLayout.sidePlatesKg.isEmpty {
+          PlateStack(plates: plateLayout.sidePlatesKg, side: .left)
+          PlateStack(plates: plateLayout.sidePlatesKg, side: .right)
+        }
+        Text(value)
+          .font(.system(size: 58, weight: .bold))
+          .monospacedDigit()
+          .lineLimit(1)
+          .minimumScaleFactor(0.65)
+          .contentTransition(numericValue.map { .numericText(value: $0) } ?? .identity)
+          .animation(.snappy(duration: 0.32, extraBounce: 0.04), value: numericValue)
+      }
+      .frame(maxWidth: .infinity)
       if let unit {
         Text(unit)
           .font(.subheadline.weight(.medium))
           .foregroundStyle(.secondary)
       }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(.background, in: RoundedRectangle(cornerRadius: 22))
+      .overlay {
+        RoundedRectangle(cornerRadius: 22)
+          .stroke(Color.accentColor, lineWidth: 2)
+      }
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(.background, in: RoundedRectangle(cornerRadius: 22))
-    .overlay {
-      RoundedRectangle(cornerRadius: 22)
-        .stroke(Color.accentColor, lineWidth: 2)
+    .buttonStyle(.plain)
+  }
+}
+
+private struct PlateStack: View {
+  enum Side { case left, right }
+
+  let plates: [Double]
+  let side: Side
+
+  var body: some View {
+    HStack {
+      if side == .left { stack; Spacer(minLength: 0) }
+      else { Spacer(minLength: 0); stack }
+    }
+    .padding(.horizontal, 12)
+    .accessibilityLabel("Discos por lado: \(plates.map { $0.formatted() }.joined(separator: ", ")) kg")
+  }
+
+  private var stack: some View {
+    VStack(spacing: 3) {
+      ForEach(Array(plates.enumerated()), id: \.offset) { _, plate in
+        Text(plate.formatted(.number.precision(.fractionLength(0...2))))
+          .font(.system(size: 9, weight: .bold))
+          .foregroundStyle(.primary)
+          .frame(width: plateWidth(plate), height: plateHeight(plate))
+          .background(Color.accentColor.opacity(0.16), in: RoundedRectangle(cornerRadius: 5))
+          .overlay {
+            RoundedRectangle(cornerRadius: 5).stroke(Color.accentColor.opacity(0.45), lineWidth: 1)
+          }
+      }
+    }
+  }
+
+  private func plateWidth(_ plate: Double) -> CGFloat {
+    18 + CGFloat(min(plate, 20)) * 1.1
+  }
+
+  private func plateHeight(_ plate: Double) -> CGFloat {
+    16 + CGFloat(min(plate, 20)) * 0.45
+  }
+}
+
+private struct SetTargetEditor: View {
+  let field: SetEditField
+  let initialValue: Double
+  let equipment: Equipment
+  let onConfirm: (Double) -> Void
+  @Environment(\.dismiss) private var dismiss
+  @State private var value: Double
+
+  init(
+    field: SetEditField,
+    initialValue: Double,
+    equipment: Equipment,
+    onConfirm: @escaping (Double) -> Void
+  ) {
+    self.field = field
+    self.initialValue = initialValue
+    self.equipment = equipment
+    self.onConfirm = onConfirm
+    _value = State(initialValue: initialValue)
+  }
+
+  var body: some View {
+    VStack(spacing: 18) {
+      HStack {
+        Button("Descartar") { dismiss() }
+          .font(.subheadline.weight(.semibold))
+        Spacer()
+        Text("Ajustar \(field.title)")
+          .font(.headline.weight(.bold))
+        Spacer()
+        Button("Confirmar") {
+          onConfirm(value)
+          dismiss()
+        }
+        .font(.subheadline.weight(.bold))
+      }
+
+      Spacer(minLength: 0)
+      Text(displayValue)
+        .font(.system(size: 72, weight: .bold))
+        .monospacedDigit()
+        .contentTransition(.numericText(value: value))
+
+      HStack(spacing: 12) {
+        adjustmentButton(symbol: "minus") { adjust(-1) }
+        adjustmentButton(symbol: "plus") { adjust(1) }
+      }
+      Spacer(minLength: 0)
+    }
+    .padding(20)
+  }
+
+  private var displayValue: String {
+    field == .reps
+      ? "\(Int(value))"
+      : "\(value.formatted(.number.precision(.fractionLength(0...1)))) kg"
+  }
+
+  private func adjustmentButton(symbol: String, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+      Image(systemName: symbol)
+        .font(.system(size: 30, weight: .bold))
+        .frame(maxWidth: .infinity, minHeight: 76)
+        .foregroundStyle(.primary)
+        .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 24))
+        .overlay { RoundedRectangle(cornerRadius: 24).stroke(Color.accentColor.opacity(0.45), lineWidth: 1) }
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func adjust(_ direction: Int) {
+    if field == .reps {
+      value = Double(max(1, Int(value) + direction))
+    } else {
+      value = EquipmentLoadRules.adjustedWeight(
+        from: value,
+        equipment: equipment,
+        direction: direction
+      )
     }
   }
 }
@@ -1166,6 +1491,7 @@ private struct TimedSetTarget: View {
   let seconds: Int
   @Binding var endsAt: Date?
   @Binding var pausedRemaining: Int
+  let onAdjustDuration: (Int) -> Void
 
   private var isRunning: Bool { endsAt != nil }
 
@@ -1196,9 +1522,18 @@ private struct TimedSetTarget: View {
           }
           .foregroundStyle(.white)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+          HStack(spacing: 8) {
+            timeAdjustmentButton(title: "-15s") { onAdjustDuration(-15) }
+            Spacer()
+            timeAdjustmentButton(title: "+15s") { onAdjustDuration(15) }
+          }
+          .padding(10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 22))
+        .contentShape(RoundedRectangle(cornerRadius: 22))
+        .onTapGesture(perform: toggle)
 
         HStack(spacing: 12) {
           Button(action: reset) {
@@ -1256,6 +1591,16 @@ private struct TimedSetTarget: View {
 
   private func clock(_ totalSeconds: Int) -> String {
     "\(totalSeconds / 60):\(String(format: "%02d", totalSeconds % 60))"
+  }
+
+  private func timeAdjustmentButton(title: String, action: @escaping () -> Void) -> some View {
+    Button(title, action: action)
+      .font(.caption.weight(.bold))
+      .foregroundStyle(.white)
+      .padding(.horizontal, 10)
+      .padding(.vertical, 7)
+      .background(.black.opacity(0.18), in: Capsule())
+      .buttonStyle(.plain)
   }
 }
 

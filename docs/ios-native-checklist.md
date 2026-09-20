@@ -16,8 +16,8 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | Área | Estado verificable | Referencia |
 | --- | --- | --- |
 | Contrato del plan | Completado | `GymAppNativeCore` decodifica el JSON de producción en pruebas. |
-| Hoy y previsualización | Completado | Diseño y navegación base trasladados desde la PWA. |
-| Serie, feedback y descanso | Persistencia activa | Ejecutan, saltan series y recuperan serie, feedback, temporizador y descanso tras un cierre. |
+| Hoy y previsualización | Completado | Semana completa en tarjetas, con fecha, foco, estimado, bloques y navegación directa a la previsualización. |
+| Serie, feedback y descanso | Persistencia activa | Ejecutan, editan objetivos, saltan series y recuperan serie, feedback, evaluación, temporizador y descanso tras un cierre. |
 | Material y cargas | Completado en memoria | Variante por ejercicio, inventario y redondeo cubiertos por tests Swift. |
 | Persistencia, historial e import/export | Parcial | El borrador activo usa SwiftData; historial e import/export siguen pendientes. |
 
@@ -38,6 +38,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [ ] | P1 | M | Completar exportación CSV por serie y backup JSON desde iOS. | El CSV nativo ya se comparte desde el cierre; falta validar contra `docs/data-schemas.md` y añadir el backup JSON. |
 | [ ] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados e informa del resultado. |
 | [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano y muestran estado terminado. |
+| [x] | P1 | M | Edición táctil de objetivos y evaluación final de ejercicio. | Reps y peso se ajustan en una hoja inferior con los incrementos reales del material, se propagan a series homogéneas y se evalúa cada ejercicio o superserie antes del descanso. |
 | [ ] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la primera serie y compara con el estimado operativo, sin contar movilidad. |
 | [ ] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, reinicio controlado e importación/exportación accesibles. |
 
@@ -45,7 +46,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 
 | Estado | Pri. | Coste | Tarea | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
-| [ ] | P2 | S | Mostrar discos por lado para barra y multipower. | Respeta inventario y variantes, sin reducir la legibilidad del peso central. |
+| [x] | P2 | S | Mostrar discos por lado para barra y multipower. | Respeta inventario y variantes, sin reducir la legibilidad del peso central. |
 | [ ] | P2 | S | Sustituir SF Symbols provisionales por Heroicons locales. | Los iconos usados coinciden con los roles de la PWA y respetan accesibilidad. |
 | [ ] | P2 | M | Notificación local y háptica al acabar descanso. | Funciona con permisos denegados sin bloquear el flujo. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |

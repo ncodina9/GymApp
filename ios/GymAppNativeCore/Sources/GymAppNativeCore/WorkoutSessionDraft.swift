@@ -106,6 +106,36 @@ public struct WorkoutSessionDraft: Codable, Sendable {
     }
   }
 
+  public mutating func updateTimedDuration(
+    for exerciseID: String,
+    setIndex: Int,
+    durationSeconds: Int
+  ) {
+    guard let exercise = exercise(withID: exerciseID),
+          let currentPosition = exercise.sets.firstIndex(where: { $0.setIndex == setIndex })
+    else {
+      return
+    }
+
+    let currentPlannedSet = exercise.sets[currentPosition]
+    let equipment = equipment(for: exerciseID) ?? exercise.equipment
+    let override = TargetOverride(
+      reps: currentPlannedSet.targetReps,
+      referenceWeightKg: EquipmentLoadRules.referenceWeightKg(
+        currentPlannedSet.targetWeightKg,
+        equipment: equipment
+      ),
+      durationSeconds: durationSeconds
+    )
+
+    for trainingSet in exercise.sets[currentPosition...] {
+      guard hasSamePlannedTarget(currentPlannedSet, trainingSet) else { break }
+      targetOverrides[
+        SetTargetKey(exerciseID: exerciseID, setIndex: trainingSet.setIndex)
+      ] = override
+    }
+  }
+
   private func exercise(withID exerciseID: String) -> TrainingExercise? {
     session.exercises.first { $0.exerciseID == exerciseID }
   }

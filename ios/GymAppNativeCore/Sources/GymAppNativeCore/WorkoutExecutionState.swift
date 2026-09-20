@@ -71,6 +71,7 @@ public struct WorkoutSetRecord: Codable, Equatable, Sendable {
 public struct WorkoutAdvance: Sendable {
   public let next: WorkoutSetLocator?
   public let restSeconds: Int?
+  public let reviewExerciseIndexes: [Int]
 }
 
 public struct WorkoutExecutionState: Codable, Sendable {
@@ -139,6 +140,18 @@ public struct WorkoutExecutionState: Codable, Sendable {
     )
   }
 
+  public mutating func updateTimedDuration(
+    for locator: WorkoutSetLocator,
+    durationSeconds: Int
+  ) {
+    guard let exercise = exercise(for: locator) else { return }
+    draft.updateTimedDuration(
+      for: exercise.exerciseID,
+      setIndex: locator.setIndex,
+      durationSeconds: durationSeconds
+    )
+  }
+
   @discardableResult
   public mutating func recordCurrent(
     feedback: WorkoutSetFeedback,
@@ -177,8 +190,25 @@ public struct WorkoutExecutionState: Codable, Sendable {
 
     return WorkoutAdvance(
       next: next,
-      restSeconds: restAfterCurrent(current, next: next, proposedRest: trainingSet.restSeconds)
+      restSeconds: restAfterCurrent(current, next: next, proposedRest: trainingSet.restSeconds),
+      reviewExerciseIndexes: reviewExerciseIndexes(afterRecording: current)
     )
+  }
+
+  private func reviewExerciseIndexes(afterRecording current: WorkoutSetLocator) -> [Int] {
+    guard let exercise = exercise(for: current) else { return [] }
+
+    let exerciseIndexes: [Int]
+    if let supersetID = exercise.supersetID {
+      exerciseIndexes = session.exercises.indices.filter { session.exercises[$0].supersetID == supersetID }
+    } else {
+      exerciseIndexes = [current.exerciseIndex]
+    }
+
+    let hasPendingSetInGroup = order.dropFirst(currentPosition).contains {
+      exerciseIndexes.contains($0.exerciseIndex)
+    }
+    return hasPendingSetInGroup ? [] : exerciseIndexes
   }
 
   private func restAfterCurrent(

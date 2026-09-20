@@ -6,6 +6,7 @@ enum ActiveWorkoutPhase: String, Codable {
   case workingSet
   case feedback
   case rest
+  case exerciseReview
 }
 
 struct ActiveWorkoutFeedbackDraft: Codable {
@@ -18,7 +19,7 @@ struct ActiveWorkoutFeedbackDraft: Codable {
 }
 
 struct ActiveWorkoutSnapshot: Codable {
-  static let currentSchemaVersion = 3
+  static let currentSchemaVersion = 4
 
   let schemaVersion: Int
   var execution: WorkoutExecutionState
@@ -28,6 +29,9 @@ struct ActiveWorkoutSnapshot: Codable {
   var restTotalSeconds: Int
   var setTimerEndsAt: Date?
   var setTimerRemaining: Int
+  var reviewExerciseIndexes: [Int]
+  var reviewRestSeconds: Int
+  var exerciseDecisions: [String: String]
   let startedAt: Date
 
   init(
@@ -38,6 +42,9 @@ struct ActiveWorkoutSnapshot: Codable {
     restTotalSeconds: Int,
     setTimerEndsAt: Date?,
     setTimerRemaining: Int,
+    reviewExerciseIndexes: [Int],
+    reviewRestSeconds: Int,
+    exerciseDecisions: [String: String],
     startedAt: Date
   ) {
     schemaVersion = Self.currentSchemaVersion
@@ -48,7 +55,41 @@ struct ActiveWorkoutSnapshot: Codable {
     self.restTotalSeconds = restTotalSeconds
     self.setTimerEndsAt = setTimerEndsAt
     self.setTimerRemaining = setTimerRemaining
+    self.reviewExerciseIndexes = reviewExerciseIndexes
+    self.reviewRestSeconds = reviewRestSeconds
+    self.exerciseDecisions = exerciseDecisions
     self.startedAt = startedAt
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case schemaVersion
+    case execution
+    case phase
+    case feedback
+    case restEndsAt
+    case restTotalSeconds
+    case setTimerEndsAt
+    case setTimerRemaining
+    case reviewExerciseIndexes
+    case reviewRestSeconds
+    case exerciseDecisions
+    case startedAt
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 3
+    execution = try container.decode(WorkoutExecutionState.self, forKey: .execution)
+    phase = try container.decode(ActiveWorkoutPhase.self, forKey: .phase)
+    feedback = try container.decode(ActiveWorkoutFeedbackDraft.self, forKey: .feedback)
+    restEndsAt = try container.decodeIfPresent(Date.self, forKey: .restEndsAt)
+    restTotalSeconds = try container.decodeIfPresent(Int.self, forKey: .restTotalSeconds) ?? 0
+    setTimerEndsAt = try container.decodeIfPresent(Date.self, forKey: .setTimerEndsAt)
+    setTimerRemaining = try container.decodeIfPresent(Int.self, forKey: .setTimerRemaining) ?? 0
+    reviewExerciseIndexes = try container.decodeIfPresent([Int].self, forKey: .reviewExerciseIndexes) ?? []
+    reviewRestSeconds = try container.decodeIfPresent(Int.self, forKey: .reviewRestSeconds) ?? 0
+    exerciseDecisions = try container.decodeIfPresent([String: String].self, forKey: .exerciseDecisions) ?? [:]
+    startedAt = try container.decode(Date.self, forKey: .startedAt)
   }
 }
 
@@ -72,7 +113,7 @@ enum ActiveWorkoutStore {
   static func load(from records: [ActiveWorkoutRecord]) -> ActiveWorkoutSnapshot? {
     guard let record = records.first(where: { $0.id == recordID }),
           let snapshot = try? JSONDecoder().decode(ActiveWorkoutSnapshot.self, from: record.snapshotData),
-          snapshot.schemaVersion == ActiveWorkoutSnapshot.currentSchemaVersion
+          (3 ... ActiveWorkoutSnapshot.currentSchemaVersion).contains(snapshot.schemaVersion)
     else {
       return nil
     }

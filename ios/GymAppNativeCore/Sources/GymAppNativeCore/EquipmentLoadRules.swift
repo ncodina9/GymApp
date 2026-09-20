@@ -8,6 +8,11 @@ public enum EquipmentLoadType: Sendable {
   case bodyweight
 }
 
+public struct BarbellPlateLayout: Equatable, Sendable {
+  public let barWeightKg: Double
+  public let sidePlatesKg: [Double]
+}
+
 public enum EquipmentLoadRules {
   private static let dumbbellLoadsKg: [Double] = [
     5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30,
@@ -81,6 +86,47 @@ public enum EquipmentLoadRules {
     case .bodyweight:
       [0]
     }
+  }
+
+  public static func adjustedWeight(
+    from currentWeightKg: Double,
+    equipment: Equipment,
+    direction: Int
+  ) -> Double {
+    guard direction != 0 else { return currentWeightKg }
+    let loads = availableLoads(for: equipment)
+    guard !loads.isEmpty else { return currentWeightKg }
+    let currentIndex = loads.indices.min {
+      abs(loads[$0] - currentWeightKg) < abs(loads[$1] - currentWeightKg)
+    } ?? 0
+    let nextIndex = min(max(0, currentIndex + (direction > 0 ? 1 : -1)), loads.count - 1)
+    return loads[nextIndex]
+  }
+
+  public static func plateLayout(
+    totalWeightKg: Double,
+    equipment: Equipment
+  ) -> BarbellPlateLayout? {
+    let barWeightKg: Double
+    switch equipment {
+    case .barbell: barWeightKg = barbellWeightKg
+    case .multipower: barWeightKg = multipowerBarWeightKg
+    default: return nil
+    }
+
+    guard totalWeightKg >= barWeightKg else { return nil }
+    var remainingSideWeight = roundToHundredth((totalWeightKg - barWeightKg) / 2)
+    var sidePlates: [Double] = []
+
+    for plate in plateInventory.sorted(by: { $0.weight > $1.weight }) {
+      for _ in 0 ..< (plate.count / 2) where remainingSideWeight >= plate.weight {
+        sidePlates.append(plate.weight)
+        remainingSideWeight = roundToHundredth(remainingSideWeight - plate.weight)
+      }
+    }
+
+    guard remainingSideWeight == 0 else { return nil }
+    return BarbellPlateLayout(barWeightKg: barWeightKg, sidePlatesKg: sidePlates)
   }
 
   private static func nearestAvailableLoad(to target: Double, equipment: Equipment) -> Double {

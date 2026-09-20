@@ -5,6 +5,7 @@ import GymAppNativeCore
 struct TodayView: View {
   let plan: TrainingPlan
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
+  @State private var path: [String] = []
 
   init(plan: TrainingPlan) {
     self.plan = plan
@@ -24,41 +25,39 @@ struct TodayView: View {
   }
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $path) {
       if let recommendedSession {
         ScrollView {
-          VStack(spacing: 12) {
+          VStack(alignment: .leading, spacing: 12) {
             Text("Semana \(recommendedSession.week) · \(recommendedSession.weekFocusLabel)")
               .font(.subheadline.weight(.semibold))
               .foregroundStyle(.secondary)
               .frame(maxWidth: .infinity, alignment: .leading)
 
-            NavigationLink {
-              SessionPreviewView(session: recommendedSession, activeWorkout: activeWorkout)
-            } label: {
-              TodaySessionCard(session: recommendedSession)
-            }
-            .buttonStyle(.plain)
-
-            VStack(spacing: 8) {
-              ForEach(weekSessions) { session in
-                NavigationLink {
-                  SessionPreviewView(session: session, activeWorkout: activeWorkout)
-                } label: {
-                  WeekSessionRow(
-                    session: session,
-                    isRecommended: session.sessionID == recommendedSession.sessionID,
-                    isInProgress: activeWorkout?.execution.session.sessionID == session.sessionID
-                  )
-                }
-                .buttonStyle(.plain)
+            ForEach(weekSessions) { session in
+              NavigationLink(value: session.sessionID) {
+                WeekSessionCard(
+                  session: session,
+                  isRecommended: session.sessionID == recommendedSession.sessionID,
+                  isInProgress: activeWorkout?.execution.session.sessionID == session.sessionID
+                )
               }
+              .buttonStyle(.plain)
             }
           }
           .padding(.horizontal, 16)
           .padding(.vertical, 12)
         }
         .scrollIndicators(.hidden)
+        .navigationDestination(for: String.self) { sessionID in
+          if let session = plan.sessions.first(where: { $0.sessionID == sessionID }) {
+            SessionPreviewView(
+              session: session,
+              activeWorkout: activeWorkout,
+              onReturnHome: { path.removeAll() }
+            )
+          }
+        }
       } else {
         ContentUnavailableView(
           "No hay entrenamientos",
@@ -78,88 +77,18 @@ struct TodayView: View {
   }
 }
 
-private struct TodaySessionCard: View {
-  let session: TrainingSession
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Text("Hoy toca")
-        .font(.subheadline.weight(.semibold))
-        .foregroundStyle(.secondary)
-
-      Text(session.label)
-        .font(.system(size: 32, weight: .bold))
-        .lineLimit(2)
-        .frame(height: 92, alignment: .topLeading)
-        .padding(.top, 12)
-
-      Text(session.focus)
-        .font(.body)
-        .foregroundStyle(.secondary)
-        .lineLimit(2)
-        .frame(height: 48, alignment: .topLeading)
-        .padding(.top, 8)
-
-      TodayMetric(label: "Fecha", value: Self.dateLabel(session.date))
-
-      HStack(spacing: 8) {
-        TodayMetric(label: "Estimado", value: "\(session.estimatedMinutes)m")
-        TodayMetric(label: "Bloques", value: "\(session.exercises.count)")
-      }
-      .padding(.top, 8)
-    }
-    .padding(16)
-    .frame(height: 340)
-    .background(.background, in: RoundedRectangle(cornerRadius: 20))
-    .overlay {
-      RoundedRectangle(cornerRadius: 20)
-        .stroke(Color.accentColor, lineWidth: 2)
-    }
-  }
-
-  private static func dateLabel(_ isoDate: String) -> String {
-    let parser = DateFormatter()
-    parser.locale = Locale(identifier: "en_US_POSIX")
-    parser.dateFormat = "yyyy-MM-dd"
-
-    guard let date = parser.date(from: isoDate) else { return isoDate }
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "es_ES")
-    formatter.dateFormat = "EEE, d MMM"
-    return formatter.string(from: date).lowercased()
-  }
-}
-
-private struct TodayMetric: View {
-  let label: String
-  let value: String
-
-  var body: some View {
-    VStack(spacing: 7) {
-      Text(label)
-        .font(.caption.weight(.semibold))
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-      Text(value)
-        .font(.title3.weight(.bold))
-        .monospacedDigit()
-        .lineLimit(1)
-        .minimumScaleFactor(0.7)
-    }
-    .frame(maxWidth: .infinity, minHeight: 58)
-    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
-  }
-}
-
-private struct WeekSessionRow: View {
+private struct WeekSessionCard: View {
   let session: TrainingSession
   let isRecommended: Bool
   let isInProgress: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 5) {
-      HStack {
-        Text(session.weekday)
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(alignment: .firstTextBaseline) {
+        Text(session.weekday.capitalized)
+          .font(.subheadline.weight(.bold))
+          .foregroundStyle(.secondary)
+        Text(Self.dateLabel(session.date))
           .font(.subheadline.weight(.semibold))
           .foregroundStyle(.secondary)
         Spacer()
@@ -178,18 +107,61 @@ private struct WeekSessionRow: View {
       }
 
       Text(session.label)
-        .font(.title3.weight(.bold))
+        .font(.title2.weight(.bold))
         .lineLimit(2)
         .frame(maxWidth: .infinity, alignment: .leading)
+
+      Text(session.focus)
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .lineLimit(2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      HStack(spacing: 8) {
+        SessionMetric(label: "Estimado", value: "\(session.estimatedMinutes)m")
+        SessionMetric(label: "Bloques", value: "\(session.exercises.count)")
+      }
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 11)
-    .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
     .foregroundStyle(.primary)
-    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
+    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 22))
     .overlay {
-      RoundedRectangle(cornerRadius: 18)
-        .stroke(isInProgress ? Color.orange : (isRecommended ? Color.accentColor : Color.secondary.opacity(0.3)), lineWidth: isRecommended || isInProgress ? 2 : 1)
+      RoundedRectangle(cornerRadius: 22)
+        .stroke(
+          isInProgress ? Color.orange : (isRecommended ? Color.accentColor : Color.secondary.opacity(0.3)),
+          lineWidth: isRecommended || isInProgress ? 2 : 1
+        )
     }
+  }
+
+  private static func dateLabel(_ isoDate: String) -> String {
+    let parser = DateFormatter()
+    parser.locale = Locale(identifier: "en_US_POSIX")
+    parser.dateFormat = "yyyy-MM-dd"
+    guard let date = parser.date(from: isoDate) else { return isoDate }
+
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateFormat = "d MMM"
+    return formatter.string(from: date).lowercased()
+  }
+}
+
+private struct SessionMetric: View {
+  let label: String
+  let value: String
+
+  var body: some View {
+    VStack(spacing: 6) {
+      Text(label)
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      Text(value)
+        .font(.title3.weight(.bold))
+        .monospacedDigit()
+    }
+    .frame(maxWidth: .infinity, minHeight: 54)
+    .background(.background, in: RoundedRectangle(cornerRadius: 14))
   }
 }
