@@ -13,7 +13,18 @@ struct TodayView: View {
   }
 
   private var recommendedSession: TrainingSession? {
-    plan.sessions.first { $0.date == Self.todayISODate } ?? plan.sessions.first
+    let sessionsByWeek = Dictionary(grouping: plan.sessions, by: \.week)
+      .values
+      .map { $0.sorted { $0.date < $1.date } }
+      .sorted { $0[0].week < $1[0].week }
+
+    if let nextWeek = sessionsByWeek.first(where: { week in
+      week.contains { !completedSessionIDs.contains($0.sessionID) }
+    }) {
+      return nextWeek.first
+    }
+
+    return plan.sessions.max { $0.date < $1.date }
   }
 
   private var weekSessions: [TrainingSession] {
@@ -89,14 +100,6 @@ struct TodayView: View {
     }
   }
 
-  private static var todayISODate: String {
-    let formatter = DateFormatter()
-    formatter.calendar = Calendar(identifier: .iso8601)
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = .current
-    formatter.dateFormat = "yyyy-MM-dd"
-    return formatter.string(from: Date())
-  }
 }
 
 struct WeekSessionCard: View {

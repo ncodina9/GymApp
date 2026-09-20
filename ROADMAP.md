@@ -1307,6 +1307,8 @@ Actualización v0.1.85: las tarjetas de sesiones en Exportación muestran una l�
 
 Actualización v0.1.86: el importador nativo acepta los valores históricos numéricos de `painOther` generados por la PWA, además de texto y valores nulos. El backup de transición mantiene así su estructura original al volver a exportarse y las sesiones completadas pueden importarse sin descartar el archivo completo.
 
+Actualización v0.1.87: Exportación sitúa backup, importación y borrado confirmado antes del historial de sesiones. `Hoy` deja de depender de la fecha exacta del día y presenta siempre la primera semana incompleta del plan; al completar todas las sesiones de una semana, pasa automáticamente a la siguiente.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

@@ -43,7 +43,7 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.86")
+        Text("v0.1.87")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -226,8 +226,30 @@ private struct ExportSettingsView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 14) {
+        ShareLink(item: backupURL()) {
+          Label("Exportar backup JSON", systemImage: "archivebox")
+        }
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+
+        Button {
+          showsImporter = true
+        } label: {
+          Label("Importar backup JSON", systemImage: "square.and.arrow.down")
+        }
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+
+        Button("Borrar todos los datos locales", role: .destructive) {
+          showsDeleteConfirmation = true
+        }
+        .frame(maxWidth: .infinity, minHeight: 56)
+
         Text("Sesiones guardadas: \(completedRecords.count)")
           .font(.headline)
+          .padding(.top, 8)
         Text("El backup JSON conserva todas las sesiones. El CSV se puede regenerar para sesiones con registro nativo detallado.")
           .font(.subheadline)
           .foregroundStyle(.secondary)
@@ -257,26 +279,6 @@ private struct ExportSettingsView: View {
           }
         }
 
-        ShareLink(item: backupURL()) {
-          Label("Exportar backup JSON", systemImage: "archivebox")
-        }
-        .frame(maxWidth: .infinity, minHeight: 56)
-        .foregroundStyle(.white)
-        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
-
-        Button {
-          showsImporter = true
-        } label: {
-          Label("Importar backup JSON", systemImage: "square.and.arrow.down")
-        }
-        .frame(maxWidth: .infinity, minHeight: 56)
-        .foregroundStyle(.white)
-        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
-
-        Button("Borrar todos los datos locales", role: .destructive) {
-          showsDeleteConfirmation = true
-        }
-        .frame(maxWidth: .infinity, minHeight: 56)
       }
       .padding(16)
     }
@@ -376,7 +378,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.86"
+      appVersion: "0.1.87"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 
