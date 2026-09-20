@@ -28,7 +28,14 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
   let plan: TrainingPlan
+  @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
+  @AppStorage("lightPalette") private var lightPaletteRaw = LightPalette.white.rawValue
+  @AppStorage("darkPalette") private var darkPaletteRaw = DarkPalette.dark.rawValue
   @Environment(\.dismiss) private var dismiss
+
+  private var themeKey: String {
+    "\(appearanceRaw)-\(lightPaletteRaw)-\(darkPaletteRaw)"
+  }
 
   var body: some View {
     ScrollView {
@@ -36,7 +43,7 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.82")
+        Text("v0.1.83")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -44,6 +51,7 @@ struct SettingsView: View {
       }
       .padding(16)
     }
+    .id(themeKey)
     .background(GymCanvas())
     .navigationBarBackButtonHidden()
     .toolbar { NavigationHeader(title: "Opciones") }
@@ -320,7 +328,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.82"
+      appVersion: "0.1.83"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 

@@ -1299,6 +1299,8 @@ Actualización v0.1.81: Próximos entrenamientos elimina el título duplicado de
 
 Actualización v0.1.82: se corrige la asignación de superficies en los temas claros. White usa superficies blancas y Light superficies gris claro, manteniendo el canvas blanco común que asegura la continuidad con las regiones de sistema.
 
+Actualización v0.1.83: Opciones observa las preferencias de apariencia y reconstruye únicamente su contenido al volver desde Apariencia. Los cambios White/Light y Dark/Black ya se aplican de inmediato sin reiniciar la navegación ni regresar a Hoy.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
