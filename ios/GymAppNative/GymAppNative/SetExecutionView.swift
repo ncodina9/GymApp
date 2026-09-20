@@ -13,6 +13,7 @@ struct SetExecutionView: View {
   @State private var feedbackPainLowerBack = 0
   @State private var feedbackNote = "OK"
   @State private var restEndsAt: Date?
+  @State private var restTotalSeconds = 0
   @State private var flowDirection: FlowDirection = .forward
   @State private var startedAt: Date
   @Environment(\.dismiss) private var dismiss
@@ -35,6 +36,7 @@ struct SetExecutionView: View {
     _feedbackPainLowerBack = State(initialValue: snapshot.feedback.painLowerBack)
     _feedbackNote = State(initialValue: snapshot.feedback.note)
     _restEndsAt = State(initialValue: snapshot.restEndsAt)
+    _restTotalSeconds = State(initialValue: snapshot.restTotalSeconds)
     _startedAt = State(initialValue: snapshot.startedAt)
   }
 
@@ -74,7 +76,9 @@ struct SetExecutionView: View {
               execution: execution,
               next: next,
               endsAt: restEndsAt,
-              onContinue: { move(to: .workingSet, direction: .forward) }
+              totalSeconds: restTotalSeconds,
+              onAdjust: adjustRest,
+              onContinue: continueFromRest
             )
           }
         case .finished:
@@ -84,7 +88,6 @@ struct SetExecutionView: View {
       .id(phase)
       .transition(flowDirection.transition)
     }
-    .animation(.smooth(duration: 0.3), value: phase)
     .toolbar(.hidden, for: .navigationBar)
     .onAppear(perform: persistActiveWorkout)
     .onDisappear {
@@ -101,8 +104,10 @@ struct SetExecutionView: View {
   }
 
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
-    flowDirection = direction
-    phase = newPhase
+    withAnimation(.smooth(duration: 0.3)) {
+      flowDirection = direction
+      phase = newPhase
+    }
     persistActiveWorkout()
   }
 
@@ -121,6 +126,7 @@ struct SetExecutionView: View {
           note: feedbackNote
         ),
         restEndsAt: restEndsAt,
+        restTotalSeconds: restTotalSeconds,
         startedAt: startedAt
       ),
       in: modelContext
@@ -128,8 +134,24 @@ struct SetExecutionView: View {
   }
 
   private func finishWorkout() {
-    phase = .finished
+    withAnimation(.smooth(duration: 0.3)) {
+      phase = .finished
+    }
     ActiveWorkoutStore.clear(in: modelContext)
+  }
+
+  private func adjustRest(by seconds: Int) {
+    let remaining = max(0, Int((restEndsAt ?? .now).timeIntervalSinceNow.rounded(.up)))
+    let adjusted = max(0, remaining + seconds)
+    restEndsAt = .now.addingTimeInterval(TimeInterval(adjusted))
+    restTotalSeconds = max(restTotalSeconds, adjusted)
+    persistActiveWorkout()
+  }
+
+  private func continueFromRest() {
+    restEndsAt = nil
+    restTotalSeconds = 0
+    move(to: .workingSet, direction: .forward)
   }
 
   private func registerCurrentSet() {
@@ -164,6 +186,7 @@ struct SetExecutionView: View {
 
     if let restSeconds = advance.restSeconds, restSeconds > 0 {
       restEndsAt = Date().addingTimeInterval(TimeInterval(restSeconds))
+      restTotalSeconds = restSeconds
       move(to: .rest, direction: .forward)
     } else {
       move(to: .workingSet, direction: .forward)
@@ -546,73 +569,222 @@ private struct RestView: View {
   let execution: WorkoutExecutionState
   let next: WorkoutSetLocator
   let endsAt: Date
+  let totalSeconds: Int
+  let onAdjust: (Int) -> Void
   let onContinue: () -> Void
 
   var body: some View {
     TimelineView(.periodic(from: .now, by: 1)) { context in
       let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
-      VStack(spacing: 16) {
-        Text(remaining == 0 ? "Descanso terminado" : "Descanso")
-          .font(.title2.weight(.bold))
-          .foregroundStyle(remaining == 0 ? .green : .secondary)
+      VStack(spacing: 6) {
+        RestCountdownBar(remaining: remaining, totalSeconds: totalSeconds, onContinue: onContinue)
 
-        Text(timeLabel(remaining))
-          .font(.system(size: 68, weight: .bold))
-          .monospacedDigit()
-          .frame(maxWidth: .infinity, minHeight: 148)
-          .foregroundStyle(.white)
-          .background(remaining == 0 ? .green : Color.accentColor, in: RoundedRectangle(cornerRadius: 28))
+        HStack(spacing: 8) {
+          RestAdjustmentButton(title: "-15s") { onAdjust(-15) }
+          RestAdjustmentButton(title: "+15s") { onAdjust(15) }
+        }
 
-        NextSetCard(execution: execution, locator: next)
+        NextSetPreview(execution: execution, locator: next)
           .frame(maxHeight: .infinity, alignment: .top)
 
-        BottomActions(
-          primaryTitle: "Siguiente",
-          primaryAction: onContinue,
-          primaryDisabled: remaining > 0
-        )
+        Button("Siguiente", action: onContinue)
+          .font(.headline.weight(.bold))
+          .frame(maxWidth: .infinity, minHeight: 64)
+          .foregroundStyle(.white)
+          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          .buttonStyle(.plain)
       }
       .padding(16)
     }
   }
 
-  private func timeLabel(_ seconds: Int) -> String {
-    "\(seconds / 60):\(String(format: "%02d", seconds % 60))"
+}
+
+private struct RestCountdownBar: View {
+  let remaining: Int
+  let totalSeconds: Int
+  let onContinue: () -> Void
+
+  private var isFinished: Bool { remaining == 0 }
+  private var progress: CGFloat {
+    CGFloat(remaining) / CGFloat(max(totalSeconds, remaining, 1))
+  }
+
+  var body: some View {
+    Button(action: {
+      guard isFinished else { return }
+      onContinue()
+    }) {
+      ZStack(alignment: .leading) {
+        RoundedRectangle(cornerRadius: 30)
+          .fill(isFinished ? Color.green : Color.accentColor.opacity(0.6))
+
+        GeometryReader { geometry in
+          RoundedRectangle(cornerRadius: 30)
+            .fill(isFinished ? Color.green : Color.accentColor)
+            .frame(width: geometry.size.width * progress)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 30))
+
+        VStack(spacing: 5) {
+          Text(isFinished ? "Descanso terminado" : "Descanso")
+            .font(.headline.weight(.bold))
+          Text("\(remaining / 60):\(String(format: "%02d", remaining % 60))")
+            .font(.system(size: 68, weight: .bold))
+            .monospacedDigit()
+            .contentTransition(.numericText())
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      }
+      .frame(maxWidth: .infinity, minHeight: 128)
+    }
+    .buttonStyle(.plain)
+    .disabled(!isFinished)
+    .animation(.linear(duration: 0.85), value: remaining)
   }
 }
 
-private struct NextSetCard: View {
+private struct RestAdjustmentButton: View {
+  let title: String
+  let action: () -> Void
+
+  var body: some View {
+    Button(title, action: action)
+      .font(.title3.weight(.bold))
+      .frame(maxWidth: .infinity, minHeight: 64)
+      .foregroundStyle(.white)
+      .glassEffect(.regular.tint(.accentColor).interactive(), in: RoundedRectangle(cornerRadius: 24))
+      .buttonStyle(.plain)
+  }
+}
+
+private struct NextSetPreview: View {
   let execution: WorkoutExecutionState
   let locator: WorkoutSetLocator
 
   var body: some View {
-    if let exercise = execution.exercise(for: locator),
-       let targets = execution.targets(for: locator) {
+    let previews = previews
+    if !previews.isEmpty {
       VStack(alignment: .leading, spacing: 8) {
-        Text("A continuación")
+        Text(previews.count > 1 ? "Próxima superserie" : "Próxima serie")
           .font(.caption.weight(.bold))
           .foregroundStyle(.secondary)
           .textCase(.uppercase)
-        Text(exercise.baseExerciseName)
-          .font(.title3.weight(.bold))
-          .lineLimit(2)
-        Text("Serie \(locator.setIndex) de \(exercise.sets.count) · \(summary(targets, equipment: execution.equipment(for: locator) ?? exercise.equipment))")
-          .font(.subheadline.weight(.medium))
-          .foregroundStyle(.secondary)
+
+        ScrollView {
+          VStack(spacing: 8) {
+            ForEach(previews) { preview in
+              RestPreviewCard(preview: preview)
+            }
+          }
+        }
+        .scrollIndicators(.hidden)
+        .frame(maxHeight: previews.count > 1 ? 230 : 138)
       }
-      .padding(16)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 20))
     }
   }
 
-  private func summary(_ targets: WorkoutSetTargets, equipment: Equipment) -> String {
-    if let duration = targets.durationSeconds {
+  private var previews: [RestSetPreview] {
+    guard let nextExercise = execution.exercise(for: locator) else { return [] }
+    let locators: [WorkoutSetLocator]
+    if let supersetID = nextExercise.supersetID {
+      locators = execution.session.exercises.enumerated().compactMap { index, exercise in
+        guard exercise.supersetID == supersetID,
+              exercise.sets.contains(where: { $0.setIndex == locator.setIndex })
+        else { return nil }
+        return WorkoutSetLocator(exerciseIndex: index, setIndex: locator.setIndex)
+      }
+    } else {
+      locators = [locator]
+    }
+
+    return locators.compactMap { current in
+      guard let exercise = execution.exercise(for: current),
+            let targets = execution.targets(for: current)
+      else { return nil }
+      return RestSetPreview(locator: current, exercise: exercise, targets: targets, equipment: execution.equipment(for: current) ?? exercise.equipment)
+    }
+  }
+}
+
+private struct RestSetPreview: Identifiable {
+  let locator: WorkoutSetLocator
+  let exercise: TrainingExercise
+  let targets: WorkoutSetTargets
+  let equipment: Equipment
+
+  var id: String { "\(exercise.exerciseID)-\(locator.setIndex)" }
+}
+
+private struct RestPreviewCard: View {
+  let preview: RestSetPreview
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      HStack(spacing: 8) {
+        Text(preview.exercise.baseExerciseName)
+          .font(.subheadline.weight(.bold))
+          .lineLimit(2)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        RestEquipmentChip(equipment: preview.equipment, variantLabel: preview.exercise.variantLabel)
+      }
+
+      HStack(spacing: 8) {
+        RestPreviewMetric(label: "Serie", value: "\(preview.locator.setIndex)/\(preview.exercise.sets.count)")
+        RestPreviewMetric(label: preview.targets.durationSeconds == nil ? "Reps" : "Tiempo", value: workValue)
+        RestPreviewMetric(label: loadLabel, value: loadValue)
+      }
+    }
+    .padding(12)
+    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
+    .overlay { RoundedRectangle(cornerRadius: 18).stroke(.separator, lineWidth: 1) }
+  }
+
+  private var workValue: String {
+    if let duration = preview.targets.durationSeconds {
       return "\(duration / 60):\(String(format: "%02d", duration % 60))"
     }
-    let reps = targets.reps.map(String.init) ?? "-"
-    let weight = targets.weightKg.formatted(.number.precision(.fractionLength(0...1)))
-    return "\(reps) reps · \(equipment == .external ? "+" : "")\(weight) kg"
+    return preview.targets.reps.map(String.init) ?? "-"
+  }
+
+  private var loadLabel: String {
+    preview.equipment == .dumbbell ? "Peso c/u" : "Peso"
+  }
+
+  private var loadValue: String {
+    guard preview.equipment != .bodyweight else { return "0 kg" }
+    let amount = preview.targets.weightKg.formatted(.number.precision(.fractionLength(0...1)))
+    return preview.equipment == .external ? "+\(amount) kg" : "\(amount) kg"
+  }
+}
+
+private struct RestPreviewMetric: View {
+  let label: String
+  let value: String
+
+  var body: some View {
+    VStack(spacing: 4) {
+      Text(label).font(.caption2.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1)
+      Text(value).font(.subheadline.weight(.bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+    }
+    .frame(maxWidth: .infinity, minHeight: 52)
+    .background(.background, in: RoundedRectangle(cornerRadius: 12))
+  }
+}
+
+private struct RestEquipmentChip: View {
+  let equipment: Equipment
+  let variantLabel: String?
+
+  var body: some View {
+    Text(variantLabel ?? equipment.executionLabel)
+      .font(.caption2.weight(.semibold))
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+      .padding(.horizontal, 8)
+      .padding(.vertical, 5)
+      .background(.background, in: Capsule())
   }
 }
 
@@ -631,7 +803,9 @@ private struct FinishedWorkoutView: View {
       Text("\(completedSetCount) series registradas en esta sesión.")
         .foregroundStyle(.secondary)
       Spacer()
-      Button("Volver a Hoy", action: onFinish)
+      Button(action: onFinish) {
+        Label("Volver a Hoy", systemImage: "house")
+      }
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(.white)

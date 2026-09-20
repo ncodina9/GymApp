@@ -3,7 +3,15 @@ import GymAppNativeCore
 
 struct SessionPreviewView: View {
   let session: TrainingSession
+  let activeWorkout: ActiveWorkoutSnapshot?
+  @State private var startsNewWorkout = false
+  @State private var showsRestartConfirmation = false
   @Environment(\.dismiss) private var dismiss
+
+  private var resumableWorkout: ActiveWorkoutSnapshot? {
+    guard activeWorkout?.execution.session.sessionID == session.sessionID else { return nil }
+    return activeWorkout
+  }
 
   private var blocks: [PreviewBlock] {
     session.exercises.reduce(into: []) { result, exercise in
@@ -61,6 +69,17 @@ struct SessionPreviewView: View {
       .padding(.bottom, 116)
     }
     .toolbar(.hidden, for: .navigationBar)
+    .navigationDestination(isPresented: $startsNewWorkout) {
+      SetExecutionView(session: session)
+    }
+    .alert("Empezar de nuevo", isPresented: $showsRestartConfirmation) {
+      Button("Cancelar", role: .cancel) {}
+      Button("Empezar de nuevo", role: .destructive) {
+        startsNewWorkout = true
+      }
+    } message: {
+      Text("Se sustituirá el entrenamiento en curso por una nueva sesión de \(session.label).")
+    }
     .overlay(alignment: .bottom) {
       GlassEffectContainer(spacing: 16) {
         HStack(spacing: 16) {
@@ -73,10 +92,27 @@ struct SessionPreviewView: View {
           }
           .buttonStyle(.plain)
 
-          NavigationLink {
-            SetExecutionView(session: session)
+          if let resumableWorkout {
+            NavigationLink {
+              SetExecutionView(snapshot: resumableWorkout)
+            } label: {
+              Label("Reanudar", systemImage: "play.fill")
+                .font(.subheadline.weight(.bold))
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .foregroundStyle(.white)
+                .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+            }
+            .buttonStyle(.plain)
+          }
+
+          Button {
+            if activeWorkout != nil {
+              showsRestartConfirmation = true
+            } else {
+              startsNewWorkout = true
+            }
           } label: {
-            Label("Empezar entrenamiento", systemImage: "chevron.right")
+            Label("Empezar", systemImage: "chevron.right")
               .font(.headline.weight(.bold))
               .frame(maxWidth: .infinity, minHeight: 56)
               .foregroundStyle(.white)

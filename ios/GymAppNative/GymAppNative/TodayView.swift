@@ -4,22 +4,19 @@ import GymAppNativeCore
 
 struct TodayView: View {
   let plan: TrainingPlan
-  @State private var selectedSessionID: String
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
 
   init(plan: TrainingPlan) {
     self.plan = plan
-    let recommended = plan.sessions.first { $0.date == Self.todayISODate } ?? plan.sessions.first
-    _selectedSessionID = State(initialValue: recommended?.sessionID ?? "")
   }
 
-  private var selectedSession: TrainingSession? {
-    plan.sessions.first { $0.sessionID == selectedSessionID } ?? plan.sessions.first
+  private var recommendedSession: TrainingSession? {
+    plan.sessions.first { $0.date == Self.todayISODate } ?? plan.sessions.first
   }
 
   private var weekSessions: [TrainingSession] {
-    guard let selectedSession else { return [] }
-    return plan.sessions.filter { $0.week == selectedSession.week }
+    guard let recommendedSession else { return [] }
+    return plan.sessions.filter { $0.week == recommendedSession.week }
   }
 
   private var activeWorkout: ActiveWorkoutSnapshot? {
@@ -28,56 +25,45 @@ struct TodayView: View {
 
   var body: some View {
     NavigationStack {
-      Group {
-        if let selectedSession {
+      if let recommendedSession {
+        ScrollView {
           VStack(spacing: 12) {
-            Text("Semana \(selectedSession.week) · \(selectedSession.weekFocusLabel)")
+            Text("Semana \(recommendedSession.week) · \(recommendedSession.weekFocusLabel)")
               .font(.subheadline.weight(.semibold))
               .foregroundStyle(.secondary)
               .frame(maxWidth: .infinity, alignment: .leading)
 
-            TodaySessionCard(session: selectedSession)
-
-            WeekSessionsList(
-              sessions: weekSessions,
-              selectedSessionID: $selectedSessionID
-            )
-
-            Spacer(minLength: 0)
-
-            if let activeWorkout {
-              NavigationLink {
-                SetExecutionView(snapshot: activeWorkout)
-              } label: {
-                Label("Reanudar entrenamiento", systemImage: "play.fill")
-                  .font(.headline.weight(.bold))
-                  .frame(maxWidth: .infinity, minHeight: 56)
-                  .foregroundStyle(.white)
-                  .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
-              }
-              .buttonStyle(.plain)
-            }
-
             NavigationLink {
-              SessionPreviewView(session: selectedSession)
+              SessionPreviewView(session: recommendedSession, activeWorkout: activeWorkout)
             } label: {
-              Label(activeWorkout == nil ? "Siguiente" : "Ver entrenamiento", systemImage: "chevron.right")
-                .font(.headline.weight(.bold))
-                .frame(maxWidth: .infinity, minHeight: 56)
-                .foregroundStyle(.white)
-                .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+              TodaySessionCard(session: recommendedSession)
             }
             .buttonStyle(.plain)
+
+            VStack(spacing: 8) {
+              ForEach(weekSessions) { session in
+                NavigationLink {
+                  SessionPreviewView(session: session, activeWorkout: activeWorkout)
+                } label: {
+                  WeekSessionRow(
+                    session: session,
+                    isRecommended: session.sessionID == recommendedSession.sessionID,
+                    isInProgress: activeWorkout?.execution.session.sessionID == session.sessionID
+                  )
+                }
+                .buttonStyle(.plain)
+              }
+            }
           }
           .padding(.horizontal, 16)
-          .padding(.top, 12)
-          .padding(.bottom, 12)
-        } else {
-          ContentUnavailableView(
-            "No hay entrenamientos",
-            systemImage: "calendar.badge.exclamationmark"
-          )
+          .padding(.vertical, 12)
         }
+        .scrollIndicators(.hidden)
+      } else {
+        ContentUnavailableView(
+          "No hay entrenamientos",
+          systemImage: "calendar.badge.exclamationmark"
+        )
       }
     }
   }
@@ -89,38 +75,6 @@ struct TodayView: View {
     formatter.timeZone = .current
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.string(from: Date())
-  }
-}
-
-private struct WeekSessionsList: View {
-  let sessions: [TrainingSession]
-  @Binding var selectedSessionID: String
-
-  var body: some View {
-    Group {
-      if sessions.count > 3 {
-        ScrollView {
-          rows
-        }
-        .scrollIndicators(.hidden)
-        .frame(maxHeight: .infinity)
-      } else {
-        rows
-      }
-    }
-  }
-
-  private var rows: some View {
-    VStack(spacing: 8) {
-      ForEach(sessions) { session in
-        Button {
-          selectedSessionID = session.sessionID
-        } label: {
-          WeekSessionRow(session: session, isSelected: session.sessionID == selectedSessionID)
-        }
-        .buttonStyle(.plain)
-      }
-    }
   }
 }
 
@@ -159,7 +113,7 @@ private struct TodaySessionCard: View {
     .background(.background, in: RoundedRectangle(cornerRadius: 20))
     .overlay {
       RoundedRectangle(cornerRadius: 20)
-        .stroke(.separator, lineWidth: 1)
+        .stroke(Color.accentColor, lineWidth: 2)
     }
   }
 
@@ -199,13 +153,29 @@ private struct TodayMetric: View {
 
 private struct WeekSessionRow: View {
   let session: TrainingSession
-  let isSelected: Bool
+  let isRecommended: Bool
+  let isInProgress: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 5) {
-      Text(session.weekday)
-        .font(.subheadline.weight(.semibold))
-        .foregroundStyle(isSelected ? .white.opacity(0.85) : .secondary)
+      HStack {
+        Text(session.weekday)
+          .font(.subheadline.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Spacer()
+        if isInProgress {
+          Text("En curso")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.orange)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.orange.opacity(0.12), in: Capsule())
+        } else if isRecommended {
+          Image(systemName: "sparkle")
+            .font(.caption.weight(.bold))
+            .foregroundStyle(Color.accentColor)
+        }
+      }
 
       Text(session.label)
         .font(.title3.weight(.bold))
@@ -215,16 +185,11 @@ private struct WeekSessionRow: View {
     .padding(.horizontal, 16)
     .padding(.vertical, 11)
     .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-    .foregroundStyle(isSelected ? .white : .primary)
-    .background(
-      isSelected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.fill.tertiary),
-      in: RoundedRectangle(cornerRadius: 18)
-    )
+    .foregroundStyle(.primary)
+    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
     .overlay {
-      if !isSelected {
-        RoundedRectangle(cornerRadius: 18)
-          .stroke(.separator, lineWidth: 1)
-      }
+      RoundedRectangle(cornerRadius: 18)
+        .stroke(isInProgress ? Color.orange : (isRecommended ? Color.accentColor : Color.secondary.opacity(0.3)), lineWidth: isRecommended || isInProgress ? 2 : 1)
     }
   }
 }

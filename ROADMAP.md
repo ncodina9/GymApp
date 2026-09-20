@@ -1257,6 +1257,8 @@ Actualización v0.1.61: el chip de material de feedback ocupa una columna secund
 
 Actualización v0.1.62: SwiftData guarda una única instantánea de la sesión activa, incluyendo orden de superseries, series ya registradas, material real, objetivos recalculados, feedback en curso, fase, inicio y fin de descanso. `Hoy` muestra `Reanudar entrenamiento` cuando esa instantánea es válida. Completar la sesión la elimina; el histórico definitivo se implementará como entidad separada en el siguiente bloque de paridad.
 
+Actualización v0.1.63: se corrige la dirección de las transiciones internas de serie, feedback, descanso y finalización. Descanso adopta la composición de la PWA: barra de progreso vaciable, botones `-15s` y `+15s`, tarjeta de próxima serie con métricas y todas las integrantes de una superserie, y avance temprano solo desde `Siguiente`. `Hoy` pasa directamente a previsualización, usa bordes de resalte en vez de rellenos y marca el borrador activo en ámbar. La previsualización concentra `Casa`, `Reanudar` y `Empezar`, este último con confirmación si existe un borrador. La marca verde de sesiones finalizadas queda ligada al hito de historial, que persistirá resultados definitivos.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

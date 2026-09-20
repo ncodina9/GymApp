@@ -18,13 +18,14 @@ struct ActiveWorkoutFeedbackDraft: Codable {
 }
 
 struct ActiveWorkoutSnapshot: Codable {
-  static let currentSchemaVersion = 1
+  static let currentSchemaVersion = 2
 
   let schemaVersion: Int
   var execution: WorkoutExecutionState
   var phase: ActiveWorkoutPhase
   var feedback: ActiveWorkoutFeedbackDraft
   var restEndsAt: Date?
+  var restTotalSeconds: Int
   let startedAt: Date
 
   init(
@@ -32,6 +33,7 @@ struct ActiveWorkoutSnapshot: Codable {
     phase: ActiveWorkoutPhase,
     feedback: ActiveWorkoutFeedbackDraft,
     restEndsAt: Date?,
+    restTotalSeconds: Int,
     startedAt: Date
   ) {
     schemaVersion = Self.currentSchemaVersion
@@ -39,6 +41,7 @@ struct ActiveWorkoutSnapshot: Codable {
     self.phase = phase
     self.feedback = feedback
     self.restEndsAt = restEndsAt
+    self.restTotalSeconds = restTotalSeconds
     self.startedAt = startedAt
   }
 }
@@ -49,7 +52,7 @@ final class ActiveWorkoutRecord {
   var snapshotData: Data
   var updatedAt: Date
 
-  init(id: String = ActiveWorkoutStore.recordID, snapshotData: Data, updatedAt: Date = .now) {
+  init(id: String = "active-workout", snapshotData: Data, updatedAt: Date = .now) {
     self.id = id
     self.snapshotData = snapshotData
     self.updatedAt = updatedAt

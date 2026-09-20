@@ -34,7 +34,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 
 | Estado | Pri. | Coste | Tarea | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
-| [ ] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | Se puede abrir una sesión terminada y consultar series, material y feedback. |
+| [ ] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | Se puede abrir una sesión terminada y consultar series, material y feedback; `Hoy` marca sus tarjetas con check verde. |
 | [ ] | P1 | M | Exportar CSV por serie y backup JSON desde iOS. | Los archivos cumplen `docs/data-schemas.md` y se pueden guardar en Archivos. |
 | [ ] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados e informa del resultado. |
 | [ ] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano y muestran estado terminado. |
