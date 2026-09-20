@@ -1279,6 +1279,8 @@ Actualización v0.1.72: Próximos elimina la cabecera de navegación nativa, usa
 
 Actualización v0.1.73: Opciones, Próximos y Exportación comparten barra superior nativa visible con desenfoque de iOS, título principal de la tipografía de la app y vuelta explícita abajo a la izquierda. El gesto lateral de navegación sigue siendo complementario y debe comprobarse en simulador y dispositivo al ocultar el botón estándar de la barra.
 
+Actualización v0.1.74: Apariencia adopta la misma barra superior, control de vuelta inferior y selector segmentado Liquid Glass que el material de la pantalla de serie. La navegación principal se mantiene en `NavigationStack`; las fases internas de entrenamiento usan transiciones de flujo y no se comportan como destinos apilados.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

@@ -71,22 +71,81 @@ private struct SettingsLink<Destination: View>: View {
 private struct AppearanceSettingsView: View {
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
+  @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
-      Picker("Tema", selection: $appearanceRaw) {
-        ForEach(AppAppearance.allCases) { appearance in
-          Text(appearance.label).tag(appearance.rawValue)
-        }
-      }
-      .pickerStyle(.segmented)
+      AppearanceSegmentedSelector(selection: $appearanceRaw)
 
       Toggle("Mantener la pantalla activa", isOn: $keepScreenAwake)
         .tint(.accentColor)
       Spacer()
     }
     .padding(16)
-    .navigationTitle("Apariencia")
+    .navigationBarBackButtonHidden()
+    .toolbar { NavigationHeader(title: "Apariencia") }
+    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+}
+
+private struct AppearanceSegmentedSelector: View {
+  @Binding var selection: String
+  @State private var dragOffset: CGFloat = 0
+
+  private var selectedIndex: Int {
+    AppAppearance.allCases.firstIndex { $0.rawValue == selection } ?? 0
+  }
+
+  var body: some View {
+    GlassEffectContainer(spacing: 0) {
+      GeometryReader { geometry in
+        let options = AppAppearance.allCases
+        let segmentWidth = geometry.size.width / CGFloat(options.count)
+        let offset = min(max(CGFloat(selectedIndex) * segmentWidth + dragOffset, 0), segmentWidth * CGFloat(options.count - 1))
+
+        ZStack(alignment: .leading) {
+          Capsule()
+            .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+            .frame(width: segmentWidth, height: 42)
+            .offset(x: offset)
+            .allowsHitTesting(false)
+
+          HStack(spacing: 0) {
+            ForEach(options) { appearance in
+              let index = options.firstIndex(of: appearance) ?? 0
+              Button {
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
+                  selection = appearance.rawValue
+                  dragOffset = 0
+                }
+              } label: {
+                Text(appearance.label)
+                  .font(.caption.weight(.bold))
+                  .frame(maxWidth: .infinity, minHeight: 42)
+                  .foregroundStyle(index == Int((offset / segmentWidth).rounded()) ? .white : .primary)
+              }
+              .buttonStyle(.plain)
+            }
+          }
+          .simultaneousGesture(
+            DragGesture(minimumDistance: 6)
+              .onChanged { dragOffset = $0.translation.width }
+              .onEnded { _ in
+                let target = min(max(Int((offset / segmentWidth).rounded()), 0), options.count - 1)
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
+                  selection = options[target].rawValue
+                  dragOffset = 0
+                }
+              }
+          )
+        }
+      }
+      .frame(height: 42)
+      .padding(4)
+      .glassEffect(.regular, in: Capsule())
+    }
   }
 }
 
