@@ -84,6 +84,7 @@ struct SessionPreviewView: View {
       .padding(20)
       .padding(.bottom, 116)
     }
+    .background(GymCanvas())
     .toolbar(.hidden, for: .navigationBar)
     .navigationDestination(isPresented: $startsNewWorkout) {
       SetExecutionView(session: session, onFinishToToday: returnToToday)
@@ -203,7 +204,7 @@ private struct ExercisePreviewRow: View {
       }
     }
     .padding(14)
-    .background(.background, in: RoundedRectangle(cornerRadius: 18))
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 18))
     .overlay {
       RoundedRectangle(cornerRadius: 18)
         .stroke(.separator, lineWidth: 1)

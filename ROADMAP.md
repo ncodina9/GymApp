@@ -1289,6 +1289,8 @@ Actualización v0.1.76: la app nativa exporta e importa `gymapp.full-training-da
 
 Actualización v0.1.77: Apariencia nativa adopta un sistema de cuatro temas inspirado en los principios de tokens de EightShapes: `White`, `Light`, `Dark` y `Black`. El selector principal mantiene Sistema/Claro/Oscuro; Sistema guarda una variante clara y otra oscura, mientras que Claro y Oscuro solo muestran sus dos alternativas relevantes. Canvas, superficies y color de realce comparten tokens para evitar decisiones de color dispersas. Opciones muestra una versión discreta al final de la lista.
 
+Actualización v0.1.78: los canvas de tema se resuelven mediante una vista SwiftUI reactiva para que White/Light y Dark/Black cambien el fondo visible al seleccionar la variante. Los estados semánticos comparten tokens propios: éxito verde profundo, aviso amarillo ocre y error rojo moderado, sustituyendo los colores de sistema demasiado saturados en la finalización de descansos y series temporizadas.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

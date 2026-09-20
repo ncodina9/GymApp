@@ -21,10 +21,22 @@ private enum ThemeColor {
   case accent
 }
 
-private enum GymTheme {
-  static func color(_ role: ThemeColor, traits: UITraitCollection) -> UIColor {
-    let defaults = UserDefaults.standard
-    let appearance = AppAppearance(rawValue: defaults.string(forKey: "appearanceTheme") ?? "system") ?? .system
+enum GymTheme {
+  nonisolated(unsafe) private static var appearance: AppAppearance = .system
+  nonisolated(unsafe) private static var lightPalette: LightPalette = .white
+  nonisolated(unsafe) private static var darkPalette: DarkPalette = .dark
+
+  static func apply(
+    appearance: AppAppearance,
+    lightPalette: LightPalette,
+    darkPalette: DarkPalette
+  ) {
+    Self.appearance = appearance
+    Self.lightPalette = lightPalette
+    Self.darkPalette = darkPalette
+  }
+
+  fileprivate static func color(_ role: ThemeColor, traits: UITraitCollection) -> UIColor {
     let usesDarkCanvas: Bool = switch appearance {
     case .light: false
     case .dark: true
@@ -32,8 +44,7 @@ private enum GymTheme {
     }
 
     if usesDarkCanvas {
-      let palette = DarkPalette(rawValue: defaults.string(forKey: "darkPalette") ?? "dark") ?? .dark
-      switch (palette, role) {
+      switch (darkPalette, role) {
       case (.dark, .canvas): return UIColor(red: 0.055, green: 0.071, blue: 0.094, alpha: 1)
       case (.dark, .surface): return UIColor(red: 0.102, green: 0.125, blue: 0.157, alpha: 1)
       case (.dark, .accent): return UIColor(red: 0.00, green: 0.36, blue: 0.64, alpha: 1)
@@ -43,8 +54,7 @@ private enum GymTheme {
       }
     }
 
-    let palette = LightPalette(rawValue: defaults.string(forKey: "lightPalette") ?? "white") ?? .white
-    switch (palette, role) {
+    switch (lightPalette, role) {
     case (.white, .canvas): return UIColor.white
     case (.white, .surface): return UIColor(red: 0.955, green: 0.961, blue: 0.969, alpha: 1)
     case (.white, .accent): return UIColor(red: 0.20, green: 0.23, blue: 0.27, alpha: 1)
@@ -59,4 +69,34 @@ extension Color {
   static let gymCanvas = Color(uiColor: UIColor { GymTheme.color(.canvas, traits: $0) })
   static let gymSurface = Color(uiColor: UIColor { GymTheme.color(.surface, traits: $0) })
   static let gymAccent = Color(uiColor: UIColor { GymTheme.color(.accent, traits: $0) })
+  static let gymSuccess = Color(red: 0.09, green: 0.45, blue: 0.29)
+  static let gymWarning = Color(red: 0.64, green: 0.43, blue: 0.00)
+  static let gymDanger = Color(red: 0.70, green: 0.23, blue: 0.22)
+}
+
+struct GymCanvas: View {
+  @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
+  @AppStorage("lightPalette") private var lightPaletteRaw = LightPalette.white.rawValue
+  @AppStorage("darkPalette") private var darkPaletteRaw = DarkPalette.dark.rawValue
+  @Environment(\.colorScheme) private var systemColorScheme
+
+  private var isDark: Bool {
+    switch AppAppearance(rawValue: appearanceRaw) ?? .system {
+    case .light: false
+    case .dark: true
+    case .system: systemColorScheme == .dark
+    }
+  }
+
+  var body: some View {
+    if isDark {
+      (DarkPalette(rawValue: darkPaletteRaw) ?? .dark) == .black
+        ? Color.black
+        : Color(red: 0.055, green: 0.071, blue: 0.094)
+    } else {
+      (LightPalette(rawValue: lightPaletteRaw) ?? .white) == .white
+        ? Color.white
+        : Color(red: 0.925, green: 0.937, blue: 0.949)
+    }
+  }
 }

@@ -128,6 +128,7 @@ struct SetExecutionView: View {
       .zIndex(1)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    .background(GymCanvas())
     .toolbar(.hidden, for: .navigationBar)
     .overlay(alignment: .top) {
       WorkoutProgressBar(
@@ -742,7 +743,7 @@ private struct FeedbackMetric: View {
         .opacity(footer == nil ? 0 : 1)
     }
     .frame(maxWidth: .infinity, minHeight: 94)
-    .background(.background, in: RoundedRectangle(cornerRadius: 12))
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
     .overlay { RoundedRectangle(cornerRadius: 12).stroke(.separator, lineWidth: 1) }
   }
 }
@@ -923,8 +924,8 @@ private struct ExerciseDecisionSection: View {
 
   private func decisionColor(_ option: String) -> Color {
     let lower = option.lowercased()
-    if lower.contains("bajar") || lower.contains("molestia") { return .red }
-    if lower.contains("subir") { return .green }
+    if lower.contains("bajar") || lower.contains("molestia") { return Color.gymDanger }
+    if lower.contains("subir") { return Color.gymSuccess }
     return Color.gymAccent
   }
 }
@@ -1004,11 +1005,11 @@ private struct RestCountdownBar: View {
     }) {
       ZStack(alignment: .leading) {
         RoundedRectangle(cornerRadius: 30)
-          .fill(isFinished ? Color.green : Color.gymAccent.opacity(0.6))
+          .fill(isFinished ? Color.gymSuccess : Color.gymAccent.opacity(0.6))
 
         GeometryReader { geometry in
           Rectangle()
-            .fill(isFinished ? Color.green : Color.gymAccent)
+            .fill(isFinished ? Color.gymSuccess : Color.gymAccent)
             .frame(width: geometry.size.width * progress)
         }
 
@@ -1235,7 +1236,7 @@ private struct RestPreviewMetric: View {
       Text(value).font(.subheadline.weight(.bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
     }
     .frame(maxWidth: .infinity, minHeight: 52)
-    .background(.background, in: RoundedRectangle(cornerRadius: 12))
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
   }
 }
 
@@ -1250,7 +1251,7 @@ private struct RestEquipmentChip: View {
       .lineLimit(1)
       .padding(.horizontal, 8)
       .padding(.vertical, 5)
-      .background(.background, in: Capsule())
+      .background(Color.gymCanvas, in: Capsule())
   }
 }
 
@@ -1283,12 +1284,12 @@ private struct FinishedWorkoutView: View {
       Spacer()
       ZStack {
         Circle()
-          .stroke(Color.green.opacity(0.35), lineWidth: 10)
+          .stroke(Color.gymSuccess.opacity(0.35), lineWidth: 10)
           .scaleEffect(rewardVisible ? 1.18 : 0.75)
           .opacity(rewardVisible ? 0 : 1)
         Image(systemName: "checkmark.circle.fill")
           .font(.system(size: 72))
-          .foregroundStyle(.green)
+          .foregroundStyle(Color.gymSuccess)
           .symbolEffect(.bounce, value: rewardVisible)
       }
       Text("Entrenamiento completado")
@@ -1468,7 +1469,7 @@ private struct SetTargetCard: View {
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .background(.background, in: RoundedRectangle(cornerRadius: 22))
+      .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 22))
       .overlay {
         RoundedRectangle(cornerRadius: 22)
           .stroke(Color.gymAccent, lineWidth: 2)
@@ -1646,11 +1647,11 @@ private struct TimedSetTarget: View {
         } label: {
           ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 30)
-              .fill(isFinished ? Color.green : Color.gymAccent.opacity(0.6))
+              .fill(isFinished ? Color.gymSuccess : Color.gymAccent.opacity(0.6))
 
             GeometryReader { geometry in
               Rectangle()
-                .fill(isFinished ? Color.green : Color.gymAccent)
+                .fill(isFinished ? Color.gymSuccess : Color.gymAccent)
                 .frame(width: geometry.size.width * progress)
             }
 

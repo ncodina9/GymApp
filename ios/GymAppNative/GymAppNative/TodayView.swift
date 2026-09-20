@@ -55,6 +55,7 @@ struct TodayView: View {
           .padding(.vertical, 12)
         }
         .scrollIndicators(.hidden)
+        .background(GymCanvas())
         .overlay(alignment: .bottomTrailing) {
           NavigationLink {
             SettingsView(plan: plan)
@@ -117,17 +118,17 @@ struct WeekSessionCard: View {
         if isCompleted {
           Text("Completado")
             .font(.caption2.weight(.bold))
-            .foregroundStyle(.green)
+            .foregroundStyle(Color.gymSuccess)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.green.opacity(0.12), in: Capsule())
+            .background(Color.gymSuccess.opacity(0.14), in: Capsule())
         } else if isInProgress {
           Text("En curso")
             .font(.caption2.weight(.bold))
-            .foregroundStyle(.orange)
+            .foregroundStyle(Color.gymWarning)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.orange.opacity(0.12), in: Capsule())
+            .background(Color.gymWarning.opacity(0.14), in: Capsule())
         } else if isRecommended {
           Image(systemName: "sparkle")
             .font(.caption.weight(.bold))
@@ -158,7 +159,7 @@ struct WeekSessionCard: View {
     .overlay {
       RoundedRectangle(cornerRadius: 22)
         .stroke(
-          isCompleted ? Color.green : (isInProgress ? Color.orange : (isRecommended ? Color.gymAccent : Color.secondary.opacity(0.3))),
+          isCompleted ? Color.gymSuccess : (isInProgress ? Color.gymWarning : (isRecommended ? Color.gymAccent : Color.secondary.opacity(0.3))),
           lineWidth: isRecommended || isInProgress || isCompleted ? 2 : 1
         )
     }
@@ -191,6 +192,6 @@ private struct SessionMetric: View {
         .monospacedDigit()
     }
     .frame(maxWidth: .infinity, minHeight: 54)
-    .background(.background, in: RoundedRectangle(cornerRadius: 14))
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 14))
   }
 }

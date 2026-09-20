@@ -20,7 +20,7 @@ struct ContentView: View {
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.gymCanvas.ignoresSafeArea())
+    .background(GymCanvas().ignoresSafeArea())
     .task { loadPlan() }
   }
 
