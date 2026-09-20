@@ -1249,6 +1249,10 @@ Actualización v0.1.58: la pantalla de serie elimina el texto redundante `Serie 
 
 Actualización v0.1.59: el nombre del ejercicio abre ahora el encabezado de la pantalla de serie y admite dos líneas a todo el ancho disponible. Los círculos de progreso ocupan una fila propia debajo, alineada a la derecha, para que nunca se solapen ni resten espacio a nombres largos.
 
+Actualización v0.1.60: el encabezado de feedback nativo se alinea con el de serie: nombre prioritario de hasta dos líneas, material y superserie como información secundaria y progreso en una fila separada. Al cambiar material, la carga de peso usa una transición numérica nativa breve para que el redondeo a la carga disponible sea legible.
+
+El trabajo nativo pasa a seguir el checklist operativo `docs/ios-native-checklist.md`, que complementa este roadmap narrativo con tareas acotadas, prioridad, coste y criterios verificables.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

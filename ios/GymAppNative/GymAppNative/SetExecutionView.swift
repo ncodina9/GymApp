@@ -145,7 +145,8 @@ private struct WorkingSetView: View {
                 label: "Peso",
                 value: (activeTargets?.weightKg ?? trainingSet.targetWeightKg)
                   .formatted(.number.precision(.fractionLength(0...1))),
-                unit: weightUnit(for: activeEquipment)
+                unit: weightUnit(for: activeEquipment),
+                numericValue: activeTargets?.weightKg ?? trainingSet.targetWeightKg
               )
             }
             .frame(maxHeight: .infinity)
@@ -281,36 +282,36 @@ private struct FeedbackHeader: View {
   let equipment: Equipment
 
   var body: some View {
-    HStack(alignment: .top, spacing: 12) {
-      VStack(alignment: .leading, spacing: 5) {
-        Text("Feedback serie")
-          .font(.caption.weight(.bold))
-          .foregroundStyle(.secondary)
-          .textCase(.uppercase)
-        Text(exercise?.baseExerciseName ?? "Ejercicio")
-          .font(.title3.weight(.bold))
-          .lineLimit(2)
-        Text(equipment.executionLabel)
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(.secondary)
-          .padding(.horizontal, 10)
-          .padding(.vertical, 6)
-          .background(.fill.quaternary, in: Capsule())
-      }
-      Spacer(minLength: 0)
-      VStack(alignment: .trailing, spacing: 5) {
+    VStack(alignment: .leading, spacing: 7) {
+      Text(exercise?.baseExerciseName ?? "Ejercicio")
+        .font(.system(size: 27, weight: .bold))
+        .lineLimit(2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      HStack(alignment: .center, spacing: 10) {
+        HStack(spacing: 6) {
+          Text(equipment.executionLabel)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.fill.quaternary, in: Capsule())
+
+          if let exercise, let supersetID = exercise.supersetID {
+            let members = execution.session.exercises.filter { $0.supersetID == supersetID }
+            let position = (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
+            FeedbackChip(text: "Superserie \(position)/\(members.count)", accent: true)
+          }
+        }
+
+        Spacer(minLength: 0)
+
         FeedbackSetProgress(
           setCount: exercise?.sets.count ?? 0,
           currentSetIndex: locator.setIndex
         )
-        if let exercise, let supersetID = exercise.supersetID {
-          let members = execution.session.exercises.filter { $0.supersetID == supersetID }
-          let position = (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
-          FeedbackChip(text: "Superserie \(position)/\(members.count)", accent: true)
-        }
       }
     }
-    .frame(height: 86, alignment: .top)
   }
 }
 
@@ -697,6 +698,7 @@ private struct SetTargetCard: View {
   let label: String
   let value: String
   var unit: String? = nil
+  var numericValue: Double? = nil
 
   var body: some View {
     VStack(spacing: 8) {
@@ -708,6 +710,8 @@ private struct SetTargetCard: View {
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.65)
+        .contentTransition(numericValue.map { .numericText(value: $0) } ?? .identity)
+        .animation(.snappy(duration: 0.32, extraBounce: 0.04), value: numericValue)
       if let unit {
         Text(unit)
           .font(.subheadline.weight(.medium))
