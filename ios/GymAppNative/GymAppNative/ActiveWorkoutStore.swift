@@ -113,19 +113,22 @@ final class CompletedWorkoutRecord {
   var startedAt: Date?
   var executionData: Data?
   var decisionsData: Data?
+  var importedSessionData: Data?
 
   init(
     sessionID: String,
     startedAt: Date?,
     completedAt: Date = .now,
     executionData: Data? = nil,
-    decisionsData: Data? = nil
+    decisionsData: Data? = nil,
+    importedSessionData: Data? = nil
   ) {
     self.sessionID = sessionID
     self.startedAt = startedAt
     self.completedAt = completedAt
     self.executionData = executionData
     self.decisionsData = decisionsData
+    self.importedSessionData = importedSessionData
   }
 }
 

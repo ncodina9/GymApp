@@ -1285,6 +1285,8 @@ Pendiente P2: avisos de finalización para descanso y series temporizadas. Al pa
 
 Actualización v0.1.75: el selector Liquid Glass se extrae como componente genérico compartido. Tema y Material usan la misma interacción por toque y arrastre; las opciones de material no disponibles siguen visibles en rojo y bloquean tanto el toque como el desplazamiento hacia ellas.
 
+Actualización v0.1.76: la app nativa exporta e importa `gymapp.full-training-data-export` v1. El backup conserva plan, ajustes, estado resumido de la sesión activa y sesiones terminadas; la importación valida `schemaName` y versión, evita duplicados por `sessionId` y conserva el payload de las sesiones importadas para poder reexportarlas sin pérdida.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

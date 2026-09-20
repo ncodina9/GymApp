@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import UniformTypeIdentifiers
 import GymAppNativeCore
 
 enum AppAppearance: String, CaseIterable, Identifiable {
@@ -154,16 +155,21 @@ private struct UpcomingWorkoutsView: View {
 private struct ExportSettingsView: View {
   let plan: TrainingPlan
   @Query private var completedRecords: [CompletedWorkoutRecord]
+  @Query private var activeRecords: [ActiveWorkoutRecord]
+  @AppStorage("appearanceTheme") private var appearanceTheme = AppAppearance.system.rawValue
+  @AppStorage("keepScreenAwake") private var keepScreenAwake = false
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
   @State private var showsDeleteConfirmation = false
+  @State private var showsImporter = false
+  @State private var importMessage: String?
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 14) {
         Text("Sesiones guardadas: \(completedRecords.count)")
           .font(.headline)
-        Text("Los exports incluyen solo sesiones nativas que conservan su registro detallado.")
+        Text("El backup JSON conserva todas las sesiones. El CSV se puede regenerar para sesiones con registro nativo detallado.")
           .font(.subheadline)
           .foregroundStyle(.secondary)
 
@@ -196,6 +202,15 @@ private struct ExportSettingsView: View {
         .foregroundStyle(.white)
         .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
 
+        Button {
+          showsImporter = true
+        } label: {
+          Label("Importar backup JSON", systemImage: "square.and.arrow.down")
+        }
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+
         Button("Borrar todos los datos locales", role: .destructive) {
           showsDeleteConfirmation = true
         }
@@ -213,6 +228,17 @@ private struct ExportSettingsView: View {
       Button("Borrar", role: .destructive, action: clearLocalData)
     } message: {
       Text("Se eliminarán los entrenamientos en curso y las sesiones nativas guardadas.")
+    }
+    .alert("Importación", isPresented: Binding(
+      get: { importMessage != nil },
+      set: { if !$0 { importMessage = nil } }
+    )) {
+      Button("Aceptar", role: .cancel) { importMessage = nil }
+    } message: {
+      Text(importMessage ?? "")
+    }
+    .fileImporter(isPresented: $showsImporter, allowedContentTypes: [.json]) { result in
+      importBackup(result)
     }
   }
 
@@ -236,28 +262,14 @@ private struct ExportSettingsView: View {
   }
 
   private func backupURL() -> URL {
-    let payload: [String: Any] = [
-      "schemaName": "gymapp.full-training-data-export",
-      "schemaVersion": 1,
-      "exportedAt": ISO8601DateFormatter().string(from: .now),
-      "app": ["name": "GymAppNative", "version": "0.1.70"],
-      "source": ["platform": "ios", "localStores": ["SwiftData:completedWorkouts"]],
-      "plan": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(plan))) ?? [:],
-      "sessions": completedRecords.compactMap { record -> [String: Any]? in
-        guard let data = record.executionData else { return nil }
-        return [
-          "sessionId": record.sessionID,
-          "startedAt": record.startedAt.map { ISO8601DateFormatter().string(from: $0) } ?? NSNull(),
-          "finishedAt": ISO8601DateFormatter().string(from: record.completedAt),
-          "execution": (try? JSONSerialization.jsonObject(with: data)) ?? [:],
-          "decisions": decodedDecisions(record)
-        ] as [String: Any]
-      }
-    ]
-    let url = FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-native-backup.json")
-    let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
-    try? data?.write(to: url, options: .atomic)
-    return url
+    (try? TrainingBackup.write(
+      plan: plan,
+      appearanceTheme: appearanceTheme,
+      keepScreenAwake: keepScreenAwake,
+      activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
+      completedRecords: completedRecords,
+      appVersion: "0.1.76"
+    )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 
   private func decodedDecisions(_ record: CompletedWorkoutRecord) -> [String: String] {
@@ -269,6 +281,21 @@ private struct ExportSettingsView: View {
     ActiveWorkoutStore.clear(in: modelContext)
     completedRecords.forEach(modelContext.delete)
     try? modelContext.save()
+  }
+
+  private func importBackup(_ result: Result<URL, Error>) {
+    do {
+      let url = try result.get()
+      guard url.startAccessingSecurityScopedResource() else {
+        throw TrainingBackup.BackupError.noFilePermission
+      }
+      defer { url.stopAccessingSecurityScopedResource() }
+      let data = try Data(contentsOf: url)
+      let result = try TrainingBackup.importBackup(data, into: modelContext)
+      importMessage = "Importadas: \(result.imported). Ya existentes: \(result.duplicates)."
+    } catch {
+      importMessage = error.localizedDescription
+    }
   }
 }
 

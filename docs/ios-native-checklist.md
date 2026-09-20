@@ -19,7 +19,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | Hoy y previsualización | Completado | Semana completa en tarjetas, con fecha, foco, estimado, bloques y navegación directa a la previsualización. |
 | Serie, feedback y descanso | Persistencia activa | Ejecutan, editan objetivos, saltan series, cambian el siguiente bloque al terminar el descanso y recuperan serie, feedback, evaluación y temporizador tras un cierre. |
 | Material y cargas | Completado en memoria | Variante por ejercicio, inventario y redondeo cubiertos por tests Swift. |
-| Persistencia, historial e import/export | Parcial | El borrador activo y las marcas de sesión completada usan SwiftData; el detalle histórico e import/export siguen pendientes. |
+| Persistencia, historial e import/export | Parcial | El borrador activo y las sesiones terminadas usan SwiftData; CSV por sesión, backup interoperable e importación deduplicada están disponibles. Falta una vista de detalle histórico nativa. |
 
 ## Próximo bloque: sesión persistente
 
@@ -35,13 +35,13 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | Estado | Pri. | Coste | Tarea | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
 | [~] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | `Hoy` marca las sesiones terminadas con borde y chip verdes; falta una vista de detalle con series, material y feedback. |
-| [~] | P1 | M | Completar exportación CSV por serie y backup JSON desde iOS. | El CSV nativo se comparte desde el cierre y respeta `gymapp.workout-set-export` v2; falta el backup JSON completo. |
-| [ ] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados e informa del resultado. |
+| [x] | P1 | M | Completar exportación CSV por serie y backup JSON desde iOS. | El CSV nativo se comparte desde el cierre y el backup usa `gymapp.full-training-data-export` v1, incluyendo plan, ajustes, borrador resumido y sesiones. |
+| [x] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados, preserva la sesión original e informa del resultado. |
 | [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano, mantienen la marcha al ajustar duracion y muestran estado terminado. |
 | [x] | P1 | M | Edición táctil de objetivos y evaluación final de ejercicio. | Reps y peso se ajustan en una hoja inferior con los incrementos reales del material, se propagan a series homogéneas y se evalúa cada ejercicio o superserie antes del descanso. |
 | [x] | P1 | S | Reordenar el siguiente bloque durante un descanso. | Tras acabar un descanso se puede priorizar un bloque no iniciado; no se crean series saltadas, el bloque originalmente propuesto permanece pendiente y el bloque elegido conserva todas sus series consecutivas. |
 | [x] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la entrada en la primera serie y compara con el estimado del plan, sin contar movilidad. |
-| [~] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, pantalla activa, consulta futura, CSV por sesión y borrado confirmado están accesibles; falta importación y validar el backup JSON contra el importador PWA. |
+| [x] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, pantalla activa, consulta futura, CSV por sesión, backup/importación JSON y borrado confirmado están accesibles. |
 
 ## Pulido posterior a v1
 
