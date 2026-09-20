@@ -1311,6 +1311,36 @@ Actualización v0.1.87: Exportación sitúa backup, importación y borrado confi
 
 Actualización v0.1.88: se registra como pendiente P1 la recuperación del gesto nativo de volver deslizando desde el borde izquierdo en destinos de `NavigationStack`. El botón inferior de vuelta sigue siendo el acceso explícito y no se sustituye.
 
+Actualización v0.1.89: se valida en dispositivo la importación del backup real de las dos primeras semanas desde la PWA y el avance de `Hoy` a la semana 3. Se incorpora el Hito 27 de companion Apple Watch: la primera versión tendrá el iPhone como estado autoritativo y el reloj resolverá la interacción inmediata de serie, salto y descanso con respuesta háptica.
+
+### Hito 27: Companion Apple Watch
+
+Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.
+
+Prioridad 1:
+
+- [ ] crear el target watchOS y un canal de sincronización con el iPhone que publique la sesión, serie actual, objetivos, material, progreso y descanso
+- [ ] diseñar la pantalla de serie para reloj: ejercicio, progreso, reps/tiempo, peso y acciones grandes de registrar o saltar
+- [ ] diseñar la pantalla de descanso con cuenta atrás, próxima serie y háptica al finalizar
+- [ ] aplicar las acciones del reloj de forma idempotente sobre el estado del iPhone, evitando registros duplicados al reconectar
+
+Prioridad 2:
+
+- [ ] mostrar superseries como secuencia de ejercicios vinculados, manteniendo clara la integrante actual
+- [ ] incorporar una cola local en el reloj para registrar acciones sin conexión temporal con el teléfono y reconciliarlas al volver
+- [ ] definir notificaciones y sonidos de finalización coherentes entre iPhone y reloj, sin avisos duplicados
+
+Fuera de la primera versión:
+
+- edición del plan, historial, exportación, análisis y configuración completa desde el reloj
+- fuente de verdad independiente en watchOS; el iPhone seguirá guardando el borrador y las sesiones definitivas
+
+Criterio de aceptación:
+
+- con el iPhone cerca, una serie normal, una superserie y una temporizada se pueden completar desde el reloj y quedan registradas una sola vez en el iPhone
+- un descanso termina con háptica y permite ver con claridad la siguiente acción
+- al abrir el iPhone, progreso, material, feedback y exportación reflejan exactamente la ejecución registrada desde el reloj
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

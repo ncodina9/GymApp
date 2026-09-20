@@ -36,7 +36,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | --- | --- | --- | --- | --- |
 | [~] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | `Hoy` marca las sesiones terminadas con borde y chip verdes; falta una vista de detalle con series, material y feedback. |
 | [x] | P1 | M | Completar exportación CSV por serie y backup JSON desde iOS. | El CSV nativo se comparte desde el cierre y el backup usa `gymapp.full-training-data-export` v1, incluyendo plan, ajustes, borrador resumido y sesiones. |
-| [x] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados, preserva la sesión original e informa del resultado. |
+| [x] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados, preserva la sesión original e informa del resultado. Verificado en dispositivo con el backup real de las dos primeras semanas. |
 | [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano, mantienen la marcha al ajustar duracion y muestran estado terminado. |
 | [x] | P1 | M | Edición táctil de objetivos y evaluación final de ejercicio. | Reps y peso se ajustan en una hoja inferior con los incrementos reales del material, se propagan a series homogéneas y se evalúa cada ejercicio o superserie antes del descanso. |
 | [x] | P1 | S | Reordenar el siguiente bloque durante un descanso. | Tras acabar un descanso se puede priorizar un bloque no iniciado; no se crean series saltadas, el bloque originalmente propuesto permanece pendiente y el bloque elegido conserva todas sus series consecutivas. |
@@ -56,6 +56,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [~] | P2 | M | Aviso de finalización de descanso y serie temporizada. | En primer plano reproduce sonido corto más háptica; queda programar notificación local al pasar a segundo plano. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |
 | [ ] | P2 | M | HealthKit, widget y sincronización. | Se evalúan por separado cuando la persistencia local sea estable. |
+| [ ] | P2 | L | Companion Apple Watch v1. | El iPhone conserva el estado autoritativo; el reloj muestra la serie o descanso actual, registra/omite series y emite háptica. |
 
 ## Validación obligatoria por iteración
 
