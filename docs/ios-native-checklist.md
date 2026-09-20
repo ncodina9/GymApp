@@ -9,6 +9,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 - Prioridad `P2`: mejora de producto posterior a la paridad v1.
 - Coste `XS`: hasta 1 hora; `S`: 1-3 horas; `M`: media jornada; `L`: 1-2 jornadas.
 - Cada cambio de comportamiento visible actualiza la versión de la PWA y deja una entrada breve en `ROADMAP.md`.
+- La navegación interna usa una transición horizontal estable: avance de derecha a izquierda; vuelta de izquierda a derecha. Las pantallas nuevas reutilizan esta regla salvo que una interacción puntual requiera otra semántica.
 
 ## Estado actual
 

@@ -1253,6 +1253,8 @@ Actualización v0.1.60: el encabezado de feedback nativo se alinea con el de ser
 
 El trabajo nativo pasa a seguir el checklist operativo `docs/ios-native-checklist.md`, que complementa este roadmap narrativo con tareas acotadas, prioridad, coste y criterios verificables.
 
+Actualización v0.1.61: el chip de material de feedback ocupa una columna secundaria encima de los puntos de progreso, sin competir con el título de dos líneas. Los puntos conservan el mismo borde derecho que en serie. Las fases internas de ejecución adoptan una transición horizontal común: el avance entra desde la derecha y el retroceso entra desde la izquierda; esta es la referencia para toda navegación futura de la app nativa.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

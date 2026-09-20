@@ -12,6 +12,7 @@ struct SetExecutionView: View {
   @State private var feedbackPainLowerBack = 0
   @State private var feedbackNote = "OK"
   @State private var restEndsAt: Date?
+  @State private var flowDirection: FlowDirection = .forward
   @Environment(\.dismiss) private var dismiss
 
   init(session: TrainingSession) {
@@ -20,52 +21,62 @@ struct SetExecutionView: View {
   }
 
   var body: some View {
-    Group {
-      switch phase {
-      case .workingSet:
-        if let locator = execution.current {
-          WorkingSetView(
-            execution: $execution,
-            locator: locator,
-            onContinue: { phase = .feedback }
-          )
-        } else {
+    ZStack {
+      Group {
+        switch phase {
+        case .workingSet:
+          if let locator = execution.current {
+            WorkingSetView(
+              execution: $execution,
+              locator: locator,
+              onContinue: { move(to: .feedback, direction: .forward) }
+            )
+          } else {
+            FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
+          }
+        case .feedback:
+          if let locator = execution.current {
+            FeedbackView(
+              execution: execution,
+              locator: locator,
+              rir: $feedbackRir,
+              painKnee: $feedbackPainKnee,
+              painWrist: $feedbackPainWrist,
+              painShoulder: $feedbackPainShoulder,
+              painLowerBack: $feedbackPainLowerBack,
+              note: $feedbackNote,
+              onBack: { move(to: .workingSet, direction: .backward) },
+              onRegister: registerCurrentSet
+            )
+          }
+        case .rest:
+          if let restEndsAt, let next = execution.current {
+            RestView(
+              execution: execution,
+              next: next,
+              endsAt: restEndsAt,
+              onContinue: { move(to: .workingSet, direction: .forward) }
+            )
+          }
+        case .finished:
           FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
         }
-      case .feedback:
-        if let locator = execution.current {
-          FeedbackView(
-            execution: execution,
-            locator: locator,
-            rir: $feedbackRir,
-            painKnee: $feedbackPainKnee,
-            painWrist: $feedbackPainWrist,
-            painShoulder: $feedbackPainShoulder,
-            painLowerBack: $feedbackPainLowerBack,
-            note: $feedbackNote,
-            onBack: { phase = .workingSet },
-            onRegister: registerCurrentSet
-          )
-        }
-      case .rest:
-        if let restEndsAt, let next = execution.current {
-          RestView(
-            execution: execution,
-            next: next,
-            endsAt: restEndsAt,
-            onContinue: { phase = .workingSet }
-          )
-        }
-      case .finished:
-        FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
       }
+      .id(phase)
+      .transition(flowDirection.transition)
     }
+    .animation(.smooth(duration: 0.3), value: phase)
     .toolbar(.hidden, for: .navigationBar)
+  }
+
+  private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
+    flowDirection = direction
+    phase = newPhase
   }
 
   private func registerCurrentSet() {
     guard let current = execution.current else {
-      phase = .finished
+      move(to: .finished, direction: .forward)
       return
     }
     let isTimed = execution.trainingSet(for: current)?.type == .timed
@@ -78,7 +89,7 @@ struct SetExecutionView: View {
       note: feedbackNote
     )
     guard let advance = execution.recordCurrent(feedback: setFeedback) else {
-      phase = .finished
+      move(to: .finished, direction: .forward)
       return
     }
 
@@ -89,24 +100,44 @@ struct SetExecutionView: View {
     feedbackPainLowerBack = 0
     feedbackNote = "OK"
     guard advance.next != nil else {
-      phase = .finished
+      move(to: .finished, direction: .forward)
       return
     }
 
     if let restSeconds = advance.restSeconds, restSeconds > 0 {
       restEndsAt = Date().addingTimeInterval(TimeInterval(restSeconds))
-      phase = .rest
+      move(to: .rest, direction: .forward)
     } else {
-      phase = .workingSet
+      move(to: .workingSet, direction: .forward)
     }
   }
 }
 
-private enum ExecutionPhase {
+private enum ExecutionPhase: Hashable {
   case workingSet
   case feedback
   case rest
   case finished
+}
+
+private enum FlowDirection {
+  case forward
+  case backward
+
+  var transition: AnyTransition {
+    switch self {
+    case .forward:
+      .asymmetric(
+        insertion: .move(edge: .trailing).combined(with: .opacity),
+        removal: .move(edge: .leading).combined(with: .opacity)
+      )
+    case .backward:
+      .asymmetric(
+        insertion: .move(edge: .leading).combined(with: .opacity),
+        removal: .move(edge: .trailing).combined(with: .opacity)
+      )
+    }
+  }
 }
 
 private struct WorkingSetView: View {
@@ -283,13 +314,13 @@ private struct FeedbackHeader: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
-      Text(exercise?.baseExerciseName ?? "Ejercicio")
-        .font(.system(size: 27, weight: .bold))
-        .lineLimit(2)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      HStack(alignment: .top, spacing: 12) {
+        Text(exercise?.baseExerciseName ?? "Ejercicio")
+          .font(.system(size: 27, weight: .bold))
+          .lineLimit(2)
+          .frame(maxWidth: .infinity, alignment: .leading)
 
-      HStack(alignment: .center, spacing: 10) {
-        HStack(spacing: 6) {
+        VStack(alignment: .trailing, spacing: 7) {
           Text(equipment.executionLabel)
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
@@ -297,19 +328,17 @@ private struct FeedbackHeader: View {
             .padding(.vertical, 6)
             .background(.fill.quaternary, in: Capsule())
 
-          if let exercise, let supersetID = exercise.supersetID {
-            let members = execution.session.exercises.filter { $0.supersetID == supersetID }
-            let position = (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
-            FeedbackChip(text: "Superserie \(position)/\(members.count)", accent: true)
-          }
+          FeedbackSetProgress(
+            setCount: exercise?.sets.count ?? 0,
+            currentSetIndex: locator.setIndex
+          )
         }
+      }
 
-        Spacer(minLength: 0)
-
-        FeedbackSetProgress(
-          setCount: exercise?.sets.count ?? 0,
-          currentSetIndex: locator.setIndex
-        )
+      if let exercise, let supersetID = exercise.supersetID {
+        let members = execution.session.exercises.filter { $0.supersetID == supersetID }
+        let position = (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
+        FeedbackChip(text: "Superserie \(position)/\(members.count)", accent: true)
       }
     }
   }
