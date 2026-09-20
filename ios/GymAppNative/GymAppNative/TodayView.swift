@@ -131,7 +131,7 @@ struct WeekSessionCard: View {
         } else if isRecommended {
           Image(systemName: "sparkle")
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color.accentColor)
+            .foregroundStyle(Color.gymAccent)
         }
       }
 
@@ -154,11 +154,11 @@ struct WeekSessionCard: View {
     .padding(16)
     .frame(maxWidth: .infinity, alignment: .leading)
     .foregroundStyle(.primary)
-    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 22))
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 22))
     .overlay {
       RoundedRectangle(cornerRadius: 22)
         .stroke(
-          isCompleted ? Color.green : (isInProgress ? Color.orange : (isRecommended ? Color.accentColor : Color.secondary.opacity(0.3))),
+          isCompleted ? Color.green : (isInProgress ? Color.orange : (isRecommended ? Color.gymAccent : Color.secondary.opacity(0.3))),
           lineWidth: isRecommended || isInProgress || isCompleted ? 2 : 1
         )
     }

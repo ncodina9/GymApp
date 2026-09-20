@@ -10,6 +10,8 @@ struct GymAppNativeApp: App {
     WindowGroup {
       ContentView()
         .preferredColorScheme(AppAppearance(rawValue: appearanceRaw)?.colorScheme)
+        .tint(.gymAccent)
+        .background(Color.gymCanvas)
         .onAppear { UIApplication.shared.isIdleTimerDisabled = keepScreenAwake }
         .onChange(of: keepScreenAwake) { _, enabled in
           UIApplication.shared.isIdleTimerDisabled = enabled

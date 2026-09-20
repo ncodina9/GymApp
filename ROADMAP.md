@@ -1287,6 +1287,8 @@ Actualización v0.1.75: el selector Liquid Glass se extrae como componente gené
 
 Actualización v0.1.76: la app nativa exporta e importa `gymapp.full-training-data-export` v1. El backup conserva plan, ajustes, estado resumido de la sesión activa y sesiones terminadas; la importación valida `schemaName` y versión, evita duplicados por `sessionId` y conserva el payload de las sesiones importadas para poder reexportarlas sin pérdida.
 
+Actualización v0.1.77: Apariencia nativa adopta un sistema de cuatro temas inspirado en los principios de tokens de EightShapes: `White`, `Light`, `Dark` y `Black`. El selector principal mantiene Sistema/Claro/Oscuro; Sistema guarda una variante clara y otra oscura, mientras que Claro y Oscuro solo muestran sus dos alternativas relevantes. Canvas, superficies y color de realce comparten tokens para evitar decisiones de color dispersas. Opciones muestra una versión discreta al final de la lista.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

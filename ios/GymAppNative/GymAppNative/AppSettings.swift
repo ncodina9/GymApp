@@ -36,6 +36,11 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
+        Text("v0.1.77")
+          .font(.caption2.weight(.medium))
+          .foregroundStyle(.tertiary)
+          .frame(maxWidth: .infinity, alignment: .center)
+          .padding(.top, 8)
       }
       .padding(16)
     }
@@ -63,7 +68,7 @@ private struct SettingsLink<Destination: View>: View {
         Image(systemName: "chevron.right").foregroundStyle(.secondary)
       }
       .padding(16)
-      .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 20))
+      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 20))
     }
     .buttonStyle(.plain)
   }
@@ -71,23 +76,70 @@ private struct SettingsLink<Destination: View>: View {
 
 private struct AppearanceSettingsView: View {
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
+  @AppStorage("lightPalette") private var lightPaletteRaw = LightPalette.white.rawValue
+  @AppStorage("darkPalette") private var darkPaletteRaw = DarkPalette.dark.rawValue
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
   @Environment(\.dismiss) private var dismiss
 
-  var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
-      AppearanceSegmentedSelector(selection: $appearanceRaw)
+  private var appearance: AppAppearance {
+    AppAppearance(rawValue: appearanceRaw) ?? .system
+  }
 
-      Toggle("Mantener la pantalla activa", isOn: $keepScreenAwake)
-        .tint(.accentColor)
-      Spacer()
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 20) {
+        AppearanceSegmentedSelector(selection: $appearanceRaw)
+
+        if appearance == .system || appearance == .light {
+          ThemeVariantSection(
+            title: appearance == .system ? "Claro" : "Variante clara",
+            selection: $lightPaletteRaw,
+            options: LightPalette.allCases.map(\.rawValue),
+            label: { LightPalette(rawValue: $0)?.label ?? $0 }
+          )
+        }
+
+        if appearance == .system || appearance == .dark {
+          ThemeVariantSection(
+            title: appearance == .system ? "Oscuro" : "Variante oscura",
+            selection: $darkPaletteRaw,
+            options: DarkPalette.allCases.map(\.rawValue),
+            label: { DarkPalette(rawValue: $0)?.label ?? $0 }
+          )
+        }
+
+        Toggle("Mantener la pantalla activa", isOn: $keepScreenAwake)
+          .tint(Color.gymAccent)
+      }
+      .padding(16)
+      .padding(.bottom, 88)
     }
-    .padding(16)
     .navigationBarBackButtonHidden()
     .toolbar { NavigationHeader(title: "Apariencia") }
     .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
     .toolbarBackground(.visible, for: .navigationBar)
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+}
+
+private struct ThemeVariantSection: View {
+  let title: String
+  @Binding var selection: String
+  let options: [String]
+  let label: (String) -> String
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(title)
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(.secondary)
+      GlassSegmentedSelector(
+        selection: $selection,
+        options: options,
+        unavailableOptions: [],
+        label: label
+      )
+    }
   }
 }
 
@@ -180,7 +232,7 @@ private struct ExportSettingsView: View {
             }
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(.white)
-            .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+            .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           } else {
             VStack(alignment: .leading, spacing: 4) {
               Text(csvLabel(for: record))
@@ -191,7 +243,7 @@ private struct ExportSettingsView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
-            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
+            .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
           }
         }
 
@@ -200,7 +252,7 @@ private struct ExportSettingsView: View {
         }
         .frame(maxWidth: .infinity, minHeight: 56)
         .foregroundStyle(.white)
-        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
 
         Button {
           showsImporter = true
@@ -209,7 +261,7 @@ private struct ExportSettingsView: View {
         }
         .frame(maxWidth: .infinity, minHeight: 56)
         .foregroundStyle(.white)
-        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
 
         Button("Borrar todos los datos locales", role: .destructive) {
           showsDeleteConfirmation = true
@@ -268,7 +320,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.76"
+      appVersion: "0.1.77"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 

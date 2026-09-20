@@ -19,6 +19,8 @@ struct ContentView: View {
         ProgressView("Cargando entrenamiento")
       }
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Color.gymCanvas.ignoresSafeArea())
     .task { loadPlan() }
   }
 

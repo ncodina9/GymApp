@@ -75,7 +75,7 @@ struct SessionPreviewView: View {
               }
             }
             .padding(16)
-            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 22))
+            .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 22))
           } else if let exercise = block.exercises.first {
             ExercisePreviewRow(exercise: exercise, order: exerciseOrder(exercise))
           }
@@ -129,7 +129,7 @@ struct SessionPreviewView: View {
                 .font(.subheadline.weight(.bold))
                 .frame(maxWidth: .infinity, minHeight: 56)
                 .foregroundStyle(.white)
-                .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+                .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
             }
             .buttonStyle(.plain)
           }
@@ -145,7 +145,7 @@ struct SessionPreviewView: View {
               .font(.headline.weight(.bold))
               .frame(maxWidth: .infinity, minHeight: 56)
               .foregroundStyle(.white)
-              .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+              .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           }
           .buttonStyle(.plain)
         }
@@ -184,7 +184,7 @@ private struct ExercisePreviewRow: View {
         Text("\(order)")
           .font(.subheadline.weight(.bold))
           .frame(width: 32, height: 32)
-          .background(.fill.tertiary, in: Circle())
+          .background(Color.gymSurface, in: Circle())
 
         VStack(alignment: .leading, spacing: 7) {
           Text(exercise.baseExerciseName)
@@ -258,7 +258,7 @@ private struct EquipmentChip: View {
       .foregroundStyle(.secondary)
       .padding(.horizontal, 10)
       .padding(.vertical, 6)
-      .background(.fill.quaternary, in: Capsule())
+      .background(Color.gymSurface.opacity(0.72), in: Capsule())
   }
 }
 
@@ -279,7 +279,7 @@ private struct PreviewMetric: View {
         .minimumScaleFactor(0.7)
     }
     .frame(maxWidth: .infinity, minHeight: 58)
-    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
   }
 }
 

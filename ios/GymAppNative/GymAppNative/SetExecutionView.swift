@@ -367,7 +367,7 @@ private struct WorkoutProgressBar: View {
       ZStack(alignment: .leading) {
         Rectangle().fill(.clear)
         Rectangle()
-          .fill(Color.accentColor)
+          .fill(Color.gymAccent)
           .frame(width: geometry.size.width * progress)
           .animation(.easeInOut(duration: 0.35), value: progress)
       }
@@ -464,7 +464,7 @@ private struct WorkingSetView: View {
             .lineLimit(2)
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
+            .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
 
           BottomActions(
             primaryTitle: "Continuar",
@@ -627,7 +627,7 @@ private struct FeedbackView: View {
         NotePicker(note: $note)
       }
       .padding(10)
-      .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
+      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
 
       Spacer(minLength: 0)
 
@@ -645,7 +645,7 @@ private struct FeedbackView: View {
           .font(.headline.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
           .foregroundStyle(.white)
-          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           .buttonStyle(.plain)
       }
     }
@@ -698,10 +698,10 @@ private struct SetProgressIndicators: View {
         let isCompleted = index < currentSetIndex
         let isCurrent = index == currentSetIndex
         Circle()
-          .fill(isCompleted ? Color.accentColor : .clear)
+          .fill(isCompleted ? Color.gymAccent : .clear)
           .overlay {
             Circle().strokeBorder(
-              isCompleted || isCurrent ? Color.accentColor : .secondary.opacity(0.35),
+              isCompleted || isCurrent ? Color.gymAccent : .secondary.opacity(0.35),
               lineWidth: 2
             )
           }
@@ -721,8 +721,8 @@ private struct FeedbackChip: View {
       .lineLimit(1)
       .padding(.horizontal, 8)
       .padding(.vertical, 4)
-      .foregroundStyle(accent ? Color.accentColor : .secondary)
-      .background(accent ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.12), in: Capsule())
+      .foregroundStyle(accent ? Color.gymAccent : .secondary)
+      .background(accent ? Color.gymAccent.opacity(0.12) : Color.secondary.opacity(0.12), in: Capsule())
   }
 }
 
@@ -778,7 +778,7 @@ private struct PainLevelControl: View {
           .font(.subheadline.weight(.bold))
           .frame(width: 40, height: 40)
           .foregroundStyle(value == level ? .white : .primary)
-          .background(value == level ? Color.accentColor : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+          .background(value == level ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
           .buttonStyle(.plain)
       }
     }
@@ -796,7 +796,7 @@ private struct NotePicker: View {
           .font(.caption.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 42)
           .foregroundStyle(note == option ? .white : .primary)
-          .background(note == option ? Color.accentColor : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+          .background(note == option ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
           .buttonStyle(.plain)
       }
     }
@@ -849,7 +849,7 @@ private struct ExerciseReviewView: View {
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(.white)
-        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
         .buttonStyle(.plain)
     }
     .padding(16)
@@ -925,7 +925,7 @@ private struct ExerciseDecisionSection: View {
     let lower = option.lowercased()
     if lower.contains("bajar") || lower.contains("molestia") { return .red }
     if lower.contains("subir") { return .green }
-    return Color.accentColor
+    return Color.gymAccent
   }
 }
 
@@ -977,7 +977,7 @@ private struct RestView: View {
           .font(.headline.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
           .foregroundStyle(.white)
-          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           .buttonStyle(.plain)
       }
       .padding(16)
@@ -1004,11 +1004,11 @@ private struct RestCountdownBar: View {
     }) {
       ZStack(alignment: .leading) {
         RoundedRectangle(cornerRadius: 30)
-          .fill(isFinished ? Color.green : Color.accentColor.opacity(0.6))
+          .fill(isFinished ? Color.green : Color.gymAccent.opacity(0.6))
 
         GeometryReader { geometry in
           Rectangle()
-            .fill(isFinished ? Color.green : Color.accentColor)
+            .fill(isFinished ? Color.green : Color.gymAccent)
             .frame(width: geometry.size.width * progress)
         }
 
@@ -1040,7 +1040,7 @@ private struct RestAdjustmentButton: View {
       .font(.title3.weight(.bold))
       .frame(maxWidth: .infinity, minHeight: 64)
       .foregroundStyle(.white)
-      .glassEffect(.regular.tint(.accentColor).interactive(), in: RoundedRectangle(cornerRadius: 24))
+      .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: RoundedRectangle(cornerRadius: 24))
       .buttonStyle(.plain)
   }
 }
@@ -1090,7 +1090,7 @@ private struct PendingBlockSelector: View {
                       if option.exercise.supersetID != nil {
                         Text("Superserie")
                           .font(.caption2.weight(.bold))
-                          .foregroundStyle(Color.accentColor)
+                          .foregroundStyle(Color.gymAccent)
                       }
                       Text(option.exercise.variantLabel ?? option.exercise.equipment.executionLabel)
                         .font(.caption2.weight(.semibold))
@@ -1104,7 +1104,7 @@ private struct PendingBlockSelector: View {
                 }
                 .padding(.horizontal, 12)
                 .frame(maxWidth: .infinity, minHeight: 48)
-                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 16))
+                .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 16))
               }
               .buttonStyle(.plain)
               .disabled(!isRestFinished)
@@ -1203,7 +1203,7 @@ private struct RestPreviewCard: View {
       }
     }
     .padding(12)
-    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
     .overlay { RoundedRectangle(cornerRadius: 18).stroke(.separator, lineWidth: 1) }
   }
 
@@ -1275,7 +1275,7 @@ private struct FinishedWorkoutView: View {
     let difference = elapsedSeconds - (execution.session.estimatedMinutes * 60)
     if abs(difference) < 60 { return "En el tiempo estimado" }
     let minutes = abs(difference) / 60
-    return difference < 0 ? "(minutes) min por debajo del estimado" : "(minutes) min por encima del estimado"
+    return difference < 0 ? "\(minutes) min por debajo del estimado" : "\(minutes) min por encima del estimado"
   }
 
   var body: some View {
@@ -1314,7 +1314,7 @@ private struct FinishedWorkoutView: View {
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(.white)
-        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
       }
       Button(action: onFinish) {
         Label("Volver a Hoy", systemImage: "house")
@@ -1322,7 +1322,7 @@ private struct FinishedWorkoutView: View {
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(.white)
-        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
         .buttonStyle(.plain)
     }
     .padding(16)
@@ -1366,7 +1366,7 @@ private struct BottomActions: View {
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(.white)
-        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
         .buttonStyle(.plain)
         .disabled(primaryDisabled)
 
@@ -1471,7 +1471,7 @@ private struct SetTargetCard: View {
       .background(.background, in: RoundedRectangle(cornerRadius: 22))
       .overlay {
         RoundedRectangle(cornerRadius: 22)
-          .stroke(Color.accentColor, lineWidth: 2)
+          .stroke(Color.gymAccent, lineWidth: 2)
       }
     }
     .buttonStyle(.plain)
@@ -1500,9 +1500,9 @@ private struct PlateStack: View {
           .font(.system(size: 10, weight: .bold))
           .foregroundStyle(.primary)
           .frame(width: plateWidth(plate), height: plateHeight(plate))
-          .background(Color.accentColor.opacity(0.16), in: RoundedRectangle(cornerRadius: 6))
+          .background(Color.gymAccent.opacity(0.16), in: RoundedRectangle(cornerRadius: 6))
           .overlay {
-            RoundedRectangle(cornerRadius: 6).stroke(Color.accentColor.opacity(0.45), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 6).stroke(Color.gymAccent.opacity(0.45), lineWidth: 1)
           }
       }
     }
@@ -1562,7 +1562,7 @@ private struct SetTargetEditor: View {
             .font(.headline.weight(.bold))
             .frame(width: 44, height: 44)
             .foregroundStyle(.white)
-            .glassEffect(.regular.tint(.accentColor).interactive(), in: Circle())
+            .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
         }
         .accessibilityLabel("Confirmar cambios")
         .buttonStyle(.plain)
@@ -1595,8 +1595,8 @@ private struct SetTargetEditor: View {
         .font(.system(size: 30, weight: .bold))
         .frame(maxWidth: .infinity, minHeight: 76)
         .foregroundStyle(.primary)
-        .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 24))
-        .overlay { RoundedRectangle(cornerRadius: 24).stroke(Color.accentColor.opacity(0.45), lineWidth: 1) }
+        .background(Color.gymAccent.opacity(0.14), in: RoundedRectangle(cornerRadius: 24))
+        .overlay { RoundedRectangle(cornerRadius: 24).stroke(Color.gymAccent.opacity(0.45), lineWidth: 1) }
     }
     .buttonStyle(.plain)
   }
@@ -1646,11 +1646,11 @@ private struct TimedSetTarget: View {
         } label: {
           ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 30)
-              .fill(isFinished ? Color.green : Color.accentColor.opacity(0.6))
+              .fill(isFinished ? Color.green : Color.gymAccent.opacity(0.6))
 
             GeometryReader { geometry in
               Rectangle()
-                .fill(isFinished ? Color.green : Color.accentColor)
+                .fill(isFinished ? Color.green : Color.gymAccent)
                 .frame(width: geometry.size.width * progress)
             }
 
@@ -1690,7 +1690,7 @@ private struct TimedSetTarget: View {
           .font(.headline.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 58)
           .foregroundStyle(.white)
-          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           .buttonStyle(.plain)
           .disabled(isFinished)
           .opacity(isFinished ? 0.45 : 1)
