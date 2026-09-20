@@ -50,7 +50,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P2 | S | Mostrar discos por lado para barra y multipower. | Respeta inventario y variantes, sin reducir la legibilidad del peso central. |
 | [ ] | P2 | S | Sustituir SF Symbols provisionales por Heroicons locales. | Los iconos usados coinciden con los roles de la PWA y respetan accesibilidad. |
 | [x] | P2 | M | Sistema de cuatro temas nativos. | Apariencia permite Sistema, Claro u Oscuro; cada familia conserva una variante independiente: White/Light y Dark/Black. Canvas, superficie y realce usan tokens compartidos. |
-| [~] | P2 | XS | Integración del canvas con regiones de sistema. | El canvas propio llena la ventana de contenido. La barra de estado y la región del indicador de inicio siguen el comportamiento del sistema en iOS 26; evaluar la API de `statusBar` al elevar el mínimo a iOS 27. |
+| [x] | P2 | XS | Integración del canvas con regiones de sistema. | La app requiere iOS 27 y aplica el esquema de contraste oficial a la barra de estado. El canvas base se normaliza a blanco o negro puro por familia para mantener continuidad aunque el sistema conserve sus superficies de borde. |
 | [ ] | P2 | M | Notificación local y háptica al acabar descanso. | Funciona con permisos denegados sin bloquear el flujo. |
 | [ ] | P2 | M | Aviso de finalización de descanso y serie temporizada. | Programa notificación local al pasar a segundo plano y reproduce sonido corto más háptica al terminar en primer plano. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |

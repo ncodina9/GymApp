@@ -30,14 +30,7 @@ struct GymAppNativeApp: App {
     case .dark: true
     case .system: UITraitCollection.current.userInterfaceStyle == .dark
     }
-    if usesDarkCanvas {
-      return darkPalette == .black
-        ? .black
-        : UIColor(red: 0.055, green: 0.071, blue: 0.094, alpha: 1)
-    }
-    return lightPalette == .white
-      ? .white
-      : UIColor(red: 0.925, green: 0.937, blue: 0.949, alpha: 1)
+    return usesDarkCanvas ? .black : .white
   }
 
   var body: some Scene {
@@ -48,6 +41,8 @@ struct GymAppNativeApp: App {
       }
         .preferredColorScheme(appearance.colorScheme)
         .background(windowCanvas, ignoresSafeAreaEdges: .all)
+        .toolbarBackground(windowCanvas, for: .statusBar)
+        .toolbarColorScheme(appearance.colorScheme, for: .statusBar)
         .tint(.gymAccent)
         .onAppear(perform: applyTheme)
         .onChange(of: appearanceRaw) { _, _ in applyTheme() }
