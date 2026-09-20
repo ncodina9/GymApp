@@ -1309,6 +1309,8 @@ Actualización v0.1.86: el importador nativo acepta los valores históricos num�
 
 Actualización v0.1.87: Exportación sitúa backup, importación y borrado confirmado antes del historial de sesiones. `Hoy` deja de depender de la fecha exacta del día y presenta siempre la primera semana incompleta del plan; al completar todas las sesiones de una semana, pasa automáticamente a la siguiente.
 
+Actualización v0.1.88: se registra como pendiente P1 la recuperación del gesto nativo de volver deslizando desde el borde izquierdo en destinos de `NavigationStack`. El botón inferior de vuelta sigue siendo el acceso explícito y no se sustituye.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
