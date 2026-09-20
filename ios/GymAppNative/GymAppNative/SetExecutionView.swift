@@ -23,6 +23,7 @@ struct SetExecutionView: View {
   @State private var transitionOrigin: ExecutionPhase = .workingSet
   @State private var transitionDirection: FlowDirection = .forward
   @State private var startedAt: Date
+  @State private var finishedAt: Date?
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
 
@@ -70,7 +71,13 @@ struct SetExecutionView: View {
               onExecutionChanged: persistActiveWorkout
             )
           } else {
-            FinishedWorkoutView(execution: execution, onFinish: onFinishToToday)
+            FinishedWorkoutView(
+              execution: execution,
+              startedAt: startedAt,
+              finishedAt: finishedAt ?? .now,
+              exerciseDecisions: exerciseDecisions,
+              onFinish: onFinishToToday
+            )
           }
         case .feedback:
           if let locator = execution.current {
@@ -107,7 +114,13 @@ struct SetExecutionView: View {
             onContinue: continueAfterExerciseReview
           )
         case .finished:
-          FinishedWorkoutView(execution: execution, onFinish: onFinishToToday)
+          FinishedWorkoutView(
+            execution: execution,
+            startedAt: startedAt,
+            finishedAt: finishedAt ?? .now,
+            exerciseDecisions: exerciseDecisions,
+            onFinish: onFinishToToday
+          )
         }
       }
       .id(TransitionKey(origin: transitionOrigin, destination: phase))
@@ -177,10 +190,17 @@ struct SetExecutionView: View {
   }
 
   private func finishWorkout() {
+    let completionDate = Date.now
+    finishedAt = completionDate
     withAnimation(.smooth(duration: 0.3)) {
       phase = .finished
     }
-    ActiveWorkoutStore.markCompleted(sessionID: session.sessionID, in: modelContext)
+    ActiveWorkoutStore.markCompleted(
+      sessionID: session.sessionID,
+      startedAt: startedAt,
+      completedAt: completionDate,
+      in: modelContext
+    )
     ActiveWorkoutStore.clear(in: modelContext)
   }
 
@@ -347,6 +367,7 @@ private struct WorkoutProgressBar: View {
         Rectangle()
           .fill(Color.accentColor)
           .frame(width: geometry.size.width * progress)
+          .animation(.easeInOut(duration: 0.35), value: progress)
       }
     }
     .frame(height: 59)
@@ -945,7 +966,7 @@ private struct RestView: View {
             isRestFinished: remaining == 0,
             onSelect: onSelectBlock
           )
-          .frame(maxHeight: hasNextSuperset ? 180 : 148, alignment: .top)
+          .frame(maxHeight: hasNextSuperset ? 180 : .infinity, alignment: .top)
         }
 
         Spacer(minLength: 0)
@@ -1233,12 +1254,26 @@ private struct RestEquipmentChip: View {
 
 private struct FinishedWorkoutView: View {
   let execution: WorkoutExecutionState
+  let startedAt: Date
+  let finishedAt: Date
+  let exerciseDecisions: [String: String]
   let onFinish: () -> Void
   @State private var csvURL: URL?
   @State private var rewardVisible = false
 
   private var completedSetCount: Int {
     execution.records.filter { $0.status == .completed }.count
+  }
+
+  private var elapsedSeconds: Int {
+    max(0, Int(finishedAt.timeIntervalSince(startedAt).rounded()))
+  }
+
+  private var estimateComparison: String {
+    let difference = elapsedSeconds - (execution.session.estimatedMinutes * 60)
+    if abs(difference) < 60 { return "En el tiempo estimado" }
+    let minutes = abs(difference) / 60
+    return difference < 0 ? "(minutes) min por debajo del estimado" : "(minutes) min por encima del estimado"
   }
 
   var body: some View {
@@ -1261,6 +1296,14 @@ private struct FinishedWorkoutView: View {
       Text("\(completedSetCount) series registradas en esta sesión.")
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
+      VStack(spacing: 4) {
+        Text("\(durationLabel(elapsedSeconds)) reales · \(execution.session.estimatedMinutes) min estimados")
+          .font(.headline.weight(.bold))
+          .monospacedDigit()
+        Text(estimateComparison)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+      }
       Spacer()
       if let csvURL {
         ShareLink(item: csvURL) {
@@ -1282,12 +1325,20 @@ private struct FinishedWorkoutView: View {
     }
     .padding(16)
     .onAppear {
-      csvURL = try? WorkoutCSVExporter.write(session: execution.session, execution: execution)
+      csvURL = try? WorkoutCSVExporter.write(
+        session: execution.session,
+        execution: execution,
+        exerciseDecisions: exerciseDecisions
+      )
       withAnimation(.easeOut(duration: 0.8)) {
         rewardVisible = true
       }
     }
     .sensoryFeedback(.success, trigger: rewardVisible)
+  }
+
+  private func durationLabel(_ totalSeconds: Int) -> String {
+    "\(totalSeconds / 60):\(String(format: "%02d", totalSeconds % 60))"
   }
 }
 

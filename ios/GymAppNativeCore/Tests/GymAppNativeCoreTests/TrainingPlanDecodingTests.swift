@@ -174,8 +174,8 @@ struct TrainingPlanDecodingTests {
     #expect(state.current == WorkoutSetLocator(exerciseIndex: 2, setIndex: 2))
   }
 
-  @Test("Propaga el ajuste temporal a las series homogeneas restantes")
-  func propagatesTimedDurationToRemainingMatchingSets() throws {
+  @Test("Mantiene local el ajuste temporal de una serie")
+  func keepsTimedDurationAdjustmentLocalToCurrentSet() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
     let session = try #require(plan.sessions.first(where: {
       $0.exercises.contains(where: { $0.sets.first?.type == .timed && $0.sets.count > 1 })
@@ -193,7 +193,7 @@ struct TrainingPlanDecodingTests {
     state.updateTimedDuration(for: locator, durationSeconds: 75)
 
     #expect(state.targets(for: locator)?.durationSeconds == 75)
-    #expect(state.targets(for: WorkoutSetLocator(exerciseIndex: exerciseIndex, setIndex: 2))?.durationSeconds == 75)
+    #expect(state.targets(for: WorkoutSetLocator(exerciseIndex: exerciseIndex, setIndex: 2))?.durationSeconds == exercise.sets[1].targetDurationSeconds)
     #expect(exercise.sets.count == 2)
   }
 

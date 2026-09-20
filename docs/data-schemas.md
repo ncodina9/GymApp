@@ -278,6 +278,7 @@ Notas:
 - `set_number` es 1-based en CSV.
 - `load_type` distingue carga total, lastre, mancuerna, máquina y peso corporal.
 - `exercise_decision` y `exercise_note` solo se rellenan en la última fila exportada de cada ejercicio.
+- El exportador nativo de iOS genera la misma cabecera y asigna `exercise_decision` a la última serie registrada de cada ejercicio; por ello su CSV se puede consolidar con los exports de la PWA sin migración.
 - No se anaden `schema_name` ni `schema_version` a cada fila para no romper el CSV maestro apendable de Obsidian. Si el contrato cambia, se debe documentar una nueva version y migrar el maestro con script.
 - No se genera un segundo resumen por ejercicio desde el flujo principal: ese resumen se obtiene desde el CSV estadistico y desde el backup JSON completo para evitar duplicar fuentes.
 

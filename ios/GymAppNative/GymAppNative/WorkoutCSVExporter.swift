@@ -2,7 +2,11 @@ import Foundation
 import GymAppNativeCore
 
 enum WorkoutCSVExporter {
-  static func write(session: TrainingSession, execution: WorkoutExecutionState) throws -> URL {
+  static func write(
+    session: TrainingSession,
+    execution: WorkoutExecutionState,
+    exerciseDecisions: [String: String] = [:]
+  ) throws -> URL {
     let headers = [
       "date", "performed_at", "week", "session", "exercise_id", "base_exercise_id",
       "exercise", "base_exercise", "variant_label", "type", "target", "set_number",
@@ -12,7 +16,12 @@ enum WorkoutCSVExporter {
       "round_number"
     ]
 
-    let rows = execution.records.sorted { $0.performedAt < $1.performedAt }.compactMap { record -> [String]? in
+    let orderedRecords = execution.records.sorted { $0.performedAt < $1.performedAt }
+    let lastRecordIndexByExercise = orderedRecords.enumerated().reduce(into: [String: Int]()) { result, item in
+      guard let exercise = execution.exercise(for: item.element.locator) else { return }
+      result[exercise.exerciseID] = item.offset
+    }
+    let rows = orderedRecords.enumerated().compactMap { index, record -> [String]? in
       guard let exercise = execution.exercise(for: record.locator),
             let targets = execution.targets(for: record.locator)
       else { return nil }
@@ -45,7 +54,9 @@ enum WorkoutCSVExporter {
         "\(record.feedback.painWrist)",
         "\(record.feedback.painShoulder)",
         "\(record.feedback.painLowerBack)",
-        "",
+        lastRecordIndexByExercise[exercise.exerciseID] == index
+          ? exerciseDecisions[exercise.exerciseID] ?? ""
+          : "",
         isSkipped ? "skipped" : record.feedback.note,
         "",
         exercise.notes,

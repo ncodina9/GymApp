@@ -128,12 +128,9 @@ public struct WorkoutSessionDraft: Codable, Sendable {
       durationSeconds: durationSeconds
     )
 
-    for trainingSet in exercise.sets[currentPosition...] {
-      guard hasSamePlannedTarget(currentPlannedSet, trainingSet) else { break }
-      targetOverrides[
-        SetTargetKey(exerciseID: exerciseID, setIndex: trainingSet.setIndex)
-      ] = override
-    }
+    targetOverrides[
+      SetTargetKey(exerciseID: exerciseID, setIndex: currentPlannedSet.setIndex)
+    ] = override
   }
 
   private func exercise(withID exerciseID: String) -> TrainingExercise? {

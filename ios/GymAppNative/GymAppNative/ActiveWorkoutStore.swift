@@ -110,9 +110,11 @@ final class ActiveWorkoutRecord {
 final class CompletedWorkoutRecord {
   @Attribute(.unique) var sessionID: String
   var completedAt: Date
+  var startedAt: Date?
 
-  init(sessionID: String, completedAt: Date = .now) {
+  init(sessionID: String, startedAt: Date?, completedAt: Date = .now) {
     self.sessionID = sessionID
+    self.startedAt = startedAt
     self.completedAt = completedAt
   }
 }
@@ -156,12 +158,12 @@ enum ActiveWorkoutStore {
     try? context.save()
   }
 
-  static func markCompleted(sessionID: String, in context: ModelContext) {
+  static func markCompleted(sessionID: String, startedAt: Date, completedAt: Date, in context: ModelContext) {
     let descriptor = FetchDescriptor<CompletedWorkoutRecord>(
       predicate: #Predicate { $0.sessionID == sessionID }
     )
     guard (try? context.fetch(descriptor).first) == nil else { return }
-    context.insert(CompletedWorkoutRecord(sessionID: sessionID))
+    context.insert(CompletedWorkoutRecord(sessionID: sessionID, startedAt: startedAt, completedAt: completedAt))
     try? context.save()
   }
 }
