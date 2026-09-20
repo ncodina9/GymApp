@@ -1303,6 +1303,8 @@ Actualización v0.1.83: Opciones observa las preferencias de apariencia y recons
 
 Actualización v0.1.84: la app nativa conserva dos decimales en cargas de discos, por lo que valores como 31,25 kg se muestran y exportan sin truncarse. El peso muerto rumano queda normalizado como nombre de ejercicio y el plan declara Barra y Multipower como materiales seleccionables para PWA y nativo. Al terminar un descanso o una serie temporizada en primer plano se emite un sonido corto y respuesta háptica. La lista de CSV nativa muestra también la fecha planificada de cada entrenamiento.
 
+Actualización v0.1.85: las tarjetas de sesiones en Exportación muestran una línea independiente con la fecha planificada y el nombre del entrenamiento. El mismo identificador se conserva para sesiones importadas desde la PWA, aunque estas se mantengan como historial sin CSV nativo regenerable.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

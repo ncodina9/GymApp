@@ -43,7 +43,7 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.84")
+        Text("v0.1.85")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -235,14 +235,17 @@ private struct ExportSettingsView: View {
         ForEach(completedRecords.sorted { $0.completedAt > $1.completedAt }) { record in
           if let url = csvURL(for: record) {
             ShareLink(item: url) {
-              Label(csvLabel(for: record), systemImage: "square.and.arrow.up")
+              exportCardContent(for: record, actionTitle: "Exportar CSV", systemImage: "square.and.arrow.up")
             }
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(.white)
             .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           } else {
             VStack(alignment: .leading, spacing: 4) {
-              Text(csvLabel(for: record))
+              Text(sessionDetails(for: record).date)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+              Text(sessionDetails(for: record).label)
                 .font(.headline.weight(.bold))
               Text("Registro sin detalle. Solo las sesiones finalizadas desde v0.1.71 pueden reexportarse.")
                 .font(.caption)
@@ -314,11 +317,47 @@ private struct ExportSettingsView: View {
     return url
   }
 
-  private func csvLabel(for record: CompletedWorkoutRecord) -> String {
-    guard let data = record.executionData,
-          let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data)
-    else { return "CSV · \(record.sessionID)" }
-    return "Exportar CSV · \(trainingDateLabel(execution.session.date)) · \(execution.session.sessionLabel)"
+  private func exportCardContent(
+    for record: CompletedWorkoutRecord,
+    actionTitle: String,
+    systemImage: String
+  ) -> some View {
+    let details = sessionDetails(for: record)
+    return HStack(spacing: 12) {
+      VStack(alignment: .leading, spacing: 3) {
+        Text(details.date)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.white.opacity(0.78))
+        Text(details.label)
+          .font(.headline.weight(.bold))
+          .lineLimit(1)
+        Text(actionTitle)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.white.opacity(0.82))
+      }
+      Spacer(minLength: 0)
+      Image(systemName: systemImage)
+        .font(.headline.weight(.bold))
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 18)
+  }
+
+  private func sessionDetails(for record: CompletedWorkoutRecord) -> (date: String, label: String) {
+    if let data = record.executionData,
+       let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data) {
+      return (trainingDateLabel(execution.session.date), execution.session.sessionLabel)
+    }
+
+    if let data = record.importedSessionData,
+       let session = try? JSONDecoder().decode(TrainingBackup.Session.self, from: data) {
+      return (
+        trainingDateLabel(session.sessionDate ?? session.summary?.sessionDate ?? ""),
+        session.sessionLabel ?? session.summary?.sessionLabel ?? record.sessionID
+      )
+    }
+
+    return (record.completedAt.formatted(.dateTime.day().month(.abbreviated).year()), record.sessionID)
   }
 
   private func trainingDateLabel(_ value: String) -> String {
@@ -337,7 +376,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.84"
+      appVersion: "0.1.85"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 
