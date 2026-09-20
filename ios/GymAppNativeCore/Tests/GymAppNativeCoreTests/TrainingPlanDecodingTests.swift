@@ -230,6 +230,92 @@ struct TrainingPlanDecodingTests {
     #expect(restored.targets(for: WorkoutSetLocator(exerciseIndex: 0, setIndex: 2))?.weightKg == 65.5)
   }
 
+  @Test("Restaura una serie normal con su feedback y objetivo editado")
+  func restoresNormalSetSnapshot() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    var execution = WorkoutExecutionState(session: session)
+    let locator = try #require(execution.current)
+    execution.updateWorkingTargets(for: locator, reps: 6, weightKg: 67.5)
+    let snapshot = ActiveWorkoutSnapshot(
+      execution: execution,
+      phase: .feedback,
+      feedback: ActiveWorkoutFeedbackDraft(rir: 1, painKnee: 0, painWrist: 0, painShoulder: 1, painLowerBack: 0, note: "Técnica"),
+      restEndsAt: nil,
+      restTotalSeconds: 0,
+      setTimerEndsAt: nil,
+      setTimerRemaining: 0,
+      reviewExerciseIndexes: [],
+      reviewRestSeconds: 0,
+      exerciseDecisions: [:],
+      startedAt: Date(timeIntervalSince1970: 1_789_000_000)
+    )
+
+    let restored = try JSONDecoder().decode(ActiveWorkoutSnapshot.self, from: JSONEncoder().encode(snapshot))
+    #expect(restored.phase == .feedback)
+    #expect(restored.execution.current == locator)
+    #expect(restored.execution.targets(for: locator)?.reps == 6)
+    #expect(restored.execution.targets(for: locator)?.weightKg == 67.5)
+    #expect(restored.feedback.note == "Técnica")
+  }
+
+  @Test("Restaura una superserie en el segundo ejercicio de la ronda")
+  func restoresSupersetSnapshot() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let firstSuperset = try #require(session.exercises.firstIndex { $0.supersetID != nil })
+    var execution = WorkoutExecutionState(session: session)
+    while execution.current?.exerciseIndex != firstSuperset { _ = execution.recordCurrent(feedback: .ok) }
+    _ = execution.recordCurrent(feedback: .ok)
+    let expectedCurrent = WorkoutSetLocator(exerciseIndex: firstSuperset + 1, setIndex: 1)
+    let snapshot = ActiveWorkoutSnapshot(
+      execution: execution,
+      phase: .workingSet,
+      feedback: .init(rir: 2, painKnee: 0, painWrist: 0, painShoulder: 0, painLowerBack: 0, note: "OK"),
+      restEndsAt: nil,
+      restTotalSeconds: 0,
+      setTimerEndsAt: nil,
+      setTimerRemaining: 0,
+      reviewExerciseIndexes: [],
+      reviewRestSeconds: 0,
+      exerciseDecisions: [:],
+      startedAt: .now
+    )
+
+    let restored = try JSONDecoder().decode(ActiveWorkoutSnapshot.self, from: JSONEncoder().encode(snapshot))
+    #expect(restored.execution.current == expectedCurrent)
+    #expect(restored.execution.records.count == execution.records.count)
+  }
+
+  @Test("Restaura un descanso caducado sin alterar la siguiente serie")
+  func restoresExpiredRestSnapshot() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    var execution = WorkoutExecutionState(session: session)
+    _ = execution.recordCurrent(feedback: .ok)
+    let expectedCurrent = try #require(execution.current)
+    let endedAt = Date.now.addingTimeInterval(-15)
+    let snapshot = ActiveWorkoutSnapshot(
+      execution: execution,
+      phase: .rest,
+      feedback: .init(rir: 2, painKnee: 0, painWrist: 0, painShoulder: 0, painLowerBack: 0, note: "OK"),
+      restEndsAt: endedAt,
+      restTotalSeconds: 90,
+      setTimerEndsAt: nil,
+      setTimerRemaining: 0,
+      reviewExerciseIndexes: [],
+      reviewRestSeconds: 0,
+      exerciseDecisions: [:],
+      startedAt: .now
+    )
+
+    let restored = try JSONDecoder().decode(ActiveWorkoutSnapshot.self, from: JSONEncoder().encode(snapshot))
+    #expect(restored.phase == .rest)
+    #expect(restored.restEndsAt?.timeIntervalSinceNow ?? 0 < 0)
+    #expect(restored.restTotalSeconds == 90)
+    #expect(restored.execution.current == expectedCurrent)
+  }
+
   private var sharedPlanURL: URL {
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0 ..< 5 {

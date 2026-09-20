@@ -19,7 +19,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | Hoy y previsualización | Completado | Semana completa en tarjetas, con fecha, foco, estimado, bloques y navegación directa a la previsualización. |
 | Serie, feedback y descanso | Persistencia activa | Ejecutan, editan objetivos, saltan series, cambian el siguiente bloque al terminar el descanso y recuperan serie, feedback, evaluación y temporizador tras un cierre. |
 | Material y cargas | Completado en memoria | Variante por ejercicio, inventario y redondeo cubiertos por tests Swift. |
-| Persistencia, historial e import/export | Parcial | El borrador activo y las sesiones terminadas usan SwiftData; CSV por sesión, backup interoperable e importación deduplicada están disponibles. Falta una vista de detalle histórico nativa. |
+| Persistencia, historial e import/export | Parcial | El borrador activo y las sesiones terminadas usan SwiftData; CSV por sesión, backup interoperable e importación deduplicada están disponibles. La recuperación del borrador está cubierta en Core para serie normal, superserie y descanso caducado. Falta una vista de detalle histórico nativa. |
 
 ## Próximo bloque: sesión persistente
 
@@ -28,7 +28,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P0 | M | Definir modelo SwiftData para borrador activo. | Una instantánea versionada conserva localizador de serie, objetivos, material real, feedback, `startedAt` y `endsAt`. Los eventos e historial definitivos permanecen en el bloque P1. |
 | [x] | P0 | M | Persistir cada cambio de la sesión activa. | Material, fase, feedback, series registradas y descanso se escriben inmediatamente; un cierre no elimina el borrador. |
 | [x] | P0 | S | Restaurar el borrador desde Hoy. | Hoy ofrece reanudar solo cuando existe una instantánea válida; completar la sesión borra el borrador activo. |
-| [ ] | P0 | S | Añadir pruebas de serialización y restauración del secuenciador. | Cubren una serie normal, una superserie y un descanso recuperado tras caducar. |
+| [x] | P0 | S | Añadir pruebas de serialización y restauración del secuenciador. | Cubren una serie normal, una superserie y un descanso recuperado tras caducar. |
 
 ## Paridad funcional v1
 
@@ -50,6 +50,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P2 | S | Mostrar discos por lado para barra y multipower. | Respeta inventario y variantes, sin reducir la legibilidad del peso central. |
 | [ ] | P2 | S | Sustituir SF Symbols provisionales por Heroicons locales. | Los iconos usados coinciden con los roles de la PWA y respetan accesibilidad. |
 | [x] | P2 | M | Sistema de cuatro temas nativos. | Apariencia permite Sistema, Claro u Oscuro; cada familia conserva una variante independiente: White/Light y Dark/Black. Canvas, superficie y realce usan tokens compartidos. |
+| [~] | P2 | XS | Integración del canvas con regiones de sistema. | El canvas propio llena la ventana de contenido. La barra de estado y la región del indicador de inicio siguen el comportamiento del sistema en iOS 26; evaluar la API de `statusBar` al elevar el mínimo a iOS 27. |
 | [ ] | P2 | M | Notificación local y háptica al acabar descanso. | Funciona con permisos denegados sin bloquear el flujo. |
 | [ ] | P2 | M | Aviso de finalización de descanso y serie temporizada. | Programa notificación local al pasar a segundo plano y reproduce sonido corto más háptica al terminar en primer plano. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |
@@ -63,3 +64,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 - [ ] La app compila en el simulador objetivo con `xcodebuild`.
 - [ ] Si cambia una pantalla nativa, se revisa en simulador con nombre largo, superserie y tema claro/oscuro cuando aplique.
 - [ ] Se actualizan versión, roadmap y este checklist cuando cambia el estado de una tarea.
+
+## Criterio para prueba real en gimnasio
+
+La app nativa solo se marcará como lista para una primera sesión real cuando pase un recorrido completo en dispositivo: elegir sesión, preview, serie normal, superserie, serie temporizada, feedback, descanso, reordenar un bloque, finalizar, exportar CSV y recuperar una sesión activa tras bloquear o cerrar la app. Las notificaciones locales son una mejora P2 y no bloquean esa primera validación, siempre que los temporizadores se recuperen correctamente al volver a primer plano.

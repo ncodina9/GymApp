@@ -1,14 +1,31 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="112" fill="#101619"/>
-  <rect x="122" y="207" width="268" height="52" rx="26" fill="#F6F7F2"/>
-  <rect x="78" y="171" width="48" height="124" rx="24" fill="#F6F7F2"/>
-  <rect x="386" y="171" width="48" height="124" rx="24" fill="#F6F7F2"/>
-  <rect x="132" y="143" width="66" height="180" rx="33" fill="#151B1F"/>
-  <rect x="198" y="166" width="44" height="134" rx="22" fill="#36F24B"/>
-  <rect x="270" y="166" width="44" height="134" rx="22" fill="#36F24B"/>
-  <rect x="314" y="143" width="66" height="180" rx="33" fill="#151B1F"/>
-  <circle cx="168" cy="380" r="28" fill="#36F24B"/>
-  <circle cx="232" cy="380" r="24" stroke="#F6F7F2" stroke-width="12"/>
-  <circle cx="296" cy="380" r="24" stroke="#F6F7F2" stroke-width="12"/>
-  <circle cx="360" cy="380" r="24" stroke="#F6F7F2" stroke-width="12"/>
+  <defs>
+    <linearGradient id="bg" x1="82" y1="34" x2="430" y2="478" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBFCFD"/>
+      <stop offset="1" stop-color="#E9EEF2"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="256" y1="130" x2="256" y2="326" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#727A7E"/>
+      <stop offset="0.48" stop-color="#293135"/>
+      <stop offset="1" stop-color="#111719"/>
+    </linearGradient>
+    <linearGradient id="slate" x1="164" y1="318" x2="348" y2="418" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7D9DBD"/>
+      <stop offset="1" stop-color="#41617E"/>
+    </linearGradient>
+    <filter id="shadow" x="48" y="58" width="416" height="410" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#16212A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="174" y="213" width="164" height="48" rx="24" fill="url(#metal)"/>
+    <rect x="86" y="171" width="52" height="132" rx="26" fill="url(#metal)"/>
+    <rect x="374" y="171" width="52" height="132" rx="26" fill="url(#metal)"/>
+    <rect x="132" y="146" width="64" height="184" rx="32" fill="url(#metal)"/>
+    <rect x="316" y="146" width="64" height="184" rx="32" fill="url(#metal)"/>
+    <rect x="198" y="328" width="116" height="24" rx="12" fill="url(#slate)"/>
+    <rect x="178" y="376" width="156" height="24" rx="12" fill="url(#slate)"/>
+    <rect x="158" y="424" width="196" height="24" rx="12" fill="url(#slate)"/>
+  </g>
 </svg>

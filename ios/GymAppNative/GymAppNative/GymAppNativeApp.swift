@@ -7,7 +7,6 @@ struct GymAppNativeApp: App {
   @AppStorage("lightPalette") private var lightPaletteRaw = LightPalette.white.rawValue
   @AppStorage("darkPalette") private var darkPaletteRaw = DarkPalette.dark.rawValue
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
-  @State private var themeRevision = 0
 
   private var appearance: AppAppearance {
     AppAppearance(rawValue: appearanceRaw) ?? .system
@@ -21,13 +20,35 @@ struct GymAppNativeApp: App {
     DarkPalette(rawValue: darkPaletteRaw) ?? .dark
   }
 
+  private var windowCanvas: Color {
+    Color(uiColor: windowCanvasColor)
+  }
+
+  private var windowCanvasColor: UIColor {
+    let usesDarkCanvas: Bool = switch appearance {
+    case .light: false
+    case .dark: true
+    case .system: UITraitCollection.current.userInterfaceStyle == .dark
+    }
+    if usesDarkCanvas {
+      return darkPalette == .black
+        ? .black
+        : UIColor(red: 0.055, green: 0.071, blue: 0.094, alpha: 1)
+    }
+    return lightPalette == .white
+      ? .white
+      : UIColor(red: 0.925, green: 0.937, blue: 0.949, alpha: 1)
+  }
+
   var body: some Scene {
     WindowGroup {
-      ContentView()
-        .id(themeRevision)
+      ZStack {
+        SafeAreaCanvas(color: windowCanvas)
+        ContentView()
+      }
         .preferredColorScheme(appearance.colorScheme)
+        .background(windowCanvas, ignoresSafeAreaEdges: .all)
         .tint(.gymAccent)
-        .background(GymCanvas())
         .onAppear(perform: applyTheme)
         .onChange(of: appearanceRaw) { _, _ in applyTheme() }
         .onChange(of: lightPaletteRaw) { _, _ in applyTheme() }
@@ -42,6 +63,21 @@ struct GymAppNativeApp: App {
 
   private func applyTheme() {
     GymTheme.apply(appearance: appearance, lightPalette: lightPalette, darkPalette: darkPalette)
-    themeRevision += 1
+  }
+}
+
+private struct SafeAreaCanvas: View {
+  let color: Color
+
+  var body: some View {
+    GeometryReader { proxy in
+      color
+        .frame(
+          width: proxy.size.width,
+          height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom
+        )
+        .offset(y: -proxy.safeAreaInsets.top)
+    }
+    .ignoresSafeArea()
   }
 }

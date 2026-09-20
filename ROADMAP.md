@@ -1291,6 +1291,8 @@ Actualización v0.1.77: Apariencia nativa adopta un sistema de cuatro temas insp
 
 Actualización v0.1.78: los canvas de tema se resuelven mediante una vista SwiftUI reactiva para que White/Light y Dark/Black cambien el fondo visible al seleccionar la variante. Los estados semánticos comparten tokens propios: éxito verde profundo, aviso amarillo ocre y error rojo moderado, sustituyendo los colores de sistema demasiado saturados en la finalización de descansos y series temporizadas.
 
+Actualización v0.1.79: cambiar de tema ya no reconstruye la jerarquía de navegación ni devuelve a Hoy. White, Light, Dark y Black actualizan el canvas de la app sin reiniciar la pantalla actual; iOS 26 mantiene sus regiones de sistema superior e inferior bajo control del sistema y no expone todavía una API pública para teñirlas con el canvas de la aplicación. La instantánea persistida del entrenamiento activo pasa a `GymAppNativeCore` y cuenta con pruebas de recuperación para una serie normal, una superserie y un descanso caducado.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
