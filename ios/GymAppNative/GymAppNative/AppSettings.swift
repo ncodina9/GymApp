@@ -92,60 +92,14 @@ private struct AppearanceSettingsView: View {
 
 private struct AppearanceSegmentedSelector: View {
   @Binding var selection: String
-  @State private var dragOffset: CGFloat = 0
-
-  private var selectedIndex: Int {
-    AppAppearance.allCases.firstIndex { $0.rawValue == selection } ?? 0
-  }
 
   var body: some View {
-    GlassEffectContainer(spacing: 0) {
-      GeometryReader { geometry in
-        let options = AppAppearance.allCases
-        let segmentWidth = geometry.size.width / CGFloat(options.count)
-        let offset = min(max(CGFloat(selectedIndex) * segmentWidth + dragOffset, 0), segmentWidth * CGFloat(options.count - 1))
-
-        ZStack(alignment: .leading) {
-          Capsule()
-            .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
-            .frame(width: segmentWidth, height: 42)
-            .offset(x: offset)
-            .allowsHitTesting(false)
-
-          HStack(spacing: 0) {
-            ForEach(options) { appearance in
-              let index = options.firstIndex(of: appearance) ?? 0
-              Button {
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
-                  selection = appearance.rawValue
-                  dragOffset = 0
-                }
-              } label: {
-                Text(appearance.label)
-                  .font(.caption.weight(.bold))
-                  .frame(maxWidth: .infinity, minHeight: 42)
-                  .foregroundStyle(index == Int((offset / segmentWidth).rounded()) ? .white : .primary)
-              }
-              .buttonStyle(.plain)
-            }
-          }
-          .simultaneousGesture(
-            DragGesture(minimumDistance: 6)
-              .onChanged { dragOffset = $0.translation.width }
-              .onEnded { _ in
-                let target = min(max(Int((offset / segmentWidth).rounded()), 0), options.count - 1)
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
-                  selection = options[target].rawValue
-                  dragOffset = 0
-                }
-              }
-          )
-        }
-      }
-      .frame(height: 42)
-      .padding(4)
-      .glassEffect(.regular, in: Capsule())
-    }
+    GlassSegmentedSelector(
+      selection: $selection,
+      options: AppAppearance.allCases.map(\.rawValue),
+      unavailableOptions: [],
+      label: { AppAppearance(rawValue: $0)?.label ?? $0 }
+    )
   }
 }
 

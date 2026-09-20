@@ -50,6 +50,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P2 | S | Mostrar discos por lado para barra y multipower. | Respeta inventario y variantes, sin reducir la legibilidad del peso central. |
 | [ ] | P2 | S | Sustituir SF Symbols provisionales por Heroicons locales. | Los iconos usados coinciden con los roles de la PWA y respetan accesibilidad. |
 | [ ] | P2 | M | Notificación local y háptica al acabar descanso. | Funciona con permisos denegados sin bloquear el flujo. |
+| [ ] | P2 | M | Aviso de finalización de descanso y serie temporizada. | Programa notificación local al pasar a segundo plano y reproduce sonido corto más háptica al terminar en primer plano. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |
 | [ ] | P2 | M | HealthKit, widget y sincronización. | Se evalúan por separado cuando la persistencia local sea estable. |
 

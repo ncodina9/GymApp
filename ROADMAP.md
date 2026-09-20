@@ -1281,6 +1281,10 @@ Actualización v0.1.73: Opciones, Próximos y Exportación comparten barra super
 
 Actualización v0.1.74: Apariencia adopta la misma barra superior, control de vuelta inferior y selector segmentado Liquid Glass que el material de la pantalla de serie. La navegación principal se mantiene en `NavigationStack`; las fases internas de entrenamiento usan transiciones de flujo y no se comportan como destinos apilados.
 
+Pendiente P2: avisos de finalización para descanso y series temporizadas. Al pasar la app a segundo plano se programará una notificación local; en primer plano, el fin combinará sonido corto y respuesta háptica. Debe funcionar aunque el permiso de notificaciones sea denegado y no depende de infraestructura push remota.
+
+Actualización v0.1.75: el selector Liquid Glass se extrae como componente genérico compartido. Tema y Material usan la misma interacción por toque y arrastre; las opciones de material no disponibles siguen visibles en rojo y bloquean tanto el toque como el desplazamiento hacia ellas.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
