@@ -199,6 +199,8 @@ struct SetExecutionView: View {
       sessionID: session.sessionID,
       startedAt: startedAt,
       completedAt: completionDate,
+      execution: execution,
+      decisions: exerciseDecisions,
       in: modelContext
     )
     ActiveWorkoutStore.clear(in: modelContext)

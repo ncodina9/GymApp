@@ -1273,6 +1273,8 @@ Actualización v0.1.69: la raíz de ejecución ocupa toda la ventana nativa y fi
 
 Actualización v0.1.70: la barra global de progreso anima solo el avance horizontal. En descansos con próxima serie simple, la lista de bloques alternativos usa el espacio disponible hasta la navegación inferior. La pantalla nativa de finalización muestra el tiempo real desde la entrada en la primera serie y la diferencia frente al estimado del plan. El CSV nativo respeta exactamente `gymapp.workout-set-export` v2, conserva la cabecera compatible con Obsidian y añade la decisión final solo en la última serie exportada de cada ejercicio. El backup JSON nativo sigue pendiente.
 
+Actualización v0.1.71: `Hoy` incorpora acceso a Opciones. La configuración nativa separa Apariencia (tema persistente y pantalla activa), Próximos entrenamientos (consulta de sesiones futuras pendientes con previsualización bloqueada para inicio) y Exportación (CSV por sesión nativa guardada, backup JSON de SwiftData y borrado total con confirmación). Las sesiones completadas conservan instantánea de ejecución y decisiones para poder reexportarlas fuera de la pantalla final.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

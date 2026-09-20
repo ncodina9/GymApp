@@ -6,10 +6,23 @@ struct SessionPreviewView: View {
   let session: TrainingSession
   let activeWorkout: ActiveWorkoutSnapshot?
   let onReturnHome: () -> Void
+  let readOnly: Bool
   @State private var startsNewWorkout = false
   @State private var showsRestartConfirmation = false
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
+
+  init(
+    session: TrainingSession,
+    activeWorkout: ActiveWorkoutSnapshot?,
+    onReturnHome: @escaping () -> Void,
+    readOnly: Bool = false
+  ) {
+    self.session = session
+    self.activeWorkout = activeWorkout
+    self.onReturnHome = onReturnHome
+    self.readOnly = readOnly
+  }
 
   private var resumableWorkout: ActiveWorkoutSnapshot? {
     guard activeWorkout?.execution.session.sessionID == session.sessionID else { return nil }
@@ -85,6 +98,18 @@ struct SessionPreviewView: View {
       Text("Se sustituirá el entrenamiento en curso por una nueva sesión de \(session.label).")
     }
     .overlay(alignment: .bottom) {
+      if readOnly {
+        Button(action: { dismiss() }) {
+          Image(systemName: "chevron.left")
+            .font(.headline.weight(.bold))
+            .frame(width: 56, height: 56)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      } else {
       GlassEffectContainer(spacing: 16) {
         HStack(spacing: 16) {
           Button(action: { dismiss() }) {
@@ -127,6 +152,7 @@ struct SessionPreviewView: View {
       }
       .padding(.horizontal, 20)
       .padding(.bottom, 8)
+      }
     }
   }
 

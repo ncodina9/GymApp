@@ -56,7 +56,9 @@ struct TodayView: View {
         }
         .scrollIndicators(.hidden)
         .overlay(alignment: .bottomTrailing) {
-          Button(action: {}) {
+          NavigationLink {
+            SettingsView(plan: plan)
+          } label: {
             Image(systemName: "gearshape.fill")
               .font(.headline.weight(.bold))
               .frame(width: 56, height: 56)
@@ -96,7 +98,7 @@ struct TodayView: View {
   }
 }
 
-private struct WeekSessionCard: View {
+struct WeekSessionCard: View {
   let session: TrainingSession
   let isRecommended: Bool
   let isInProgress: Bool

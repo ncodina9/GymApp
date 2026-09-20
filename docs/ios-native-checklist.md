@@ -41,7 +41,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P1 | M | Edición táctil de objetivos y evaluación final de ejercicio. | Reps y peso se ajustan en una hoja inferior con los incrementos reales del material, se propagan a series homogéneas y se evalúa cada ejercicio o superserie antes del descanso. |
 | [x] | P1 | S | Reordenar el siguiente bloque durante un descanso. | Tras acabar un descanso se puede priorizar un bloque no iniciado; no se crean series saltadas, el bloque originalmente propuesto permanece pendiente y el bloque elegido conserva todas sus series consecutivas. |
 | [x] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la entrada en la primera serie y compara con el estimado del plan, sin contar movilidad. |
-| [ ] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, reinicio controlado e importación/exportación accesibles. |
+| [~] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, pantalla activa, consulta futura, CSV por sesión y borrado confirmado están accesibles; falta importación y validar el backup JSON contra el importador PWA. |
 
 ## Pulido posterior a v1
 
