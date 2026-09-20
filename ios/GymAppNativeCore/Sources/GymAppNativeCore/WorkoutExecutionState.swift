@@ -44,10 +44,28 @@ public struct WorkoutSetFeedback: Codable, Equatable, Sendable {
   )
 }
 
+public enum WorkoutSetStatus: String, Codable, Equatable, Sendable {
+  case completed
+  case skipped
+}
+
 public struct WorkoutSetRecord: Codable, Equatable, Sendable {
   public let locator: WorkoutSetLocator
   public let feedback: WorkoutSetFeedback
   public let performedAt: Date
+  public let status: WorkoutSetStatus
+
+  public init(
+    locator: WorkoutSetLocator,
+    feedback: WorkoutSetFeedback,
+    performedAt: Date,
+    status: WorkoutSetStatus = .completed
+  ) {
+    self.locator = locator
+    self.feedback = feedback
+    self.performedAt = performedAt
+    self.status = status
+  }
 }
 
 public struct WorkoutAdvance: Sendable {
@@ -126,6 +144,20 @@ public struct WorkoutExecutionState: Codable, Sendable {
     feedback: WorkoutSetFeedback,
     performedAt: Date = Date()
   ) -> WorkoutAdvance? {
+    recordCurrent(status: .completed, feedback: feedback, performedAt: performedAt)
+  }
+
+  @discardableResult
+  public mutating func skipCurrent(performedAt: Date = Date()) -> WorkoutAdvance? {
+    recordCurrent(status: .skipped, feedback: .ok, performedAt: performedAt)
+  }
+
+  @discardableResult
+  private mutating func recordCurrent(
+    status: WorkoutSetStatus,
+    feedback: WorkoutSetFeedback,
+    performedAt: Date
+  ) -> WorkoutAdvance? {
     guard let current,
           let trainingSet = trainingSet(for: current)
     else {
@@ -133,7 +165,12 @@ public struct WorkoutExecutionState: Codable, Sendable {
     }
 
     records.append(
-      WorkoutSetRecord(locator: current, feedback: feedback, performedAt: performedAt)
+      WorkoutSetRecord(
+        locator: current,
+        feedback: feedback,
+        performedAt: performedAt,
+        status: status
+      )
     )
     currentPosition += 1
     let next = self.current

@@ -181,6 +181,7 @@ type Exercise = {
   type: string;
   block: string;
   equipment?: string;
+  equipmentOptions?: string[];
   trainingBlock?: string;
   movementPattern?: string;
   primaryMuscles?: string[];
@@ -826,6 +827,8 @@ const exerciseEquipmentVariants: Record<string, ExerciseEquipment[]> = {
   'remo-inclinado-barra': ['barbell', 'multipower'],
   'remo-barra-multipower': ['multipower', 'barbell'],
   'press-cerrado-multipower': ['multipower', 'barbell'],
+  'hip-thrust-barra': ['barbell', 'multipower'],
+  'hip-thrust-volumen': ['barbell', 'multipower'],
 };
 
 const getExerciseEquipmentOptions = (exercise: Exercise) => {

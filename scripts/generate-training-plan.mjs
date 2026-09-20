@@ -267,7 +267,7 @@ const baseSessions = {
         [
           'Descenso controlado y recorrido completo. Mantener 1-2 RIR en la última serie.',
         ],
-        { equipment: 'barbell' },
+        { equipment: 'barbell', equipmentOptions: ['barbell', 'multipower'] },
       ),
       exercise(
         'dominadas-lastradas',
@@ -294,7 +294,7 @@ const baseSessions = {
         57.5,
         120,
         ['Torso firme y mismo ángulo en todas las reps.'],
-        { equipment: 'barbell' },
+        { equipment: 'barbell', equipmentOptions: ['barbell', 'multipower'] },
       ),
       exercise(
         'press-militar-sentado',
@@ -390,7 +390,7 @@ const baseSessions = {
         90,
         120,
         ['Pausa clara arriba sin sacrificar bloqueo de cadera.'],
-        { equipment: 'barbell' },
+        { equipment: 'barbell', equipmentOptions: ['barbell', 'multipower'] },
       ),
       exercise(
         'extension-cuadriceps',
@@ -601,7 +601,7 @@ const baseSessions = {
         85,
         90,
         ['Rango 10-12 reps. Pausa arriba.'],
-        { equipment: 'barbell' },
+        { equipment: 'barbell', equipmentOptions: ['barbell', 'multipower'] },
       ),
       exercise(
         'gemelos-sentado-multipower',
@@ -765,6 +765,7 @@ function exercise(
     notes,
     measure: options.measure ?? 'reps',
     equipment: options.equipment,
+    equipmentOptions: options.equipmentOptions,
   };
 }
 
@@ -947,6 +948,7 @@ function adaptExercise(item, week) {
     type: item.type,
     block: item.block,
     equipment: plannedEquipment,
+    equipmentOptions: item.equipmentOptions,
     trainingBlock: taxonomy?.trainingBlock,
     movementPattern: taxonomy?.movementPattern,
     primaryMuscles: taxonomy?.primaryMuscles,

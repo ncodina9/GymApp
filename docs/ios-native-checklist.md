@@ -17,7 +17,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | --- | --- | --- |
 | Contrato del plan | Completado | `GymAppNativeCore` decodifica el JSON de producción en pruebas. |
 | Hoy y previsualización | Completado | Diseño y navegación base trasladados desde la PWA. |
-| Serie, feedback y descanso | Persistencia activa | Ejecutan una sesión y se recuperan tras un cierre mientras no esté completada. |
+| Serie, feedback y descanso | Persistencia activa | Ejecutan, saltan series y recuperan serie, feedback, temporizador y descanso tras un cierre. |
 | Material y cargas | Completado en memoria | Variante por ejercicio, inventario y redondeo cubiertos por tests Swift. |
 | Persistencia, historial e import/export | Parcial | El borrador activo usa SwiftData; historial e import/export siguen pendientes. |
 
@@ -35,9 +35,9 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | Estado | Pri. | Coste | Tarea | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
 | [ ] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | Se puede abrir una sesión terminada y consultar series, material y feedback; `Hoy` marca sus tarjetas con check verde. |
-| [ ] | P1 | M | Exportar CSV por serie y backup JSON desde iOS. | Los archivos cumplen `docs/data-schemas.md` y se pueden guardar en Archivos. |
+| [ ] | P1 | M | Completar exportación CSV por serie y backup JSON desde iOS. | El CSV nativo ya se comparte desde el cierre; falta validar contra `docs/data-schemas.md` y añadir el backup JSON. |
 | [ ] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados e informa del resultado. |
-| [ ] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano y muestran estado terminado. |
+| [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano y muestran estado terminado. |
 | [ ] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la primera serie y compara con el estimado operativo, sin contar movilidad. |
 | [ ] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, reinicio controlado e importación/exportación accesibles. |
 

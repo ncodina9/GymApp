@@ -72,6 +72,7 @@ public struct TrainingExercise: Codable, Identifiable, Sendable {
   public let type: String
   public let block: String
   public let equipment: Equipment
+  public let equipmentOptions: [Equipment]?
   public let trainingBlock: String?
   public let movementPattern: String?
   public let primaryMuscles: [String]
@@ -95,6 +96,7 @@ public struct TrainingExercise: Codable, Identifiable, Sendable {
     case type
     case block
     case equipment
+    case equipmentOptions
     case trainingBlock
     case movementPattern
     case primaryMuscles

@@ -14,7 +14,9 @@ struct SetExecutionView: View {
   @State private var feedbackNote = "OK"
   @State private var restEndsAt: Date?
   @State private var restTotalSeconds = 0
-  @State private var flowDirection: FlowDirection = .forward
+  @State private var setTimerEndsAt: Date?
+  @State private var setTimerRemaining = 0
+  @State private var transitionOrigin: ExecutionPhase = .workingSet
   @State private var startedAt: Date
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
@@ -37,6 +39,8 @@ struct SetExecutionView: View {
     _feedbackNote = State(initialValue: snapshot.feedback.note)
     _restEndsAt = State(initialValue: snapshot.restEndsAt)
     _restTotalSeconds = State(initialValue: snapshot.restTotalSeconds)
+    _setTimerEndsAt = State(initialValue: snapshot.setTimerEndsAt)
+    _setTimerRemaining = State(initialValue: snapshot.setTimerRemaining)
     _startedAt = State(initialValue: snapshot.startedAt)
   }
 
@@ -50,10 +54,13 @@ struct SetExecutionView: View {
               execution: $execution,
               locator: locator,
               onContinue: { move(to: .feedback, direction: .forward) },
+              onSkip: skipCurrentSet,
+              timerEndsAt: $setTimerEndsAt,
+              timerRemaining: $setTimerRemaining,
               onExecutionChanged: persistActiveWorkout
             )
           } else {
-            FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
+            FinishedWorkoutView(execution: execution, onFinish: { dismiss() })
           }
         case .feedback:
           if let locator = execution.current {
@@ -82,11 +89,12 @@ struct SetExecutionView: View {
             )
           }
         case .finished:
-          FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
+          FinishedWorkoutView(execution: execution, onFinish: { dismiss() })
         }
       }
-      .id(phase)
-      .transition(flowDirection.transition)
+      .id(TransitionKey(origin: transitionOrigin, destination: phase))
+      .transition(transition)
+      .zIndex(1)
     }
     .toolbar(.hidden, for: .navigationBar)
     .onAppear(perform: persistActiveWorkout)
@@ -101,11 +109,13 @@ struct SetExecutionView: View {
     .onChange(of: feedbackPainShoulder) { _, _ in persistActiveWorkout() }
     .onChange(of: feedbackPainLowerBack) { _, _ in persistActiveWorkout() }
     .onChange(of: feedbackNote) { _, _ in persistActiveWorkout() }
+    .onChange(of: setTimerEndsAt) { _, _ in persistActiveWorkout() }
+    .onChange(of: setTimerRemaining) { _, _ in persistActiveWorkout() }
   }
 
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
     withAnimation(.smooth(duration: 0.3)) {
-      flowDirection = direction
+      transitionOrigin = phase
       phase = newPhase
     }
     persistActiveWorkout()
@@ -127,6 +137,8 @@ struct SetExecutionView: View {
         ),
         restEndsAt: restEndsAt,
         restTotalSeconds: restTotalSeconds,
+        setTimerEndsAt: setTimerEndsAt,
+        setTimerRemaining: setTimerRemaining,
         startedAt: startedAt
       ),
       in: modelContext
@@ -154,6 +166,26 @@ struct SetExecutionView: View {
     move(to: .workingSet, direction: .forward)
   }
 
+  private func skipCurrentSet() {
+    guard let advance = execution.skipCurrent() else {
+      finishWorkout()
+      return
+    }
+
+    guard advance.next != nil else {
+      finishWorkout()
+      return
+    }
+
+    if let restSeconds = advance.restSeconds, restSeconds > 0 {
+      restEndsAt = Date().addingTimeInterval(TimeInterval(restSeconds))
+      restTotalSeconds = restSeconds
+      move(to: .rest, direction: .forward)
+    } else {
+      move(to: .workingSet, direction: .forward)
+    }
+  }
+
   private func registerCurrentSet() {
     guard let current = execution.current else {
       finishWorkout()
@@ -179,6 +211,8 @@ struct SetExecutionView: View {
     feedbackPainShoulder = 0
     feedbackPainLowerBack = 0
     feedbackNote = "OK"
+    setTimerEndsAt = nil
+    setTimerRemaining = 0
     guard advance.next != nil else {
       finishWorkout()
       return
@@ -242,10 +276,40 @@ private enum FlowDirection {
   }
 }
 
+private struct TransitionKey: Hashable {
+  let origin: ExecutionPhase
+  let destination: ExecutionPhase
+}
+
+private extension SetExecutionView {
+  var transition: AnyTransition {
+    switch (transitionOrigin, phase) {
+    case (.workingSet, .feedback):
+      .asymmetric(
+        insertion: .move(edge: .trailing).combined(with: .opacity),
+        removal: .move(edge: .leading).combined(with: .opacity)
+      )
+    case (.feedback, .workingSet):
+      .asymmetric(
+        insertion: .move(edge: .leading).combined(with: .opacity),
+        removal: .move(edge: .trailing).combined(with: .opacity)
+      )
+    default:
+      .asymmetric(
+        insertion: .move(edge: .trailing).combined(with: .opacity),
+        removal: .move(edge: .leading).combined(with: .opacity)
+      )
+    }
+  }
+}
+
 private struct WorkingSetView: View {
   @Binding var execution: WorkoutExecutionState
   let locator: WorkoutSetLocator
   let onContinue: () -> Void
+  let onSkip: () -> Void
+  @Binding var timerEndsAt: Date?
+  @Binding var timerRemaining: Int
   let onExecutionChanged: () -> Void
 
   private var exercise: TrainingExercise? { execution.exercise(for: locator) }
@@ -257,7 +321,12 @@ private struct WorkingSetView: View {
     Group {
       if let exercise, let trainingSet {
         VStack(alignment: .leading, spacing: 12) {
-          SetHeader(exercise: exercise, setIndex: trainingSet.setIndex - 1)
+          SetHeader(
+            exercise: exercise,
+            setIndex: trainingSet.setIndex - 1,
+            supersetPosition: supersetPosition(for: exercise),
+            supersetSize: supersetSize(for: exercise)
+          )
 
           MaterialSelector(
             selection: Binding(
@@ -272,7 +341,11 @@ private struct WorkingSetView: View {
           )
 
           if trainingSet.type == .timed {
-            TimedSetTarget(seconds: activeTargets?.durationSeconds ?? 0)
+            TimedSetTarget(
+              seconds: activeTargets?.durationSeconds ?? 0,
+              endsAt: $timerEndsAt,
+              pausedRemaining: $timerRemaining
+            )
           } else {
             VStack(spacing: 10) {
               SetTargetCard(label: "Reps", value: activeTargets?.reps.map(String.init) ?? "-")
@@ -295,7 +368,11 @@ private struct WorkingSetView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
 
-          BottomActions(primaryTitle: "Continuar", primaryAction: onContinue)
+          BottomActions(
+            primaryTitle: "Continuar",
+            primaryAction: onContinue,
+            skipAction: onSkip
+          )
         }
         .padding(16)
       } else {
@@ -316,10 +393,14 @@ private struct WorkingSetView: View {
   }
 
   private func equipmentOptions(for exercise: TrainingExercise) -> [Equipment] {
+    if let equipmentOptions = exercise.equipmentOptions {
+      return equipmentOptions
+    }
+
     let variants: [Equipment] = switch exercise.exerciseID {
     case "press-banca-barra", "press-banca-inclinado", "press-militar-sentado", "press-militar-sentado-velocidad":
       [.barbell, .multipower, .dumbbell]
-    case "remo-inclinado-barra", "remo-barra-multipower", "press-cerrado-multipower":
+    case "remo-inclinado-barra", "remo-barra-multipower", "press-cerrado-multipower", "hip-thrust-barra", "hip-thrust-volumen":
       [.barbell, .multipower]
     default:
       [exercise.equipment]
@@ -336,6 +417,18 @@ private struct WorkingSetView: View {
         !execution.canSelectEquipment($0, for: locator)
       }
     )
+  }
+
+  private func supersetPosition(for exercise: TrainingExercise) -> Int? {
+    guard let supersetID = exercise.supersetID else { return nil }
+    return (execution.session.exercises.firstIndex {
+      $0.supersetID == supersetID && $0.exerciseID == exercise.exerciseID
+    } ?? 0) + 1
+  }
+
+  private func supersetSize(for exercise: TrainingExercise) -> Int? {
+    guard let supersetID = exercise.supersetID else { return nil }
+    return execution.session.exercises.filter { $0.supersetID == supersetID }.count
   }
 }
 
@@ -432,9 +525,9 @@ private struct FeedbackHeader: View {
             .padding(.vertical, 6)
             .background(.fill.quaternary, in: Capsule())
 
-          FeedbackSetProgress(
+          SetProgressIndicators(
             setCount: exercise?.sets.count ?? 0,
-            currentSetIndex: locator.setIndex
+            currentSetIndex: locator.setIndex - 1
           )
         }
       }
@@ -442,22 +535,32 @@ private struct FeedbackHeader: View {
       if let exercise, let supersetID = exercise.supersetID {
         let members = execution.session.exercises.filter { $0.supersetID == supersetID }
         let position = (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
-        FeedbackChip(text: "Superserie \(position)/\(members.count)", accent: true)
+        FeedbackChip(
+          text: "Superserie \(position)/\(members.count) · Ronda \(locator.setIndex)/\(exercise.sets.count)",
+          accent: true
+        )
       }
     }
   }
 }
 
-private struct FeedbackSetProgress: View {
+private struct SetProgressIndicators: View {
   let setCount: Int
   let currentSetIndex: Int
 
   var body: some View {
     HStack(spacing: 6) {
-      ForEach(1 ... max(setCount, 1), id: \.self) { index in
+      ForEach(0 ..< max(setCount, 1), id: \.self) { index in
+        let isCompleted = index < currentSetIndex
+        let isCurrent = index == currentSetIndex
         Circle()
-          .strokeBorder(index == currentSetIndex ? Color.accentColor : .secondary.opacity(0.35), lineWidth: 2)
-          .background(Circle().fill(index < currentSetIndex ? Color.accentColor : .clear))
+          .fill(isCompleted ? Color.accentColor : .clear)
+          .overlay {
+            Circle().strokeBorder(
+              isCompleted || isCurrent ? Color.accentColor : .secondary.opacity(0.35),
+              lineWidth: 2
+            )
+          }
           .frame(width: 14, height: 14)
       }
     }
@@ -620,11 +723,10 @@ private struct RestCountdownBar: View {
           .fill(isFinished ? Color.green : Color.accentColor.opacity(0.6))
 
         GeometryReader { geometry in
-          RoundedRectangle(cornerRadius: 30)
+          Rectangle()
             .fill(isFinished ? Color.green : Color.accentColor)
             .frame(width: geometry.size.width * progress)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 30))
 
         VStack(spacing: 5) {
           Text(isFinished ? "Descanso terminado" : "Descanso")
@@ -638,9 +740,9 @@ private struct RestCountdownBar: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       .frame(maxWidth: .infinity, minHeight: 128)
+      .clipShape(RoundedRectangle(cornerRadius: 30))
     }
     .buttonStyle(.plain)
-    .disabled(!isFinished)
     .animation(.linear(duration: 0.85), value: remaining)
   }
 }
@@ -789,20 +891,45 @@ private struct RestEquipmentChip: View {
 }
 
 private struct FinishedWorkoutView: View {
-  let completedSetCount: Int
+  let execution: WorkoutExecutionState
   let onFinish: () -> Void
+  @State private var csvURL: URL?
+  @State private var rewardVisible = false
+
+  private var completedSetCount: Int {
+    execution.records.filter { $0.status == .completed }.count
+  }
 
   var body: some View {
     VStack(spacing: 18) {
       Spacer()
-      Image(systemName: "checkmark.circle.fill")
-        .font(.system(size: 72))
-        .foregroundStyle(.green)
+      ZStack {
+        Circle()
+          .stroke(Color.green.opacity(0.35), lineWidth: 10)
+          .scaleEffect(rewardVisible ? 1.18 : 0.75)
+          .opacity(rewardVisible ? 0 : 1)
+        Image(systemName: "checkmark.circle.fill")
+          .font(.system(size: 72))
+          .foregroundStyle(.green)
+          .symbolEffect(.bounce, value: rewardVisible)
+      }
       Text("Entrenamiento completado")
         .font(.largeTitle.weight(.bold))
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
       Text("\(completedSetCount) series registradas en esta sesión.")
         .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
       Spacer()
+      if let csvURL {
+        ShareLink(item: csvURL) {
+          Label("Exportar CSV", systemImage: "square.and.arrow.up")
+        }
+        .font(.headline.weight(.bold))
+        .frame(maxWidth: .infinity, minHeight: 64)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+      }
       Button(action: onFinish) {
         Label("Volver a Hoy", systemImage: "house")
       }
@@ -813,12 +940,20 @@ private struct FinishedWorkoutView: View {
         .buttonStyle(.plain)
     }
     .padding(16)
+    .onAppear {
+      csvURL = try? WorkoutCSVExporter.write(session: execution.session, execution: execution)
+      withAnimation(.easeOut(duration: 0.8)) {
+        rewardVisible = true
+      }
+    }
+    .sensoryFeedback(.success, trigger: rewardVisible)
   }
 }
 
 private struct BottomActions: View {
   let primaryTitle: String
   let primaryAction: () -> Void
+  var skipAction: (() -> Void)? = nil
   var primaryDisabled = false
   @Environment(\.dismiss) private var dismiss
 
@@ -840,6 +975,18 @@ private struct BottomActions: View {
         .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
         .buttonStyle(.plain)
         .disabled(primaryDisabled)
+
+      if let skipAction {
+        Button(action: skipAction) {
+          Image(systemName: "arrowshape.turn.up.right.fill")
+            .font(.headline.weight(.bold))
+            .frame(width: 64, height: 64)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Circle())
+        }
+        .accessibilityLabel("Saltar serie")
+        .buttonStyle(.plain)
+      }
     }
   }
 }
@@ -847,27 +994,31 @@ private struct BottomActions: View {
 private struct SetHeader: View {
   let exercise: TrainingExercise
   let setIndex: Int
+  let supersetPosition: Int?
+  let supersetSize: Int?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 7) {
-      Text(exercise.baseExerciseName)
-        .font(.system(size: 27, weight: .bold))
-        .lineLimit(2)
-        .frame(maxWidth: .infinity, alignment: .leading)
+    HStack(alignment: .top, spacing: 12) {
+      VStack(alignment: .leading, spacing: 5) {
+        Text(exercise.baseExerciseName)
+          .font(.system(size: 27, weight: .bold))
+          .lineLimit(2)
+          .frame(maxWidth: .infinity, alignment: .leading)
 
-      HStack {
-        Spacer()
-        HStack(spacing: 6) {
-          ForEach(exercise.sets.indices, id: \.self) { index in
-            Circle()
-              .strokeBorder(index == setIndex ? Color.accentColor : .secondary.opacity(0.35), lineWidth: 2)
-              .background(
-                Circle().fill(index < setIndex ? Color.accentColor : .clear)
-              )
-              .frame(width: 14, height: 14)
-          }
+        if let supersetPosition, let supersetSize {
+          FeedbackChip(
+            text: "Superserie \(supersetPosition)/\(supersetSize)",
+            accent: true
+          )
         }
       }
+      .frame(maxWidth: .infinity, minHeight: 66, alignment: .topLeading)
+
+      SetProgressIndicators(
+        setCount: exercise.sets.count,
+        currentSetIndex: setIndex
+      )
+      .padding(.top, 5)
     }
   }
 }
@@ -1013,25 +1164,98 @@ private struct SetTargetCard: View {
 
 private struct TimedSetTarget: View {
   let seconds: Int
+  @Binding var endsAt: Date?
+  @Binding var pausedRemaining: Int
+
+  private var isRunning: Bool { endsAt != nil }
 
   var body: some View {
-    VStack(spacing: 12) {
-      Text("Tiempo")
-        .font(.headline.weight(.semibold))
-        .foregroundStyle(.secondary)
-      Text("\(seconds / 60):\(String(format: "%02d", seconds % 60))")
-        .font(.system(size: 64, weight: .bold))
-        .monospacedDigit()
-      Button("Iniciar") {}
-        .font(.headline.weight(.bold))
-        .frame(maxWidth: .infinity, minHeight: 56)
-        .foregroundStyle(.white)
-        .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
-        .buttonStyle(.plain)
-        .disabled(true)
+    TimelineView(.periodic(from: .now, by: 1)) { context in
+      let remaining = remainingSeconds(at: context.date)
+      let isFinished = remaining == 0
+      let progress = CGFloat(remaining) / CGFloat(max(seconds, 1))
+
+      VStack(spacing: 12) {
+        ZStack(alignment: .leading) {
+          RoundedRectangle(cornerRadius: 22)
+            .fill(isFinished ? Color.green : Color.accentColor.opacity(0.22))
+
+          GeometryReader { geometry in
+            Rectangle()
+              .fill(isFinished ? Color.green : Color.accentColor)
+              .frame(width: geometry.size.width * progress)
+          }
+
+          VStack(spacing: 4) {
+            Text(isFinished ? "Ejercicio terminado" : "Tiempo")
+              .font(.headline.weight(.semibold))
+            Text(clock(remaining))
+              .font(.system(size: 64, weight: .bold))
+              .monospacedDigit()
+              .contentTransition(.numericText())
+          }
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+
+        HStack(spacing: 12) {
+          Button(action: reset) {
+            Image(systemName: "arrow.counterclockwise")
+              .font(.headline.weight(.bold))
+              .frame(width: 58, height: 58)
+              .foregroundStyle(.primary)
+              .glassEffect(.regular.interactive(), in: Circle())
+          }
+          .buttonStyle(.plain)
+
+          Button(action: toggle) {
+            Label(
+              isRunning ? "Pausar" : (isFinished ? "Repetir" : "Iniciar"),
+              systemImage: isRunning ? "pause.fill" : "play.fill"
+            )
+          }
+          .font(.headline.weight(.bold))
+          .frame(maxWidth: .infinity, minHeight: 58)
+          .foregroundStyle(.white)
+          .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          .buttonStyle(.plain)
+        }
+      }
+      .onAppear {
+        if pausedRemaining == 0, endsAt == nil {
+          pausedRemaining = seconds
+        }
+      }
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 22))
+  }
+
+  private func remainingSeconds(at date: Date) -> Int {
+    if let endsAt {
+      return max(0, Int(endsAt.timeIntervalSince(date).rounded(.up)))
+    }
+    return pausedRemaining
+  }
+
+  private func toggle() {
+    if let endsAt {
+      pausedRemaining = max(0, Int(endsAt.timeIntervalSinceNow.rounded(.up)))
+      self.endsAt = nil
+    } else {
+      let duration = pausedRemaining > 0 ? pausedRemaining : seconds
+      pausedRemaining = duration
+      endsAt = .now.addingTimeInterval(TimeInterval(duration))
+    }
+  }
+
+  private func reset() {
+    endsAt = nil
+    pausedRemaining = seconds
+  }
+
+  private func clock(_ totalSeconds: Int) -> String {
+    "\(totalSeconds / 60):\(String(format: "%02d", totalSeconds % 60))"
   }
 }
 

@@ -18,7 +18,7 @@ struct ActiveWorkoutFeedbackDraft: Codable {
 }
 
 struct ActiveWorkoutSnapshot: Codable {
-  static let currentSchemaVersion = 2
+  static let currentSchemaVersion = 3
 
   let schemaVersion: Int
   var execution: WorkoutExecutionState
@@ -26,6 +26,8 @@ struct ActiveWorkoutSnapshot: Codable {
   var feedback: ActiveWorkoutFeedbackDraft
   var restEndsAt: Date?
   var restTotalSeconds: Int
+  var setTimerEndsAt: Date?
+  var setTimerRemaining: Int
   let startedAt: Date
 
   init(
@@ -34,6 +36,8 @@ struct ActiveWorkoutSnapshot: Codable {
     feedback: ActiveWorkoutFeedbackDraft,
     restEndsAt: Date?,
     restTotalSeconds: Int,
+    setTimerEndsAt: Date?,
+    setTimerRemaining: Int,
     startedAt: Date
   ) {
     schemaVersion = Self.currentSchemaVersion
@@ -42,6 +46,8 @@ struct ActiveWorkoutSnapshot: Codable {
     self.feedback = feedback
     self.restEndsAt = restEndsAt
     self.restTotalSeconds = restTotalSeconds
+    self.setTimerEndsAt = setTimerEndsAt
+    self.setTimerRemaining = setTimerRemaining
     self.startedAt = startedAt
   }
 }

@@ -121,6 +121,19 @@ struct TrainingPlanDecodingTests {
     #expect(state.records.first?.feedback == feedback)
   }
 
+  @Test("Registra una serie saltada y avanza el flujo")
+  func skipsCurrentSetAndAdvances() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    var state = WorkoutExecutionState(session: session)
+
+    let advance = state.skipCurrent()
+
+    #expect(state.records.count == 1)
+    #expect(state.records.first?.status == .skipped)
+    #expect(advance?.next?.setIndex == 2)
+  }
+
   @Test("Codifica el borrador ejecutable para recuperar una sesión activa")
   func encodesActiveWorkoutState() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))

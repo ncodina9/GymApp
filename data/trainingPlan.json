@@ -27,6 +27,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -150,6 +154,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -511,6 +519,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -1168,6 +1180,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -1291,6 +1307,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -1654,6 +1674,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -2459,6 +2483,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -2686,6 +2714,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -2809,6 +2841,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -3172,6 +3208,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -3977,6 +4017,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -4204,6 +4248,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -4299,6 +4347,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -4627,6 +4679,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -5362,6 +5418,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -5589,6 +5649,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -5698,6 +5762,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -6068,6 +6136,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -6477,6 +6549,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -7221,6 +7297,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -7477,6 +7557,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -7586,6 +7670,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -8412,6 +8500,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -8639,6 +8731,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -8748,6 +8844,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -9118,6 +9218,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -9937,6 +10041,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -10164,6 +10272,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -10259,6 +10371,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -10587,6 +10703,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -11322,6 +11442,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -11549,6 +11673,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -11658,6 +11786,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -12007,6 +12139,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -12777,6 +12913,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -13004,6 +13144,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -13113,6 +13257,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -13462,6 +13610,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -14232,6 +14384,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -14459,6 +14615,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -14554,6 +14714,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -14882,6 +15046,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -15617,6 +15785,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -15844,6 +16016,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -15953,6 +16129,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -16302,6 +16482,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -17072,6 +17256,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -17299,6 +17487,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "empuje-horizontal",
           "primaryMuscles": ["pecho", "triceps"],
@@ -17380,6 +17572,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "traccion-horizontal",
           "primaryMuscles": ["espalda-alta", "dorsal"],
@@ -17680,6 +17876,10 @@
           "type": "Básico",
           "block": "C",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
@@ -18359,6 +18559,10 @@
           "type": "Básico",
           "block": "D",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "volumen",
           "movementPattern": "extension-cadera",
           "primaryMuscles": ["gluteo"],
