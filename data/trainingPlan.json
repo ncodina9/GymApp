@@ -411,6 +411,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -1566,6 +1570,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -3100,6 +3108,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -4585,6 +4597,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -6028,6 +6044,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -7189,6 +7209,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -9110,6 +9134,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -10609,6 +10637,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -12038,6 +12070,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -13509,6 +13545,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -14952,6 +14992,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -16381,6 +16425,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],
@@ -17796,6 +17844,10 @@
           "type": "Básico",
           "block": "A",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "dominante-rodilla",
           "primaryMuscles": ["cuadriceps", "gluteo"],

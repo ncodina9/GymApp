@@ -17,7 +17,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | --- | --- | --- |
 | Contrato del plan | Completado | `GymAppNativeCore` decodifica el JSON de producción en pruebas. |
 | Hoy y previsualización | Completado | Semana completa en tarjetas, con fecha, foco, estimado, bloques y navegación directa a la previsualización. |
-| Serie, feedback y descanso | Persistencia activa | Ejecutan, editan objetivos, saltan series y recuperan serie, feedback, evaluación, temporizador y descanso tras un cierre. |
+| Serie, feedback y descanso | Persistencia activa | Ejecutan, editan objetivos, saltan series, cambian el siguiente bloque al terminar el descanso y recuperan serie, feedback, evaluación y temporizador tras un cierre. |
 | Material y cargas | Completado en memoria | Variante por ejercicio, inventario y redondeo cubiertos por tests Swift. |
 | Persistencia, historial e import/export | Parcial | El borrador activo usa SwiftData; historial e import/export siguen pendientes. |
 
@@ -39,6 +39,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [ ] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados e informa del resultado. |
 | [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano y muestran estado terminado. |
 | [x] | P1 | M | Edición táctil de objetivos y evaluación final de ejercicio. | Reps y peso se ajustan en una hoja inferior con los incrementos reales del material, se propagan a series homogéneas y se evalúa cada ejercicio o superserie antes del descanso. |
+| [x] | P1 | S | Reordenar el siguiente bloque durante un descanso. | Tras acabar un descanso se puede priorizar un bloque no iniciado; no se crean series saltadas y el bloque originalmente propuesto permanece pendiente. |
 | [ ] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la primera serie y compara con el estimado operativo, sin contar movilidad. |
 | [ ] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, reinicio controlado e importación/exportación accesibles. |
 

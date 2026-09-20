@@ -89,7 +89,7 @@ private struct WeekSessionCard: View {
           .font(.subheadline.weight(.bold))
           .foregroundStyle(.secondary)
         Text(Self.dateLabel(session.date))
-          .font(.subheadline.weight(.semibold))
+          .font(.subheadline.weight(.bold))
           .foregroundStyle(.secondary)
         Spacer()
         if isInProgress {

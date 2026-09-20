@@ -158,6 +158,19 @@ struct TrainingPlanDecodingTests {
     #expect(advance?.reviewExerciseIndexes == [0])
   }
 
+  @Test("Permite priorizar un bloque pendiente sin saltar series")
+  func prioritizesPendingBlock() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    var state = WorkoutExecutionState(session: session)
+
+    let selected = state.selectNextBlock(exerciseIndex: 2)
+
+    #expect(selected)
+    #expect(state.current == WorkoutSetLocator(exerciseIndex: 2, setIndex: 1))
+    #expect(state.records.isEmpty)
+  }
+
   @Test("Codifica el borrador ejecutable para recuperar una sesión activa")
   func encodesActiveWorkoutState() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))

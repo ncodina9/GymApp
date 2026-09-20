@@ -79,7 +79,7 @@ public struct WorkoutExecutionState: Codable, Sendable {
   public private(set) var draft: WorkoutSessionDraft
   public private(set) var records: [WorkoutSetRecord]
 
-  private let order: [WorkoutSetLocator]
+  private var order: [WorkoutSetLocator]
   private var currentPosition: Int
 
   public init(session: TrainingSession) {
@@ -124,6 +124,23 @@ public struct WorkoutExecutionState: Codable, Sendable {
   public func canSelectEquipment(_ equipment: Equipment, for locator: WorkoutSetLocator) -> Bool {
     guard let exercise = exercise(for: locator) else { return false }
     return draft.canSelectEquipment(equipment, for: exercise.exerciseID)
+  }
+
+  @discardableResult
+  public mutating func selectNextBlock(exerciseIndex: Int) -> Bool {
+    guard let current,
+          current.setIndex == 1,
+          session.exercises.indices.contains(exerciseIndex),
+          !records.contains(where: { $0.locator.exerciseIndex == exerciseIndex }),
+          let targetPosition = order[currentPosition...].firstIndex(
+            where: { $0.exerciseIndex == exerciseIndex && $0.setIndex == 1 }
+          )
+    else {
+      return false
+    }
+
+    order.swapAt(currentPosition, targetPosition)
+    return true
   }
 
   public mutating func updateWorkingTargets(

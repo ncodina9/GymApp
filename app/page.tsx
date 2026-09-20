@@ -2774,34 +2774,24 @@ function TodayScreen({
         </div>
       </div>
 
-      {hasStarted ? (
-        <Button
-          className="h-14 rounded-[1.75rem] text-lg font-black"
-          onClick={onResume}
-        >
-          Reanudar
-          <ChevronRight className="size-6" />
-        </Button>
-      ) : null}
-
       <div className="grid gap-2">
         {weekSessions.map((session) => {
           const isSelected = session.sessionId === selectedSession.sessionId;
           const isComplete = completedSessionIds.has(session.sessionId);
 
           return (
-            <button
-              key={session.sessionId}
-              className={`min-h-16 rounded-lg border px-3 py-2.5 text-left transition active:scale-[0.98] ${
+            <div key={session.sessionId} className="flex min-w-0 gap-2">
+              <button
+                className={`min-h-16 min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-left transition active:scale-[0.98] ${
                 isSelected
                   ? 'border-primary bg-primary text-primary-foreground'
                   : isComplete
                     ? 'border-[var(--complete-border)] bg-[var(--complete)] text-[var(--complete-foreground)]'
                     : 'border-border bg-secondary text-secondary-foreground'
               }`}
-              type="button"
-              onClick={() => onChangeSession(session.sessionId)}
-            >
+                type="button"
+                onClick={() => onChangeSession(session.sessionId)}
+              >
               <span className="flex min-w-0 items-center justify-between gap-2 text-sm font-bold capitalize">
                 <span className="truncate">{session.weekday}</span>
                 {isComplete ? (
@@ -2820,7 +2810,17 @@ function TodayScreen({
               <span className="mt-1 block overflow-hidden text-lg font-black leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
                 {session.label}
               </span>
-            </button>
+              </button>
+              {isSelected && hasStarted ? (
+                <Button
+                  aria-label="Reanudar entrenamiento"
+                  className="h-auto w-14 shrink-0 rounded-lg p-0"
+                  onClick={onResume}
+                >
+                  <Play className="size-5 fill-current" />
+                </Button>
+              ) : null}
+            </div>
           );
         })}
       </div>

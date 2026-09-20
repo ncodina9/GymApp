@@ -21,6 +21,7 @@ struct SetExecutionView: View {
   @State private var reviewRestSeconds = 0
   @State private var exerciseDecisions: [String: String] = [:]
   @State private var transitionOrigin: ExecutionPhase = .workingSet
+  @State private var transitionDirection: FlowDirection = .forward
   @State private var startedAt: Date
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
@@ -94,7 +95,8 @@ struct SetExecutionView: View {
               endsAt: restEndsAt,
               totalSeconds: restTotalSeconds,
               onAdjust: adjustRest,
-              onContinue: continueFromRest
+              onContinue: continueFromRest,
+              onSelectBlock: selectNextBlock
             )
           }
         case .exerciseReview:
@@ -132,6 +134,7 @@ struct SetExecutionView: View {
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
     withAnimation(.smooth(duration: 0.3)) {
       transitionOrigin = phase
+      transitionDirection = direction
       phase = newPhase
     }
     persistActiveWorkout()
@@ -183,6 +186,11 @@ struct SetExecutionView: View {
     restEndsAt = nil
     restTotalSeconds = 0
     move(to: .workingSet, direction: .forward)
+  }
+
+  private func selectNextBlock(_ exerciseIndex: Int) {
+    guard execution.selectNextBlock(exerciseIndex: exerciseIndex) else { return }
+    persistActiveWorkout()
   }
 
   private func continueAfterExerciseReview() {
@@ -327,23 +335,7 @@ private struct TransitionKey: Hashable {
 
 private extension SetExecutionView {
   var transition: AnyTransition {
-    switch (transitionOrigin, phase) {
-    case (.workingSet, .feedback):
-      .asymmetric(
-        insertion: .move(edge: .trailing).combined(with: .opacity),
-        removal: .opacity
-      )
-    case (.feedback, .workingSet):
-      .asymmetric(
-        insertion: .move(edge: .leading).combined(with: .opacity),
-        removal: .opacity
-      )
-    default:
-      .asymmetric(
-        insertion: .move(edge: .trailing).combined(with: .opacity),
-        removal: .opacity
-      )
-    }
+    transitionDirection.transition
   }
 }
 
@@ -390,7 +382,8 @@ private struct WorkingSetView: View {
               seconds: activeTargets?.durationSeconds ?? 0,
               endsAt: $timerEndsAt,
               pausedRemaining: $timerRemaining,
-              onAdjustDuration: adjustTimedDuration
+              onAdjustDuration: adjustTimedDuration,
+              onFinishedTap: onContinue
             )
           } else {
             VStack(spacing: 10) {
@@ -838,17 +831,36 @@ private struct ExerciseDecisionSection: View {
   }
 
   private func decisionButton(_ option: String) -> some View {
-    Button(option) { selection = option }
+    Button { selection = option } label: {
+      HStack(spacing: 6) {
+        Text(decisionSymbol(for: option))
+          .font(.headline.weight(.bold))
+        Text(option)
+          .lineLimit(1)
+          .minimumScaleFactor(0.75)
+      }
       .font(.caption.weight(.bold))
-      .lineLimit(1)
-      .minimumScaleFactor(0.75)
-      .frame(maxWidth: .infinity, minHeight: 46)
+      .frame(maxWidth: .infinity, minHeight: 50)
       .foregroundStyle(selection == option ? .white : decisionColor(option))
       .background(
-        selection == option ? decisionColor(option) : decisionColor(option).opacity(0.12),
-        in: RoundedRectangle(cornerRadius: 12)
+        selection == option ? decisionColor(option) : decisionColor(option).opacity(0.14),
+        in: RoundedRectangle(cornerRadius: 14)
       )
-      .buttonStyle(.plain)
+      .overlay {
+        RoundedRectangle(cornerRadius: 14)
+          .stroke(decisionColor(option).opacity(selection == option ? 1 : 0.7), lineWidth: 1.5)
+      }
+    }
+    .accessibilityLabel(option)
+    .buttonStyle(.plain)
+  }
+
+  private func decisionSymbol(for option: String) -> String {
+    let lower = option.lowercased()
+    if lower.contains("subir") || lower.contains("mejorar") { return "↗" }
+    if lower.contains("bajar") { return "↘" }
+    if lower.contains("molestia") { return "×" }
+    return "="
   }
 
   private func decisionColor(_ option: String) -> Color {
@@ -866,11 +878,12 @@ private struct RestView: View {
   let totalSeconds: Int
   let onAdjust: (Int) -> Void
   let onContinue: () -> Void
+  let onSelectBlock: (Int) -> Void
 
   var body: some View {
     TimelineView(.periodic(from: .now, by: 1)) { context in
       let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
-      VStack(spacing: 6) {
+      VStack(spacing: 8) {
         RestCountdownBar(remaining: remaining, totalSeconds: totalSeconds, onContinue: onContinue)
 
         HStack(spacing: 8) {
@@ -879,7 +892,15 @@ private struct RestView: View {
         }
 
         NextSetPreview(execution: execution, locator: next)
-          .frame(maxHeight: .infinity, alignment: .top)
+          .frame(maxHeight: 186, alignment: .top)
+
+        PendingBlockSelector(
+          execution: execution,
+          next: next,
+          isRestFinished: remaining == 0,
+          onSelect: onSelectBlock
+        )
+        .frame(maxHeight: .infinity, alignment: .top)
 
         Button("Siguiente", action: onContinue)
           .font(.headline.weight(.bold))
@@ -930,7 +951,7 @@ private struct RestCountdownBar: View {
         .foregroundStyle(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .frame(maxWidth: .infinity, minHeight: 128)
+      .frame(maxWidth: .infinity, minHeight: 104)
       .clipShape(RoundedRectangle(cornerRadius: 30))
     }
     .buttonStyle(.plain)
@@ -950,6 +971,86 @@ private struct RestAdjustmentButton: View {
       .glassEffect(.regular.tint(.accentColor).interactive(), in: RoundedRectangle(cornerRadius: 24))
       .buttonStyle(.plain)
   }
+}
+
+private struct PendingBlockSelector: View {
+  let execution: WorkoutExecutionState
+  let next: WorkoutSetLocator
+  let isRestFinished: Bool
+  let onSelect: (Int) -> Void
+
+  private var options: [PendingBlockOption] {
+    guard next.setIndex == 1 else { return [] }
+    var seenSupersets = Set<String>()
+
+    return execution.session.exercises.enumerated().compactMap { index, exercise in
+      guard index != next.exerciseIndex,
+            !execution.records.contains(where: { $0.locator.exerciseIndex == index })
+      else { return nil }
+
+      if let supersetID = exercise.supersetID {
+        guard seenSupersets.insert(supersetID).inserted else { return nil }
+      }
+      return PendingBlockOption(exerciseIndex: index, exercise: exercise)
+    }
+  }
+
+  var body: some View {
+    if !options.isEmpty {
+      VStack(alignment: .leading, spacing: 7) {
+        Text("Cambiar siguiente bloque")
+          .font(.caption.weight(.bold))
+          .foregroundStyle(.secondary)
+          .textCase(.uppercase)
+
+        ScrollView {
+          VStack(spacing: 6) {
+            ForEach(options) { option in
+              Button {
+                onSelect(option.exerciseIndex)
+              } label: {
+                HStack(spacing: 10) {
+                  VStack(alignment: .leading, spacing: 4) {
+                    Text(option.exercise.baseExerciseName)
+                      .font(.subheadline.weight(.bold))
+                      .lineLimit(1)
+                    HStack(spacing: 5) {
+                      if option.exercise.supersetID != nil {
+                        Text("Superserie")
+                          .font(.caption2.weight(.bold))
+                          .foregroundStyle(Color.accentColor)
+                      }
+                      Text(option.exercise.variantLabel ?? option.exercise.equipment.executionLabel)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    }
+                  }
+                  Spacer(minLength: 0)
+                  Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 16))
+              }
+              .buttonStyle(.plain)
+              .disabled(!isRestFinished)
+              .opacity(isRestFinished ? 1 : 0.45)
+            }
+          }
+        }
+        .scrollIndicators(.hidden)
+      }
+    }
+  }
+}
+
+private struct PendingBlockOption: Identifiable {
+  let exerciseIndex: Int
+  let exercise: TrainingExercise
+
+  var id: Int { exerciseIndex }
 }
 
 private struct NextSetPreview: View {
@@ -1331,28 +1432,29 @@ private struct SetTargetCard: View {
   var body: some View {
     Button(action: action) {
       VStack(spacing: 8) {
-      Text(label)
-        .font(.headline.weight(.semibold))
-        .foregroundStyle(.secondary)
-      ZStack {
-        if let plateLayout, !plateLayout.sidePlatesKg.isEmpty {
-          PlateStack(plates: plateLayout.sidePlatesKg, side: .left)
-          PlateStack(plates: plateLayout.sidePlatesKg, side: .right)
-        }
-        Text(value)
-          .font(.system(size: 58, weight: .bold))
-          .monospacedDigit()
-          .lineLimit(1)
-          .minimumScaleFactor(0.65)
-          .contentTransition(numericValue.map { .numericText(value: $0) } ?? .identity)
-          .animation(.snappy(duration: 0.32, extraBounce: 0.04), value: numericValue)
-      }
-      .frame(maxWidth: .infinity)
-      if let unit {
-        Text(unit)
-          .font(.subheadline.weight(.medium))
+        Text(label)
+          .font(.headline.weight(.semibold))
           .foregroundStyle(.secondary)
-      }
+        ZStack(alignment: .top) {
+          if let plateLayout, !plateLayout.sidePlatesKg.isEmpty {
+            PlateStack(plates: plateLayout.sidePlatesKg, side: .left)
+            PlateStack(plates: plateLayout.sidePlatesKg, side: .right)
+          }
+          Text(value)
+            .font(.system(size: 58, weight: .bold))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.65)
+            .contentTransition(numericValue.map { .numericText(value: $0) } ?? .identity)
+            .animation(.snappy(duration: 0.32, extraBounce: 0.04), value: numericValue)
+            .padding(.top, 24)
+        }
+        .frame(maxWidth: .infinity, minHeight: 104)
+        if let unit {
+          Text(unit)
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(.secondary)
+        }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .background(.background, in: RoundedRectangle(cornerRadius: 22))
@@ -1376,31 +1478,31 @@ private struct PlateStack: View {
       if side == .left { stack; Spacer(minLength: 0) }
       else { Spacer(minLength: 0); stack }
     }
-    .padding(.horizontal, 12)
+    .padding(.horizontal, 8)
     .accessibilityLabel("Discos por lado: \(plates.map { $0.formatted() }.joined(separator: ", ")) kg")
   }
 
   private var stack: some View {
-    VStack(spacing: 3) {
+    VStack(spacing: 4) {
       ForEach(Array(plates.enumerated()), id: \.offset) { _, plate in
         Text(plate.formatted(.number.precision(.fractionLength(0...2))))
-          .font(.system(size: 9, weight: .bold))
+          .font(.system(size: 10, weight: .bold))
           .foregroundStyle(.primary)
           .frame(width: plateWidth(plate), height: plateHeight(plate))
-          .background(Color.accentColor.opacity(0.16), in: RoundedRectangle(cornerRadius: 5))
+          .background(Color.accentColor.opacity(0.16), in: RoundedRectangle(cornerRadius: 6))
           .overlay {
-            RoundedRectangle(cornerRadius: 5).stroke(Color.accentColor.opacity(0.45), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 6).stroke(Color.accentColor.opacity(0.45), lineWidth: 1)
           }
       }
     }
   }
 
   private func plateWidth(_ plate: Double) -> CGFloat {
-    18 + CGFloat(min(plate, 20)) * 1.1
+    30 + CGFloat(min(plate, 20)) * 1.55
   }
 
   private func plateHeight(_ plate: Double) -> CGFloat {
-    16 + CGFloat(min(plate, 20)) * 0.45
+    22 + CGFloat(min(plate, 20)) * 0.7
   }
 }
 
@@ -1428,17 +1530,31 @@ private struct SetTargetEditor: View {
   var body: some View {
     VStack(spacing: 18) {
       HStack {
-        Button("Descartar") { dismiss() }
-          .font(.subheadline.weight(.semibold))
+        Button(action: dismiss.callAsFunction) {
+          Image(systemName: "xmark")
+            .font(.headline.weight(.bold))
+            .frame(width: 44, height: 44)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Circle())
+        }
+        .accessibilityLabel("Descartar cambios")
+        .buttonStyle(.plain)
         Spacer()
         Text("Ajustar \(field.title)")
           .font(.headline.weight(.bold))
         Spacer()
-        Button("Confirmar") {
+        Button {
           onConfirm(value)
           dismiss()
+        } label: {
+          Image(systemName: "checkmark")
+            .font(.headline.weight(.bold))
+            .frame(width: 44, height: 44)
+            .foregroundStyle(.white)
+            .glassEffect(.regular.tint(.accentColor).interactive(), in: Circle())
         }
-        .font(.subheadline.weight(.bold))
+        .accessibilityLabel("Confirmar cambios")
+        .buttonStyle(.plain)
       }
 
       Spacer(minLength: 0)
@@ -1492,6 +1608,7 @@ private struct TimedSetTarget: View {
   @Binding var endsAt: Date?
   @Binding var pausedRemaining: Int
   let onAdjustDuration: (Int) -> Void
+  let onFinishedTap: () -> Void
 
   private var isRunning: Bool { endsAt != nil }
 
@@ -1502,38 +1619,44 @@ private struct TimedSetTarget: View {
       let progress = CGFloat(remaining) / CGFloat(max(seconds, 1))
 
       VStack(spacing: 12) {
-        ZStack(alignment: .leading) {
-          RoundedRectangle(cornerRadius: 22)
-            .fill(isFinished ? Color.green : Color.accentColor.opacity(0.22))
-
-          GeometryReader { geometry in
-            Rectangle()
-              .fill(isFinished ? Color.green : Color.accentColor)
-              .frame(width: geometry.size.width * progress)
-          }
-
-          VStack(spacing: 4) {
-            Text(isFinished ? "Ejercicio terminado" : "Tiempo")
-              .font(.headline.weight(.semibold))
-            Text(clock(remaining))
-              .font(.system(size: 64, weight: .bold))
-              .monospacedDigit()
-              .contentTransition(.numericText())
-          }
-          .foregroundStyle(.white)
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-          HStack(spacing: 8) {
-            timeAdjustmentButton(title: "-15s") { onAdjustDuration(-15) }
-            Spacer()
-            timeAdjustmentButton(title: "+15s") { onAdjustDuration(15) }
-          }
-          .padding(10)
+        HStack(spacing: 8) {
+          RestAdjustmentButton(title: "-15s") { onAdjustDuration(-15) }
+          RestAdjustmentButton(title: "+15s") { onAdjustDuration(15) }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 22))
-        .contentShape(RoundedRectangle(cornerRadius: 22))
-        .onTapGesture(perform: toggle)
+
+        Button {
+          if isFinished {
+            onFinishedTap()
+          } else {
+            toggle()
+          }
+        } label: {
+          ZStack(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 30)
+              .fill(isFinished ? Color.green : Color.accentColor.opacity(0.6))
+
+            GeometryReader { geometry in
+              Rectangle()
+                .fill(isFinished ? Color.green : Color.accentColor)
+                .frame(width: geometry.size.width * progress)
+            }
+
+            VStack(spacing: 5) {
+              Text(isFinished ? "Ejercicio terminado" : "Tiempo")
+                .font(.headline.weight(.bold))
+              Text(clock(remaining))
+                .font(.system(size: 64, weight: .bold))
+                .monospacedDigit()
+                .contentTransition(.numericText())
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+          }
+          .frame(maxWidth: .infinity, minHeight: 128)
+          .clipShape(RoundedRectangle(cornerRadius: 30))
+        }
+        .buttonStyle(.plain)
+        .animation(.linear(duration: 0.85), value: remaining)
 
         HStack(spacing: 12) {
           Button(action: reset) {
@@ -1547,7 +1670,7 @@ private struct TimedSetTarget: View {
 
           Button(action: toggle) {
             Label(
-              isRunning ? "Pausar" : (isFinished ? "Repetir" : "Iniciar"),
+              isRunning ? "Pausar" : "Iniciar",
               systemImage: isRunning ? "pause.fill" : "play.fill"
             )
           }
@@ -1556,6 +1679,8 @@ private struct TimedSetTarget: View {
           .foregroundStyle(.white)
           .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
           .buttonStyle(.plain)
+          .disabled(isFinished)
+          .opacity(isFinished ? 0.45 : 1)
         }
       }
       .onAppear {

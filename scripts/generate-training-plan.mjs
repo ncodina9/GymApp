@@ -366,7 +366,7 @@ const baseSessions = {
           'Tempo controlado: 2 s bajada y pausa corta abajo.',
           'Si la rodilla molesta, reducir el rango o revisar la variante.',
         ],
-        { equipment: 'barbell' },
+        { equipment: 'barbell', equipmentOptions: ['barbell', 'multipower'] },
       ),
       exercise(
         'peso-muerto-rumano-barra',
