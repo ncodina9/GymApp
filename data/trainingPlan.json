@@ -463,12 +463,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -1622,12 +1626,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -3160,12 +3168,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -4642,12 +4654,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -6096,12 +6112,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -7261,12 +7281,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -9186,12 +9210,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -10682,12 +10710,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -12122,12 +12154,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -13597,12 +13633,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -15037,12 +15077,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -16477,12 +16521,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],
@@ -17882,12 +17930,16 @@
         },
         {
           "exerciseId": "peso-muerto-rumano-barra",
-          "name": "Peso muerto rumano con barra",
-          "baseExerciseId": "peso-muerto-rumano-barra",
-          "baseExerciseName": "Peso muerto rumano con barra",
+          "name": "Peso muerto rumano",
+          "baseExerciseId": "peso-muerto-rumano",
+          "baseExerciseName": "Peso muerto rumano",
           "type": "Básico",
           "block": "B",
           "equipment": "barbell",
+          "equipmentOptions": [
+            "barbell",
+            "multipower"
+          ],
           "trainingBlock": "fuerza",
           "movementPattern": "bisagra-cadera",
           "primaryMuscles": ["isquios", "gluteo"],

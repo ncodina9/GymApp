@@ -97,7 +97,7 @@ enum WorkoutCSVExporter {
   }
 
   private static func number(_ value: Double) -> String {
-    value.formatted(.number.precision(.fractionLength(0 ... 1)))
+    value.formatted(.number.precision(.fractionLength(0 ... 2)))
   }
 
   nonisolated private static func escape(_ value: String) -> String {

@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import AudioToolbox
+import UIKit
 import GymAppNativeCore
 
 struct SetExecutionView: View {
@@ -446,7 +448,7 @@ private struct WorkingSetView: View {
               SetTargetCard(
                 label: "Peso",
                 value: (activeTargets?.weightKg ?? trainingSet.targetWeightKg)
-                  .formatted(.number.precision(.fractionLength(0...1))),
+                  .formatted(.number.precision(.fractionLength(0...2))),
                 unit: weightUnit(for: activeEquipment),
                 numericValue: activeTargets?.weightKg ?? trainingSet.targetWeightKg,
                 plateLayout: EquipmentLoadRules.plateLayout(
@@ -528,7 +530,7 @@ private struct WorkingSetView: View {
     let variants: [Equipment] = switch exercise.exerciseID {
     case "press-banca-barra", "press-banca-inclinado", "press-militar-sentado", "press-militar-sentado-velocidad":
       [.barbell, .multipower, .dumbbell]
-    case "remo-inclinado-barra", "remo-barra-multipower", "press-cerrado-multipower", "hip-thrust-barra", "hip-thrust-volumen":
+    case "remo-inclinado-barra", "remo-barra-multipower", "press-cerrado-multipower", "hip-thrust-barra", "hip-thrust-volumen", "peso-muerto-rumano-barra":
       [.barbell, .multipower]
     default:
       [exercise.equipment]
@@ -611,7 +613,7 @@ private struct FeedbackView: View {
           FeedbackMetric(label: "Reps", value: targets?.reps.map(String.init) ?? "-")
           FeedbackMetric(
             label: "Peso",
-            value: "\(targets?.weightKg.formatted(.number.precision(.fractionLength(0...1))) ?? "-") kg",
+            value: "\(targets?.weightKg.formatted(.number.precision(.fractionLength(0...2))) ?? "-") kg",
             footer: equipment.executionLabel
           )
         }
@@ -938,6 +940,7 @@ private struct RestView: View {
   let onAdjust: (Int) -> Void
   let onContinue: () -> Void
   let onSelectBlock: (Int) -> Void
+  @State private var hasAnnouncedCompletion = false
 
   private var hasNextSuperset: Bool {
     execution.exercise(for: next)?.supersetID != nil
@@ -983,9 +986,23 @@ private struct RestView: View {
       }
       .padding(16)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+      .onAppear {
+        announceCompletionIfNeeded(remaining: remaining)
+      }
+      .onChange(of: remaining) { _, newValue in
+        if newValue > 0 {
+          hasAnnouncedCompletion = false
+        }
+        announceCompletionIfNeeded(remaining: newValue)
+      }
     }
   }
 
+  private func announceCompletionIfNeeded(remaining: Int) {
+    guard remaining == 0, !hasAnnouncedCompletion else { return }
+    hasAnnouncedCompletion = true
+    TimerCompletionFeedback.play()
+  }
 }
 
 private struct RestCountdownBar: View {
@@ -1221,7 +1238,7 @@ private struct RestPreviewCard: View {
 
   private var loadValue: String {
     guard preview.equipment != .bodyweight else { return "0 kg" }
-    let amount = preview.targets.weightKg.formatted(.number.precision(.fractionLength(0...1)))
+    let amount = preview.targets.weightKg.formatted(.number.precision(.fractionLength(0...2)))
     return preview.equipment == .external ? "+\(amount) kg" : "\(amount) kg"
   }
 }
@@ -1587,7 +1604,7 @@ private struct SetTargetEditor: View {
   private var displayValue: String {
     field == .reps
       ? "\(Int(value))"
-      : "\(value.formatted(.number.precision(.fractionLength(0...1)))) kg"
+      : "\(value.formatted(.number.precision(.fractionLength(0...2)))) kg"
   }
 
   private func adjustmentButton(symbol: String, action: @escaping () -> Void) -> some View {
@@ -1623,6 +1640,7 @@ private struct TimedSetTarget: View {
   let onFinishedTap: () -> Void
   let onFinishedChanged: (Bool) -> Void
   @State private var hasStarted = false
+  @State private var hasAnnouncedCompletion = false
 
   private var isRunning: Bool { endsAt != nil }
 
@@ -1704,7 +1722,14 @@ private struct TimedSetTarget: View {
         onFinishedChanged(false)
       }
       .onChange(of: remaining) { _, newValue in
-        onFinishedChanged(hasStarted && newValue == 0)
+        if newValue > 0 {
+          hasAnnouncedCompletion = false
+        }
+        let isFinished = hasStarted && newValue == 0
+        onFinishedChanged(isFinished)
+        if isFinished {
+          announceCompletionIfNeeded()
+        }
       }
     }
   }
@@ -1732,7 +1757,14 @@ private struct TimedSetTarget: View {
     endsAt = nil
     pausedRemaining = seconds
     hasStarted = false
+    hasAnnouncedCompletion = false
     onFinishedChanged(false)
+  }
+
+  private func announceCompletionIfNeeded() {
+    guard !hasAnnouncedCompletion else { return }
+    hasAnnouncedCompletion = true
+    TimerCompletionFeedback.play()
   }
 
   private func clock(_ totalSeconds: Int) -> String {
@@ -1747,6 +1779,15 @@ private struct TimedSetTarget: View {
       .padding(.vertical, 7)
       .background(.black.opacity(0.18), in: Capsule())
       .buttonStyle(.plain)
+  }
+}
+
+private enum TimerCompletionFeedback {
+  static func play() {
+    let feedback = UINotificationFeedbackGenerator()
+    feedback.prepare()
+    feedback.notificationOccurred(.success)
+    AudioServicesPlaySystemSound(1005)
   }
 }
 

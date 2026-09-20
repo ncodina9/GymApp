@@ -43,7 +43,7 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.83")
+        Text("v0.1.84")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -318,7 +318,16 @@ private struct ExportSettingsView: View {
     guard let data = record.executionData,
           let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data)
     else { return "CSV · \(record.sessionID)" }
-    return "Exportar CSV · \(execution.session.sessionLabel)"
+    return "Exportar CSV · \(trainingDateLabel(execution.session.date)) · \(execution.session.sessionLabel)"
+  }
+
+  private func trainingDateLabel(_ value: String) -> String {
+    let input = DateFormatter()
+    input.locale = Locale(identifier: "en_US_POSIX")
+    input.dateFormat = "yyyy-MM-dd"
+
+    guard let date = input.date(from: value) else { return value }
+    return date.formatted(.dateTime.day().month(.abbreviated).year())
   }
 
   private func backupURL() -> URL {
@@ -328,7 +337,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.83"
+      appVersion: "0.1.84"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 

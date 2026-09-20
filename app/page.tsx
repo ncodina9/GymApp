@@ -829,6 +829,7 @@ const exerciseEquipmentVariants: Record<string, ExerciseEquipment[]> = {
   'press-cerrado-multipower': ['multipower', 'barbell'],
   'hip-thrust-barra': ['barbell', 'multipower'],
   'hip-thrust-volumen': ['barbell', 'multipower'],
+  'peso-muerto-rumano-barra': ['barbell', 'multipower'],
 };
 
 const getExerciseEquipmentOptions = (exercise: Exercise) => {

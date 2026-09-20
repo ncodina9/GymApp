@@ -247,7 +247,7 @@ private struct ExercisePreviewRow: View {
     guard exercise.equipment != .bodyweight else { return "0 kg" }
 
     return uniqueValues(exercise.sets.map { set in
-      let amount = set.targetWeightKg.formatted(.number.precision(.fractionLength(0...1)))
+      let amount = set.targetWeightKg.formatted(.number.precision(.fractionLength(0...2)))
       return exercise.equipment == .external ? "+\(amount) kg" : "\(amount) kg"
     })
   }

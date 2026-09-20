@@ -52,7 +52,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P2 | M | Sistema de cuatro temas nativos. | Apariencia permite Sistema, Claro u Oscuro; cada familia conserva una variante independiente: White/Light y Dark/Black. Canvas, superficie y realce usan tokens compartidos. |
 | [x] | P2 | XS | Integración del canvas con regiones de sistema. | La app requiere iOS 27 y aplica el esquema de contraste oficial a la barra de estado. El canvas base se normaliza a blanco o negro puro por familia para mantener continuidad aunque el sistema conserve sus superficies de borde. |
 | [ ] | P2 | M | Notificación local y háptica al acabar descanso. | Funciona con permisos denegados sin bloquear el flujo. |
-| [ ] | P2 | M | Aviso de finalización de descanso y serie temporizada. | Programa notificación local al pasar a segundo plano y reproduce sonido corto más háptica al terminar en primer plano. |
+| [~] | P2 | M | Aviso de finalización de descanso y serie temporizada. | En primer plano reproduce sonido corto más háptica; queda programar notificación local al pasar a segundo plano. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |
 | [ ] | P2 | M | HealthKit, widget y sincronización. | Se evalúan por separado cuando la persistencia local sea estable. |
 

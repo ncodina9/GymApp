@@ -215,7 +215,7 @@ const exercisePresentation = {
     'Mancuernas',
   ),
   'sentadilla-barra': presentation('sentadilla', 'Sentadilla'),
-  'peso-muerto-rumano': presentation(
+  'peso-muerto-rumano-barra': presentation(
     'peso-muerto-rumano',
     'Peso muerto rumano',
   ),
@@ -370,7 +370,7 @@ const baseSessions = {
       ),
       exercise(
         'peso-muerto-rumano-barra',
-        'Peso muerto rumano con barra',
+        'Peso muerto rumano',
         'Básico',
         'B',
         4,
@@ -378,7 +378,7 @@ const baseSessions = {
         65,
         150,
         ['Cadera atrás, espalda neutra y barra pegada.'],
-        { equipment: 'barbell' },
+        { equipment: 'barbell', equipmentOptions: ['barbell', 'multipower'] },
       ),
       exercise(
         'hip-thrust-barra',
