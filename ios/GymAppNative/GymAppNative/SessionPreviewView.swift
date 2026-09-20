@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import GymAppNativeCore
 
 struct SessionPreviewView: View {
@@ -8,6 +9,7 @@ struct SessionPreviewView: View {
   @State private var startsNewWorkout = false
   @State private var showsRestartConfirmation = false
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.modelContext) private var modelContext
 
   private var resumableWorkout: ActiveWorkoutSnapshot? {
     guard activeWorkout?.execution.session.sessionID == session.sessionID else { return nil }
@@ -76,6 +78,7 @@ struct SessionPreviewView: View {
     .alert("Empezar de nuevo", isPresented: $showsRestartConfirmation) {
       Button("Cancelar", role: .cancel) {}
       Button("Empezar de nuevo", role: .destructive) {
+        ActiveWorkoutStore.clear(in: modelContext)
         startsNewWorkout = true
       }
     } message: {

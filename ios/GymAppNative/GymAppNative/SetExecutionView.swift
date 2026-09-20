@@ -114,6 +114,13 @@ struct SetExecutionView: View {
       .zIndex(1)
     }
     .toolbar(.hidden, for: .navigationBar)
+    .overlay(alignment: .top) {
+      WorkoutProgressBar(
+        completed: execution.completedSetCount,
+        total: execution.totalSetCount
+      )
+      .ignoresSafeArea(edges: .top)
+    }
     .onAppear(perform: persistActiveWorkout)
     .onDisappear {
       if phase != .finished {
@@ -171,6 +178,7 @@ struct SetExecutionView: View {
     withAnimation(.smooth(duration: 0.3)) {
       phase = .finished
     }
+    ActiveWorkoutStore.markCompleted(sessionID: session.sessionID, in: modelContext)
     ActiveWorkoutStore.clear(in: modelContext)
   }
 
@@ -331,6 +339,29 @@ private enum FlowDirection {
 private struct TransitionKey: Hashable {
   let origin: ExecutionPhase
   let destination: ExecutionPhase
+}
+
+private struct WorkoutProgressBar: View {
+  let completed: Int
+  let total: Int
+
+  private var progress: CGFloat {
+    CGFloat(completed) / CGFloat(max(total, 1))
+  }
+
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack(alignment: .leading) {
+        Rectangle().fill(Color.secondary.opacity(0.18))
+        Rectangle()
+          .fill(Color.accentColor)
+          .frame(width: geometry.size.width * progress)
+      }
+    }
+    .frame(height: 4)
+    .animation(.easeInOut(duration: 0.28), value: completed)
+    .accessibilityLabel("Progreso del entrenamiento: \(completed) de \(total) series")
+  }
 }
 
 private extension SetExecutionView {
@@ -880,6 +911,10 @@ private struct RestView: View {
   let onContinue: () -> Void
   let onSelectBlock: (Int) -> Void
 
+  private var hasNextSuperset: Bool {
+    execution.exercise(for: next)?.supersetID != nil
+  }
+
   var body: some View {
     TimelineView(.periodic(from: .now, by: 1)) { context in
       let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
@@ -891,16 +926,23 @@ private struct RestView: View {
           RestAdjustmentButton(title: "+15s") { onAdjust(15) }
         }
 
-        NextSetPreview(execution: execution, locator: next)
-          .frame(maxHeight: 186, alignment: .top)
+        VStack(spacing: hasNextSuperset ? 8 : 3) {
+          NextSetPreview(execution: execution, locator: next)
+            .frame(maxHeight: hasNextSuperset ? 186 : 132, alignment: .top)
 
-        PendingBlockSelector(
-          execution: execution,
-          next: next,
-          isRestFinished: remaining == 0,
-          onSelect: onSelectBlock
-        )
-        .frame(maxHeight: .infinity, alignment: .top)
+          PendingBlockSelector(
+            execution: execution,
+            next: next,
+            isRestFinished: remaining == 0,
+            onSelect: onSelectBlock
+          )
+          .frame(maxHeight: hasNextSuperset ? .infinity : 148, alignment: .top)
+        }
+        .padding(10)
+        .overlay {
+          RoundedRectangle(cornerRadius: 18)
+            .stroke(.separator.opacity(0.7), lineWidth: 1)
+        }
 
         Button("Siguiente", action: onContinue)
           .font(.headline.weight(.bold))

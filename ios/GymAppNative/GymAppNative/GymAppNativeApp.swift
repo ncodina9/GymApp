@@ -7,6 +7,6 @@ struct GymAppNativeApp: App {
     WindowGroup {
       ContentView()
     }
-    .modelContainer(for: ActiveWorkoutRecord.self)
+    .modelContainer(for: [ActiveWorkoutRecord.self, CompletedWorkoutRecord.self])
   }
 }

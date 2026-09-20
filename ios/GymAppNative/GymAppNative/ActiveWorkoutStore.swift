@@ -106,6 +106,17 @@ final class ActiveWorkoutRecord {
   }
 }
 
+@Model
+final class CompletedWorkoutRecord {
+  @Attribute(.unique) var sessionID: String
+  var completedAt: Date
+
+  init(sessionID: String, completedAt: Date = .now) {
+    self.sessionID = sessionID
+    self.completedAt = completedAt
+  }
+}
+
 @MainActor
 enum ActiveWorkoutStore {
   static let recordID = "active-workout"
@@ -142,6 +153,15 @@ enum ActiveWorkoutStore {
     )
     guard let records = try? context.fetch(descriptor) else { return }
     records.forEach(context.delete)
+    try? context.save()
+  }
+
+  static func markCompleted(sessionID: String, in context: ModelContext) {
+    let descriptor = FetchDescriptor<CompletedWorkoutRecord>(
+      predicate: #Predicate { $0.sessionID == sessionID }
+    )
+    guard (try? context.fetch(descriptor).first) == nil else { return }
+    context.insert(CompletedWorkoutRecord(sessionID: sessionID))
     try? context.save()
   }
 }

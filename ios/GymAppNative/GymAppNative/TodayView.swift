@@ -5,6 +5,7 @@ import GymAppNativeCore
 struct TodayView: View {
   let plan: TrainingPlan
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
+  @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
   @State private var path: [String] = []
 
   init(plan: TrainingPlan) {
@@ -24,6 +25,10 @@ struct TodayView: View {
     ActiveWorkoutStore.load(from: activeWorkoutRecords)
   }
 
+  private var completedSessionIDs: Set<String> {
+    Set(completedWorkoutRecords.map(\.sessionID))
+  }
+
   var body: some View {
     NavigationStack(path: $path) {
       if let recommendedSession {
@@ -39,7 +44,8 @@ struct TodayView: View {
                 WeekSessionCard(
                   session: session,
                   isRecommended: session.sessionID == recommendedSession.sessionID,
-                  isInProgress: activeWorkout?.execution.session.sessionID == session.sessionID
+                  isInProgress: activeWorkout?.execution.session.sessionID == session.sessionID,
+                  isCompleted: completedSessionIDs.contains(session.sessionID)
                 )
               }
               .buttonStyle(.plain)
@@ -49,6 +55,19 @@ struct TodayView: View {
           .padding(.vertical, 12)
         }
         .scrollIndicators(.hidden)
+        .overlay(alignment: .bottomTrailing) {
+          Button(action: {}) {
+            Image(systemName: "gearshape.fill")
+              .font(.headline.weight(.bold))
+              .frame(width: 56, height: 56)
+              .foregroundStyle(.primary)
+              .glassEffect(.regular.interactive(), in: Circle())
+          }
+          .accessibilityLabel("Opciones")
+          .buttonStyle(.plain)
+          .padding(.trailing, 20)
+          .padding(.bottom, 16)
+        }
         .navigationDestination(for: String.self) { sessionID in
           if let session = plan.sessions.first(where: { $0.sessionID == sessionID }) {
             SessionPreviewView(
@@ -81,6 +100,7 @@ private struct WeekSessionCard: View {
   let session: TrainingSession
   let isRecommended: Bool
   let isInProgress: Bool
+  let isCompleted: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -92,7 +112,14 @@ private struct WeekSessionCard: View {
           .font(.subheadline.weight(.bold))
           .foregroundStyle(.secondary)
         Spacer()
-        if isInProgress {
+        if isCompleted {
+          Text("Completado")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.green)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.green.opacity(0.12), in: Capsule())
+        } else if isInProgress {
           Text("En curso")
             .font(.caption2.weight(.bold))
             .foregroundStyle(.orange)
@@ -129,8 +156,8 @@ private struct WeekSessionCard: View {
     .overlay {
       RoundedRectangle(cornerRadius: 22)
         .stroke(
-          isInProgress ? Color.orange : (isRecommended ? Color.accentColor : Color.secondary.opacity(0.3)),
-          lineWidth: isRecommended || isInProgress ? 2 : 1
+          isCompleted ? Color.green : (isInProgress ? Color.orange : (isRecommended ? Color.accentColor : Color.secondary.opacity(0.3))),
+          lineWidth: isRecommended || isInProgress || isCompleted ? 2 : 1
         )
     }
   }

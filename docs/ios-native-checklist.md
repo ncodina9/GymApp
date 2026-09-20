@@ -19,7 +19,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | Hoy y previsualización | Completado | Semana completa en tarjetas, con fecha, foco, estimado, bloques y navegación directa a la previsualización. |
 | Serie, feedback y descanso | Persistencia activa | Ejecutan, editan objetivos, saltan series, cambian el siguiente bloque al terminar el descanso y recuperan serie, feedback, evaluación y temporizador tras un cierre. |
 | Material y cargas | Completado en memoria | Variante por ejercicio, inventario y redondeo cubiertos por tests Swift. |
-| Persistencia, historial e import/export | Parcial | El borrador activo usa SwiftData; historial e import/export siguen pendientes. |
+| Persistencia, historial e import/export | Parcial | El borrador activo y las marcas de sesión completada usan SwiftData; el detalle histórico e import/export siguen pendientes. |
 
 ## Próximo bloque: sesión persistente
 
@@ -34,7 +34,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 
 | Estado | Pri. | Coste | Tarea | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
-| [ ] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | Se puede abrir una sesión terminada y consultar series, material y feedback; `Hoy` marca sus tarjetas con check verde. |
+| [~] | P1 | M | Guardar sesiones finalizadas e historial nativo básico. | `Hoy` marca las sesiones terminadas con borde y chip verdes; falta una vista de detalle con series, material y feedback. |
 | [ ] | P1 | M | Completar exportación CSV por serie y backup JSON desde iOS. | El CSV nativo ya se comparte desde el cierre; falta validar contra `docs/data-schemas.md` y añadir el backup JSON. |
 | [ ] | P1 | M | Importar backup JSON completo de la PWA. | Valida schema/version, evita IDs duplicados e informa del resultado. |
 | [x] | P1 | S | Temporizadores nativos temporizados y de descanso. | Calculan contra fecha final, se recuperan correctamente al volver a primer plano y muestran estado terminado. |
