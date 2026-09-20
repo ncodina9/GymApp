@@ -88,6 +88,7 @@ private struct AppearanceSettingsView: View {
 private struct UpcomingWorkoutsView: View {
   let plan: TrainingPlan
   @Query private var completedRecords: [CompletedWorkoutRecord]
+  @Environment(\.dismiss) private var dismiss
 
   private var upcomingSessions: [TrainingSession] {
     let completed = Set(completedRecords.map(\.sessionID))
@@ -97,19 +98,39 @@ private struct UpcomingWorkoutsView: View {
 
   var body: some View {
     ScrollView {
-      LazyVStack(spacing: 12) {
-        ForEach(upcomingSessions) { session in
-          NavigationLink {
-            SessionPreviewView(session: session, activeWorkout: nil, onReturnHome: {}, readOnly: true)
-          } label: {
-            WeekSessionCard(session: session, isRecommended: false, isInProgress: false, isCompleted: false)
+      VStack(alignment: .leading, spacing: 16) {
+        Text("Próximos entrenamientos")
+          .font(.system(size: 27, weight: .bold))
+          .frame(maxWidth: .infinity, alignment: .leading)
+
+        LazyVStack(spacing: 12) {
+          ForEach(upcomingSessions) { session in
+            NavigationLink {
+              SessionPreviewView(session: session, activeWorkout: nil, onReturnHome: {}, readOnly: true)
+            } label: {
+              WeekSessionCard(session: session, isRecommended: false, isInProgress: false, isCompleted: false)
+            }
+            .buttonStyle(.plain)
           }
-          .buttonStyle(.plain)
         }
       }
       .padding(16)
+      .padding(.bottom, 88)
     }
-    .navigationTitle("Próximos")
+    .toolbar(.hidden, for: .navigationBar)
+    .overlay(alignment: .bottomLeading) {
+      Button(action: { dismiss() }) {
+        Image(systemName: "chevron.left")
+          .font(.headline.weight(.bold))
+          .frame(width: 56, height: 56)
+          .foregroundStyle(.primary)
+          .glassEffect(.regular.interactive(), in: Circle())
+      }
+      .accessibilityLabel("Atrás")
+      .buttonStyle(.plain)
+      .padding(.leading, 20)
+      .padding(.bottom, 8)
+    }
   }
 
   private static var todayISODate: String {
@@ -139,11 +160,22 @@ private struct ExportSettingsView: View {
         ForEach(completedRecords.sorted { $0.completedAt > $1.completedAt }) { record in
           if let url = csvURL(for: record) {
             ShareLink(item: url) {
-              Label("Exportar CSV · \(record.sessionID)", systemImage: "square.and.arrow.up")
+              Label(csvLabel(for: record), systemImage: "square.and.arrow.up")
             }
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(.white)
             .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+          } else {
+            VStack(alignment: .leading, spacing: 4) {
+              Text(csvLabel(for: record))
+                .font(.headline.weight(.bold))
+              Text("Registro sin detalle. Solo las sesiones finalizadas desde v0.1.71 pueden reexportarse.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
           }
         }
 
@@ -180,6 +212,13 @@ private struct ExportSettingsView: View {
           )
     else { return nil }
     return url
+  }
+
+  private func csvLabel(for record: CompletedWorkoutRecord) -> String {
+    guard let data = record.executionData,
+          let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data)
+    else { return "CSV · \(record.sessionID)" }
+    return "Exportar CSV · \(execution.session.sessionLabel)"
   }
 
   private func backupURL() -> URL {

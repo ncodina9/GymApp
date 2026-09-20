@@ -1275,6 +1275,8 @@ Actualización v0.1.70: la barra global de progreso anima solo el avance horizon
 
 Actualización v0.1.71: `Hoy` incorpora acceso a Opciones. La configuración nativa separa Apariencia (tema persistente y pantalla activa), Próximos entrenamientos (consulta de sesiones futuras pendientes con previsualización bloqueada para inicio) y Exportación (CSV por sesión nativa guardada, backup JSON de SwiftData y borrado total con confirmación). Las sesiones completadas conservan instantánea de ejecución y decisiones para poder reexportarlas fuera de la pantalla final.
 
+Actualización v0.1.72: Próximos elimina la cabecera de navegación nativa, usa el título visual de la ejecución y sitúa Atrás como control Liquid Glass flotante inferior. Exportación enumera todas las sesiones completadas: las que tienen detalle persistido permiten CSV individual; los marcadores históricos anteriores permanecen visibles y explican por qué no se pueden reexportar.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.
