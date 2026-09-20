@@ -1305,6 +1305,8 @@ Actualización v0.1.84: la app nativa conserva dos decimales en cargas de discos
 
 Actualización v0.1.85: las tarjetas de sesiones en Exportación muestran una línea independiente con la fecha planificada y el nombre del entrenamiento. El mismo identificador se conserva para sesiones importadas desde la PWA, aunque estas se mantengan como historial sin CSV nativo regenerable.
 
+Actualización v0.1.86: el importador nativo acepta los valores históricos numéricos de `painOther` generados por la PWA, además de texto y valores nulos. El backup de transición mantiene así su estructura original al volver a exportarse y las sesiones completadas pueden importarse sin descartar el archivo completo.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

@@ -90,7 +90,7 @@ enum TrainingBackup {
     let painWrist: Int
     let painShoulder: Int?
     let painLowerBack: Int?
-    let painOther: String?
+    let painOther: JSONValue?
     let note: String?
   }
 
