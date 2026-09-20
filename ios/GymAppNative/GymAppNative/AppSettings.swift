@@ -27,6 +27,7 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
   let plan: TrainingPlan
+  @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     ScrollView {
@@ -37,7 +38,11 @@ struct SettingsView: View {
       }
       .padding(16)
     }
-    .navigationTitle("Opciones")
+    .navigationBarBackButtonHidden()
+    .toolbar { NavigationHeader(title: "Opciones") }
+    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
   }
 }
 
@@ -117,20 +122,11 @@ private struct UpcomingWorkoutsView: View {
       .padding(16)
       .padding(.bottom, 88)
     }
-    .toolbar(.hidden, for: .navigationBar)
-    .overlay(alignment: .bottomLeading) {
-      Button(action: { dismiss() }) {
-        Image(systemName: "chevron.left")
-          .font(.headline.weight(.bold))
-          .frame(width: 56, height: 56)
-          .foregroundStyle(.primary)
-          .glassEffect(.regular.interactive(), in: Circle())
-      }
-      .accessibilityLabel("Atrás")
-      .buttonStyle(.plain)
-      .padding(.leading, 20)
-      .padding(.bottom, 8)
-    }
+    .navigationBarBackButtonHidden()
+    .toolbar { NavigationHeader(title: "Próximos entrenamientos") }
+    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
   }
 
   private static var todayISODate: String {
@@ -146,6 +142,7 @@ private struct ExportSettingsView: View {
   let plan: TrainingPlan
   @Query private var completedRecords: [CompletedWorkoutRecord]
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.dismiss) private var dismiss
   @State private var showsDeleteConfirmation = false
 
   var body: some View {
@@ -193,7 +190,11 @@ private struct ExportSettingsView: View {
       }
       .padding(16)
     }
-    .navigationTitle("Exportación")
+    .navigationBarBackButtonHidden()
+    .toolbar { NavigationHeader(title: "Exportación") }
+    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
     .alert("Borrar datos locales", isPresented: $showsDeleteConfirmation) {
       Button("Cancelar", role: .cancel) {}
       Button("Borrar", role: .destructive, action: clearLocalData)
@@ -255,5 +256,35 @@ private struct ExportSettingsView: View {
     ActiveWorkoutStore.clear(in: modelContext)
     completedRecords.forEach(modelContext.delete)
     try? modelContext.save()
+  }
+}
+
+private struct NavigationHeader: ToolbarContent {
+  let title: String
+
+  var body: some ToolbarContent {
+    ToolbarItem(placement: .principal) {
+      Text(title)
+        .font(.system(size: 20, weight: .bold))
+        .lineLimit(1)
+    }
+  }
+}
+
+private struct BottomBackButton: View {
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      Image(systemName: "chevron.left")
+        .font(.headline.weight(.bold))
+        .frame(width: 56, height: 56)
+        .foregroundStyle(.primary)
+        .glassEffect(.regular.interactive(), in: Circle())
+    }
+    .accessibilityLabel("Atrás")
+    .buttonStyle(.plain)
+    .padding(.leading, 20)
+    .padding(.bottom, 8)
   }
 }
