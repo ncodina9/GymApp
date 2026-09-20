@@ -1,6 +1,6 @@
 import Foundation
 
-public struct WorkoutSetLocator: Equatable, Hashable, Sendable {
+public struct WorkoutSetLocator: Codable, Equatable, Hashable, Sendable {
   public let exerciseIndex: Int
   public let setIndex: Int
 
@@ -10,7 +10,7 @@ public struct WorkoutSetLocator: Equatable, Hashable, Sendable {
   }
 }
 
-public struct WorkoutSetFeedback: Equatable, Sendable {
+public struct WorkoutSetFeedback: Codable, Equatable, Sendable {
   public let rir: Int?
   public let painKnee: Int
   public let painWrist: Int
@@ -44,7 +44,7 @@ public struct WorkoutSetFeedback: Equatable, Sendable {
   )
 }
 
-public struct WorkoutSetRecord: Equatable, Sendable {
+public struct WorkoutSetRecord: Codable, Equatable, Sendable {
   public let locator: WorkoutSetLocator
   public let feedback: WorkoutSetFeedback
   public let performedAt: Date
@@ -55,7 +55,7 @@ public struct WorkoutAdvance: Sendable {
   public let restSeconds: Int?
 }
 
-public struct WorkoutExecutionState: Sendable {
+public struct WorkoutExecutionState: Codable, Sendable {
   public let session: TrainingSession
   public private(set) var draft: WorkoutSessionDraft
   public private(set) var records: [WorkoutSetRecord]

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import GymAppNativeCore
 
 struct SetExecutionView: View {
@@ -13,11 +14,28 @@ struct SetExecutionView: View {
   @State private var feedbackNote = "OK"
   @State private var restEndsAt: Date?
   @State private var flowDirection: FlowDirection = .forward
+  @State private var startedAt: Date
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.modelContext) private var modelContext
 
   init(session: TrainingSession) {
     self.session = session
     _execution = State(initialValue: WorkoutExecutionState(session: session))
+    _startedAt = State(initialValue: .now)
+  }
+
+  init(snapshot: ActiveWorkoutSnapshot) {
+    session = snapshot.execution.session
+    _execution = State(initialValue: snapshot.execution)
+    _phase = State(initialValue: ExecutionPhase(snapshot.phase))
+    _feedbackRir = State(initialValue: snapshot.feedback.rir)
+    _feedbackPainKnee = State(initialValue: snapshot.feedback.painKnee)
+    _feedbackPainWrist = State(initialValue: snapshot.feedback.painWrist)
+    _feedbackPainShoulder = State(initialValue: snapshot.feedback.painShoulder)
+    _feedbackPainLowerBack = State(initialValue: snapshot.feedback.painLowerBack)
+    _feedbackNote = State(initialValue: snapshot.feedback.note)
+    _restEndsAt = State(initialValue: snapshot.restEndsAt)
+    _startedAt = State(initialValue: snapshot.startedAt)
   }
 
   var body: some View {
@@ -29,7 +47,8 @@ struct SetExecutionView: View {
             WorkingSetView(
               execution: $execution,
               locator: locator,
-              onContinue: { move(to: .feedback, direction: .forward) }
+              onContinue: { move(to: .feedback, direction: .forward) },
+              onExecutionChanged: persistActiveWorkout
             )
           } else {
             FinishedWorkoutView(completedSetCount: execution.completedSetCount, onFinish: { dismiss() })
@@ -67,16 +86,55 @@ struct SetExecutionView: View {
     }
     .animation(.smooth(duration: 0.3), value: phase)
     .toolbar(.hidden, for: .navigationBar)
+    .onAppear(perform: persistActiveWorkout)
+    .onDisappear {
+      if phase != .finished {
+        persistActiveWorkout()
+      }
+    }
+    .onChange(of: feedbackRir) { _, _ in persistActiveWorkout() }
+    .onChange(of: feedbackPainKnee) { _, _ in persistActiveWorkout() }
+    .onChange(of: feedbackPainWrist) { _, _ in persistActiveWorkout() }
+    .onChange(of: feedbackPainShoulder) { _, _ in persistActiveWorkout() }
+    .onChange(of: feedbackPainLowerBack) { _, _ in persistActiveWorkout() }
+    .onChange(of: feedbackNote) { _, _ in persistActiveWorkout() }
   }
 
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
     flowDirection = direction
     phase = newPhase
+    persistActiveWorkout()
+  }
+
+  private func persistActiveWorkout() {
+    guard phase != .finished else { return }
+    ActiveWorkoutStore.save(
+      ActiveWorkoutSnapshot(
+        execution: execution,
+        phase: ActiveWorkoutPhase(phase),
+        feedback: ActiveWorkoutFeedbackDraft(
+          rir: feedbackRir,
+          painKnee: feedbackPainKnee,
+          painWrist: feedbackPainWrist,
+          painShoulder: feedbackPainShoulder,
+          painLowerBack: feedbackPainLowerBack,
+          note: feedbackNote
+        ),
+        restEndsAt: restEndsAt,
+        startedAt: startedAt
+      ),
+      in: modelContext
+    )
+  }
+
+  private func finishWorkout() {
+    phase = .finished
+    ActiveWorkoutStore.clear(in: modelContext)
   }
 
   private func registerCurrentSet() {
     guard let current = execution.current else {
-      move(to: .finished, direction: .forward)
+      finishWorkout()
       return
     }
     let isTimed = execution.trainingSet(for: current)?.type == .timed
@@ -89,7 +147,7 @@ struct SetExecutionView: View {
       note: feedbackNote
     )
     guard let advance = execution.recordCurrent(feedback: setFeedback) else {
-      move(to: .finished, direction: .forward)
+      finishWorkout()
       return
     }
 
@@ -100,7 +158,7 @@ struct SetExecutionView: View {
     feedbackPainLowerBack = 0
     feedbackNote = "OK"
     guard advance.next != nil else {
-      move(to: .finished, direction: .forward)
+      finishWorkout()
       return
     }
 
@@ -118,6 +176,27 @@ private enum ExecutionPhase: Hashable {
   case feedback
   case rest
   case finished
+}
+
+private extension ExecutionPhase {
+  init(_ persistedPhase: ActiveWorkoutPhase) {
+    switch persistedPhase {
+    case .workingSet: self = .workingSet
+    case .feedback: self = .feedback
+    case .rest: self = .rest
+    }
+  }
+}
+
+private extension ActiveWorkoutPhase {
+  init(_ executionPhase: ExecutionPhase) {
+    switch executionPhase {
+    case .workingSet: self = .workingSet
+    case .feedback: self = .feedback
+    case .rest: self = .rest
+    case .finished: self = .workingSet
+    }
+  }
 }
 
 private enum FlowDirection {
@@ -144,6 +223,7 @@ private struct WorkingSetView: View {
   @Binding var execution: WorkoutExecutionState
   let locator: WorkoutSetLocator
   let onContinue: () -> Void
+  let onExecutionChanged: () -> Void
 
   private var exercise: TrainingExercise? { execution.exercise(for: locator) }
   private var trainingSet: TrainingSet? { execution.trainingSet(for: locator) }
@@ -161,6 +241,7 @@ private struct WorkingSetView: View {
               get: { activeEquipment },
               set: { selectedEquipment in
                 _ = execution.selectEquipment(selectedEquipment, for: locator)
+                onExecutionChanged()
               }
             ),
             options: equipmentOptions(for: exercise),

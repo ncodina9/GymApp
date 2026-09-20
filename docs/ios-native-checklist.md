@@ -17,17 +17,17 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | --- | --- | --- |
 | Contrato del plan | Completado | `GymAppNativeCore` decodifica el JSON de producción en pruebas. |
 | Hoy y previsualización | Completado | Diseño y navegación base trasladados desde la PWA. |
-| Serie, feedback y descanso | En memoria | Ejecutan una sesión y respetan superseries; no sobreviven a un cierre. |
+| Serie, feedback y descanso | Persistencia activa | Ejecutan una sesión y se recuperan tras un cierre mientras no esté completada. |
 | Material y cargas | Completado en memoria | Variante por ejercicio, inventario y redondeo cubiertos por tests Swift. |
-| Persistencia, historial e import/export | Pendiente | Requisito de paridad funcional v1. |
+| Persistencia, historial e import/export | Parcial | El borrador activo usa SwiftData; historial e import/export siguen pendientes. |
 
 ## Próximo bloque: sesión persistente
 
 | Estado | Pri. | Coste | Tarea | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
-| [ ] | P0 | M | Definir modelos SwiftData para borrador activo, eventos de serie y metadatos de sesión. | El esquema conserva localizador de serie, objetivo ejecutado, material real, feedback, `startedAt` y `endsAt`. |
-| [ ] | P0 | M | Persistir cada cambio de la sesión activa. | Al forzar el cierre y relanzar, se recuperan serie actual, material, objetivos, feedback pendiente y descanso con su tiempo restante. |
-| [ ] | P0 | S | Restaurar o descartar de forma explícita el borrador desde Hoy. | Hoy ofrece reanudar solo cuando existe un borrador válido y no duplica registros. |
+| [x] | P0 | M | Definir modelo SwiftData para borrador activo. | Una instantánea versionada conserva localizador de serie, objetivos, material real, feedback, `startedAt` y `endsAt`. Los eventos e historial definitivos permanecen en el bloque P1. |
+| [x] | P0 | M | Persistir cada cambio de la sesión activa. | Material, fase, feedback, series registradas y descanso se escriben inmediatamente; un cierre no elimina el borrador. |
+| [x] | P0 | S | Restaurar el borrador desde Hoy. | Hoy ofrece reanudar solo cuando existe una instantánea válida; completar la sesión borra el borrador activo. |
 | [ ] | P0 | S | Añadir pruebas de serialización y restauración del secuenciador. | Cubren una serie normal, una superserie y un descanso recuperado tras caducar. |
 
 ## Paridad funcional v1

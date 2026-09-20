@@ -34,6 +34,13 @@ verificado ejecutándolo en el simulador de iPhone. `TodayView` navega ya a
 `SessionPreviewView`, que agrupa superseries y muestra los objetivos junto con el
 material explícito del plan.
 
+La sesión activa se guarda ya en SwiftData como una instantánea versionada. Incluye
+el estado ejecutable, material real por ejercicio, objetivos ajustados, feedback
+pendiente, fase y fin de descanso. Al reabrir, `TodayView` ofrece reanudar una
+sesión válida. Las sesiones completadas, historial e importación/exportación siguen
+siendo entidades separadas pendientes de la paridad v1. El detalle de estado y las
+tareas verificables viven en `docs/ios-native-checklist.md`.
+
 ## Principios
 
 - El contrato de datos manda sobre la UI: `trainingPlan.json`, eventos de serie, metadata y export JSON deben ser compatibles con Swift `Codable`.

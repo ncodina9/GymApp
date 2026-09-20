@@ -1,9 +1,11 @@
 import SwiftUI
+import SwiftData
 import GymAppNativeCore
 
 struct TodayView: View {
   let plan: TrainingPlan
   @State private var selectedSessionID: String
+  @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
 
   init(plan: TrainingPlan) {
     self.plan = plan
@@ -18,6 +20,10 @@ struct TodayView: View {
   private var weekSessions: [TrainingSession] {
     guard let selectedSession else { return [] }
     return plan.sessions.filter { $0.week == selectedSession.week }
+  }
+
+  private var activeWorkout: ActiveWorkoutSnapshot? {
+    ActiveWorkoutStore.load(from: activeWorkoutRecords)
   }
 
   var body: some View {
@@ -39,10 +45,23 @@ struct TodayView: View {
 
             Spacer(minLength: 0)
 
+            if let activeWorkout {
+              NavigationLink {
+                SetExecutionView(snapshot: activeWorkout)
+              } label: {
+                Label("Reanudar entrenamiento", systemImage: "play.fill")
+                  .font(.headline.weight(.bold))
+                  .frame(maxWidth: .infinity, minHeight: 56)
+                  .foregroundStyle(.white)
+                  .glassEffect(.regular.tint(.accentColor).interactive(), in: Capsule())
+              }
+              .buttonStyle(.plain)
+            }
+
             NavigationLink {
               SessionPreviewView(session: selectedSession)
             } label: {
-              Label("Siguiente", systemImage: "chevron.right")
+              Label(activeWorkout == nil ? "Siguiente" : "Ver entrenamiento", systemImage: "chevron.right")
                 .font(.headline.weight(.bold))
                 .frame(maxWidth: .infinity, minHeight: 56)
                 .foregroundStyle(.white)

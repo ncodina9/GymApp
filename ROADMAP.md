@@ -1255,6 +1255,8 @@ El trabajo nativo pasa a seguir el checklist operativo `docs/ios-native-checklis
 
 Actualización v0.1.61: el chip de material de feedback ocupa una columna secundaria encima de los puntos de progreso, sin competir con el título de dos líneas. Los puntos conservan el mismo borde derecho que en serie. Las fases internas de ejecución adoptan una transición horizontal común: el avance entra desde la derecha y el retroceso entra desde la izquierda; esta es la referencia para toda navegación futura de la app nativa.
 
+Actualización v0.1.62: SwiftData guarda una única instantánea de la sesión activa, incluyendo orden de superseries, series ya registradas, material real, objetivos recalculados, feedback en curso, fase, inicio y fin de descanso. `Hoy` muestra `Reanudar entrenamiento` cuando esa instantánea es válida. Completar la sesión la elimina; el histórico definitivo se implementará como entidad separada en el siguiente bloque de paridad.
+
 ## Riesgos y decisiones pendientes
 
 - Confirmar si los pesos de GymBook en ejercicios con mancuernas representan total o peso por mancuerna.

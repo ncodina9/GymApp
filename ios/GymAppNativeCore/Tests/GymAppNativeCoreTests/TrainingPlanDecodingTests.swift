@@ -121,6 +121,39 @@ struct TrainingPlanDecodingTests {
     #expect(state.records.first?.feedback == feedback)
   }
 
+  @Test("Codifica el borrador ejecutable para recuperar una sesión activa")
+  func encodesActiveWorkoutState() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let press = try #require(session.exercises.first { $0.exerciseID == "press-banca-barra" })
+    var state = WorkoutExecutionState(session: session)
+
+    let selectedMultipower = state.selectEquipment(
+      .multipower,
+      for: WorkoutSetLocator(exerciseIndex: 0, setIndex: 1)
+    )
+    #expect(selectedMultipower)
+    _ = state.recordCurrent(feedback: WorkoutSetFeedback(
+      rir: 1,
+      painKnee: 0,
+      painWrist: 0,
+      painShoulder: 1,
+      painLowerBack: 0,
+      note: "Técnica"
+    ))
+
+    let restored = try JSONDecoder().decode(
+      WorkoutExecutionState.self,
+      from: JSONEncoder().encode(state)
+    )
+
+    #expect(restored.session.sessionID == session.sessionID)
+    #expect(restored.records.count == 1)
+    #expect(restored.current?.setIndex == 2)
+    #expect(restored.draft.equipment(for: press.exerciseID) == .multipower)
+    #expect(restored.targets(for: WorkoutSetLocator(exerciseIndex: 0, setIndex: 2))?.weightKg == 65.5)
+  }
+
   private var sharedPlanURL: URL {
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0 ..< 5 {

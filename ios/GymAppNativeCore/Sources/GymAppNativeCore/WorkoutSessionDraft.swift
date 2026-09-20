@@ -1,6 +1,6 @@
 import Foundation
 
-public struct WorkoutSetTargets: Equatable, Sendable {
+public struct WorkoutSetTargets: Codable, Equatable, Sendable {
   public let reps: Int?
   public let weightKg: Double
   public let durationSeconds: Int?
@@ -12,7 +12,7 @@ public struct WorkoutSetTargets: Equatable, Sendable {
   }
 }
 
-public struct WorkoutSessionDraft: Sendable {
+public struct WorkoutSessionDraft: Codable, Sendable {
   public let session: TrainingSession
   private var equipmentByExerciseID: [String: Equipment]
   private var targetOverrides: [SetTargetKey: TargetOverride]
@@ -117,12 +117,12 @@ public struct WorkoutSessionDraft: Sendable {
   }
 }
 
-private struct SetTargetKey: Hashable, Sendable {
+private struct SetTargetKey: Codable, Hashable, Sendable {
   let exerciseID: String
   let setIndex: Int
 }
 
-private struct TargetOverride: Sendable {
+private struct TargetOverride: Codable, Sendable {
   let reps: Int?
   let referenceWeightKg: Double
   let durationSeconds: Int?
