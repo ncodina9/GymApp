@@ -6,6 +6,7 @@ struct TodayView: View {
   let plan: TrainingPlan
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
+  @AppStorage("themeAccent") private var themeAccentRaw = ThemeAccent.blue.rawValue
   @State private var path: [String] = []
 
   init(plan: TrainingPlan) {
@@ -61,6 +62,7 @@ struct TodayView: View {
           .padding(.vertical, 12)
         }
         .scrollIndicators(.hidden)
+        .id("today-theme-\(themeAccentRaw)")
         .background(GymCanvas())
         .safeAreaInset(edge: .top, spacing: 0) {
           AccentHeaderCard(

@@ -1337,6 +1337,8 @@ Actualización v0.1.100: las superficies de tarjetas, métricas y controles pasa
 
 Pendiente de apariencia: animar de forma coordinada la expansión y reducción vertical de la tarjeta superior de acento al navegar entre pantallas. Requiere una capa de cabecera compartida por el `NavigationStack`, por lo que se abordará cuando se consolide la navegación nativa y sus transiciones.
 
+Actualización v0.1.101: Hoy observa explícitamente el color de resalte persistido y recrea solo su contenido visual al cambiar la preferencia. El `NavigationStack` conserva su identidad y estado, evitando que modificar el color desde Apariencia expulse al usuario de Ajustes o altere su navegación.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.
