@@ -1331,6 +1331,8 @@ Actualización v0.1.97: se simplifica Apariencia en dos decisiones independiente
 
 Actualización v0.1.98: los colores del tema se resuelven directamente desde las preferencias persistentes durante el dibujado, por lo que cambiar Azul, Rojo oscuro o Ámbar actualiza de inmediato cabeceras, selectores, controles, progreso y barras temporizadas sin tener que salir de la pantalla ni cambiar la apariencia. El lienzo de aplicación y las zonas seguras superior e inferior vuelven a blanco puro para apariencia clara y negro puro para apariencia oscura.
 
+Actualización v0.1.99: las superficies interactivas recuperan en apariencia clara un gris azulado muy sutil, mientras el lienzo global permanece blanco puro. Los colores de tema dejan de cachearse como instancias estáticas, de modo que un cambio de resalte crea colores dinámicos nuevos en el mismo render. Opciones se organiza en grupos de lista para Entrenamiento, Personalización y Datos locales, conservando las mismas acciones y preparando el menú para nuevos apartados.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.

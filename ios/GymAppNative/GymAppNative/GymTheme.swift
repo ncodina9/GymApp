@@ -46,7 +46,7 @@ enum GymTheme {
     case .surface:
       return usesDarkCanvas
         ? UIColor(red: 0.102, green: 0.125, blue: 0.157, alpha: 1)
-        : UIColor.white
+        : UIColor(red: 0.941, green: 0.953, blue: 0.965, alpha: 1)
     case .accent:
       switch accent {
       case .blue: return UIColor(red: 0.00, green: 0.33, blue: 0.62, alpha: 1)
@@ -64,10 +64,10 @@ enum GymTheme {
 }
 
 extension Color {
-  static let gymCanvas = Color(uiColor: UIColor { GymTheme.color(.canvas, traits: $0) })
-  static let gymSurface = Color(uiColor: UIColor { GymTheme.color(.surface, traits: $0) })
-  static let gymAccent = Color(uiColor: UIColor { GymTheme.color(.accent, traits: $0) })
-  static let gymAccentSecondary = Color(uiColor: UIColor { GymTheme.color(.accentSecondary, traits: $0) })
+  static var gymCanvas: Color { Color(uiColor: UIColor { GymTheme.color(.canvas, traits: $0) }) }
+  static var gymSurface: Color { Color(uiColor: UIColor { GymTheme.color(.surface, traits: $0) }) }
+  static var gymAccent: Color { Color(uiColor: UIColor { GymTheme.color(.accent, traits: $0) }) }
+  static var gymAccentSecondary: Color { Color(uiColor: UIColor { GymTheme.color(.accentSecondary, traits: $0) }) }
   static let gymSuccess = Color(red: 0.09, green: 0.45, blue: 0.29)
   static let gymWarning = Color(red: 0.64, green: 0.43, blue: 0.00)
   static let gymDanger = Color(red: 0.70, green: 0.23, blue: 0.22)

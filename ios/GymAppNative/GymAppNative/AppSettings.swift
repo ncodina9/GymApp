@@ -38,11 +38,32 @@ struct SettingsView: View {
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 12) {
-        SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
-        SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
-        SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.98")
+      VStack(alignment: .leading, spacing: 22) {
+        SettingsCategory(title: "Entrenamiento") {
+          SettingsRow(
+            title: "Próximos entrenamientos",
+            detail: "Consulta del plan pendiente",
+            destination: UpcomingWorkoutsView(plan: plan)
+          )
+        }
+
+        SettingsCategory(title: "Personalización") {
+          SettingsRow(
+            title: "Apariencia",
+            detail: "Tema, color y pantalla activa",
+            destination: AppearanceSettingsView()
+          )
+        }
+
+        SettingsCategory(title: "Datos locales") {
+          SettingsRow(
+            title: "Exportación",
+            detail: "Backup, CSV y datos locales",
+            destination: ExportSettingsView(plan: plan)
+          )
+        }
+
+        Text("v0.1.99")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -59,7 +80,30 @@ struct SettingsView: View {
   }
 }
 
-private struct SettingsLink<Destination: View>: View {
+private struct SettingsCategory<Content: View>: View {
+  let title: String
+  @ViewBuilder let content: Content
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(title)
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 4)
+
+      VStack(spacing: 0) {
+        content
+      }
+      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+      .overlay {
+        RoundedRectangle(cornerRadius: 18)
+          .stroke(.separator.opacity(0.7), lineWidth: 1)
+      }
+    }
+  }
+}
+
+private struct SettingsRow<Destination: View>: View {
   let title: String
   let detail: String
   let destination: Destination
@@ -75,7 +119,6 @@ private struct SettingsLink<Destination: View>: View {
         Image(systemName: "chevron.right").foregroundStyle(.secondary)
       }
       .padding(16)
-      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 20))
     }
     .buttonStyle(.plain)
   }
@@ -373,7 +416,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.98"
+      appVersion: "0.1.99"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 
