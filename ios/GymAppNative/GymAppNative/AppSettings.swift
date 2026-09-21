@@ -63,7 +63,7 @@ struct SettingsView: View {
           )
         }
 
-        Text("v0.1.102")
+        Text("v0.1.103")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -471,7 +471,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.102"
+      appVersion: "0.1.103"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 

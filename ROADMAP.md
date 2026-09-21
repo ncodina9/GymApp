@@ -1341,6 +1341,27 @@ Actualización v0.1.101: Hoy observa explícitamente el color de resalte persist
 
 Actualización v0.1.102: cada fila de Opciones ocupa y responde en toda la anchura de su tarjeta agrupada, incluidos los espacios vacíos alrededor de título, descripción y flecha.
 
+Actualización v0.1.103: se documentan los próximos desarrollos de personalización inicial, análisis inteligente y molestias para orientar el modelo de datos nativo más allá de la integración actual con Obsidian.
+
+### Futuro: onboarding y perfil de entrenamiento
+
+- [ ] Onboarding guiado antes de crear un plan: material disponible, días de entrenamiento, duración del plan, objetivo principal, duración deseada de cada sesión, preferencias de cardio, ejercicios favoritos y ejercicios a evitar.
+- [ ] Recoger nivel inicial sin obligar a introducir un 1RM: pesos y repeticiones cómodos aproximados por patrón o ejercicio, además de preferencia por aislados frente a superseries.
+- [ ] Registrar limitaciones y molestias declaradas durante el onboarding para condicionar las sustituciones y el diseño inicial del plan.
+- [ ] Permitir revisar y editar ese perfil sin alterar retroactivamente las sesiones ya registradas.
+
+### Futuro: planificación y análisis con IA
+
+- [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, con explicaciones y confirmación explícita antes de modificar un plan.
+- [ ] Generar macrociclos y ajustar mesociclos, calendario, pesos, repeticiones, descansos y volumen a partir del perfil, el material y las sesiones ejecutadas.
+- [ ] Diseñar límites de seguridad: no proponer progresiones o sustituciones que contradigan molestias declaradas, material real o límites del usuario.
+
+### Futuro: molestias y almacenamiento independiente
+
+- [ ] Ampliar molestias más allá del feedback puntual de cada serie: zona, intensidad, contexto, evolución y restricciones asociadas a ejercicios.
+- [ ] Definir un esquema de datos y exportación propio para molestias, separado del CSV de series y no dependiente de Obsidian, antes de almacenar información sensible.
+- [ ] Establecer reglas de retención, edición y borrado de esas entradas, junto con una exportación completa legible por el usuario.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.
