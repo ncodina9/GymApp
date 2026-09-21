@@ -63,13 +63,14 @@ struct SettingsView: View {
           )
         }
 
-        Text("v0.1.101")
+        Text("v0.1.102")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
           .padding(.top, 8)
       }
       .padding(16)
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
     .id(themeKey)
     .background(GymCanvas())
@@ -119,6 +120,8 @@ private struct SettingsRow<Destination: View>: View {
         Image(systemName: "chevron.right").foregroundStyle(.secondary)
       }
       .padding(16)
+      .frame(maxWidth: .infinity)
+      .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
   }
@@ -468,7 +471,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.101"
+      appVersion: "0.1.102"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 

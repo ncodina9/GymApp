@@ -1339,6 +1339,8 @@ Pendiente de apariencia: animar de forma coordinada la expansión y reducción v
 
 Actualización v0.1.101: Hoy observa explícitamente el color de resalte persistido y recrea solo su contenido visual al cambiar la preferencia. El `NavigationStack` conserva su identidad y estado, evitando que modificar el color desde Apariencia expulse al usuario de Ajustes o altere su navegación.
 
+Actualización v0.1.102: cada fila de Opciones ocupa y responde en toda la anchura de su tarjeta agrupada, incluidos los espacios vacíos alrededor de título, descripción y flecha.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.
