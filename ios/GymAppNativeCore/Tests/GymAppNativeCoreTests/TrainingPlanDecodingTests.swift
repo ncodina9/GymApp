@@ -31,6 +31,17 @@ struct TrainingPlanDecodingTests {
     #expect(timedExercise.sets.allSatisfy { $0.targetDurationSeconds == 60 })
   }
 
+  @Test("Estima las sesiones con la misma regla que la PWA")
+  func estimatesSessionDurationUsingSharedRules() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let firstSession = try #require(plan.sessions.first)
+    let secondSession = try #require(plan.sessions.dropFirst().first)
+
+    #expect(SessionDurationEstimator.estimate(for: firstSession).totalMinutes == 70)
+    #expect(SessionDurationEstimator.estimate(for: secondSession).totalMinutes == 65)
+    #expect(SessionDurationEstimator.estimate(for: firstSession).mobilityMinutes == 9)
+  }
+
   @Test("Convierte cargas entre variantes con el material disponible")
   func convertsLoadsForEquipment() {
     #expect(

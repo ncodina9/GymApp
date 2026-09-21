@@ -19,7 +19,11 @@ struct GlassSegmentedSelector<Value: Hashable>: View {
 
         ZStack(alignment: .leading) {
           Capsule()
-            .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+            .fill(Color.gymAccent)
+            .overlay {
+              Capsule()
+                .stroke(Color.gymAccent.opacity(0.9), lineWidth: 1)
+            }
             .frame(width: segmentWidth, height: 42)
             .offset(x: indicatorOffset)
             .allowsHitTesting(false)

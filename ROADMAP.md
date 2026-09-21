@@ -1315,6 +1315,8 @@ Actualización v0.1.89: se valida en dispositivo la importación del backup real
 
 Actualización v0.1.90: Exportación muestra, solo cuando existe un borrador, la acción confirmada `Descartar entrenamiento en curso`. Elimina exclusivamente la instantánea activa de SwiftData y conserva sesiones finalizadas, sesiones importadas y backups ya creados.
 
+Actualización v0.1.91: la evaluación final nativa adopta la jerarquía semántica de la PWA: mantener usa el acento, subir verde y bajar o molestia rojo, con fondos, bordes y objetivos táctiles reforzados. El feedback de serie separa RIR de molestias; RIR tiene controles de 56 pt y las cuatro molestias viven en un bloque desplazable independiente. El selector segmentado conserva el contenedor Liquid Glass, pero su indicador se pinta con el mismo token de acento que progreso y acciones primarias, sin la aclaración automática del tinte de vidrio. La estimación de Hoy, previsualización, cierre y backup se obtiene ya con el algoritmo de la PWA: movilidad, ejecución de cada serie, descansos, cambios entre ejercicios, transiciones de superserie y feedback.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.

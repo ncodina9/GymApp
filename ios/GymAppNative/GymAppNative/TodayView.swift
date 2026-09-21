@@ -151,7 +151,7 @@ struct WeekSessionCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
 
       HStack(spacing: 8) {
-        SessionMetric(label: "Estimado", value: "\(session.estimatedMinutes)m")
+        SessionMetric(label: "Estimado", value: "\(SessionDurationEstimator.estimate(for: session).totalMinutes)m")
         SessionMetric(label: "Bloques", value: "\(session.exercises.count)")
       }
     }

@@ -218,7 +218,7 @@ enum TrainingBackup {
         sessionDate: execution.session.date,
         sessionLabel: execution.session.sessionLabel,
         estimatedMinutes: execution.session.estimatedMinutes,
-        derivedEstimatedMinutes: execution.session.estimatedMinutes,
+        derivedEstimatedMinutes: SessionDurationEstimator.estimate(for: execution.session).totalMinutes,
         attemptedSets: records.count,
         completedSets: records.filter { $0.status == .completed }.count,
         totalSets: execution.totalSetCount,

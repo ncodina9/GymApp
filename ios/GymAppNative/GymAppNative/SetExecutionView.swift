@@ -619,14 +619,16 @@ private struct FeedbackView: View {
         }
       }
 
-      VStack(spacing: 8) {
+      VStack(spacing: 10) {
         if !isTimed {
           FeedbackStepper(label: "RIR", value: $rir, range: 0 ... 5)
         }
-        PainLevelControl(label: "Rodilla", value: $painKnee)
-        PainLevelControl(label: "Muñeca", value: $painWrist)
-        PainLevelControl(label: "Hombro", value: $painShoulder)
-        PainLevelControl(label: "Lumbar", value: $painLowerBack)
+        PainFeedbackBlock(
+          painKnee: $painKnee,
+          painWrist: $painWrist,
+          painShoulder: $painShoulder,
+          painLowerBack: $painLowerBack
+        )
         NotePicker(note: $note)
       }
       .padding(10)
@@ -756,15 +758,48 @@ private struct FeedbackStepper: View {
   let range: ClosedRange<Int>
 
   var body: some View {
-    HStack {
-      Text(label).font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+    HStack(spacing: 12) {
+      Text(label).font(.headline.weight(.bold)).foregroundStyle(.secondary)
       Spacer()
       Button { value = max(range.lowerBound, value - 1) } label: { Image(systemName: "minus") }
         .feedbackControlButton()
-      Text("\(value)").font(.title3.weight(.bold)).monospacedDigit().frame(width: 24)
+      Text("\(value)").font(.title2.weight(.bold)).monospacedDigit().frame(width: 32)
       Button { value = min(range.upperBound, value + 1) } label: { Image(systemName: "plus") }
         .feedbackControlButton()
     }
+    .padding(.horizontal, 12)
+    .frame(minHeight: 68)
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 14))
+    .overlay { RoundedRectangle(cornerRadius: 14).stroke(.separator, lineWidth: 1) }
+  }
+}
+
+private struct PainFeedbackBlock: View {
+  @Binding var painKnee: Int
+  @Binding var painWrist: Int
+  @Binding var painShoulder: Int
+  @Binding var painLowerBack: Int
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("Molestias")
+        .font(.subheadline.weight(.bold))
+        .foregroundStyle(.secondary)
+
+      ScrollView(.vertical) {
+        VStack(spacing: 8) {
+          PainLevelControl(label: "Rodilla", value: $painKnee)
+          PainLevelControl(label: "Muñeca", value: $painWrist)
+          PainLevelControl(label: "Hombro", value: $painShoulder)
+          PainLevelControl(label: "Lumbar", value: $painLowerBack)
+        }
+      }
+      .scrollIndicators(.visible)
+      .frame(maxHeight: 160)
+    }
+    .padding(12)
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 14))
+    .overlay { RoundedRectangle(cornerRadius: 14).stroke(.separator, lineWidth: 1) }
   }
 }
 
@@ -779,9 +814,9 @@ private struct PainLevelControl: View {
       ForEach(0 ... 3, id: \.self) { level in
         Button("\(level)") { value = level }
           .font(.subheadline.weight(.bold))
-          .frame(width: 40, height: 40)
+          .frame(width: 48, height: 48)
           .foregroundStyle(value == level ? .white : .primary)
-          .background(value == level ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+          .background(value == level ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
           .buttonStyle(.plain)
       }
     }
@@ -797,7 +832,7 @@ private struct NotePicker: View {
       ForEach(options, id: \.self) { option in
         Button(option) { note = option }
           .font(.caption.weight(.bold))
-          .frame(maxWidth: .infinity, minHeight: 42)
+          .frame(maxWidth: .infinity, minHeight: 48)
           .foregroundStyle(note == option ? .white : .primary)
           .background(note == option ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
           .buttonStyle(.plain)
@@ -810,9 +845,9 @@ private extension View {
   func feedbackControlButton() -> some View {
     self
       .font(.subheadline.weight(.bold))
-      .frame(width: 40, height: 40)
+      .frame(width: 56, height: 56)
       .foregroundStyle(.primary)
-      .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+      .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
       .buttonStyle(.plain)
   }
 }
@@ -900,16 +935,16 @@ private struct ExerciseDecisionSection: View {
           .lineLimit(1)
           .minimumScaleFactor(0.75)
       }
-      .font(.caption.weight(.bold))
-      .frame(maxWidth: .infinity, minHeight: 50)
+      .font(.subheadline.weight(.bold))
+      .frame(maxWidth: .infinity, minHeight: 58)
       .foregroundStyle(selection == option ? .white : decisionColor(option))
       .background(
         selection == option ? decisionColor(option) : decisionColor(option).opacity(0.14),
-        in: RoundedRectangle(cornerRadius: 14)
+        in: RoundedRectangle(cornerRadius: 16)
       )
       .overlay {
-        RoundedRectangle(cornerRadius: 14)
-          .stroke(decisionColor(option).opacity(selection == option ? 1 : 0.7), lineWidth: 1.5)
+        RoundedRectangle(cornerRadius: 16)
+          .stroke(decisionColor(option).opacity(selection == option ? 1 : 0.72), lineWidth: 2)
       }
     }
     .accessibilityLabel(option)
@@ -1290,7 +1325,7 @@ private struct FinishedWorkoutView: View {
   }
 
   private var estimateComparison: String {
-    let difference = elapsedSeconds - (execution.session.estimatedMinutes * 60)
+    let difference = elapsedSeconds - (SessionDurationEstimator.estimate(for: execution.session).totalMinutes * 60)
     if abs(difference) < 60 { return "En el tiempo estimado" }
     let minutes = abs(difference) / 60
     return difference < 0 ? "\(minutes) min por debajo del estimado" : "\(minutes) min por encima del estimado"
@@ -1317,7 +1352,7 @@ private struct FinishedWorkoutView: View {
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
       VStack(spacing: 4) {
-        Text("\(durationLabel(elapsedSeconds)) reales · \(execution.session.estimatedMinutes) min estimados")
+        Text("\(durationLabel(elapsedSeconds)) reales · \(SessionDurationEstimator.estimate(for: execution.session).totalMinutes) min estimados")
           .font(.headline.weight(.bold))
           .monospacedDigit()
         Text(estimateComparison)

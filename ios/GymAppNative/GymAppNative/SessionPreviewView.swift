@@ -172,7 +172,7 @@ private struct PreviewContextHeader: View {
         .lineLimit(2)
         .minimumScaleFactor(0.85)
 
-      Text("\(session.exercises.count) ejercicios · \(session.estimatedMinutes) min estimados")
+      Text("\(session.exercises.count) ejercicios · \(SessionDurationEstimator.estimate(for: session).totalMinutes) min estimados")
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .lineLimit(1)
