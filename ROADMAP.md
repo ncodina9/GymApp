@@ -1325,6 +1325,8 @@ Actualización v0.1.94: el feedback de serie gana la cabecera fija `Evaluar seri
 
 Actualización v0.1.95: las pantallas nativas ajenas a la ejecución adoptan `AccentHeaderCard`: tarjeta superior de color de resalte, texto centrado de contraste blanco y radio inferior continuo de 36 pt. Hoy centra semana y foco; la previsualización prioriza el nombre de entrenamiento sobre el contexto; Opciones, Apariencia, Próximos y Exportación dejan de usar la barra de navegación nativa. Las vistas de serie, feedback, descanso y cierre conservan su propia jerarquía de sesión.
 
+Actualización v0.1.96: la tarjeta superior de las vistas de consulta prolonga su lienzo de color de resalte por detrás de la zona segura superior, hasta el borde físico del iPhone. El contenido permanece dentro del área segura y la curvatura se mantiene exclusivamente en el borde inferior de la tarjeta.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.

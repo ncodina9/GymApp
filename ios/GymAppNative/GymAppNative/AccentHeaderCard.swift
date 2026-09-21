@@ -33,6 +33,13 @@ struct AccentHeaderCard: View {
     .padding(.horizontal, 28)
     .padding(.top, 14)
     .padding(.bottom, 22)
+    .background(alignment: .top) {
+      // `safeAreaInset` positions this view below the status area. Extend only the
+      // accent canvas upward so the card begins at the physical edge of the phone.
+      Color.gymAccent
+        .frame(height: 96)
+        .offset(y: -96)
+    }
     .background {
       UnevenRoundedRectangle(
         topLeadingRadius: 0,
