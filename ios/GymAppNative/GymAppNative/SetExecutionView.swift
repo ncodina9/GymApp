@@ -758,19 +758,42 @@ private struct FeedbackStepper: View {
   let range: ClosedRange<Int>
 
   var body: some View {
-    HStack(spacing: 12) {
+    HStack(spacing: 14) {
       Text(label).font(.headline.weight(.bold)).foregroundStyle(.secondary)
       Spacer()
-      Button { value = max(range.lowerBound, value - 1) } label: { Image(systemName: "minus") }
-        .feedbackControlButton()
-      Text("\(value)").font(.title2.weight(.bold)).monospacedDigit().frame(width: 32)
-      Button { value = min(range.upperBound, value + 1) } label: { Image(systemName: "plus") }
-        .feedbackControlButton()
+      adjustmentButton(symbol: "minus", accessibilityLabel: "Bajar RIR") {
+        value = max(range.lowerBound, value - 1)
+      }
+      Text("\(value)")
+        .font(.title2.weight(.bold))
+        .monospacedDigit()
+        .frame(width: 36)
+      adjustmentButton(symbol: "plus", accessibilityLabel: "Subir RIR") {
+        value = min(range.upperBound, value + 1)
+      }
     }
     .padding(.horizontal, 12)
-    .frame(minHeight: 68)
+    .frame(minHeight: 76)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 14))
     .overlay { RoundedRectangle(cornerRadius: 14).stroke(.separator, lineWidth: 1) }
+  }
+
+  private func adjustmentButton(
+    symbol: String,
+    accessibilityLabel: String,
+    action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      Image(systemName: symbol)
+        .font(.title3.weight(.bold))
+        .frame(width: 76, height: 64)
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+    }
+    .foregroundStyle(.primary)
+    .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+    .contentShape(RoundedRectangle(cornerRadius: 14))
+    .accessibilityLabel(accessibilityLabel)
+    .buttonStyle(.plain)
   }
 }
 
@@ -841,17 +864,6 @@ private struct NotePicker: View {
   }
 }
 
-private extension View {
-  func feedbackControlButton() -> some View {
-    self
-      .font(.subheadline.weight(.bold))
-      .frame(width: 56, height: 56)
-      .foregroundStyle(.primary)
-      .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
-      .buttonStyle(.plain)
-  }
-}
-
 private func feedbackTimeLabel(_ seconds: Int) -> String {
   "\(seconds / 60):\(String(format: "%02d", seconds % 60))"
 }
@@ -864,15 +876,14 @@ private struct ExerciseReviewView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
-      Text(exercises.count > 1 ? "Evaluar superserie" : "Evaluar ejercicio")
-        .font(.subheadline.weight(.semibold))
-        .foregroundStyle(.secondary)
+      ExerciseReviewHeader(exercises: exercises)
 
       ScrollView {
         VStack(alignment: .leading, spacing: 16) {
           ForEach(exercises) { exercise in
             ExerciseDecisionSection(
               exercise: exercise,
+              showsExerciseName: exercises.count > 1,
               selection: Binding(
                 get: { decisions[exercise.exerciseID] ?? ExerciseDecisionSection.defaultDecision(for: exercise) },
                 set: { decisions[exercise.exerciseID] = $0 }
@@ -894,8 +905,28 @@ private struct ExerciseReviewView: View {
   }
 }
 
+private struct ExerciseReviewHeader: View {
+  let exercises: [TrainingExercise]
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(exercises.count > 1 ? "Evaluar superserie" : "Evaluar ejercicio")
+        .font(.title2.weight(.bold))
+        .foregroundStyle(.secondary)
+
+      Text(exercises.map(\.baseExerciseName).joined(separator: " + "))
+        .font(.system(size: 31, weight: .bold))
+        .lineLimit(2)
+        .minimumScaleFactor(0.78)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .frame(minHeight: 88, alignment: .topLeading)
+  }
+}
+
 private struct ExerciseDecisionSection: View {
   let exercise: TrainingExercise
+  let showsExerciseName: Bool
   @Binding var selection: String
 
   private var isTimed: Bool { exercise.sets.first?.type == .timed }
@@ -915,9 +946,11 @@ private struct ExerciseDecisionSection: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      Text(exercise.baseExerciseName)
-        .font(.title3.weight(.bold))
-        .lineLimit(2)
+      if showsExerciseName {
+        Text(exercise.baseExerciseName)
+          .font(.title3.weight(.bold))
+          .lineLimit(2)
+      }
       LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
         ForEach(options, id: \.self) { option in
           decisionButton(option)

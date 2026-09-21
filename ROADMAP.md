@@ -1319,6 +1319,8 @@ Actualización v0.1.91: la evaluación final nativa adopta la jerarquía semánt
 
 Actualización v0.1.92: el selector nativo `Cambiar siguiente bloque` modela cada superserie como una sola alternativa, igual que la acción que ejecuta. La tarjeta enumera sus integrantes con `+`, mantiene el chip `Superserie` y resume los materiales implicados; no vuelve a ofrecer el bloque ya anunciado en `Próxima superserie` ni bloques parcialmente realizados.
 
+Actualización v0.1.93: el control de RIR abandona el área de toque implícita de sus iconos y declara dos zonas táctiles de 76 × 64 pt, con `contentShape`, etiqueta de accesibilidad y acciones separadas. La evaluación nativa incorpora una cabecera fija de jerarquía equivalente a la pantalla de serie: `Evaluar ejercicio` o `Evaluar superserie` y el nombre del ejercicio o conjunto; sus decisiones se mantienen como contenido desplazable, evitando perder contexto en nombres largos.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.
