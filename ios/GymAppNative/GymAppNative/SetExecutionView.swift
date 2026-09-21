@@ -664,15 +664,20 @@ private struct FeedbackHeader: View {
   let exercise: TrainingExercise?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 7) {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("Evaluar serie")
+        .font(.title2.weight(.bold))
+        .foregroundStyle(.secondary)
+
       HStack(alignment: .top, spacing: 12) {
         VStack(alignment: .leading, spacing: 5) {
           Text(exercise?.baseExerciseName ?? "Ejercicio")
-          .font(.system(size: 27, weight: .bold))
+          .font(.system(size: 31, weight: .bold))
           .lineLimit(2)
+          .minimumScaleFactor(0.78)
           .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, minHeight: 66, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
 
         SetProgressIndicators(
           setCount: exercise?.sets.count ?? 0,
@@ -791,6 +796,10 @@ private struct FeedbackStepper: View {
     }
     .foregroundStyle(.primary)
     .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+    .overlay {
+      RoundedRectangle(cornerRadius: 14)
+        .stroke(Color.secondary.opacity(0.42), lineWidth: 1)
+    }
     .contentShape(RoundedRectangle(cornerRadius: 14))
     .accessibilityLabel(accessibilityLabel)
     .buttonStyle(.plain)
@@ -840,6 +849,10 @@ private struct PainLevelControl: View {
           .frame(width: 48, height: 48)
           .foregroundStyle(value == level ? .white : .primary)
           .background(value == level ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+          .overlay {
+            RoundedRectangle(cornerRadius: 10)
+              .stroke(value == level ? Color.gymAccent : Color.secondary.opacity(0.38), lineWidth: 1)
+          }
           .buttonStyle(.plain)
       }
     }
@@ -858,6 +871,10 @@ private struct NotePicker: View {
           .frame(maxWidth: .infinity, minHeight: 48)
           .foregroundStyle(note == option ? .white : .primary)
           .background(note == option ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+          .overlay {
+            RoundedRectangle(cornerRadius: 8)
+              .stroke(note == option ? Color.gymAccent : Color.secondary.opacity(0.38), lineWidth: 1)
+          }
           .buttonStyle(.plain)
       }
     }
