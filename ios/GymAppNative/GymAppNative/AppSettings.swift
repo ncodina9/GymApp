@@ -43,7 +43,7 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.94")
+        Text("v0.1.95")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -54,9 +54,8 @@ struct SettingsView: View {
     .id(themeKey)
     .background(GymCanvas())
     .navigationBarBackButtonHidden()
-    .toolbar { NavigationHeader(title: "Opciones") }
-    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-    .toolbarBackground(.visible, for: .navigationBar)
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Opciones") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
   }
 }
@@ -125,9 +124,8 @@ private struct AppearanceSettingsView: View {
     }
     .background(GymCanvas())
     .navigationBarBackButtonHidden()
-    .toolbar { NavigationHeader(title: "Apariencia") }
-    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-    .toolbarBackground(.visible, for: .navigationBar)
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Apariencia") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
   }
 }
@@ -196,9 +194,8 @@ private struct UpcomingWorkoutsView: View {
     }
     .background(GymCanvas())
     .navigationBarBackButtonHidden()
-    .toolbar { NavigationHeader(title: "Próximos entrenamientos") }
-    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-    .toolbarBackground(.visible, for: .navigationBar)
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Próximos entrenamientos") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
   }
 
@@ -292,9 +289,8 @@ private struct ExportSettingsView: View {
     }
     .background(GymCanvas())
     .navigationBarBackButtonHidden()
-    .toolbar { NavigationHeader(title: "Exportación") }
-    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-    .toolbarBackground(.visible, for: .navigationBar)
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Exportación") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
     .alert("Borrar datos locales", isPresented: $showsDeleteConfirmation) {
       Button("Cancelar", role: .cancel) {}
@@ -392,7 +388,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.94"
+      appVersion: "0.1.95"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 
@@ -423,18 +419,6 @@ private struct ExportSettingsView: View {
       importMessage = "Importadas: \(result.imported). Ya existentes: \(result.duplicates)."
     } catch {
       importMessage = error.localizedDescription
-    }
-  }
-}
-
-private struct NavigationHeader: ToolbarContent {
-  let title: String
-
-  var body: some ToolbarContent {
-    ToolbarItem(placement: .principal) {
-      Text(title)
-        .font(.system(size: 20, weight: .bold))
-        .lineLimit(1)
     }
   }
 }

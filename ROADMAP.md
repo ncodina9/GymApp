@@ -1323,6 +1323,8 @@ Actualización v0.1.93: el control de RIR abandona el área de toque implícita 
 
 Actualización v0.1.94: el feedback de serie gana la cabecera fija `Evaluar serie` y el nombre de ejercicio a 31 pt, alineando su jerarquía con la evaluación final. Los controles secundarios de RIR, molestias y nota refuerzan su borde y contraste en temas oscuros para leerse inequívocamente como botones sin competir con la acción principal `Registrar serie`.
 
+Actualización v0.1.95: las pantallas nativas ajenas a la ejecución adoptan `AccentHeaderCard`: tarjeta superior de color de resalte, texto centrado de contraste blanco y radio inferior continuo de 36 pt. Hoy centra semana y foco; la previsualización prioriza el nombre de entrenamiento sobre el contexto; Opciones, Apariencia, Próximos y Exportación dejan de usar la barra de navegación nativa. Las vistas de serie, feedback, descanso y cierre conservan su propia jerarquía de sesión.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.

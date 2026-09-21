@@ -45,11 +45,6 @@ struct TodayView: View {
       if let recommendedSession {
         ScrollView {
           VStack(alignment: .leading, spacing: 12) {
-            Text("Semana \(recommendedSession.week) · \(recommendedSession.weekFocusLabel)")
-              .font(.subheadline.weight(.semibold))
-              .foregroundStyle(.secondary)
-              .frame(maxWidth: .infinity, alignment: .leading)
-
             ForEach(weekSessions) { session in
               NavigationLink(value: session.sessionID) {
                 WeekSessionCard(
@@ -67,6 +62,12 @@ struct TodayView: View {
         }
         .scrollIndicators(.hidden)
         .background(GymCanvas())
+        .safeAreaInset(edge: .top, spacing: 0) {
+          AccentHeaderCard(
+            title: "Semana \(recommendedSession.week)",
+            detail: recommendedSession.weekFocusLabel
+          )
+        }
         .overlay(alignment: .bottomTrailing) {
           NavigationLink {
             SettingsView(plan: plan)

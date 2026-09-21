@@ -161,26 +161,12 @@ private struct PreviewContextHeader: View {
   let session: TrainingSession
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 5) {
-      Text("Semana \(session.week) · \(session.weekFocusLabel)")
-        .font(.subheadline.weight(.semibold))
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-
-      Text(session.label)
-        .font(.title2.weight(.bold))
-        .lineLimit(2)
-        .minimumScaleFactor(0.85)
-
-      Text("\(session.exercises.count) ejercicios · \(SessionDurationEstimator.estimate(for: session).totalMinutes) min estimados")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 20)
-    .padding(.vertical, 12)
-    .background(.ultraThinMaterial)
+    AccentHeaderCard(
+      title: session.label,
+      eyebrow: "Semana \(session.week) · \(session.weekFocusLabel)",
+      detail: "\(session.exercises.count) ejercicios · \(SessionDurationEstimator.estimate(for: session).totalMinutes) min estimados",
+      emphasizesTitle: true
+    )
   }
 }
 
