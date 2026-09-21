@@ -1106,17 +1106,33 @@ private struct PendingBlockSelector: View {
 
   private var options: [PendingBlockOption] {
     guard next.setIndex == 1 else { return [] }
-    var seenSupersets = Set<String>()
+    let recordsByExercise = Set(execution.records.map(\.locator.exerciseIndex))
+    let nextSupersetID = execution.exercise(for: next)?.supersetID
+    var seenBlockIDs = Set<String>()
 
     return execution.session.exercises.enumerated().compactMap { index, exercise in
-      guard index != next.exerciseIndex,
-            !execution.records.contains(where: { $0.locator.exerciseIndex == index })
+      let blockID = exercise.supersetID.map { "superset:\($0)" } ?? "exercise:\(index)"
+      guard blockID != nextSupersetID.map({ "superset:\($0)" }),
+            seenBlockIDs.insert(blockID).inserted
       else { return nil }
 
-      if let supersetID = exercise.supersetID {
-        guard seenSupersets.insert(supersetID).inserted else { return nil }
-      }
-      return PendingBlockOption(exerciseIndex: index, exercise: exercise)
+      let members = exercise.supersetID.map { supersetID in
+        execution.session.exercises.enumerated()
+          .filter { $0.element.supersetID == supersetID }
+          .sorted { lhs, rhs in
+            (lhs.element.supersetOrder ?? lhs.offset) < (rhs.element.supersetOrder ?? rhs.offset)
+          }
+      } ?? [(offset: index, element: exercise)]
+
+      guard members.allSatisfy({ !recordsByExercise.contains($0.offset) }),
+            let firstMember = members.first
+      else { return nil }
+
+      return PendingBlockOption(
+        exerciseIndex: firstMember.offset,
+        exercises: members.map(\.element),
+        isSuperset: exercise.supersetID != nil
+      )
     }
   }
 
@@ -1136,16 +1152,16 @@ private struct PendingBlockSelector: View {
               } label: {
                 HStack(spacing: 10) {
                   VStack(alignment: .leading, spacing: 4) {
-                    Text(option.exercise.baseExerciseName)
+                    Text(option.exerciseNames)
                       .font(.subheadline.weight(.bold))
-                      .lineLimit(1)
+                      .lineLimit(option.isSuperset ? 2 : 1)
                     HStack(spacing: 5) {
-                      if option.exercise.supersetID != nil {
+                      if option.isSuperset {
                         Text("Superserie")
                           .font(.caption2.weight(.bold))
                           .foregroundStyle(Color.gymAccent)
                       }
-                      Text(option.exercise.variantLabel ?? option.exercise.equipment.executionLabel)
+                      Text(option.equipmentSummary)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.secondary)
                     }
@@ -1173,9 +1189,21 @@ private struct PendingBlockSelector: View {
 
 private struct PendingBlockOption: Identifiable {
   let exerciseIndex: Int
-  let exercise: TrainingExercise
+  let exercises: [TrainingExercise]
+  let isSuperset: Bool
 
-  var id: Int { exerciseIndex }
+  var id: String { exercises.map(\.exerciseID).joined(separator: "+") }
+  var exerciseNames: String { exercises.map(\.baseExerciseName).joined(separator: " + ") }
+
+  var equipmentSummary: String {
+    exercises.reduce(into: [String]()) { labels, exercise in
+      let label = exercise.variantLabel ?? exercise.equipment.executionLabel
+      if !labels.contains(label) {
+        labels.append(label)
+      }
+    }
+    .joined(separator: " + ")
+  }
 }
 
 private struct NextSetPreview: View {
