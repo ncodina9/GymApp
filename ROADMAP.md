@@ -1333,6 +1333,10 @@ Actualización v0.1.98: los colores del tema se resuelven directamente desde las
 
 Actualización v0.1.99: las superficies interactivas recuperan en apariencia clara un gris azulado muy sutil, mientras el lienzo global permanece blanco puro. Los colores de tema dejan de cachearse como instancias estáticas, de modo que un cambio de resalte crea colores dinámicos nuevos en el mismo render. Opciones se organiza en grupos de lista para Entrenamiento, Personalización y Datos locales, conservando las mismas acciones y preparando el menú para nuevos apartados.
 
+Actualización v0.1.100: las superficies de tarjetas, métricas y controles pasan a usar una versión tenue de cada color de resalte, en lugar de un gris genérico. Apariencia sustituye el selector lineal de color por tarjetas de previsualización para Azul, Rojo oscuro, Ámbar y Grafito. Cada selección recrea solo el contenido de Apariencia, sin reiniciar la navegación, para actualizar cabecera, selector y controles de manera inmediata.
+
+Pendiente de apariencia: animar de forma coordinada la expansión y reducción vertical de la tarjeta superior de acento al navegar entre pantallas. Requiere una capa de cabecera compartida por el `NavigationStack`, por lo que se abordará cuando se consolide la navegación nativa y sus transiciones.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.

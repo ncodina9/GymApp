@@ -63,7 +63,7 @@ struct SettingsView: View {
           )
         }
 
-        Text("v0.1.99")
+        Text("v0.1.100")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -135,12 +135,7 @@ private struct AppearanceSettingsView: View {
       VStack(alignment: .leading, spacing: 20) {
         AppearanceSegmentedSelector(selection: $appearanceRaw)
 
-        ThemeVariantSection(
-          title: "Color de resalte",
-          selection: $accentRaw,
-          options: ThemeAccent.allCases.map(\.rawValue),
-          label: { ThemeAccent(rawValue: $0)?.label ?? $0 }
-        )
+        AccentThemePreviewList(selection: $accentRaw)
 
         Toggle("Mantener la pantalla activa", isOn: $keepScreenAwake)
           .tint(Color.gymAccent)
@@ -153,27 +148,84 @@ private struct AppearanceSettingsView: View {
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Apariencia") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+    .id("appearance-\(appearanceRaw)-\(accentRaw)")
   }
 }
 
-private struct ThemeVariantSection: View {
-  let title: String
+private struct AccentThemePreviewList: View {
   @Binding var selection: String
-  let options: [String]
-  let label: (String) -> String
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text(title)
+      Text("Color de resalte")
         .font(.subheadline.weight(.semibold))
         .foregroundStyle(.secondary)
-      GlassSegmentedSelector(
-        selection: $selection,
-        options: options,
-        unavailableOptions: [],
-        label: label
-      )
+
+      ForEach(ThemeAccent.allCases) { theme in
+        AccentThemePreviewCard(theme: theme, isSelected: selection == theme.rawValue) {
+          withAnimation(.easeInOut(duration: 0.2)) {
+            selection = theme.rawValue
+          }
+        }
+      }
     }
+  }
+}
+
+private struct AccentThemePreviewCard: View {
+  let theme: ThemeAccent
+  let isSelected: Bool
+  let action: () -> Void
+  @Environment(\.colorScheme) private var colorScheme
+
+  private var surface: Color {
+    Color(uiColor: colorScheme == .dark ? theme.darkSurfaceColor : theme.lightSurfaceColor)
+  }
+
+  private var accent: Color {
+    Color(uiColor: theme.primaryColor)
+  }
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: 14) {
+        VStack(alignment: .leading, spacing: 4) {
+          Text(theme.label)
+            .font(.headline.weight(.bold))
+            .foregroundStyle(.primary)
+          Text(isSelected ? "Seleccionado" : "Color de interfaz")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+        }
+
+        Spacer(minLength: 12)
+
+        VStack(spacing: 4) {
+          Capsule()
+            .fill(accent)
+            .frame(width: 92, height: 14)
+          HStack(spacing: 4) {
+            RoundedRectangle(cornerRadius: 5)
+              .fill(surface)
+            RoundedRectangle(cornerRadius: 5)
+              .fill(surface)
+            RoundedRectangle(cornerRadius: 5)
+              .fill(accent.opacity(0.72))
+          }
+          .frame(width: 92, height: 21)
+        }
+        .padding(7)
+        .background(surface, in: RoundedRectangle(cornerRadius: 12))
+      }
+      .padding(14)
+      .background(surface, in: RoundedRectangle(cornerRadius: 18))
+      .overlay {
+        RoundedRectangle(cornerRadius: 18)
+          .stroke(isSelected ? accent : Color.secondary.opacity(0.28), lineWidth: isSelected ? 2 : 1)
+      }
+    }
+    .buttonStyle(.plain)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
   }
 }
 
@@ -416,7 +468,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.99"
+      appVersion: "0.1.100"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 

@@ -5,6 +5,7 @@ enum ThemeAccent: String, CaseIterable, Identifiable {
   case blue
   case red
   case amber
+  case graphite
 
   var id: String { rawValue }
 
@@ -13,6 +14,43 @@ enum ThemeAccent: String, CaseIterable, Identifiable {
     case .blue: "Azul"
     case .red: "Rojo oscuro"
     case .amber: "Ámbar"
+    case .graphite: "Grafito"
+    }
+  }
+
+  var primaryColor: UIColor {
+    switch self {
+    case .blue: UIColor(red: 0.00, green: 0.33, blue: 0.62, alpha: 1)
+    case .red: UIColor(red: 0.56, green: 0.14, blue: 0.18, alpha: 1)
+    case .amber: UIColor(red: 0.52, green: 0.31, blue: 0.00, alpha: 1)
+    case .graphite: UIColor(red: 0.19, green: 0.23, blue: 0.28, alpha: 1)
+    }
+  }
+
+  var secondaryColor: UIColor {
+    switch self {
+    case .blue: UIColor(red: 0.16, green: 0.31, blue: 0.42, alpha: 1)
+    case .red: UIColor(red: 0.37, green: 0.20, blue: 0.23, alpha: 1)
+    case .amber: UIColor(red: 0.39, green: 0.30, blue: 0.10, alpha: 1)
+    case .graphite: UIColor(red: 0.13, green: 0.16, blue: 0.20, alpha: 1)
+    }
+  }
+
+  var lightSurfaceColor: UIColor {
+    switch self {
+    case .blue: UIColor(red: 0.929, green: 0.957, blue: 0.976, alpha: 1)
+    case .red: UIColor(red: 0.984, green: 0.941, blue: 0.945, alpha: 1)
+    case .amber: UIColor(red: 0.984, green: 0.961, blue: 0.910, alpha: 1)
+    case .graphite: UIColor(red: 0.941, green: 0.953, blue: 0.965, alpha: 1)
+    }
+  }
+
+  var darkSurfaceColor: UIColor {
+    switch self {
+    case .blue: UIColor(red: 0.067, green: 0.110, blue: 0.145, alpha: 1)
+    case .red: UIColor(red: 0.133, green: 0.078, blue: 0.094, alpha: 1)
+    case .amber: UIColor(red: 0.129, green: 0.102, blue: 0.055, alpha: 1)
+    case .graphite: UIColor(red: 0.102, green: 0.125, blue: 0.157, alpha: 1)
     }
   }
 }
@@ -44,21 +82,9 @@ enum GymTheme {
     case .canvas:
       return usesDarkCanvas ? .black : .white
     case .surface:
-      return usesDarkCanvas
-        ? UIColor(red: 0.102, green: 0.125, blue: 0.157, alpha: 1)
-        : UIColor(red: 0.941, green: 0.953, blue: 0.965, alpha: 1)
-    case .accent:
-      switch accent {
-      case .blue: return UIColor(red: 0.00, green: 0.33, blue: 0.62, alpha: 1)
-      case .red: return UIColor(red: 0.56, green: 0.14, blue: 0.18, alpha: 1)
-      case .amber: return UIColor(red: 0.52, green: 0.31, blue: 0.00, alpha: 1)
-      }
-    case .accentSecondary:
-      switch accent {
-      case .blue: return UIColor(red: 0.16, green: 0.31, blue: 0.42, alpha: 1)
-      case .red: return UIColor(red: 0.37, green: 0.20, blue: 0.23, alpha: 1)
-      case .amber: return UIColor(red: 0.39, green: 0.30, blue: 0.10, alpha: 1)
-      }
+      return usesDarkCanvas ? accent.darkSurfaceColor : accent.lightSurfaceColor
+    case .accent: return accent.primaryColor
+    case .accentSecondary: return accent.secondaryColor
     }
   }
 }
