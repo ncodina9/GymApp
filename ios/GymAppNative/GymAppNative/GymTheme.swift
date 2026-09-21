@@ -25,12 +25,12 @@ private enum ThemeColor {
 }
 
 enum GymTheme {
-  nonisolated(unsafe) private static var appearance: AppAppearance = .system
-  nonisolated(unsafe) private static var accent: ThemeAccent = .blue
+  private static var appearance: AppAppearance {
+    AppAppearance(rawValue: UserDefaults.standard.string(forKey: "appearanceTheme") ?? "system") ?? .system
+  }
 
-  static func apply(appearance: AppAppearance, accent: ThemeAccent) {
-    Self.appearance = appearance
-    Self.accent = accent
+  private static var accent: ThemeAccent {
+    ThemeAccent(rawValue: UserDefaults.standard.string(forKey: "themeAccent") ?? "blue") ?? .blue
   }
 
   fileprivate static func color(_ role: ThemeColor, traits: UITraitCollection) -> UIColor {
@@ -42,9 +42,7 @@ enum GymTheme {
 
     switch role {
     case .canvas:
-      return usesDarkCanvas
-        ? UIColor(red: 0.055, green: 0.067, blue: 0.086, alpha: 1)
-        : UIColor(red: 0.949, green: 0.961, blue: 0.973, alpha: 1)
+      return usesDarkCanvas ? .black : .white
     case .surface:
       return usesDarkCanvas
         ? UIColor(red: 0.102, green: 0.125, blue: 0.157, alpha: 1)

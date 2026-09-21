@@ -1329,6 +1329,8 @@ Actualización v0.1.96: la tarjeta superior de las vistas de consulta prolonga s
 
 Actualización v0.1.97: se simplifica Apariencia en dos decisiones independientes: `Sistema`, `Claro` u `Oscuro` para el lienzo y las superficies; y `Azul`, `Rojo oscuro` o `Ámbar` para el color de resalte. Se retiran las variantes White, Light, Dark y Black, por lo que el modo claro conserva siempre el gris sutil de fondo. El acento elegido alimenta cabeceras, controles, progreso y una segunda variante desaturada para los fondos de las barras temporizadas y agrupaciones secundarias. Las copias JSON incluyen opcionalmente el color para preservar la preferencia sin incompatibilizar backups existentes. La curvatura inferior de las cabeceras aumenta a 48 pt.
 
+Actualización v0.1.98: los colores del tema se resuelven directamente desde las preferencias persistentes durante el dibujado, por lo que cambiar Azul, Rojo oscuro o Ámbar actualiza de inmediato cabeceras, selectores, controles, progreso y barras temporizadas sin tener que salir de la pantalla ni cambiar la apariencia. El lienzo de aplicación y las zonas seguras superior e inferior vuelven a blanco puro para apariencia clara y negro puro para apariencia oscura.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.
