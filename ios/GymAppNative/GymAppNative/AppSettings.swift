@@ -29,12 +29,11 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 struct SettingsView: View {
   let plan: TrainingPlan
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
-  @AppStorage("lightPalette") private var lightPaletteRaw = LightPalette.white.rawValue
-  @AppStorage("darkPalette") private var darkPaletteRaw = DarkPalette.dark.rawValue
+  @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
   @Environment(\.dismiss) private var dismiss
 
   private var themeKey: String {
-    "\(appearanceRaw)-\(lightPaletteRaw)-\(darkPaletteRaw)"
+    "\(appearanceRaw)-\(accentRaw)"
   }
 
   var body: some View {
@@ -43,7 +42,7 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.96")
+        Text("v0.1.97")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -84,37 +83,21 @@ private struct SettingsLink<Destination: View>: View {
 
 private struct AppearanceSettingsView: View {
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
-  @AppStorage("lightPalette") private var lightPaletteRaw = LightPalette.white.rawValue
-  @AppStorage("darkPalette") private var darkPaletteRaw = DarkPalette.dark.rawValue
+  @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
   @Environment(\.dismiss) private var dismiss
-
-  private var appearance: AppAppearance {
-    AppAppearance(rawValue: appearanceRaw) ?? .system
-  }
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
         AppearanceSegmentedSelector(selection: $appearanceRaw)
 
-        if appearance == .system || appearance == .light {
-          ThemeVariantSection(
-            title: appearance == .system ? "Claro" : "Variante clara",
-            selection: $lightPaletteRaw,
-            options: LightPalette.allCases.map(\.rawValue),
-            label: { LightPalette(rawValue: $0)?.label ?? $0 }
-          )
-        }
-
-        if appearance == .system || appearance == .dark {
-          ThemeVariantSection(
-            title: appearance == .system ? "Oscuro" : "Variante oscura",
-            selection: $darkPaletteRaw,
-            options: DarkPalette.allCases.map(\.rawValue),
-            label: { DarkPalette(rawValue: $0)?.label ?? $0 }
-          )
-        }
+        ThemeVariantSection(
+          title: "Color de resalte",
+          selection: $accentRaw,
+          options: ThemeAccent.allCases.map(\.rawValue),
+          label: { ThemeAccent(rawValue: $0)?.label ?? $0 }
+        )
 
         Toggle("Mantener la pantalla activa", isOn: $keepScreenAwake)
           .tint(Color.gymAccent)
@@ -213,6 +196,7 @@ private struct ExportSettingsView: View {
   @Query private var completedRecords: [CompletedWorkoutRecord]
   @Query private var activeRecords: [ActiveWorkoutRecord]
   @AppStorage("appearanceTheme") private var appearanceTheme = AppAppearance.system.rawValue
+  @AppStorage("themeAccent") private var accentTheme = ThemeAccent.blue.rawValue
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
@@ -385,10 +369,11 @@ private struct ExportSettingsView: View {
     (try? TrainingBackup.write(
       plan: plan,
       appearanceTheme: appearanceTheme,
+      accentTheme: accentTheme,
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.96"
+      appVersion: "0.1.97"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 

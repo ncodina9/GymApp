@@ -4,50 +4,31 @@ import SwiftData
 @main
 struct GymAppNativeApp: App {
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
-  @AppStorage("lightPalette") private var lightPaletteRaw = LightPalette.white.rawValue
-  @AppStorage("darkPalette") private var darkPaletteRaw = DarkPalette.dark.rawValue
+  @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
 
   private var appearance: AppAppearance {
     AppAppearance(rawValue: appearanceRaw) ?? .system
   }
 
-  private var lightPalette: LightPalette {
-    LightPalette(rawValue: lightPaletteRaw) ?? .white
-  }
-
-  private var darkPalette: DarkPalette {
-    DarkPalette(rawValue: darkPaletteRaw) ?? .dark
-  }
-
-  private var windowCanvas: Color {
-    Color(uiColor: windowCanvasColor)
-  }
-
-  private var windowCanvasColor: UIColor {
-    let usesDarkCanvas: Bool = switch appearance {
-    case .light: false
-    case .dark: true
-    case .system: UITraitCollection.current.userInterfaceStyle == .dark
-    }
-    return usesDarkCanvas ? .black : .white
+  private var accent: ThemeAccent {
+    ThemeAccent(rawValue: accentRaw) ?? .blue
   }
 
   var body: some Scene {
     WindowGroup {
       ZStack {
-        SafeAreaCanvas(color: windowCanvas)
+        SafeAreaCanvas(color: .gymCanvas)
         ContentView()
       }
         .preferredColorScheme(appearance.colorScheme)
-        .background(windowCanvas, ignoresSafeAreaEdges: .all)
-        .toolbarBackground(windowCanvas, for: .statusBar)
-        .toolbarColorScheme(appearance.colorScheme, for: .statusBar)
+        .background(Color.gymCanvas, ignoresSafeAreaEdges: .all)
+        .toolbarBackground(.hidden, for: .statusBar)
+        .toolbarColorScheme(.dark, for: .statusBar)
         .tint(.gymAccent)
         .onAppear(perform: applyTheme)
         .onChange(of: appearanceRaw) { _, _ in applyTheme() }
-        .onChange(of: lightPaletteRaw) { _, _ in applyTheme() }
-        .onChange(of: darkPaletteRaw) { _, _ in applyTheme() }
+        .onChange(of: accentRaw) { _, _ in applyTheme() }
         .onAppear { UIApplication.shared.isIdleTimerDisabled = keepScreenAwake }
         .onChange(of: keepScreenAwake) { _, enabled in
           UIApplication.shared.isIdleTimerDisabled = enabled
@@ -57,7 +38,7 @@ struct GymAppNativeApp: App {
   }
 
   private func applyTheme() {
-    GymTheme.apply(appearance: appearance, lightPalette: lightPalette, darkPalette: darkPalette)
+    GymTheme.apply(appearance: appearance, accent: accent)
   }
 }
 

@@ -1107,7 +1107,7 @@ private struct RestCountdownBar: View {
     }) {
       ZStack(alignment: .leading) {
         RoundedRectangle(cornerRadius: 30)
-          .fill(isFinished ? Color.gymSuccess : Color.gymAccent.opacity(0.6))
+          .fill(isFinished ? Color.gymSuccess : Color.gymAccentSecondary)
 
         GeometryReader { geometry in
           Rectangle()
@@ -1778,7 +1778,7 @@ private struct TimedSetTarget: View {
         } label: {
           ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 30)
-              .fill(isFinished ? Color.gymSuccess : Color.gymAccent.opacity(0.6))
+              .fill(isFinished ? Color.gymSuccess : Color.gymAccentSecondary)
 
             GeometryReader { geometry in
               Rectangle()

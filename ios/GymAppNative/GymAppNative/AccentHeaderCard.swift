@@ -43,8 +43,8 @@ struct AccentHeaderCard: View {
     .background {
       UnevenRoundedRectangle(
         topLeadingRadius: 0,
-        bottomLeadingRadius: 36,
-        bottomTrailingRadius: 36,
+        bottomLeadingRadius: 48,
+        bottomTrailingRadius: 48,
         topTrailingRadius: 0,
         style: .continuous
       )

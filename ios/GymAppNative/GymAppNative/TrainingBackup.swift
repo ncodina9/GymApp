@@ -22,7 +22,11 @@ enum TrainingBackup {
 
   struct AppInfo: Codable { let name: String; let version: String }
   struct Source: Codable { let platform: String; let localStores: [String] }
-  struct Settings: Codable { let appearanceTheme: String; let keepScreenAwake: Bool }
+  struct Settings: Codable {
+    let appearanceTheme: String
+    let accentTheme: String?
+    let keepScreenAwake: Bool
+  }
 
   struct ActiveWorkout: Codable {
     let selectedSessionId: String
@@ -143,6 +147,7 @@ enum TrainingBackup {
   static func write(
     plan: TrainingPlan,
     appearanceTheme: String,
+    accentTheme: String,
     keepScreenAwake: Bool,
     activeWorkout: ActiveWorkoutSnapshot?,
     completedRecords: [CompletedWorkoutRecord],
@@ -158,7 +163,11 @@ enum TrainingBackup {
       plan: try JSONDecoder()
         .decode(JSONValue.self, from: JSONEncoder().encode(plan))
         .removingNativeOnlyPlanFields(),
-      settings: Settings(appearanceTheme: appearanceTheme, keepScreenAwake: keepScreenAwake),
+      settings: Settings(
+        appearanceTheme: appearanceTheme,
+        accentTheme: accentTheme,
+        keepScreenAwake: keepScreenAwake
+      ),
       activeWorkout: activeState,
       sessions: completedRecords.compactMap { session(from: $0, plan: plan) }
     )
