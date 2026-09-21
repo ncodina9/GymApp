@@ -42,6 +42,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P1 | S | Reordenar el siguiente bloque durante un descanso. | Tras acabar un descanso se puede priorizar un bloque no iniciado; no se crean series saltadas, el bloque originalmente propuesto permanece pendiente y el bloque elegido conserva todas sus series consecutivas. |
 | [x] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la entrada en la primera serie y compara con el estimado del plan, sin contar movilidad. |
 | [x] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, pantalla activa, consulta futura, CSV por sesión, backup/importación JSON y borrado confirmado están accesibles. |
+| [x] | P1 | XS | Descartar solo el entrenamiento activo. | Exportación ofrece una acción confirmada que elimina el borrador de SwiftData sin borrar sesiones terminadas ni importadas. |
 | [ ] | P1 | S | Restaurar el gesto de volver desde el borde izquierdo. | En destinos de `NavigationStack`, el deslizamiento lateral vuelve al destino anterior sin competir con los gestos internos ni con el botón inferior. |
 
 ## Pulido posterior a v1

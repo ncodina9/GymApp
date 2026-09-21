@@ -1313,6 +1313,8 @@ Actualización v0.1.88: se registra como pendiente P1 la recuperación del gesto
 
 Actualización v0.1.89: se valida en dispositivo la importación del backup real de las dos primeras semanas desde la PWA y el avance de `Hoy` a la semana 3. Se incorpora el Hito 27 de companion Apple Watch: la primera versión tendrá el iPhone como estado autoritativo y el reloj resolverá la interacción inmediata de serie, salto y descanso con respuesta háptica.
 
+Actualización v0.1.90: Exportación muestra, solo cuando existe un borrador, la acción confirmada `Descartar entrenamiento en curso`. Elimina exclusivamente la instantánea activa de SwiftData y conserva sesiones finalizadas, sesiones importadas y backups ya creados.
+
 ### Hito 27: Companion Apple Watch
 
 Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin duplicar la lógica ni comprometer el registro que ya funciona en el iPhone.

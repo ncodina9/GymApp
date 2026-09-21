@@ -43,7 +43,7 @@ struct SettingsView: View {
         SettingsLink(title: "Apariencia", detail: "Tema y pantalla activa", destination: AppearanceSettingsView())
         SettingsLink(title: "Próximos entrenamientos", detail: "Consulta del plan pendiente", destination: UpcomingWorkoutsView(plan: plan))
         SettingsLink(title: "Exportación", detail: "Backup, CSV y datos locales", destination: ExportSettingsView(plan: plan))
-        Text("v0.1.89")
+        Text("v0.1.90")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -220,6 +220,7 @@ private struct ExportSettingsView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
   @State private var showsDeleteConfirmation = false
+  @State private var showsDiscardActiveConfirmation = false
   @State private var showsImporter = false
   @State private var importMessage: String?
 
@@ -241,6 +242,13 @@ private struct ExportSettingsView: View {
         .frame(maxWidth: .infinity, minHeight: 56)
         .foregroundStyle(.white)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+
+        if !activeRecords.isEmpty {
+          Button("Descartar entrenamiento en curso", role: .destructive) {
+            showsDiscardActiveConfirmation = true
+          }
+          .frame(maxWidth: .infinity, minHeight: 56)
+        }
 
         Button("Borrar todos los datos locales", role: .destructive) {
           showsDeleteConfirmation = true
@@ -293,6 +301,12 @@ private struct ExportSettingsView: View {
       Button("Borrar", role: .destructive, action: clearLocalData)
     } message: {
       Text("Se eliminarán los entrenamientos en curso y las sesiones nativas guardadas.")
+    }
+    .alert("Descartar entrenamiento en curso", isPresented: $showsDiscardActiveConfirmation) {
+      Button("Cancelar", role: .cancel) {}
+      Button("Descartar", role: .destructive, action: discardActiveWorkout)
+    } message: {
+      Text("Se borrará únicamente el entrenamiento en curso. Las sesiones terminadas e importadas se conservarán.")
     }
     .alert("Importación", isPresented: Binding(
       get: { importMessage != nil },
@@ -378,7 +392,7 @@ private struct ExportSettingsView: View {
       keepScreenAwake: keepScreenAwake,
       activeWorkout: ActiveWorkoutStore.load(from: activeRecords),
       completedRecords: completedRecords,
-      appVersion: "0.1.89"
+      appVersion: "0.1.90"
     )) ?? FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-full-training-backup.json")
   }
 
@@ -391,6 +405,10 @@ private struct ExportSettingsView: View {
     ActiveWorkoutStore.clear(in: modelContext)
     completedRecords.forEach(modelContext.delete)
     try? modelContext.save()
+  }
+
+  private func discardActiveWorkout() {
+    ActiveWorkoutStore.clear(in: modelContext)
   }
 
   private func importBackup(_ result: Result<URL, Error>) {
