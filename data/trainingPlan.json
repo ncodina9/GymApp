@@ -4589,11 +4589,11 @@
       ]
     },
     {
-      "sessionId": "2026-09-30-martes-pierna-fuerza-controlada",
-      "date": "2026-09-30",
+      "sessionId": "2026-09-29-martes-pierna-fuerza-controlada",
+      "date": "2026-09-29",
       "week": 4,
-      "weekday": "miércoles",
-      "sessionLabel": "Miércoles - Pierna fuerza controlada",
+      "weekday": "martes",
+      "sessionLabel": "Martes - Pierna fuerza controlada",
       "label": "Pierna fuerza controlada",
       "estimatedMinutes": 60,
       "focus": "Sentadilla, bisagra e hip thrust",
