@@ -30,10 +30,11 @@ struct SettingsView: View {
   let plan: TrainingPlan
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
   @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
+  @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
   @Environment(\.dismiss) private var dismiss
 
   private var themeKey: String {
-    "\(appearanceRaw)-\(accentRaw)"
+    "\(appearanceRaw)-\(accentRaw)-\(premiumSchemeRaw)"
   }
 
   var body: some View {
@@ -130,6 +131,7 @@ private struct SettingsRow<Destination: View>: View {
 private struct AppearanceSettingsView: View {
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
   @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
+  @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
   @Environment(\.dismiss) private var dismiss
 
@@ -138,10 +140,12 @@ private struct AppearanceSettingsView: View {
       VStack(alignment: .leading, spacing: 20) {
         AppearanceSegmentedSelector(selection: $appearanceRaw)
 
-        AccentThemePreviewList(selection: $accentRaw)
+        AccentThemePreviewList(selection: $accentRaw, premiumSelection: $premiumSchemeRaw)
+
+        PremiumColorSchemePreviewList(selection: $premiumSchemeRaw)
 
         Toggle("Mantener la pantalla activa", isOn: $keepScreenAwake)
-          .tint(Color.gymAccent)
+          .toggleStyle(ThemeToggleStyle())
       }
       .padding(16)
       .padding(.bottom, 88)
@@ -151,12 +155,41 @@ private struct AppearanceSettingsView: View {
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Apariencia") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
-    .id("appearance-\(appearanceRaw)-\(accentRaw)")
+    .id("appearance-\(appearanceRaw)-\(accentRaw)-\(premiumSchemeRaw)")
+  }
+}
+
+private struct ThemeToggleStyle: ToggleStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    HStack(spacing: 12) {
+      configuration.label
+      Spacer(minLength: 12)
+      Button {
+        configuration.isOn.toggle()
+      } label: {
+        Capsule()
+          .fill(configuration.isOn ? Color.gymControlSelectionFill : Color.secondary.opacity(0.16))
+          .frame(width: 52, height: 32)
+          .overlay {
+            Capsule()
+              .stroke(configuration.isOn ? Color.gymAccent : Color.secondary.opacity(0.42), lineWidth: 1)
+          }
+          .overlay(alignment: configuration.isOn ? .trailing : .leading) {
+            Circle()
+              .fill(configuration.isOn ? Color.gymControlSelectionForeground : Color.primary)
+              .padding(4)
+          }
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel("Mantener la pantalla activa")
+      .accessibilityValue(configuration.isOn ? "Activado" : "Desactivado")
+    }
   }
 }
 
 private struct AccentThemePreviewList: View {
   @Binding var selection: String
+  @Binding var premiumSelection: String
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -165,13 +198,94 @@ private struct AccentThemePreviewList: View {
         .foregroundStyle(.secondary)
 
       ForEach(ThemeAccent.allCases) { theme in
-        AccentThemePreviewCard(theme: theme, isSelected: selection == theme.rawValue) {
+        AccentThemePreviewCard(
+          theme: theme,
+          isSelected: premiumSelection.isEmpty && selection == theme.rawValue
+        ) {
           withAnimation(.easeInOut(duration: 0.2)) {
             selection = theme.rawValue
+            premiumSelection = ""
           }
         }
       }
     }
+  }
+}
+
+private struct PremiumColorSchemePreviewList: View {
+  @Binding var selection: String
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("Esquemas premium")
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(.secondary)
+
+      Text("El fondo y el resalte se invierten entre la apariencia clara y la oscura.")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+
+      ForEach(PremiumColorScheme.allCases) { scheme in
+        PremiumColorSchemePreviewCard(
+          scheme: scheme,
+          isSelected: selection == scheme.rawValue
+        ) {
+          withAnimation(.easeInOut(duration: 0.2)) {
+            selection = scheme.rawValue
+          }
+        }
+      }
+    }
+  }
+}
+
+private struct PremiumColorSchemePreviewCard: View {
+  let scheme: PremiumColorScheme
+  let isSelected: Bool
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: 14) {
+        VStack(alignment: .leading, spacing: 4) {
+          Text(scheme.label)
+            .font(.headline.weight(.bold))
+          Text(isSelected ? "Seleccionado" : "Fondo y resalte adaptativos")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+        }
+
+        Spacer(minLength: 12)
+
+        HStack(spacing: 6) {
+          schemeSwatch(background: scheme.lightColor, accent: scheme.darkColor)
+          schemeSwatch(background: scheme.darkColor, accent: scheme.lightColor)
+        }
+      }
+      .padding(14)
+      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+      .overlay {
+        RoundedRectangle(cornerRadius: 18)
+          .stroke(isSelected ? Color.gymAccent : Color.secondary.opacity(0.28), lineWidth: isSelected ? 2 : 1)
+      }
+    }
+    .buttonStyle(.plain)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+  }
+
+  private func schemeSwatch(background: UIColor, accent: UIColor) -> some View {
+    RoundedRectangle(cornerRadius: 10)
+      .fill(Color(uiColor: background))
+      .frame(width: 46, height: 42)
+      .overlay {
+        Capsule()
+          .fill(Color(uiColor: accent))
+          .frame(width: 28, height: 8)
+      }
+      .overlay {
+        RoundedRectangle(cornerRadius: 10)
+          .stroke(Color.primary.opacity(0.18), lineWidth: 1)
+      }
   }
 }
 
@@ -300,6 +414,7 @@ private struct ExportSettingsView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var showsDeleteConfirmation = false
   @State private var showsDiscardActiveConfirmation = false
+  @State private var recordPendingDeletion: CompletedWorkoutRecord?
   @State private var showsImporter = false
   @State private var importMessage: String?
 
@@ -310,8 +425,11 @@ private struct ExportSettingsView: View {
           Label("Exportar backup JSON", systemImage: "archivebox")
         }
         .frame(maxWidth: .infinity, minHeight: 56)
-        .foregroundStyle(.white)
-        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+        .foregroundStyle(Color.gymAccent)
+        .background(Color.gymSurface, in: Capsule())
+        .overlay {
+          Capsule().stroke(Color.gymAccent, lineWidth: 1.5)
+        }
 
         Button {
           showsImporter = true
@@ -319,20 +437,27 @@ private struct ExportSettingsView: View {
           Label("Importar backup JSON", systemImage: "square.and.arrow.down")
         }
         .frame(maxWidth: .infinity, minHeight: 56)
-        .foregroundStyle(.white)
-        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+        .foregroundStyle(Color.gymAccent)
+        .background(Color.gymSurface, in: Capsule())
+        .overlay {
+          Capsule().stroke(Color.gymAccent, lineWidth: 1.5)
+        }
 
         if !activeRecords.isEmpty {
           Button("Descartar entrenamiento en curso", role: .destructive) {
             showsDiscardActiveConfirmation = true
           }
           .frame(maxWidth: .infinity, minHeight: 56)
+          .buttonStyle(.bordered)
+          .tint(Color.gymDanger)
         }
 
         Button("Borrar todos los datos locales", role: .destructive) {
           showsDeleteConfirmation = true
         }
         .frame(maxWidth: .infinity, minHeight: 56)
+        .buttonStyle(.bordered)
+        .tint(Color.gymDanger)
 
         Text("Sesiones guardadas: \(completedRecords.count)")
           .font(.headline)
@@ -342,28 +467,12 @@ private struct ExportSettingsView: View {
           .foregroundStyle(.secondary)
 
         ForEach(completedRecords.sorted { $0.completedAt > $1.completedAt }) { record in
-          if let url = csvURL(for: record) {
-            ShareLink(item: url) {
-              exportCardContent(for: record, actionTitle: "Exportar CSV", systemImage: "square.and.arrow.up")
-            }
-            .frame(maxWidth: .infinity, minHeight: 56)
-            .foregroundStyle(.white)
-            .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
-          } else {
-            VStack(alignment: .leading, spacing: 4) {
-              Text(sessionDetails(for: record).date)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-              Text(sessionDetails(for: record).label)
-                .font(.headline.weight(.bold))
-              Text("Registro sin detalle. Solo las sesiones finalizadas desde v0.1.71 pueden reexportarse.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
-          }
+          SavedWorkoutCard(
+            date: sessionDetails(for: record).date,
+            label: sessionDetails(for: record).label,
+            csvURL: csvURL(for: record),
+            deleteAction: { recordPendingDeletion = record }
+          )
         }
 
       }
@@ -385,6 +494,23 @@ private struct ExportSettingsView: View {
       Button("Descartar", role: .destructive, action: discardActiveWorkout)
     } message: {
       Text("Se borrará únicamente el entrenamiento en curso. Las sesiones terminadas e importadas se conservarán.")
+    }
+    .alert(
+      "Borrar entrenamiento guardado",
+      isPresented: Binding(
+        get: { recordPendingDeletion != nil },
+        set: { if !$0 { recordPendingDeletion = nil } }
+      ),
+      presenting: recordPendingDeletion
+    ) { record in
+      Button("Cancelar", role: .cancel) {
+        recordPendingDeletion = nil
+      }
+      Button("Borrar", role: .destructive) {
+        delete(record)
+      }
+    } message: { record in
+      Text("Se eliminará \(sessionDetails(for: record).label) de los datos locales.")
     }
     .alert("Importación", isPresented: Binding(
       get: { importMessage != nil },
@@ -409,32 +535,6 @@ private struct ExportSettingsView: View {
           )
     else { return nil }
     return url
-  }
-
-  private func exportCardContent(
-    for record: CompletedWorkoutRecord,
-    actionTitle: String,
-    systemImage: String
-  ) -> some View {
-    let details = sessionDetails(for: record)
-    return HStack(spacing: 12) {
-      VStack(alignment: .leading, spacing: 3) {
-        Text(details.date)
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(.white.opacity(0.78))
-        Text(details.label)
-          .font(.headline.weight(.bold))
-          .lineLimit(1)
-        Text(actionTitle)
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(.white.opacity(0.82))
-      }
-      Spacer(minLength: 0)
-      Image(systemName: systemImage)
-        .font(.headline.weight(.bold))
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 18)
   }
 
   private func sessionDetails(for record: CompletedWorkoutRecord) -> (date: String, label: String) {
@@ -486,6 +586,12 @@ private struct ExportSettingsView: View {
     try? modelContext.save()
   }
 
+  private func delete(_ record: CompletedWorkoutRecord) {
+    modelContext.delete(record)
+    try? modelContext.save()
+    recordPendingDeletion = nil
+  }
+
   private func discardActiveWorkout() {
     ActiveWorkoutStore.clear(in: modelContext)
   }
@@ -502,6 +608,53 @@ private struct ExportSettingsView: View {
       importMessage = "Importadas: \(result.imported). Ya existentes: \(result.duplicates)."
     } catch {
       importMessage = error.localizedDescription
+    }
+  }
+}
+
+private struct SavedWorkoutCard: View {
+  let date: String
+  let label: String
+  let csvURL: URL?
+  let deleteAction: () -> Void
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      VStack(alignment: .leading, spacing: 4) {
+        Text(date)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Text(label)
+          .font(.headline.weight(.bold))
+          .lineLimit(1)
+      }
+
+      HStack(spacing: 10) {
+        if let csvURL {
+          ShareLink(item: csvURL) {
+            Label("Exportar CSV", systemImage: "square.and.arrow.up")
+          }
+          .buttonStyle(.bordered)
+          .tint(Color.gymAccent)
+        } else {
+          Text("Registro sin detalle. Solo las sesiones finalizadas desde v0.1.71 pueden reexportarse.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+
+        Spacer(minLength: 0)
+
+        Button("Borrar", role: .destructive, action: deleteAction)
+          .buttonStyle(.bordered)
+          .tint(Color.gymDanger)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(14)
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+    .overlay {
+      RoundedRectangle(cornerRadius: 18)
+        .stroke(Color.gymAccent, lineWidth: 1.5)
     }
   }
 }

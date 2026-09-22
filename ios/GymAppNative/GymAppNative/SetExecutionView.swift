@@ -368,9 +368,9 @@ private struct WorkoutProgressBar: View {
   var body: some View {
     GeometryReader { geometry in
       ZStack(alignment: .leading) {
-        Rectangle().fill(.clear)
+        Rectangle().fill(Color.gymCanvas)
         Rectangle()
-          .fill(Color.gymAccent)
+          .fill(Color.gymProgressFill)
           .frame(width: geometry.size.width * progress)
           .animation(.easeInOut(duration: 0.35), value: progress)
       }
@@ -417,18 +417,6 @@ private struct WorkingSetView: View {
             supersetSize: supersetSize(for: exercise)
           )
 
-          MaterialSelector(
-            selection: Binding(
-              get: { activeEquipment },
-              set: { selectedEquipment in
-                _ = execution.selectEquipment(selectedEquipment, for: locator)
-                onExecutionChanged()
-              }
-            ),
-            options: equipmentOptions(for: exercise),
-            unavailableOptions: unavailableEquipment(for: exercise)
-          )
-
           if trainingSet.type == .timed {
             TimedSetTarget(
               seconds: activeTargets?.durationSeconds ?? 0,
@@ -444,6 +432,17 @@ private struct WorkingSetView: View {
                 label: "Reps",
                 value: activeTargets?.reps.map(String.init) ?? "-",
                 action: { editField = .reps }
+              )
+              MaterialSelector(
+                selection: Binding(
+                  get: { activeEquipment },
+                  set: { selectedEquipment in
+                    _ = execution.selectEquipment(selectedEquipment, for: locator)
+                    onExecutionChanged()
+                  }
+                ),
+                options: equipmentOptions(for: exercise),
+                unavailableOptions: unavailableEquipment(for: exercise)
               )
               SetTargetCard(
                 label: "Peso",
@@ -649,8 +648,9 @@ private struct FeedbackView: View {
         Button("Registrar serie", action: onRegister)
           .font(.headline.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
-          .foregroundStyle(.white)
-          .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+          .foregroundStyle(Color.gymControlSelectionForeground)
+          .background(Color.gymControlSelectionFill, in: Capsule())
+          .overlay { Capsule().stroke(Color.gymAccent, lineWidth: 1) }
           .buttonStyle(.plain)
       }
     }
@@ -667,7 +667,7 @@ private struct FeedbackHeader: View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Evaluar serie")
         .font(.title2.weight(.bold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
 
       HStack(alignment: .top, spacing: 12) {
         VStack(alignment: .leading, spacing: 5) {
@@ -731,8 +731,8 @@ private struct FeedbackChip: View {
       .lineLimit(1)
       .padding(.horizontal, 8)
       .padding(.vertical, 4)
-      .foregroundStyle(accent ? Color.gymAccent : .secondary)
-      .background(accent ? Color.gymAccent.opacity(0.12) : Color.secondary.opacity(0.12), in: Capsule())
+      .foregroundStyle(accent ? Color.gymControlSelectionForeground : Color.gymSecondaryText)
+      .background(accent ? Color.gymControlSelectionFill : Color.secondary.opacity(0.12), in: Capsule())
   }
 }
 
@@ -743,11 +743,11 @@ private struct FeedbackMetric: View {
 
   var body: some View {
     VStack(spacing: 5) {
-      Text(label).font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+      Text(label).font(.subheadline.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
       Text(value).font(.system(size: 31, weight: .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
       Text(footer ?? "Material")
         .font(.caption2.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
         .lineLimit(1)
         .opacity(footer == nil ? 0 : 1)
     }
@@ -764,7 +764,7 @@ private struct FeedbackStepper: View {
 
   var body: some View {
     HStack(spacing: 14) {
-      Text(label).font(.headline.weight(.bold)).foregroundStyle(.secondary)
+      Text(label).font(.headline.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
       Spacer()
       adjustmentButton(symbol: "minus", accessibilityLabel: "Bajar RIR") {
         value = max(range.lowerBound, value - 1)
@@ -816,7 +816,7 @@ private struct PainFeedbackBlock: View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Molestias")
         .font(.subheadline.weight(.bold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
 
       ScrollView(.vertical) {
         VStack(spacing: 8) {
@@ -841,14 +841,14 @@ private struct PainLevelControl: View {
 
   var body: some View {
     HStack(spacing: 6) {
-      Text(label).font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+      Text(label).font(.subheadline.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
       Spacer()
       ForEach(0 ... 3, id: \.self) { level in
         Button("\(level)") { value = level }
           .font(.subheadline.weight(.bold))
           .frame(width: 48, height: 48)
-          .foregroundStyle(value == level ? .white : .primary)
-          .background(value == level ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+          .foregroundStyle(value == level ? Color.gymControlSelectionForeground : .primary)
+          .background(value == level ? Color.gymControlSelectionFill : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
           .overlay {
             RoundedRectangle(cornerRadius: 10)
               .stroke(value == level ? Color.gymAccent : Color.secondary.opacity(0.38), lineWidth: 1)
@@ -869,8 +869,8 @@ private struct NotePicker: View {
         Button(option) { note = option }
           .font(.caption.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 48)
-          .foregroundStyle(note == option ? .white : .primary)
-          .background(note == option ? Color.gymAccent : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+          .foregroundStyle(note == option ? Color.gymControlSelectionForeground : .primary)
+          .background(note == option ? Color.gymControlSelectionFill : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
           .overlay {
             RoundedRectangle(cornerRadius: 8)
               .stroke(note == option ? Color.gymAccent : Color.secondary.opacity(0.38), lineWidth: 1)
@@ -914,7 +914,7 @@ private struct ExerciseReviewView: View {
       Button(isFinalReview ? "Finalizar" : "Continuar", action: onContinue)
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
-        .foregroundStyle(.white)
+        .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
         .buttonStyle(.plain)
     }
@@ -1026,6 +1026,7 @@ private struct RestView: View {
   let onContinue: () -> Void
   let onSelectBlock: (Int) -> Void
   @State private var hasAnnouncedCompletion = false
+  @State private var completionWaveID = 0
 
   private var hasNextSuperset: Bool {
     execution.exercise(for: next)?.supersetID != nil
@@ -1035,7 +1036,12 @@ private struct RestView: View {
     TimelineView(.periodic(from: .now, by: 1)) { context in
       let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
       VStack(spacing: 8) {
-        RestCountdownBar(remaining: remaining, totalSeconds: totalSeconds, onContinue: onContinue)
+        RestCountdownBar(
+          remaining: remaining,
+          totalSeconds: totalSeconds,
+          completionWaveID: completionWaveID,
+          onContinue: onContinue
+        )
 
         HStack(spacing: 8) {
           RestAdjustmentButton(title: "-15s") { onAdjust(-15) }
@@ -1065,7 +1071,7 @@ private struct RestView: View {
         Button("Siguiente", action: onContinue)
           .font(.headline.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
-          .foregroundStyle(.white)
+          .foregroundStyle(Color.gymAccentForeground)
           .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           .buttonStyle(.plain)
       }
@@ -1086,6 +1092,7 @@ private struct RestView: View {
   private func announceCompletionIfNeeded(remaining: Int) {
     guard remaining == 0, !hasAnnouncedCompletion else { return }
     hasAnnouncedCompletion = true
+    completionWaveID += 1
     TimerCompletionFeedback.play()
   }
 }
@@ -1093,6 +1100,7 @@ private struct RestView: View {
 private struct RestCountdownBar: View {
   let remaining: Int
   let totalSeconds: Int
+  let completionWaveID: Int
   let onContinue: () -> Void
 
   private var isFinished: Bool { remaining == 0 }
@@ -1123,13 +1131,19 @@ private struct RestCountdownBar: View {
             .monospacedDigit()
             .contentTransition(.numericText())
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(isFinished ? Color.white : Color.gymAccentForeground)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 160)
       .clipShape(RoundedRectangle(cornerRadius: 30))
     }
     .buttonStyle(.plain)
+    .background {
+      if completionWaveID > 0 {
+        TimerCompletionWave()
+          .id(completionWaveID)
+      }
+    }
     .animation(.linear(duration: 0.85), value: remaining)
   }
 }
@@ -1142,8 +1156,12 @@ private struct RestAdjustmentButton: View {
     Button(title, action: action)
       .font(.title3.weight(.bold))
       .frame(maxWidth: .infinity, minHeight: 64)
-      .foregroundStyle(.white)
-      .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: RoundedRectangle(cornerRadius: 24))
+      .foregroundStyle(Color.gymAccent)
+      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 24))
+      .overlay {
+        RoundedRectangle(cornerRadius: 24)
+          .stroke(Color.gymAccent, lineWidth: 1.5)
+      }
       .buttonStyle(.plain)
   }
 }
@@ -1444,7 +1462,7 @@ private struct FinishedWorkoutView: View {
         }
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
-        .foregroundStyle(.white)
+        .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
       }
       Button(action: onFinish) {
@@ -1452,7 +1470,7 @@ private struct FinishedWorkoutView: View {
       }
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
-        .foregroundStyle(.white)
+        .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
         .buttonStyle(.plain)
     }
@@ -1496,7 +1514,7 @@ private struct BottomActions: View {
       Button(primaryTitle, action: primaryAction)
         .font(.headline.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
-        .foregroundStyle(.white)
+        .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
         .buttonStyle(.plain)
         .disabled(primaryDisabled)
@@ -1692,7 +1710,7 @@ private struct SetTargetEditor: View {
           Image(systemName: "checkmark")
             .font(.headline.weight(.bold))
             .frame(width: 44, height: 44)
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.gymAccentForeground)
             .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
         }
         .accessibilityLabel("Confirmar cambios")
@@ -1754,6 +1772,7 @@ private struct TimedSetTarget: View {
   let onFinishedChanged: (Bool) -> Void
   @State private var hasStarted = false
   @State private var hasAnnouncedCompletion = false
+  @State private var completionWaveID = 0
 
   private var isRunning: Bool { endsAt != nil }
 
@@ -1794,13 +1813,19 @@ private struct TimedSetTarget: View {
                 .monospacedDigit()
                 .contentTransition(.numericText())
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(isFinished ? Color.white : Color.gymAccentForeground)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
           }
           .frame(maxWidth: .infinity, minHeight: 128)
           .clipShape(RoundedRectangle(cornerRadius: 30))
         }
         .buttonStyle(.plain)
+        .background {
+          if completionWaveID > 0 {
+            TimerCompletionWave()
+              .id(completionWaveID)
+          }
+        }
         .animation(.linear(duration: 0.85), value: remaining)
 
         HStack(spacing: 12) {
@@ -1821,7 +1846,7 @@ private struct TimedSetTarget: View {
           }
           .font(.headline.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 58)
-          .foregroundStyle(.white)
+          .foregroundStyle(Color.gymAccentForeground)
           .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           .buttonStyle(.plain)
           .disabled(isFinished)
@@ -1877,6 +1902,7 @@ private struct TimedSetTarget: View {
   private func announceCompletionIfNeeded() {
     guard !hasAnnouncedCompletion else { return }
     hasAnnouncedCompletion = true
+    completionWaveID += 1
     TimerCompletionFeedback.play()
   }
 
@@ -1887,11 +1913,37 @@ private struct TimedSetTarget: View {
   private func timeAdjustmentButton(title: String, action: @escaping () -> Void) -> some View {
     Button(title, action: action)
       .font(.caption.weight(.bold))
-      .foregroundStyle(.white)
+      .foregroundStyle(.primary)
       .padding(.horizontal, 10)
       .padding(.vertical, 7)
       .background(.black.opacity(0.18), in: Capsule())
       .buttonStyle(.plain)
+  }
+}
+
+private struct TimerCompletionWave: View {
+  @State private var isExpanded = false
+
+  var body: some View {
+    ZStack {
+      waveRing(scale: 24, opacity: 0.30, lineWidth: 3)
+      waveRing(scale: 16, opacity: 0.20, lineWidth: 5)
+      waveRing(scale: 10, opacity: 0.12, lineWidth: 8)
+    }
+    .allowsHitTesting(false)
+    .onAppear {
+      withAnimation(.easeOut(duration: 1.5)) {
+        isExpanded = true
+      }
+    }
+  }
+
+  private func waveRing(scale: CGFloat, opacity: Double, lineWidth: CGFloat) -> some View {
+    Circle()
+      .stroke(Color.gymSuccess.opacity(opacity), lineWidth: lineWidth)
+      .frame(width: 88, height: 88)
+      .scaleEffect(isExpanded ? scale : 0.05)
+      .opacity(isExpanded ? 0 : 1)
   }
 }
 

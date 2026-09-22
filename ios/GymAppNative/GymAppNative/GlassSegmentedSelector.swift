@@ -38,7 +38,11 @@ struct GlassSegmentedSelector<Value: Hashable>: View {
                   .lineLimit(1)
                   .minimumScaleFactor(0.7)
                   .frame(maxWidth: .infinity, minHeight: 42)
-                  .foregroundStyle(isSelected ? .white : (isAvailable ? .primary : .red))
+                  .foregroundStyle(
+                    isSelected
+                      ? Color.gymAccentForeground
+                      : (isAvailable ? Color.primary : Color.red)
+                  )
               }
               .buttonStyle(.plain)
               .disabled(!isAvailable)

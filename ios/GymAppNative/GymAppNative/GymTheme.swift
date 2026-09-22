@@ -55,11 +55,56 @@ enum ThemeAccent: String, CaseIterable, Identifiable {
   }
 }
 
+enum PremiumColorScheme: String, CaseIterable, Identifiable {
+  case monochrome
+  case amberViolet
+  case greenBlue
+  case whiteNavy
+  case grayBurgundy
+
+  var id: String { rawValue }
+
+  var label: String {
+    switch self {
+    case .monochrome: "Blanco y negro"
+    case .amberViolet: "Ámbar y violeta"
+    case .greenBlue: "Verde y azul"
+    case .whiteNavy: "Blanco y azul marino"
+    case .grayBurgundy: "Gris y burdeos"
+    }
+  }
+
+  var lightColor: UIColor {
+    switch self {
+    case .monochrome: .white
+    case .amberViolet: UIColor(red: 0.70, green: 0.44, blue: 0.13, alpha: 1)
+    case .greenBlue: UIColor(red: 0.40, green: 0.62, blue: 0.49, alpha: 1)
+    case .whiteNavy: .white
+    case .grayBurgundy: UIColor(red: 0.89, green: 0.90, blue: 0.92, alpha: 1)
+    }
+  }
+
+  var darkColor: UIColor {
+    switch self {
+    case .monochrome: .black
+    case .amberViolet: UIColor(red: 0.20, green: 0.09, blue: 0.34, alpha: 1)
+    case .greenBlue: UIColor(red: 0.12, green: 0.22, blue: 0.32, alpha: 1)
+    case .whiteNavy: UIColor(red: 0.02, green: 0.12, blue: 0.24, alpha: 1)
+    case .grayBurgundy: UIColor(red: 0.40, green: 0.06, blue: 0.12, alpha: 1)
+    }
+  }
+}
+
 private enum ThemeColor {
   case canvas
   case surface
   case accent
   case accentSecondary
+  case accentForeground
+  case secondaryText
+  case controlSelectionFill
+  case controlSelectionForeground
+  case progressFill
 }
 
 enum GymTheme {
@@ -71,11 +116,35 @@ enum GymTheme {
     ThemeAccent(rawValue: UserDefaults.standard.string(forKey: "themeAccent") ?? "blue") ?? .blue
   }
 
+  private static var premiumScheme: PremiumColorScheme? {
+    guard let rawValue = UserDefaults.standard.string(forKey: "premiumColorScheme") else { return nil }
+    return PremiumColorScheme(rawValue: rawValue)
+  }
+
   fileprivate static func color(_ role: ThemeColor, traits: UITraitCollection) -> UIColor {
     let usesDarkCanvas: Bool = switch appearance {
     case .light: false
     case .dark: true
     case .system: traits.userInterfaceStyle == .dark
+    }
+
+    if let premiumScheme {
+      let canvas = usesDarkCanvas ? premiumScheme.darkColor : premiumScheme.lightColor
+      let accent = usesDarkCanvas ? premiumScheme.lightColor : premiumScheme.darkColor
+
+      switch role {
+      case .canvas: return canvas
+      case .surface: return accent.withAlphaComponent(usesDarkCanvas ? 0.12 : 0.07)
+      case .accent: return accent
+      case .accentSecondary: return accent.withAlphaComponent(usesDarkCanvas ? 0.58 : 0.72)
+      case .accentForeground: return usesDarkCanvas ? .black : .white
+      case .secondaryText: return (usesDarkCanvas ? UIColor.white : UIColor.black).withAlphaComponent(0.82)
+      case .controlSelectionFill:
+        return usesDarkCanvas ? accent.withAlphaComponent(0.22) : accent
+      case .controlSelectionForeground:
+        return usesDarkCanvas ? .white : .white
+      case .progressFill: return accent.withAlphaComponent(0.22)
+      }
     }
 
     switch role {
@@ -85,6 +154,11 @@ enum GymTheme {
       return usesDarkCanvas ? accent.darkSurfaceColor : accent.lightSurfaceColor
     case .accent: return accent.primaryColor
     case .accentSecondary: return accent.secondaryColor
+    case .accentForeground: return .white
+    case .secondaryText: return .secondaryLabel
+    case .controlSelectionFill: return accent.primaryColor
+    case .controlSelectionForeground: return .white
+    case .progressFill: return accent.primaryColor.withAlphaComponent(0.22)
     }
   }
 }
@@ -94,6 +168,11 @@ extension Color {
   static var gymSurface: Color { Color(uiColor: UIColor { GymTheme.color(.surface, traits: $0) }) }
   static var gymAccent: Color { Color(uiColor: UIColor { GymTheme.color(.accent, traits: $0) }) }
   static var gymAccentSecondary: Color { Color(uiColor: UIColor { GymTheme.color(.accentSecondary, traits: $0) }) }
+  static var gymAccentForeground: Color { Color(uiColor: UIColor { GymTheme.color(.accentForeground, traits: $0) }) }
+  static var gymSecondaryText: Color { Color(uiColor: UIColor { GymTheme.color(.secondaryText, traits: $0) }) }
+  static var gymControlSelectionFill: Color { Color(uiColor: UIColor { GymTheme.color(.controlSelectionFill, traits: $0) }) }
+  static var gymControlSelectionForeground: Color { Color(uiColor: UIColor { GymTheme.color(.controlSelectionForeground, traits: $0) }) }
+  static var gymProgressFill: Color { Color(uiColor: UIColor { GymTheme.color(.progressFill, traits: $0) }) }
   static let gymSuccess = Color(red: 0.09, green: 0.45, blue: 0.29)
   static let gymWarning = Color(red: 0.64, green: 0.43, blue: 0.00)
   static let gymDanger = Color(red: 0.70, green: 0.23, blue: 0.22)
@@ -101,6 +180,6 @@ extension Color {
 
 struct GymCanvas: View {
   var body: some View {
-    Color.gymCanvas
+    Color.gymCanvas.ignoresSafeArea()
   }
 }

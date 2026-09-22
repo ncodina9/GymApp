@@ -28,7 +28,7 @@ struct AccentHeaderCard: View {
       }
     }
     .multilineTextAlignment(.center)
-    .foregroundStyle(.white)
+    .foregroundStyle(Color.gymAccentForeground)
     .frame(maxWidth: .infinity)
     .padding(.horizontal, 28)
     .padding(.top, 14)

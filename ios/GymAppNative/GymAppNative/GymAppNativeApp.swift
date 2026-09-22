@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct GymAppNativeApp: App {
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
+  @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
   @AppStorage("keepScreenAwake") private var keepScreenAwake = false
 
   private var appearance: AppAppearance {
@@ -14,12 +15,13 @@ struct GymAppNativeApp: App {
     WindowGroup {
       ZStack {
         SafeAreaCanvas(color: .gymCanvas)
+          .id(premiumSchemeRaw)
         ContentView()
       }
         .preferredColorScheme(appearance.colorScheme)
         .background(Color.gymCanvas, ignoresSafeAreaEdges: .all)
         .toolbarBackground(.hidden, for: .statusBar)
-        .toolbarColorScheme(.dark, for: .statusBar)
+        .toolbarColorScheme(appearance.colorScheme, for: .statusBar)
         .tint(.gymAccent)
         .onAppear { UIApplication.shared.isIdleTimerDisabled = keepScreenAwake }
         .onChange(of: keepScreenAwake) { _, enabled in

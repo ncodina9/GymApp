@@ -119,7 +119,7 @@ struct SessionPreviewView: View {
               Label("Reanudar", systemImage: "play.fill")
                 .font(.subheadline.weight(.bold))
                 .frame(maxWidth: .infinity, minHeight: 56)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.gymAccentForeground)
                 .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
             }
             .buttonStyle(.plain)
@@ -135,7 +135,7 @@ struct SessionPreviewView: View {
             Label("Empezar", systemImage: "chevron.right")
               .font(.headline.weight(.bold))
               .frame(maxWidth: .infinity, minHeight: 56)
-              .foregroundStyle(.white)
+              .foregroundStyle(Color.gymAccentForeground)
               .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           }
           .buttonStyle(.plain)
