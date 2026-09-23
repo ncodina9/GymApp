@@ -66,6 +66,29 @@ struct TrainingPlanDecodingTests {
     #expect(EquipmentLoadRules.plateLayout(totalWeightKg: 70, equipment: .dumbbell) == nil)
   }
 
+  @Test("Proyecta el histórico por ejercicio y material con RM de Epley")
+  func projectsExerciseHistoryByMaterial() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let exercise = try #require(session.exercises.first { $0.exerciseID == "press-banca-barra" })
+    var execution = WorkoutExecutionState(session: session)
+
+    let locator = try #require(execution.current)
+    execution.updateWorkingTargets(for: locator, reps: 5, weightKg: 70)
+    _ = execution.recordCurrent(feedback: .ok)
+
+    let entries = ExerciseHistory.entries(
+      for: exercise,
+      from: [HistoricalWorkoutExecution(completedAt: .now, execution: execution)]
+    )
+
+    let entry = try #require(entries.first)
+    #expect(entry.equipment == .barbell)
+    #expect(entry.weightKg == 70)
+    #expect(entry.reps == 5)
+    #expect(entry.estimatedOneRepMax == 81.66666666666667)
+  }
+
   @Test("Conserva material y propaga objetivos homogéneos en una sesión")
   func keepsSessionMaterialAndTargets() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
@@ -325,6 +348,51 @@ struct TrainingPlanDecodingTests {
     #expect(restored.restEndsAt?.timeIntervalSinceNow ?? 0 < 0)
     #expect(restored.restTotalSeconds == 90)
     #expect(restored.execution.current == expectedCurrent)
+  }
+
+  @Test("Conserva el calentamiento en un borrador recuperable")
+  func preservesWarmupStateInActiveWorkout() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let endsAt = Date(timeIntervalSince1970: 1_789_000_000)
+    let snapshot = ActiveWorkoutSnapshot(
+      execution: WorkoutExecutionState(session: session),
+      phase: .workingSet,
+      feedback: .init(rir: 2, painKnee: 0, painWrist: 0, painShoulder: 0, painLowerBack: 0, note: "OK"),
+      restEndsAt: nil,
+      restTotalSeconds: 0,
+      setTimerEndsAt: nil,
+      setTimerRemaining: 0,
+      reviewExerciseIndexes: [],
+      reviewRestSeconds: 0,
+      exerciseDecisions: [:],
+      warmupStatus: .running,
+      warmupEndsAt: endsAt,
+      warmupRemaining: 420,
+      startedAt: Date(timeIntervalSince1970: 1_788_999_500)
+    )
+
+    let restored = try JSONDecoder().decode(ActiveWorkoutSnapshot.self, from: JSONEncoder().encode(snapshot))
+    #expect(restored.schemaVersion == ActiveWorkoutSnapshot.currentSchemaVersion)
+    #expect(restored.warmupStatus == .running)
+    #expect(restored.warmupEndsAt == endsAt)
+    #expect(restored.warmupRemaining == 420)
+  }
+
+  @Test("Finaliza una sesión marcando como omitidas todas las series pendientes")
+  func skipsEveryRemainingSetWhenFinishingEarly() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    var execution = WorkoutExecutionState(session: session)
+
+    _ = execution.recordCurrent(feedback: .ok)
+    let skipped = execution.skipRemaining(performedAt: Date(timeIntervalSince1970: 1_789_000_000))
+
+    #expect(skipped == session.exercises.reduce(0) { $0 + $1.sets.count } - 1)
+    #expect(execution.current == nil)
+    #expect(execution.records.count == execution.totalSetCount)
+    #expect(execution.records.filter { $0.status == .completed }.count == 1)
+    #expect(execution.records.dropFirst().allSatisfy { $0.status == .skipped })
   }
 
   private var sharedPlanURL: URL {

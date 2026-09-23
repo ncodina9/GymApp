@@ -7,6 +7,12 @@ public enum ActiveWorkoutPhase: String, Codable, Equatable, Sendable {
   case exerciseReview
 }
 
+public enum WorkoutWarmupStatus: String, Codable, Equatable, Sendable {
+  case notStarted
+  case running
+  case completed
+}
+
 public struct ActiveWorkoutFeedbackDraft: Codable, Sendable {
   public var rir: Int
   public var painKnee: Int
@@ -33,7 +39,7 @@ public struct ActiveWorkoutFeedbackDraft: Codable, Sendable {
 }
 
 public struct ActiveWorkoutSnapshot: Codable, Sendable {
-  public static let currentSchemaVersion = 4
+  public static let currentSchemaVersion = 5
 
   public let schemaVersion: Int
   public var execution: WorkoutExecutionState
@@ -46,6 +52,9 @@ public struct ActiveWorkoutSnapshot: Codable, Sendable {
   public var reviewExerciseIndexes: [Int]
   public var reviewRestSeconds: Int
   public var exerciseDecisions: [String: String]
+  public var warmupStatus: WorkoutWarmupStatus
+  public var warmupEndsAt: Date?
+  public var warmupRemaining: Int
   public let startedAt: Date
 
   public init(
@@ -59,6 +68,9 @@ public struct ActiveWorkoutSnapshot: Codable, Sendable {
     reviewExerciseIndexes: [Int],
     reviewRestSeconds: Int,
     exerciseDecisions: [String: String],
+    warmupStatus: WorkoutWarmupStatus = .notStarted,
+    warmupEndsAt: Date? = nil,
+    warmupRemaining: Int = 0,
     startedAt: Date
   ) {
     schemaVersion = Self.currentSchemaVersion
@@ -72,6 +84,9 @@ public struct ActiveWorkoutSnapshot: Codable, Sendable {
     self.reviewExerciseIndexes = reviewExerciseIndexes
     self.reviewRestSeconds = reviewRestSeconds
     self.exerciseDecisions = exerciseDecisions
+    self.warmupStatus = warmupStatus
+    self.warmupEndsAt = warmupEndsAt
+    self.warmupRemaining = warmupRemaining
     self.startedAt = startedAt
   }
 
@@ -87,6 +102,9 @@ public struct ActiveWorkoutSnapshot: Codable, Sendable {
     case reviewExerciseIndexes
     case reviewRestSeconds
     case exerciseDecisions
+    case warmupStatus
+    case warmupEndsAt
+    case warmupRemaining
     case startedAt
   }
 
@@ -103,6 +121,9 @@ public struct ActiveWorkoutSnapshot: Codable, Sendable {
     reviewExerciseIndexes = try container.decodeIfPresent([Int].self, forKey: .reviewExerciseIndexes) ?? []
     reviewRestSeconds = try container.decodeIfPresent(Int.self, forKey: .reviewRestSeconds) ?? 0
     exerciseDecisions = try container.decodeIfPresent([String: String].self, forKey: .exerciseDecisions) ?? [:]
+    warmupStatus = try container.decodeIfPresent(WorkoutWarmupStatus.self, forKey: .warmupStatus) ?? .notStarted
+    warmupEndsAt = try container.decodeIfPresent(Date.self, forKey: .warmupEndsAt)
+    warmupRemaining = try container.decodeIfPresent(Int.self, forKey: .warmupRemaining) ?? 0
     startedAt = try container.decode(Date.self, forKey: .startedAt)
   }
 }

@@ -196,6 +196,18 @@ public struct WorkoutExecutionState: Codable, Sendable {
     recordCurrent(status: .skipped, feedback: .ok, performedAt: performedAt)
   }
 
+  /// Closes an interrupted workout without losing its completed records.
+  /// Pending locators follow the current execution order, including a block
+  /// that was manually reprioritized during rest.
+  @discardableResult
+  public mutating func skipRemaining(performedAt: Date = Date()) -> Int {
+    let initialCount = records.count
+    while current != nil {
+      _ = recordCurrent(status: .skipped, feedback: .ok, performedAt: performedAt)
+    }
+    return records.count - initialCount
+  }
+
   @discardableResult
   private mutating func recordCurrent(
     status: WorkoutSetStatus,

@@ -4,7 +4,11 @@ import PackageDescription
 
 let package = Package(
   name: "GymAppNativeCore",
-  platforms: [.macOS(.v14)],
+  platforms: [
+    .iOS(.v17),
+    .watchOS(.v10),
+    .macOS(.v14),
+  ],
   products: [
     .library(name: "GymAppNativeCore", targets: ["GymAppNativeCore"]),
   ],

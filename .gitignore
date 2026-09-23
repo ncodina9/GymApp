@@ -15,6 +15,10 @@
 **/.build/
 **/.swiftpm/
 
+# Xcode build products configured inside the native project directories
+ios/GymAppNative/build/
+ios/GymAppNativeCore/build/
+
 # Xcode user state
 *.xcuserdatad/
 *.xcworkspace/xcuserdata/

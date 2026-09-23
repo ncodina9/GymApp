@@ -23,6 +23,7 @@ final class CompletedWorkoutRecord {
   var executionData: Data?
   var decisionsData: Data?
   var importedSessionData: Data?
+  var healthKitWorkoutUUID: String?
 
   init(
     sessionID: String,
@@ -30,7 +31,8 @@ final class CompletedWorkoutRecord {
     completedAt: Date = .now,
     executionData: Data? = nil,
     decisionsData: Data? = nil,
-    importedSessionData: Data? = nil
+    importedSessionData: Data? = nil,
+    healthKitWorkoutUUID: String? = nil
   ) {
     self.sessionID = sessionID
     self.startedAt = startedAt
@@ -38,6 +40,7 @@ final class CompletedWorkoutRecord {
     self.executionData = executionData
     self.decisionsData = decisionsData
     self.importedSessionData = importedSessionData
+    self.healthKitWorkoutUUID = healthKitWorkoutUUID
   }
 }
 
@@ -87,20 +90,20 @@ enum ActiveWorkoutStore {
     execution: WorkoutExecutionState,
     decisions: [String: String],
     in context: ModelContext
-  ) {
+  ) -> CompletedWorkoutRecord? {
     let descriptor = FetchDescriptor<CompletedWorkoutRecord>(
       predicate: #Predicate { $0.sessionID == sessionID }
     )
-    guard (try? context.fetch(descriptor).first) == nil else { return }
-    context.insert(
-      CompletedWorkoutRecord(
+    if let existing = try? context.fetch(descriptor).first { return existing }
+    let record = CompletedWorkoutRecord(
         sessionID: sessionID,
         startedAt: startedAt,
         completedAt: completedAt,
         executionData: try? JSONEncoder().encode(execution),
         decisionsData: try? JSONEncoder().encode(decisions)
       )
-    )
+    context.insert(record)
     try? context.save()
+    return record
   }
 }

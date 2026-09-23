@@ -8,16 +8,47 @@
 
 /* Begin PBXBuildFile section */
 		000000000000000000000201 /* GymAppNativeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000203 /* GymAppNativeCore */; };
+		8BB307203064116D00DC307B /* GymAppNativeWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 8BB307073064116C00DC307B /* GymAppNativeWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8BB307223064116D00DC307B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8BB307063064116C00DC307B;
+			remoteInfo = "GymAppNativeWatch Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8BB307213064116D00DC307B /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				8BB307203064116D00DC307B /* GymAppNativeWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* GymAppNative.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GymAppNative.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8BB307073064116C00DC307B /* GymAppNativeWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GymAppNativeWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000000000000000000000010 /* GymAppNative */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = GymAppNative;
+			sourceTree = "<group>";
+		};
+		8BB307083064116C00DC307B /* GymAppNativeWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "GymAppNativeWatch Watch App";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -29,6 +60,11 @@
 				000000000000000000000201 /* GymAppNativeCore in Frameworks */,
 			);
 		};
+		8BB307043064116C00DC307B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -36,6 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* GymAppNative */,
+				8BB307083064116C00DC307B /* GymAppNativeWatch Watch App */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -44,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000120 /* GymAppNative.app */,
+				8BB307073064116C00DC307B /* GymAppNativeWatch Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -58,11 +96,15 @@
 				000000000000000120000000 /* Sources */,
 				000000000000000130000000 /* Frameworks */,
 				000000000000000140000000 /* Resources */,
+				8BB307213064116D00DC307B /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			fileSystemSynchronizedGroups = (
 				000000000000000000000010 /* GymAppNative */,
+			);
+			dependencies = (
+				8BB307233064116D00DC307B /* PBXTargetDependency */,
 			);
 			name = GymAppNative;
 			packageProductDependencies = (
@@ -72,6 +114,24 @@
 			productReference = 000000000000000000000120 /* GymAppNative.app */;
 			productType = "com.apple.product-type.application";
 		};
+		8BB307063064116C00DC307B /* GymAppNativeWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8BB3070F3064116D00DC307B /* Build configuration list for PBXNativeTarget "GymAppNativeWatch Watch App" */;
+			buildPhases = (
+				8BB307033064116C00DC307B /* Sources */,
+				8BB307043064116C00DC307B /* Frameworks */,
+				8BB307053064116C00DC307B /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				8BB307083064116C00DC307B /* GymAppNativeWatch Watch App */,
+			);
+			name = "GymAppNativeWatch Watch App";
+			productName = "GymAppNativeWatch Watch App";
+			productReference = 8BB307073064116C00DC307B /* GymAppNativeWatch Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -79,11 +139,19 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2630;
+				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					000000000000000100000000 = {
 						CreatedOnToolsVersion = 26.3;
+						SystemCapabilities = {
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
+					};
+					8BB307063064116C00DC307B = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -105,12 +173,18 @@
 			projectRoot = "";
 			targets = (
 				000000000000000100000000 /* GymAppNative */,
+				8BB307063064116C00DC307B /* GymAppNativeWatch Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		000000000000000140000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		8BB307053064116C00DC307B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -123,7 +197,20 @@
 			files = (
 			);
 		};
+		8BB307033064116C00DC307B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8BB307233064116D00DC307B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8BB307063064116C00DC307B /* GymAppNativeWatch Watch App */;
+			targetProxy = 8BB307223064116D00DC307B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		000000000000000011000000 /* Debug configuration for PBXProject "GymAppNative" */ = {
@@ -263,6 +350,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = GymApp;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = GymAppNative/GymAppNative.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 746P46SH2K;
@@ -270,6 +358,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GymApp guarda los entrenamientos de fuerza que finalizas en la app de Salud.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -307,6 +396,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = GymApp;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = GymAppNative/GymAppNative.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 746P46SH2K;
@@ -314,6 +404,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GymApp guarda los entrenamientos de fuerza que finalizas en la app de Salud.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -346,6 +437,71 @@
 			};
 			name = Release;
 		};
+		8BB307103064116D00DC307B /* Debug configuration for PBXNativeTarget "GymAppNativeWatch Watch App" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 746P46SH2K;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = GymAppNativeWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ncodina9.GymAppNative;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ncodina9.GymAppNative.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+		8BB307113064116D00DC307B /* Release configuration for PBXNativeTarget "GymAppNativeWatch Watch App" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 746P46SH2K;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = GymAppNativeWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ncodina9.GymAppNative;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ncodina9.GymAppNative.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -362,6 +518,14 @@
 			buildConfigurations = (
 				000000000000000111000000 /* Debug configuration for PBXNativeTarget "GymAppNative" */,
 				000000000000000112000000 /* Release configuration for PBXNativeTarget "GymAppNative" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		8BB3070F3064116D00DC307B /* Build configuration list for PBXNativeTarget "GymAppNativeWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8BB307103064116D00DC307B /* Debug configuration for PBXNativeTarget "GymAppNativeWatch Watch App" */,
+				8BB307113064116D00DC307B /* Release configuration for PBXNativeTarget "GymAppNativeWatch Watch App" */,
 			);
 			defaultConfigurationName = Release;
 		};

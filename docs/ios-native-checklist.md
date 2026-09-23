@@ -43,7 +43,10 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [x] | P1 | S | Pantalla de finalización y duración real. | Muestra duración desde la entrada en la primera serie y compara con el estimado del plan, sin contar movilidad. |
 | [x] | P1 | S | Ajustes nativos de apariencia y datos locales. | Tema persistente, pantalla activa, consulta futura, CSV por sesión, backup/importación JSON y borrado confirmado están accesibles. |
 | [x] | P1 | XS | Descartar solo el entrenamiento activo. | Exportación ofrece una acción confirmada que elimina el borrador de SwiftData sin borrar sesiones terminadas ni importadas. |
+| [ ] | P1 | M | Corregir una serie ya registrada. | Desde progreso e historial se pueden editar reps, peso o duración de una serie hecha; se recalculan histórico, CSV, backup y HealthKit sin crear un registro duplicado. |
+| [~] | P1 | M | Calentamiento configurable y selección de inicio desde previsualización. | Ajustes permite activarlo y definir duración; Calentar inicia el tiempo real y no registra series. Falta validación en dispositivo de reanudación, selección de bloque y estados visuales. |
 | [ ] | P1 | S | Restaurar el gesto de volver desde el borde izquierdo. | En destinos de `NavigationStack`, el deslizamiento lateral vuelve al destino anterior sin competir con los gestos internos ni con el botón inferior. |
+| [~] | P1 | L | Cabecera unificada de ejecución e historial por ejercicio. | Cabeceras centradas por fase; progreso de serie como píldoras; progreso global compacto en safe area inferior; historial desplegable solo en cabeceras de ejercicio y acceso con pulsación prolongada desde Preview. RM con Epley y comparación segregada por material. |
 
 ## Pulido posterior a v1
 
@@ -51,13 +54,13 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | --- | --- | --- | --- | --- |
 | [x] | P2 | S | Mostrar discos por lado para barra y multipower. | Respeta inventario y variantes, sin reducir la legibilidad del peso central. |
 | [ ] | P2 | S | Sustituir SF Symbols provisionales por Heroicons locales. | Los iconos usados coinciden con los roles de la PWA y respetan accesibilidad. |
-| [x] | P2 | M | Sistema de cuatro temas nativos. | Apariencia permite Sistema, Claro u Oscuro; cada familia conserva una variante independiente: White/Light y Dark/Black. Canvas, superficie y realce usan tokens compartidos. |
+| [x] | P2 | M | Sistema de apariencia y esquemas cromáticos nativos. | Apariencia permite Sistema, Claro u Oscuro, cuatro acentos base y cinco esquemas premium opcionales. Canvas, superficie y realce usan tokens compartidos. |
 | [x] | P2 | XS | Integración del canvas con regiones de sistema. | La app requiere iOS 27 y aplica el esquema de contraste oficial a la barra de estado. El canvas base se normaliza a blanco o negro puro por familia para mantener continuidad aunque el sistema conserve sus superficies de borde. |
-| [ ] | P2 | M | Notificación local y háptica al acabar descanso. | Funciona con permisos denegados sin bloquear el flujo. |
-| [~] | P2 | M | Aviso de finalización de descanso y serie temporizada. | En primer plano reproduce sonido corto más háptica; queda programar notificación local al pasar a segundo plano. |
+| [~] | P2 | M | Notificación local y háptica al acabar descanso. | La programación local está implementada; falta validarla en dispositivo con permisos concedidos y denegados, sin bloquear el flujo. |
+| [~] | P2 | M | Aviso de finalización de descanso y serie temporizada. | En primer plano reproduce sonido corto más háptica y en segundo plano programa un aviso local; falta validación física completa. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |
-| [ ] | P2 | M | HealthKit, widget y sincronización. | Se evalúan por separado cuando la persistencia local sea estable. |
-| [ ] | P2 | L | Companion Apple Watch v1. | El iPhone conserva el estado autoritativo; el reloj muestra la serie o descanso actual, registra/omite series y emite háptica. |
+| [~] | P2 | M | HealthKit, widget y sincronización. | HealthKit guarda opcionalmente cada sesión nativa finalizada como fuerza tradicional, con un UUID local para impedir duplicados. Falta validar autorización, escritura y reintento en dispositivo; widget y sincronización siguen pendientes. |
+| [~] | P2 | L | Companion Apple Watch v1. | El iPhone conserva el estado autoritativo; el reloj recibe serie o descanso actual y ajusta `±15 s` en tiempo real. Faltan registro/omisión idempotentes, superseries y háptica final. |
 
 ## Validación obligatoria por iteración
 

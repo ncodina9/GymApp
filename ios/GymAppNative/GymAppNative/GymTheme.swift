@@ -101,6 +101,7 @@ private enum ThemeColor {
   case accent
   case accentSecondary
   case accentForeground
+  case systemAction
   case secondaryText
   case controlSelectionFill
   case controlSelectionForeground
@@ -140,12 +141,22 @@ enum GymTheme {
       case .accent: return accent
       case .accentSecondary: return accent.withAlphaComponent(usesDarkCanvas ? 0.58 : 0.72)
       case .accentForeground: return usesDarkCanvas ? .black : .white
+      // System presentations such as Alert use the environment tint for their
+      // actions. Keep it independent from premium accents so it stays legible
+      // on the platform's translucent alert material.
+      case .systemAction:
+        return usesDarkCanvas
+          ? UIColor(red: 0.32, green: 0.64, blue: 0.98, alpha: 1)
+          : UIColor(red: 0.00, green: 0.38, blue: 0.75, alpha: 1)
       case .secondaryText: return (usesDarkCanvas ? UIColor.white : UIColor.black).withAlphaComponent(0.82)
       case .controlSelectionFill:
         return usesDarkCanvas ? accent.withAlphaComponent(0.22) : accent
       case .controlSelectionForeground:
         return usesDarkCanvas ? .white : .white
-      case .progressFill: return accent.withAlphaComponent(0.22)
+      // The status-bar progress indicator sits directly on the pure canvas.
+      // A translucent fill disappears with the base palettes on black or
+      // white, so progress must use the full contrast accent in every scheme.
+      case .progressFill: return accent
       case .tertiary:
         switch premiumScheme {
         case .monochrome: return UIColor(red: 0.21, green: 0.35, blue: 0.61, alpha: 1)
@@ -182,10 +193,14 @@ enum GymTheme {
     case .accent: return accent.primaryColor
     case .accentSecondary: return accent.secondaryColor
     case .accentForeground: return .white
+    case .systemAction:
+      return usesDarkCanvas
+        ? UIColor(red: 0.32, green: 0.64, blue: 0.98, alpha: 1)
+        : UIColor(red: 0.00, green: 0.38, blue: 0.75, alpha: 1)
     case .secondaryText: return .secondaryLabel
     case .controlSelectionFill: return accent.primaryColor
     case .controlSelectionForeground: return .white
-    case .progressFill: return accent.primaryColor.withAlphaComponent(0.22)
+    case .progressFill: return accent.primaryColor
     case .tertiary: return accent.primaryColor
     case .completed: return UIColor(red: 0.09, green: 0.45, blue: 0.29, alpha: 1)
     }
@@ -198,6 +213,7 @@ extension Color {
   static var gymAccent: Color { Color(uiColor: UIColor { GymTheme.color(.accent, traits: $0) }) }
   static var gymAccentSecondary: Color { Color(uiColor: UIColor { GymTheme.color(.accentSecondary, traits: $0) }) }
   static var gymAccentForeground: Color { Color(uiColor: UIColor { GymTheme.color(.accentForeground, traits: $0) }) }
+  static var gymSystemAction: Color { Color(uiColor: UIColor { GymTheme.color(.systemAction, traits: $0) }) }
   static var gymSecondaryText: Color { Color(uiColor: UIColor { GymTheme.color(.secondaryText, traits: $0) }) }
   static var gymControlSelectionFill: Color { Color(uiColor: UIColor { GymTheme.color(.controlSelectionFill, traits: $0) }) }
   static var gymControlSelectionForeground: Color { Color(uiColor: UIColor { GymTheme.color(.controlSelectionForeground, traits: $0) }) }

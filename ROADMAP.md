@@ -1343,6 +1343,20 @@ Actualización v0.1.102: cada fila de Opciones ocupa y responde en toda la anchu
 
 Actualización v0.1.103: se documentan los próximos desarrollos de personalización inicial, análisis inteligente y molestias para orientar el modelo de datos nativo más allá de la integración actual con Obsidian.
 
+Actualización v0.1.104: la app nativa programa avisos locales con sonido para el final de descanso y de serie temporizada, además de conservar el sonido corto y la respuesta háptica cuando está en primer plano. Cada programación queda versionada internamente para que ajustar, cancelar o finalizar un temporizador no pueda dejar una notificación obsoleta pendiente. Este avance deja la tarea de avisos como parcial hasta validarla en iPhone físico con permisos concedidos y denegados, y con la app en segundo plano. Se mantienen como opción los cinco esquemas premium, complementarios a las apariencias Sistema/Claro/Oscuro y a los cuatro colores base; el sistema de tokens aplica su lienzo, superficie y realce de forma consistente.
+
+Actualización v0.1.105: la previsualización nativa refleja el estado de cada ejercicio de una sesión activa: completado en verde, en curso en naranja y pendiente sin marcar. Los ejercicios completados no son interactivos; los iniciados reanudan el flujo y los pendientes solo pueden priorizarse al comenzar un bloque válido, con confirmación explícita. Se incorpora un calentamiento opcional configurable desde Ajustes: inicia el tiempo real de la sesión, se guarda en el borrador activo, no crea series ni feedback y vuelve a la previsualización al terminar o continuar manualmente. Queda validarlo en iPhone físico junto con la recuperación tras cerrar la app.
+
+Actualización v0.1.106: las acciones de avisos y presentaciones nativas usan un color de sistema accesible, independiente del color de realce y de los esquemas premium. Así, confirmar, cancelar o aceptar se mantiene legible sobre el material translúcido de iOS en apariencia clara, oscura y sistema; los colores de marca siguen reservados para controles y contenido de la app.
+
+Actualización v0.1.107: la barra de progreso global de la sesión usa el realce opaco en todas las paletas. Antes, las opciones simples aplicaban un relleno translúcido sobre blanco o negro y podían parecer ausentes; el tramo pendiente sigue mostrando el lienzo de la apariencia activa.
+
+Actualización v0.1.108: primera entrega de la cabecera de ejecución nativa. Serie, evaluación de serie y evaluación de ejercicio comparten una composición centrada; las series usan píldoras redondeadas de estado y el progreso global pasa a una barra compacta en la safe area inferior. Se incorpora el modelo de histórico nativo por ejercicio y material, con récords de carga, repeticiones y RM estimado por Epley, gráfica básica y registros fechados. En previsualización se consulta mediante pulsación prolongada, preservando el toque normal para iniciar o reanudar; en serie, un arrastre descendente desde la cabecera abre la consulta. Queda pendiente en este hito convertir esa consulta en panel expandido integrado en la propia cabecera y trasladar el temporizador de descanso a su variante de cabecera.
+
+Actualización v0.1.109: se crea la base de la companion watchOS. El iPhone publica por `WatchConnectivity` una instantánea versionada de la sesión activa; el reloj muestra ejercicio, serie, objetivos, descanso y progreso, y puede ajustar el descanso en tiempo real mediante `±15 s`. El registro de series continúa siendo autoritativo en el iPhone hasta definir un flujo de feedback completo e idempotente para la muñeca.
+
+Planificado para el siguiente bloque nativo: una cabecera común y centrada para las fases de ejecución. En Serie y Evaluar serie mostrará el ejercicio y píldoras de progreso sin material; en Descanso mostrará exclusivamente la cuenta atrás y no abrirá historial; en finalización solo dirá «Entrenamiento completado». El histórico por ejercicio se desplegará desde el borde inferior discreto de cabeceras con nombre, sin usar el gesto de inicio del dispositivo. Incluirá récords por material, RM mediante Epley, gráfico elemental y registros nativos; desde Preview se consultará con pulsación prolongada y previsualización nativa para no interferir con iniciar o priorizar un ejercicio.
+
 ### Futuro: onboarding y perfil de entrenamiento
 
 - [ ] Onboarding guiado antes de crear un plan: material disponible, días de entrenamiento, duración del plan, objetivo principal, duración deseada de cada sesión, preferencias de cardio, ejercicios favoritos y ejercicios a evitar.
@@ -1383,6 +1397,12 @@ Fuera de la primera versión:
 
 - edición del plan, historial, exportación, análisis y configuración completa desde el reloj
 - fuente de verdad independiente en watchOS; el iPhone seguirá guardando el borrador y las sesiones definitivas
+
+### Pendiente: corrección posterior de series
+
+- [ ] Permitir corregir `reps`, `peso` y duración, cuando aplique, de una serie ya registrada tanto en un entrenamiento activo como en uno finalizado.
+- [ ] Conservar la edición como una modificación explícita del registro: actualizar histórico, RM, CSV, backup JSON y la representación de progreso sin alterar el orden ni el estado (`completed` o `skipped`) de la serie.
+- [ ] Definir la reconciliación con Apple Salud para una sesión ya exportada: actualizar o recrear el `HKWorkout` vinculado sin duplicarlo.
 
 Criterio de aceptación:
 
@@ -1436,10 +1456,10 @@ Criterio de aceptación:
 
 ## Próximo hito recomendado
 
-Crear el recorrido nativo `preview → primera serie`: un botón de inicio desde la previsualización y una pantalla de serie estática con números grandes, ejercicio, material, objetivo y progreso. La sesión puede vivir aún solo en memoria; el objetivo es validar la jerarquía y los controles táctiles antes de decidir SwiftData y registro de eventos.
+Restaurar el gesto nativo de vuelta desde el borde izquierdo en los destinos de `NavigationStack`, sin competir con los controles táctiles propios del entrenamiento. Es el último punto P1 de navegación pendiente antes de centrar la siguiente sesión real en validar el calentamiento, la recuperación del borrador y las notificaciones.
 
 Checklist mínima de la siguiente iteración:
 
-- [ ] Añadir la acción explícita de comenzar desde `SessionPreviewView`.
-- [ ] Resolver la primera serie, incluido el primer ejercicio de una superserie.
-- [ ] Diseñar la pantalla táctil de serie sin teclado ni persistencia definitiva.
+- [ ] Confirmar en qué destinos se pierde el gesto y reproducirlo en simulador y dispositivo.
+- [ ] Preservar el botón inferior de vuelta o casa como alternativa explícita y accesible.
+- [ ] Verificar que el gesto no interfiere con el selector de material, hojas inferiores ni navegación de la sesión.

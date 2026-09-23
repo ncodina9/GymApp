@@ -46,6 +46,18 @@ struct SettingsView: View {
             detail: "Consulta del plan pendiente",
             destination: UpcomingWorkoutsView(plan: plan)
           )
+          SettingsDivider()
+          SettingsRow(
+            title: "Calentamiento",
+            detail: "Tiempo previo antes de la primera serie",
+            destination: WarmupSettingsView()
+          )
+          SettingsDivider()
+          SettingsRow(
+            title: "Ejercicios",
+            detail: "Historial y récords por ejercicio",
+            destination: ExercisesLibraryView(plan: plan)
+          )
         }
 
         SettingsCategory(title: "Personalización") {
@@ -53,6 +65,14 @@ struct SettingsView: View {
             title: "Apariencia",
             detail: "Tema, color y pantalla activa",
             destination: AppearanceSettingsView()
+          )
+        }
+
+        SettingsCategory(title: "Integraciones") {
+          SettingsRow(
+            title: "Apple Salud",
+            detail: "Registrar sesiones de fuerza finalizadas",
+            destination: HealthSettingsView()
           )
         }
 
@@ -64,7 +84,7 @@ struct SettingsView: View {
           )
         }
 
-        Text("v0.1.104")
+        Text("v0.1.108")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -79,6 +99,144 @@ struct SettingsView: View {
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Opciones") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+}
+
+private struct ExercisesLibraryView: View {
+  let plan: TrainingPlan
+  @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
+  @Environment(\.dismiss) private var dismiss
+
+  private var exercises: [TrainingExercise] {
+    var seen = Set<String>()
+    return plan.sessions
+      .flatMap(\.exercises)
+      .filter { seen.insert($0.baseExerciseID).inserted }
+      .sorted {
+        $0.baseExerciseName.localizedCaseInsensitiveCompare($1.baseExerciseName) == .orderedAscending
+      }
+  }
+
+  var body: some View {
+    ScrollView {
+      LazyVStack(spacing: 10) {
+        ForEach(exercises) { exercise in
+          NavigationLink {
+            ExerciseHistoryView(exercise: exercise, records: completedWorkoutRecords)
+          } label: {
+            HStack(spacing: 12) {
+              Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(Color.gymAccent)
+                .frame(width: 30, height: 30)
+
+              VStack(alignment: .leading, spacing: 4) {
+                Text(exercise.baseExerciseName)
+                  .font(.headline.weight(.bold))
+                  .foregroundStyle(.primary)
+                Text(equipmentLabel(exercise.equipment))
+                  .font(.subheadline)
+                  .foregroundStyle(Color.gymSecondaryText)
+              }
+
+              Spacer(minLength: 8)
+              Image(systemName: "chevron.right")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(Color.gymSecondaryText)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+            .overlay {
+              RoundedRectangle(cornerRadius: 18)
+                .stroke(.separator.opacity(0.7), lineWidth: 1)
+            }
+          }
+          .buttonStyle(.plain)
+        }
+      }
+      .padding(16)
+      .padding(.bottom, 88)
+    }
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Ejercicios") }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+
+  private func equipmentLabel(_ equipment: Equipment) -> String {
+    switch equipment {
+    case .barbell: "Barra"
+    case .multipower: "Multipower"
+    case .dumbbell: "Mancuernas"
+    case .cable: "Polea"
+    case .plateLoadedMachine: "Máquina de discos"
+    case .external: "Lastre"
+    case .bodyweight: "Peso corporal"
+    }
+  }
+}
+
+private struct HealthSettingsView: View {
+  @AppStorage(HealthWorkoutStore.syncEnabledKey) private var syncEnabled = false
+  @State private var message: String?
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 18) {
+      Toggle("Registrar entrenamientos en Salud", isOn: Binding(
+        get: { syncEnabled },
+        set: updateSync
+      ))
+      .toggleStyle(ThemeToggleStyle())
+
+      Text("Cada entrenamiento finalizado se guarda como fuerza tradicional con su duración real. No se estiman calorías ni se leen datos de Salud.")
+        .font(.subheadline)
+        .foregroundStyle(Color.gymSecondaryText)
+
+      if let message {
+        Text(message)
+          .font(.caption.weight(.medium))
+          .foregroundStyle(Color.gymSecondaryText)
+          .padding(12)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 14))
+      }
+
+      Spacer()
+    }
+    .padding(16)
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Apple Salud") }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+
+  private func updateSync(_ enabled: Bool) {
+    guard enabled else {
+      syncEnabled = false
+      message = nil
+      return
+    }
+
+    guard HealthWorkoutStore.isAvailable else {
+      syncEnabled = false
+      message = "Salud no está disponible en este dispositivo."
+      return
+    }
+
+    syncEnabled = true
+    Task {
+      do {
+        try await HealthWorkoutStore.requestAuthorization()
+        message = "Los próximos entrenamientos finalizados se guardarán en Salud."
+      } catch {
+        syncEnabled = false
+        message = "No se ha podido solicitar el permiso de Salud."
+      }
+    }
   }
 }
 
@@ -125,6 +283,71 @@ private struct SettingsRow<Destination: View>: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+  }
+}
+
+private struct SettingsDivider: View {
+  var body: some View {
+    Divider().padding(.leading, 16)
+  }
+}
+
+private struct WarmupSettingsView: View {
+  @AppStorage("warmupEnabled") private var warmupEnabled = true
+  @AppStorage("warmupMinutes") private var warmupMinutes = 9
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 20) {
+      Toggle("Incluir calentamiento", isOn: $warmupEnabled)
+        .toggleStyle(ThemeToggleStyle())
+
+      Text("El calentamiento inicia el tiempo real de la sesión, pero no genera series ni feedback.")
+        .font(.subheadline)
+        .foregroundStyle(Color.gymSecondaryText)
+
+      HStack {
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Duración estándar")
+            .font(.headline.weight(.bold))
+          Text("Se puede omitir al empezar directamente.")
+            .font(.caption)
+            .foregroundStyle(Color.gymSecondaryText)
+        }
+        Spacer()
+        HStack(spacing: 10) {
+          durationButton(symbol: "minus") { warmupMinutes = max(3, warmupMinutes - 1) }
+          Text("\(warmupMinutes) min")
+            .font(.headline.weight(.bold))
+            .monospacedDigit()
+            .frame(minWidth: 54)
+          durationButton(symbol: "plus") { warmupMinutes = min(20, warmupMinutes + 1) }
+        }
+      }
+      .padding(16)
+      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+
+      Spacer()
+    }
+    .padding(16)
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Calentamiento") }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+
+  private func durationButton(symbol: String, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+      Image(systemName: symbol)
+        .font(.subheadline.weight(.bold))
+        .frame(width: 40, height: 40)
+        .foregroundStyle(Color.gymAccentForeground)
+        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
+    }
+    .buttonStyle(.plain)
+    .disabled(!warmupEnabled)
+    .opacity(warmupEnabled ? 1 : 0.45)
   }
 }
 
@@ -376,7 +599,7 @@ private struct UpcomingWorkoutsView: View {
         LazyVStack(spacing: 12) {
           ForEach(upcomingSessions) { session in
             NavigationLink {
-              SessionPreviewView(session: session, activeWorkout: nil, onReturnHome: {}, readOnly: true)
+              SessionPreviewView(session: session, onReturnHome: {}, readOnly: true)
             } label: {
               WeekSessionCard(session: session, isRecommended: false, isInProgress: false, isCompleted: false)
             }

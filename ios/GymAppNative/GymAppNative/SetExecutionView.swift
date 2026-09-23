@@ -23,10 +23,17 @@ struct SetExecutionView: View {
   @State private var reviewExerciseIndexes: [Int] = []
   @State private var reviewRestSeconds = 0
   @State private var exerciseDecisions: [String: String] = [:]
+  @State private var warmupStatus: WorkoutWarmupStatus = .completed
+  @State private var warmupEndsAt: Date?
+  @State private var warmupRemaining = 0
   @State private var transitionOrigin: ExecutionPhase = .workingSet
   @State private var transitionDirection: FlowDirection = .forward
   @State private var startedAt: Date
   @State private var finishedAt: Date?
+  @State private var isExerciseHistoryPresented = false
+  @State private var isSessionActionMenuPresented = false
+  @State private var showsWorkoutProgress = false
+  @State private var showsFinishConfirmation = false
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
 
@@ -55,6 +62,9 @@ struct SetExecutionView: View {
     _reviewExerciseIndexes = State(initialValue: snapshot.reviewExerciseIndexes)
     _reviewRestSeconds = State(initialValue: snapshot.reviewRestSeconds)
     _exerciseDecisions = State(initialValue: snapshot.exerciseDecisions)
+    _warmupStatus = State(initialValue: snapshot.warmupStatus)
+    _warmupEndsAt = State(initialValue: snapshot.warmupEndsAt)
+    _warmupRemaining = State(initialValue: snapshot.warmupRemaining)
     _startedAt = State(initialValue: snapshot.startedAt)
   }
 
@@ -71,7 +81,8 @@ struct SetExecutionView: View {
               onSkip: skipCurrentSet,
               timerEndsAt: $setTimerEndsAt,
               timerRemaining: $setTimerRemaining,
-              onExecutionChanged: persistActiveWorkout
+              onExecutionChanged: persistActiveWorkout,
+              onSessionActionsRequested: { showSessionActionMenu() }
             )
           } else {
             FinishedWorkoutView(
@@ -94,7 +105,8 @@ struct SetExecutionView: View {
               painLowerBack: $feedbackPainLowerBack,
               note: $feedbackNote,
               onBack: { move(to: .workingSet, direction: .backward) },
-              onRegister: registerCurrentSet
+              onRegister: registerCurrentSet,
+              onSessionActionsRequested: { showSessionActionMenu() }
             )
           }
         case .rest:
@@ -133,14 +145,54 @@ struct SetExecutionView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .background(GymCanvas())
     .toolbar(.hidden, for: .navigationBar)
-    .overlay(alignment: .top) {
+    .safeAreaInset(edge: .bottom, spacing: 0) {
       WorkoutProgressBar(
         completed: execution.completedSetCount,
         total: execution.totalSetCount
       )
-      .ignoresSafeArea(edges: .top)
+      .opacity(isExerciseHistoryPresented ? 0 : 1)
+    }
+    .overlay {
+      if isSessionActionMenuPresented {
+        SessionActionFan(
+          completed: execution.records.count,
+          total: execution.totalSetCount,
+          onDismiss: { hideSessionActionMenu() },
+          onHome: returnToToday,
+          onProgress: {
+            hideSessionActionMenu()
+            showsWorkoutProgress = true
+          },
+          onFinish: {
+            hideSessionActionMenu()
+            showsFinishConfirmation = true
+          }
+        )
+        .transition(.opacity)
+        .zIndex(50)
+      }
+    }
+    .navigationDestination(isPresented: $showsWorkoutProgress) {
+      ActiveWorkoutProgressView(
+        execution: execution,
+        onBack: { showsWorkoutProgress = false },
+        onHome: returnToToday,
+        onFinish: {
+          showsFinishConfirmation = true
+        }
+      )
+    }
+    .alert("Finalizar entrenamiento", isPresented: $showsFinishConfirmation) {
+      Button("Cancelar", role: .cancel) {}
+      Button("Finalizar", role: .destructive, action: finishRemainingWorkout)
+    } message: {
+      Text("Se marcarán como omitidas \(pendingSetCount) series pendientes. Las series ya registradas se conservarán.")
+    }
+    .onPreferenceChange(ExerciseHistoryPresentationPreferenceKey.self) {
+      isExerciseHistoryPresented = $0
     }
     .onAppear {
+      WatchWorkoutConnectivity.shared.activate()
       persistActiveWorkout()
       syncTimerNotifications()
     }
@@ -160,6 +212,19 @@ struct SetExecutionView: View {
     .onChange(of: setTimerEndsAt) { _, _ in syncTimerNotifications() }
     .onChange(of: setTimerRemaining) { _, _ in persistActiveWorkout() }
     .onChange(of: exerciseDecisions) { _, _ in persistActiveWorkout() }
+    .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutCommandReceived)) { notification in
+      guard let command = notification.object as? WatchWorkoutCommand,
+            phase == .rest
+      else { return }
+      switch command {
+      case .requestState:
+        break
+      case .addRest15:
+        adjustRest(by: 15)
+      case .subtractRest15:
+        adjustRest(by: -15)
+      }
+    }
   }
 
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
@@ -173,8 +238,7 @@ struct SetExecutionView: View {
 
   private func persistActiveWorkout() {
     guard phase != .finished else { return }
-    ActiveWorkoutStore.save(
-      ActiveWorkoutSnapshot(
+    let snapshot = ActiveWorkoutSnapshot(
         execution: execution,
         phase: ActiveWorkoutPhase(phase),
         feedback: ActiveWorkoutFeedbackDraft(
@@ -192,10 +256,13 @@ struct SetExecutionView: View {
         reviewExerciseIndexes: reviewExerciseIndexes,
         reviewRestSeconds: reviewRestSeconds,
         exerciseDecisions: exerciseDecisions,
+        warmupStatus: warmupStatus,
+        warmupEndsAt: warmupEndsAt,
+        warmupRemaining: warmupRemaining,
         startedAt: startedAt
-      ),
-      in: modelContext
-    )
+      )
+    ActiveWorkoutStore.save(snapshot, in: modelContext)
+    WatchWorkoutConnectivity.shared.publish(snapshot)
   }
 
   private func finishWorkout() {
@@ -205,7 +272,7 @@ struct SetExecutionView: View {
     withAnimation(.smooth(duration: 0.3)) {
       phase = .finished
     }
-    ActiveWorkoutStore.markCompleted(
+    let completedRecord = ActiveWorkoutStore.markCompleted(
       sessionID: session.sessionID,
       startedAt: startedAt,
       completedAt: completionDate,
@@ -214,6 +281,47 @@ struct SetExecutionView: View {
       in: modelContext
     )
     ActiveWorkoutStore.clear(in: modelContext)
+    WatchWorkoutConnectivity.shared.clear()
+    if let completedRecord {
+      Task {
+        await HealthWorkoutStore.syncIfEnabled(
+          record: completedRecord,
+          execution: execution,
+          in: modelContext
+        )
+      }
+    }
+  }
+
+  private var pendingSetCount: Int {
+    max(0, execution.totalSetCount - execution.records.count)
+  }
+
+  private func finishRemainingWorkout() {
+    _ = execution.skipRemaining()
+    restEndsAt = nil
+    restTotalSeconds = 0
+    setTimerEndsAt = nil
+    setTimerRemaining = 0
+    finishWorkout()
+  }
+
+  private func returnToToday() {
+    persistActiveWorkout()
+    onFinishToToday()
+  }
+
+  private func showSessionActionMenu() {
+    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    withAnimation(.spring(response: 0.34, dampingFraction: 0.72)) {
+      isSessionActionMenuPresented = true
+    }
+  }
+
+  private func hideSessionActionMenu() {
+    withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+      isSessionActionMenuPresented = false
+    }
   }
 
   private func adjustRest(by seconds: Int) {
@@ -397,7 +505,7 @@ private struct WorkoutProgressBar: View {
           .animation(.easeInOut(duration: 0.35), value: progress)
       }
     }
-    .frame(height: 59)
+    .frame(height: 7)
     .accessibilityLabel("Progreso del entrenamiento: \(completed) de \(total) series")
   }
 }
@@ -420,8 +528,12 @@ private struct WorkingSetView: View {
   @Binding var timerEndsAt: Date?
   @Binding var timerRemaining: Int
   let onExecutionChanged: () -> Void
+  let onSessionActionsRequested: () -> Void
   @State private var editField: SetEditField?
   @State private var timedSetFinished = false
+  @State private var isHistoryExpanded = false
+  @State private var historyRevealDistance: CGFloat?
+  @Environment(\.dismiss) private var dismiss
 
   private var exercise: TrainingExercise? { execution.exercise(for: locator) }
   private var trainingSet: TrainingSet? { execution.trainingSet(for: locator) }
@@ -432,12 +544,18 @@ private struct WorkingSetView: View {
     Group {
       if let exercise, let trainingSet {
         VStack(alignment: .leading, spacing: 12) {
-          SetHeader(
+          ExerciseExecutionHeader(
+            eyebrow: supersetLabel(for: exercise),
             exercise: exercise,
             setIndex: trainingSet.setIndex - 1,
-            supersetPosition: supersetPosition(for: exercise),
-            supersetSize: supersetSize(for: exercise)
+            isHistoryExpanded: isHistoryExpanded,
+            onHistoryRequested: showHistory,
+            onHistoryDismissed: dismissHistory,
+            onHistoryDragChanged: beginHistoryDrag,
+            onHistoryDragEnded: completeHistoryDrag
           )
+          .padding(.horizontal, -16)
+          .padding(.top, -16)
 
           if trainingSet.type == .timed {
             TimedSetTarget(
@@ -494,10 +612,26 @@ private struct WorkingSetView: View {
             primaryTitle: "Continuar",
             primaryAction: onContinue,
             skipAction: onSkip,
-            primaryDisabled: trainingSet.type == .timed && !timedSetFinished
+            primaryDisabled: trainingSet.type == .timed && !timedSetFinished,
+            onBack: { dismiss() },
+            onSessionActionsRequested: onSessionActionsRequested
           )
         }
         .padding(16)
+        .overlay(alignment: .top) {
+          if isHistoryExpanded {
+            ExerciseHistoryOverlay(
+              exercise: exercise,
+              eyebrow: supersetLabel(for: exercise),
+              setIndex: trainingSet.setIndex - 1,
+              revealDistance: historyRevealDistance,
+              onRevealChanged: beginHistoryDrag,
+              onRevealEnded: completeHistoryDrag,
+              onDismiss: dismissHistory
+            )
+            .zIndex(20)
+          }
+        }
       } else {
         ContentUnavailableView("Serie no disponible", systemImage: "exclamationmark.triangle")
       }
@@ -530,6 +664,10 @@ private struct WorkingSetView: View {
         .presentationDragIndicator(.visible)
       }
     }
+    .preference(
+      key: ExerciseHistoryPresentationPreferenceKey.self,
+      value: isHistoryExpanded
+    )
   }
 
   private func weightUnit(for equipment: Equipment) -> String {
@@ -581,6 +719,44 @@ private struct WorkingSetView: View {
     return execution.session.exercises.filter { $0.supersetID == supersetID }.count
   }
 
+  private func supersetLabel(for exercise: TrainingExercise) -> String? {
+    guard let position = supersetPosition(for: exercise), let size = supersetSize(for: exercise) else {
+      return nil
+    }
+    return "Superserie \(position)/\(size)"
+  }
+
+  private func showHistory() {
+    historyRevealDistance = 0
+    isHistoryExpanded = true
+    Task { @MainActor in
+      withAnimation(.smooth(duration: 0.32)) { historyRevealDistance = nil }
+    }
+  }
+
+  private func beginHistoryDrag(_ distance: CGFloat) {
+    guard distance > 0 else { return }
+    historyRevealDistance = distance
+    isHistoryExpanded = true
+  }
+
+  private func completeHistoryDrag(_ distance: CGFloat) {
+    guard distance >= 42 else {
+      dismissHistory()
+      return
+    }
+    withAnimation(.smooth(duration: 0.3)) { historyRevealDistance = nil }
+  }
+
+  private func dismissHistory() {
+    withAnimation(.smooth(duration: 0.24), completionCriteria: .logicallyComplete) {
+      historyRevealDistance = 0
+    } completion: {
+      isHistoryExpanded = false
+      historyRevealDistance = nil
+    }
+  }
+
   private func adjustTimedDuration(by seconds: Int) {
     guard let targets = activeTargets else { return }
     let duration = max(15, (targets.durationSeconds ?? 60) + seconds)
@@ -616,6 +792,9 @@ private struct FeedbackView: View {
   @Binding var note: String
   let onBack: () -> Void
   let onRegister: () -> Void
+  let onSessionActionsRequested: () -> Void
+  @State private var isHistoryExpanded = false
+  @State private var historyRevealDistance: CGFloat?
 
   private var exercise: TrainingExercise? { execution.exercise(for: locator) }
   private var trainingSet: TrainingSet? { execution.trainingSet(for: locator) }
@@ -625,10 +804,22 @@ private struct FeedbackView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      FeedbackHeader(execution: execution, locator: locator, exercise: exercise)
+      ExerciseExecutionHeader(
+        eyebrow: "Evaluar serie",
+        exercise: exercise,
+        setIndex: locator.setIndex - 1,
+        isHistoryExpanded: isHistoryExpanded,
+        onHistoryRequested: showHistory,
+        onHistoryDismissed: dismissHistory,
+        onHistoryDragChanged: beginHistoryDrag,
+        onHistoryDragEnded: completeHistoryDrag
+      )
+      .padding(.horizontal, -16)
+      .padding(.top, -16)
 
       if isTimed {
         FeedbackMetric(label: "Tiempo", value: feedbackTimeLabel(targets?.durationSeconds ?? 0))
+          .zIndex(isHistoryExpanded ? -1 : 0)
       } else {
         HStack(spacing: 8) {
           FeedbackMetric(label: "Reps", value: targets?.reps.map(String.init) ?? "-")
@@ -638,6 +829,7 @@ private struct FeedbackView: View {
             footer: equipment.executionLabel
           )
         }
+        .zIndex(isHistoryExpanded ? -1 : 0)
       }
 
       VStack(spacing: 10) {
@@ -654,18 +846,15 @@ private struct FeedbackView: View {
       }
       .padding(10)
       .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+      .zIndex(isHistoryExpanded ? -1 : 0)
 
       Spacer(minLength: 0)
 
       HStack(spacing: 12) {
-        Button(action: onBack) {
-          Image(systemName: "chevron.left")
-            .font(.headline.weight(.bold))
-            .frame(width: 64, height: 64)
-            .foregroundStyle(.primary)
-            .glassEffect(.regular.interactive(), in: Circle())
-        }
-        .buttonStyle(.plain)
+        SessionNavigationButton(
+          onBack: onBack,
+          onSessionActionsRequested: onSessionActionsRequested
+        )
 
         Button("Registrar serie", action: onRegister)
           .font(.headline.weight(.bold))
@@ -675,47 +864,57 @@ private struct FeedbackView: View {
           .overlay { Capsule().stroke(Color.gymAccent, lineWidth: 1) }
           .buttonStyle(.plain)
       }
+      .zIndex(isHistoryExpanded ? -1 : 0)
     }
     .padding(16)
+    .overlay(alignment: .top) {
+      if isHistoryExpanded, let exercise {
+        ExerciseHistoryOverlay(
+          exercise: exercise,
+          eyebrow: "Evaluar serie",
+          setIndex: locator.setIndex - 1,
+          revealDistance: historyRevealDistance,
+          onRevealChanged: beginHistoryDrag,
+          onRevealEnded: completeHistoryDrag,
+          onDismiss: dismissHistory
+        )
+        .zIndex(20)
+      }
+    }
+    .preference(
+      key: ExerciseHistoryPresentationPreferenceKey.self,
+      value: isHistoryExpanded
+    )
   }
-}
 
-private struct FeedbackHeader: View {
-  let execution: WorkoutExecutionState
-  let locator: WorkoutSetLocator
-  let exercise: TrainingExercise?
+  private func showHistory() {
+    historyRevealDistance = 0
+    isHistoryExpanded = true
+    Task { @MainActor in
+      withAnimation(.smooth(duration: 0.32)) { historyRevealDistance = nil }
+    }
+  }
 
-  var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("Evaluar serie")
-        .font(.title2.weight(.bold))
-        .foregroundStyle(Color.gymSecondaryText)
+  private func beginHistoryDrag(_ distance: CGFloat) {
+    guard distance > 0 else { return }
+    historyRevealDistance = distance
+    isHistoryExpanded = true
+  }
 
-      HStack(alignment: .top, spacing: 12) {
-        VStack(alignment: .leading, spacing: 5) {
-          Text(exercise?.baseExerciseName ?? "Ejercicio")
-          .font(.system(size: 31, weight: .bold))
-          .lineLimit(2)
-          .minimumScaleFactor(0.78)
-          .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
+  private func completeHistoryDrag(_ distance: CGFloat) {
+    guard distance >= 42 else {
+      dismissHistory()
+      return
+    }
+    withAnimation(.smooth(duration: 0.3)) { historyRevealDistance = nil }
+  }
 
-        SetProgressIndicators(
-          setCount: exercise?.sets.count ?? 0,
-          currentSetIndex: locator.setIndex - 1
-        )
-        .padding(.top, 5)
-      }
-
-      if let exercise, let supersetID = exercise.supersetID {
-        let members = execution.session.exercises.filter { $0.supersetID == supersetID }
-        let position = (members.firstIndex { $0.exerciseID == exercise.exerciseID } ?? 0) + 1
-        FeedbackChip(
-          text: "Superserie \(position)/\(members.count) · Ronda \(locator.setIndex)/\(exercise.sets.count)",
-          accent: true
-        )
-      }
+  private func dismissHistory() {
+    withAnimation(.smooth(duration: 0.24), completionCriteria: .logicallyComplete) {
+      historyRevealDistance = 0
+    } completion: {
+      isHistoryExpanded = false
+      historyRevealDistance = nil
     }
   }
 }
@@ -723,21 +922,267 @@ private struct FeedbackHeader: View {
 private struct SetProgressIndicators: View {
   let setCount: Int
   let currentSetIndex: Int
+  var onAccent = false
+  @State private var currentSetPulse = false
 
   var body: some View {
     HStack(spacing: 6) {
       ForEach(0 ..< max(setCount, 1), id: \.self) { index in
         let isCompleted = index < currentSetIndex
         let isCurrent = index == currentSetIndex
-        Circle()
-          .fill(isCompleted ? Color.gymAccent : .clear)
+        Capsule()
+          .fill(
+            indicatorFill(isCompleted: isCompleted, isCurrent: isCurrent)
+              .opacity(isCurrent && !currentSetPulse ? 0.38 : 1)
+          )
           .overlay {
-            Circle().strokeBorder(
-              isCompleted || isCurrent ? Color.gymAccent : .secondary.opacity(0.35),
-              lineWidth: 2
+            Capsule().strokeBorder(
+              indicatorBorder(isCompleted: isCompleted, isCurrent: isCurrent),
+              lineWidth: 1.5
             )
           }
-          .frame(width: 14, height: 14)
+          .frame(maxWidth: .infinity)
+          .frame(height: 9)
+      }
+    }
+    .onAppear { startCurrentSetPulse() }
+    .onChange(of: currentSetIndex) { _, _ in startCurrentSetPulse() }
+  }
+
+  private func startCurrentSetPulse() {
+    currentSetPulse = false
+    withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+      currentSetPulse = true
+    }
+  }
+
+  private func indicatorFill(isCompleted: Bool, isCurrent: Bool) -> Color {
+    guard onAccent else {
+      return isCompleted ? Color.gymAccent : (isCurrent ? Color.gymAccent.opacity(0.46) : .clear)
+    }
+    return isCompleted ? Color.gymAccentForeground : (isCurrent ? Color.gymAccentForeground.opacity(0.42) : .clear)
+  }
+
+  private func indicatorBorder(isCompleted: Bool, isCurrent: Bool) -> Color {
+    if onAccent {
+      return isCompleted || isCurrent ? Color.gymAccentForeground : Color.gymAccentForeground.opacity(0.44)
+    }
+    return isCompleted || isCurrent ? Color.gymAccent : .secondary.opacity(0.35)
+  }
+}
+
+private struct ExerciseExecutionHeader: View {
+  let eyebrow: String?
+  let exercise: TrainingExercise?
+  let setIndex: Int
+  let isHistoryExpanded: Bool
+  let onHistoryRequested: () -> Void
+  let onHistoryDismissed: () -> Void
+  let onHistoryDragChanged: (CGFloat) -> Void
+  let onHistoryDragEnded: (CGFloat) -> Void
+
+  var body: some View {
+    VStack(spacing: 12) {
+      if let eyebrow {
+        Text(eyebrow)
+          .font(.subheadline.weight(.semibold))
+          .opacity(0.84)
+      }
+
+      Text(exercise?.baseExerciseName ?? "Ejercicio")
+        .font(.system(size: 31, weight: .bold))
+        .multilineTextAlignment(.center)
+        .lineLimit(2)
+        .minimumScaleFactor(0.74)
+        .frame(maxWidth: .infinity, minHeight: 42)
+
+      SetProgressIndicators(
+        setCount: exercise?.sets.count ?? 0,
+        currentSetIndex: setIndex,
+        onAccent: true
+      )
+
+      if exercise != nil {
+        HistoryDisclosureHandle(expansion: isHistoryExpanded ? 1 : 0)
+          .stroke(
+            Color.gymAccentForeground.opacity(0.42),
+            style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round)
+          )
+          .frame(width: 54, height: 8)
+          .contentShape(Rectangle().inset(by: -16))
+          .highPriorityGesture(
+            TapGesture().onEnded {
+              if isHistoryExpanded {
+                onHistoryDismissed()
+              } else {
+                onHistoryRequested()
+              }
+            }
+          )
+          .animation(.smooth(duration: 0.2), value: isHistoryExpanded)
+      }
+
+    }
+    .foregroundStyle(Color.gymAccentForeground)
+    .padding(.horizontal, 20)
+    .padding(.top, 16)
+    .padding(.bottom, 22)
+    .frame(maxWidth: .infinity)
+    .fixedSize(horizontal: false, vertical: true)
+    .background(alignment: .top) {
+      Color.gymAccent
+        .frame(height: 112)
+        .offset(y: -112)
+    }
+    .background {
+      UnevenRoundedRectangle(
+        topLeadingRadius: 0,
+        bottomLeadingRadius: 52,
+        bottomTrailingRadius: 52,
+        topTrailingRadius: 0,
+        style: .continuous
+      )
+      .fill(Color.gymAccent)
+    }
+    .gesture(
+      DragGesture(minimumDistance: 18)
+        .onChanged { value in
+          if value.translation.height > 0 {
+            onHistoryDragChanged(value.translation.height)
+          }
+        }
+        .onEnded { value in
+          guard exercise != nil else { return }
+          if value.translation.height > 42 {
+            onHistoryDragEnded(value.translation.height)
+          } else if value.translation.height < -30, isHistoryExpanded {
+            onHistoryDismissed()
+          } else {
+            onHistoryDragEnded(value.translation.height)
+          }
+        }
+    )
+  }
+}
+
+private struct HistoryDisclosureHandle: Shape {
+  var expansion: CGFloat
+
+  var animatableData: CGFloat {
+    get { expansion }
+    set { expansion = newValue }
+  }
+
+  func path(in rect: CGRect) -> Path {
+    let bend = min(max(expansion, 0), 1)
+    let rise = min(2.5, rect.height * 0.32) * bend
+    let inset = 2.5
+
+    var path = Path()
+    path.move(to: CGPoint(x: rect.minX + inset, y: rect.midY + rise))
+    path.addLine(to: CGPoint(x: rect.midX, y: rect.midY - rise))
+    path.addLine(to: CGPoint(x: rect.maxX - inset, y: rect.midY + rise))
+    return path
+  }
+}
+
+private struct ExerciseHistoryOverlay: View {
+  private static let headerOverlap: CGFloat = 70
+
+  let exercise: TrainingExercise
+  let eyebrow: String?
+  let setIndex: Int
+  let revealDistance: CGFloat?
+  let onRevealChanged: (CGFloat) -> Void
+  let onRevealEnded: (CGFloat) -> Void
+  let onDismiss: () -> Void
+  @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
+
+  var body: some View {
+    GeometryReader { geometry in
+      let availableHeight = geometry.size.height
+
+      VStack(spacing: 0) {
+        ExerciseExecutionHeader(
+          eyebrow: eyebrow,
+          exercise: exercise,
+          setIndex: setIndex,
+          isHistoryExpanded: true,
+          onHistoryRequested: {},
+          onHistoryDismissed: onDismiss,
+          onHistoryDragChanged: onRevealChanged,
+          onHistoryDragEnded: onRevealEnded
+        )
+        .zIndex(2)
+
+        GeometryReader { historyGeometry in
+          let maximumHistoryHeight = historyGeometry.size.height
+          let visibleHistoryHeight = revealDistance.map {
+            min(maximumHistoryHeight, max(0, $0))
+          } ?? maximumHistoryHeight
+
+          ExerciseHistoryPanel(exercise: exercise, completedWorkoutRecords: completedWorkoutRecords)
+            .frame(
+              width: historyGeometry.size.width,
+              height: visibleHistoryHeight + Self.headerOverlap,
+              alignment: .top
+            )
+            .offset(y: -Self.headerOverlap)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .zIndex(1)
+          }
+      }
+      .frame(width: geometry.size.width, height: availableHeight, alignment: .top)
+    }
+  }
+}
+
+private struct ExerciseHistoryPanel: View {
+  let exercise: TrainingExercise
+  let completedWorkoutRecords: [CompletedWorkoutRecord]
+
+  var body: some View {
+    ZStack(alignment: .top) {
+      Color.gymAccent
+
+      ScrollView {
+        ExerciseHistoryContent(
+          exercise: exercise,
+          completedWorkouts: completedWorkoutRecords,
+          showsTitle: false
+        )
+          .padding(.horizontal, 20)
+          .padding(.top, 98)
+          .padding(.bottom, 28)
+      }
+      .foregroundStyle(.primary)
+      .background(Color.gymCanvas)
+      .mask(BottomContainerRelativeMask())
+      .padding(.horizontal, 8)
+      .padding(.bottom, 8)
+    }
+    .mask(BottomContainerRelativeMask())
+  }
+}
+
+private struct ExerciseHistoryPresentationPreferenceKey: PreferenceKey {
+  static var defaultValue = false
+
+  static func reduce(value: inout Bool, nextValue: () -> Bool) {
+    value = value || nextValue()
+  }
+}
+
+private struct BottomContainerRelativeMask: View {
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack(alignment: .top) {
+        ContainerRelativeShape()
+          .fill(.black)
+
+        Rectangle()
+          .fill(.black)
+          .frame(height: geometry.size.height / 2)
       }
     }
   }
@@ -916,6 +1361,8 @@ private struct ExerciseReviewView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       ExerciseReviewHeader(exercises: exercises)
+        .padding(.horizontal, -16)
+        .padding(.top, -16)
 
       ScrollView {
         VStack(alignment: .leading, spacing: 16) {
@@ -948,18 +1395,38 @@ private struct ExerciseReviewHeader: View {
   let exercises: [TrainingExercise]
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
+    VStack(spacing: 8) {
       Text(exercises.count > 1 ? "Evaluar superserie" : "Evaluar ejercicio")
-        .font(.title2.weight(.bold))
+        .font(.subheadline.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
 
       Text(exercises.map(\.baseExerciseName).joined(separator: " + "))
         .font(.system(size: 31, weight: .bold))
         .lineLimit(2)
         .minimumScaleFactor(0.78)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
     }
-    .frame(minHeight: 88, alignment: .topLeading)
+    .foregroundStyle(Color.gymAccentForeground)
+    .padding(.horizontal, 20)
+    .padding(.top, 16)
+    .padding(.bottom, 22)
+    .frame(maxWidth: .infinity, minHeight: 106)
+    .background(alignment: .top) {
+      Color.gymAccent
+        .frame(height: 112)
+        .offset(y: -112)
+    }
+    .background {
+      UnevenRoundedRectangle(
+        topLeadingRadius: 0,
+        bottomLeadingRadius: 52,
+        bottomTrailingRadius: 52,
+        topTrailingRadius: 0,
+        style: .continuous
+      )
+      .fill(Color.gymAccent)
+    }
   }
 }
 
@@ -1075,12 +1542,14 @@ private struct RestView: View {
     TimelineView(.periodic(from: .now, by: 1)) { context in
       let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
       VStack(spacing: 8) {
-        RestCountdownBar(
+        RestExecutionHeader(
           remaining: remaining,
           totalSeconds: totalSeconds,
           completionWaveID: completionWaveID,
           onContinue: onContinue
         )
+        .padding(.horizontal, -16)
+        .padding(.top, -16)
 
         HStack(spacing: 8) {
           RestAdjustmentButton(title: "-15s") { onAdjust(-15) }
@@ -1135,7 +1604,7 @@ private struct RestView: View {
   }
 }
 
-private struct RestCountdownBar: View {
+private struct RestExecutionHeader: View {
   let remaining: Int
   let totalSeconds: Int
   let completionWaveID: Int
@@ -1152,30 +1621,40 @@ private struct RestCountdownBar: View {
       onContinue()
     }) {
       ZStack(alignment: .leading) {
-        RoundedRectangle(cornerRadius: 30)
-          .fill(isFinished ? Color.gymSuccess : Color.gymAccentSecondary)
-
-        GeometryReader { geometry in
-          Rectangle()
-            .fill(isFinished ? Color.gymSuccess : Color.gymAccent)
-            .frame(width: geometry.size.width * progress)
-        }
+        RestProgressBackground(progress: progress, isFinished: isFinished)
 
         VStack(spacing: 5) {
           Text(isFinished ? "Descanso terminado" : "Descanso")
             .font(.headline.weight(.bold))
           Text("\(remaining / 60):\(String(format: "%02d", remaining % 60))")
-            .font(.system(size: 68, weight: .bold))
+            .font(.system(size: 56, weight: .bold))
             .monospacedDigit()
             .contentTransition(.numericText())
         }
         .foregroundStyle(isFinished ? Color.white : Color.gymAccentForeground)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 160)
-      .clipShape(RoundedRectangle(cornerRadius: 30))
+      .frame(maxWidth: .infinity, minHeight: 132, maxHeight: 140)
+      .clipShape(
+        UnevenRoundedRectangle(
+          topLeadingRadius: 0,
+          bottomLeadingRadius: 52,
+          bottomTrailingRadius: 52,
+          topTrailingRadius: 0,
+          style: .continuous
+        )
+      )
+      // This sits outside the clipped header shape so it colors the status
+      // safe area with the same filling animation as the countdown itself.
+      .background(alignment: .top) {
+        RestProgressBackground(progress: progress, isFinished: isFinished)
+          .frame(height: 160)
+          .offset(y: -160)
+      }
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(isFinished ? "Descanso terminado. Continuar" : "Descanso: \(remaining) segundos restantes")
+    .accessibilityHint(isFinished ? "Toca para continuar a la siguiente serie" : "El toque estará disponible al finalizar el descanso")
     .background {
       if completionWaveID > 0 {
         TimerCompletionWave()
@@ -1183,6 +1662,24 @@ private struct RestCountdownBar: View {
       }
     }
     .animation(.linear(duration: 0.85), value: remaining)
+  }
+}
+
+private struct RestProgressBackground: View {
+  let progress: CGFloat
+  let isFinished: Bool
+
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack(alignment: .leading) {
+        Rectangle().fill(isFinished ? Color.gymSuccess : Color.gymAccentSecondary)
+        Rectangle()
+          .fill(isFinished ? Color.gymSuccess : Color.gymAccent)
+          .frame(width: geometry.size.width * progress)
+      }
+    }
+    .animation(.linear(duration: 0.85), value: progress)
+    .animation(.easeInOut(duration: 0.22), value: isFinished)
   }
 }
 
@@ -1465,7 +1962,11 @@ private struct FinishedWorkoutView: View {
 
   var body: some View {
     VStack(spacing: 18) {
-      Spacer()
+      CompletedWorkoutHeader()
+        .padding(.horizontal, -16)
+        .padding(.top, -16)
+
+      Spacer(minLength: 0)
       ZStack {
         Circle()
           .stroke(Color.gymSuccess.opacity(0.35), lineWidth: 10)
@@ -1476,10 +1977,6 @@ private struct FinishedWorkoutView: View {
           .foregroundStyle(Color.gymSuccess)
           .symbolEffect(.bounce, value: rewardVisible)
       }
-      Text("Entrenamiento completado")
-        .font(.largeTitle.weight(.bold))
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
       Text("\(completedSetCount) series registradas en esta sesión.")
         .foregroundStyle(Color.gymSecondaryText)
         .multilineTextAlignment(.center)
@@ -1529,23 +2026,47 @@ private struct FinishedWorkoutView: View {
   }
 }
 
+private struct CompletedWorkoutHeader: View {
+  var body: some View {
+    Text("Entrenamiento completado")
+      .font(.system(size: 31, weight: .bold))
+      .multilineTextAlignment(.center)
+      .minimumScaleFactor(0.8)
+      .foregroundStyle(Color.gymAccentForeground)
+      .frame(maxWidth: .infinity, minHeight: 132)
+      .padding(.horizontal, 24)
+      .background(alignment: .top) {
+        Color.gymAccent
+          .frame(height: 112)
+          .offset(y: -112)
+      }
+      .background {
+        UnevenRoundedRectangle(
+          topLeadingRadius: 0,
+          bottomLeadingRadius: 52,
+          bottomTrailingRadius: 52,
+          topTrailingRadius: 0,
+          style: .continuous
+        )
+        .fill(Color.gymAccent)
+      }
+  }
+}
+
 private struct BottomActions: View {
   let primaryTitle: String
   let primaryAction: () -> Void
   var skipAction: (() -> Void)? = nil
   var primaryDisabled = false
-  @Environment(\.dismiss) private var dismiss
+  let onBack: () -> Void
+  let onSessionActionsRequested: () -> Void
 
   var body: some View {
     HStack(spacing: 12) {
-      Button(action: { dismiss() }) {
-        Image(systemName: "chevron.left")
-          .font(.headline.weight(.bold))
-          .frame(width: 64, height: 64)
-          .foregroundStyle(.primary)
-          .glassEffect(.regular.interactive(), in: Circle())
-      }
-      .buttonStyle(.plain)
+      SessionNavigationButton(
+        onBack: onBack,
+        onSessionActionsRequested: onSessionActionsRequested
+      )
 
       Button(primaryTitle, action: primaryAction)
         .font(.headline.weight(.bold))
@@ -1567,6 +2088,251 @@ private struct BottomActions: View {
         .buttonStyle(.plain)
       }
     }
+  }
+}
+
+private struct SessionNavigationButton: View {
+  let onBack: () -> Void
+  let onSessionActionsRequested: () -> Void
+
+  var body: some View {
+    Image(systemName: "chevron.left")
+      .font(.headline.weight(.bold))
+      .frame(width: 64, height: 64)
+      .foregroundStyle(.primary)
+      .glassEffect(.regular.interactive(), in: Circle())
+      .contentShape(Circle())
+      .gesture(
+        LongPressGesture(minimumDuration: 0.42)
+          .onEnded { _ in onSessionActionsRequested() }
+          .exclusively(before: TapGesture().onEnded(onBack))
+      )
+      .accessibilityAddTraits(.isButton)
+    .accessibilityHint("Mantén pulsado para abrir las acciones del entrenamiento")
+  }
+}
+
+private struct SessionActionFan: View {
+  let completed: Int
+  let total: Int
+  let onDismiss: () -> Void
+  let onHome: () -> Void
+  let onProgress: () -> Void
+  let onFinish: () -> Void
+
+  private var percentage: Int {
+    Int((Double(completed) / Double(max(total, 1)) * 100).rounded())
+  }
+
+  var body: some View {
+    ZStack(alignment: .bottomLeading) {
+      Rectangle()
+        .fill(.ultraThinMaterial)
+        .overlay(Color.black.opacity(0.14))
+        .ignoresSafeArea()
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onDismiss)
+
+      SessionActionButton(symbol: "house.fill", label: "Casa", action: onHome)
+        .offset(x: 4, y: -154)
+        .transition(.scale(scale: 0.2, anchor: .bottomLeading).combined(with: .opacity))
+
+      ProgressActionButton(percentage: percentage, action: onProgress)
+        .offset(x: 78, y: -104)
+        .transition(.scale(scale: 0.2, anchor: .bottomLeading).combined(with: .opacity))
+
+      SessionActionButton(symbol: "stop.fill", label: "Finalizar", tint: .gymDanger, destructive: true, action: onFinish)
+        .offset(x: 146, y: -40)
+        .transition(.scale(scale: 0.2, anchor: .bottomLeading).combined(with: .opacity))
+
+      Button(action: onDismiss) {
+        Image(systemName: "xmark")
+          .font(.headline.weight(.bold))
+          .frame(width: 64, height: 64)
+          .foregroundStyle(.primary)
+          .glassEffect(.regular.interactive(), in: Circle())
+          .contentTransition(.symbolEffect(.replace))
+      }
+      .buttonStyle(.plain)
+      // The execution screens reserve seven points for the global progress bar.
+      // Keep this anchor aligned with the navigation button it replaces.
+      .padding(.leading, 16)
+      .padding(.bottom, 23)
+      .accessibilityLabel("Cerrar acciones del entrenamiento")
+    }
+    .animation(.smooth(duration: 0.28), value: completed)
+  }
+}
+
+private struct SessionActionButton: View {
+  let symbol: String
+  let label: String
+  var tint: Color = .gymAccent
+  var destructive = false
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      Image(systemName: symbol)
+        .font(.headline.weight(.bold))
+        .frame(width: 56, height: 56)
+        .foregroundStyle(destructive ? Color.white : Color.gymAccentForeground)
+        .glassEffect(.regular.tint(tint).interactive(), in: Circle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(label)
+  }
+}
+
+private struct ProgressActionButton: View {
+  let percentage: Int
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      Text("\(percentage)%")
+        .font(.caption.weight(.bold))
+        .monospacedDigit()
+        .frame(width: 56, height: 56)
+        .foregroundStyle(Color.gymAccent)
+        .background(.regularMaterial, in: Circle())
+        .overlay {
+          Circle()
+            .trim(from: 0, to: CGFloat(percentage) / 100)
+            .stroke(Color.gymAccent, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+            .rotationEffect(.degrees(-90))
+            .padding(3)
+        }
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel("Progreso del entrenamiento: \(percentage) por ciento")
+  }
+}
+
+private struct ActiveWorkoutProgressView: View {
+  let execution: WorkoutExecutionState
+  let onBack: () -> Void
+  let onHome: () -> Void
+  let onFinish: () -> Void
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 12) {
+        ForEach(Array(execution.session.exercises.enumerated()), id: \.element.exerciseID) { index, exercise in
+          ExerciseProgressCard(
+            exercise: exercise,
+            exerciseIndex: index,
+            execution: execution
+          )
+        }
+      }
+      .padding(16)
+      .padding(.bottom, 92)
+    }
+    .background(GymCanvas())
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) {
+      AccentHeaderCard(
+        title: "Progreso del entrenamiento",
+        detail: "\(execution.records.count) de \(execution.totalSetCount) series registradas"
+      )
+    }
+    .overlay(alignment: .bottom) {
+      HStack(spacing: 12) {
+        Button(action: onBack) {
+          Image(systemName: "chevron.left")
+            .font(.headline.weight(.bold))
+            .frame(width: 56, height: 56)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Volver al entrenamiento")
+
+        Button(action: onHome) {
+          Image(systemName: "house.fill")
+            .font(.headline.weight(.bold))
+            .frame(width: 56, height: 56)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Volver a Hoy")
+
+        Button("Finalizar", action: onFinish)
+          .font(.headline.weight(.bold))
+          .frame(maxWidth: .infinity, minHeight: 56)
+          .foregroundStyle(.white)
+          .glassEffect(.regular.tint(Color.gymDanger).interactive(), in: Capsule())
+          .buttonStyle(.plain)
+      }
+      .padding(16)
+    }
+  }
+}
+
+private struct ExerciseProgressCard: View {
+  let exercise: TrainingExercise
+  let exerciseIndex: Int
+  let execution: WorkoutExecutionState
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      HStack(spacing: 8) {
+        Text(exercise.baseExerciseName)
+          .font(.headline.weight(.bold))
+          .lineLimit(2)
+        Spacer(minLength: 0)
+        Text(execution.equipment(for: WorkoutSetLocator(exerciseIndex: exerciseIndex, setIndex: 1))?.executionLabel ?? exercise.equipment.executionLabel)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(Color.gymSecondaryText)
+          .padding(.horizontal, 8)
+          .padding(.vertical, 5)
+          .background(Color.gymCanvas, in: Capsule())
+      }
+
+      ForEach(exercise.sets, id: \.setIndex) { set in
+        let locator = WorkoutSetLocator(exerciseIndex: exerciseIndex, setIndex: set.setIndex)
+        let record = execution.records.first { $0.locator == locator }
+        HStack {
+          Text("Serie \(set.setIndex)")
+            .font(.subheadline.weight(.semibold))
+          Spacer()
+          Text(targetLabel(for: locator))
+            .font(.subheadline.weight(.bold))
+            .monospacedDigit()
+          Text(statusLabel(record))
+            .font(.caption.weight(.bold))
+            .foregroundStyle(statusColor(record))
+        }
+        .padding(.vertical, 7)
+        .padding(.horizontal, 10)
+        .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 10))
+      }
+    }
+    .padding(14)
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+    .overlay { RoundedRectangle(cornerRadius: 18).stroke(.separator.opacity(0.7), lineWidth: 1) }
+  }
+
+  private func targetLabel(for locator: WorkoutSetLocator) -> String {
+    guard let targets = execution.targets(for: locator) else { return "-" }
+    if let duration = targets.durationSeconds {
+      return "\(duration / 60):\(String(format: "%02d", duration % 60))"
+    }
+    let reps = targets.reps.map(String.init) ?? "-"
+    let weight = targets.weightKg.formatted(.number.precision(.fractionLength(0...2)))
+    return "\(reps) x \(weight) kg"
+  }
+
+  private func statusLabel(_ record: WorkoutSetRecord?) -> String {
+    guard let record else { return "Pendiente" }
+    return record.status == .completed ? "Hecha" : "Omitida"
+  }
+
+  private func statusColor(_ record: WorkoutSetRecord?) -> Color {
+    guard let record else { return Color.gymSecondaryText }
+    return record.status == .completed ? Color.gymCompleted : Color.gymWarning
   }
 }
 
@@ -2060,7 +2826,7 @@ private enum WorkoutTimerNotification {
   }
 }
 
-private extension Equipment {
+extension Equipment {
   var executionLabel: String {
     switch self {
     case .barbell: "Barra"

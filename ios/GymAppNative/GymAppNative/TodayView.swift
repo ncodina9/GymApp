@@ -100,7 +100,6 @@ struct TodayView: View {
           if let session = plan.sessions.first(where: { $0.sessionID == sessionID }) {
             SessionPreviewView(
               session: session,
-              activeWorkout: activeWorkout,
               onReturnHome: { path.removeAll() }
             )
           }
@@ -112,6 +111,7 @@ struct TodayView: View {
         )
       }
     }
+    .background(InteractivePopGestureRestorer())
   }
 
 }
