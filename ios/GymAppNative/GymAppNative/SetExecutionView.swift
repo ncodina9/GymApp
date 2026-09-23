@@ -213,16 +213,27 @@ struct SetExecutionView: View {
     .onChange(of: setTimerRemaining) { _, _ in persistActiveWorkout() }
     .onChange(of: exerciseDecisions) { _, _ in persistActiveWorkout() }
     .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutCommandReceived)) { notification in
-      guard let command = notification.object as? WatchWorkoutCommand,
-            phase == .rest
-      else { return }
-      switch command {
+      guard let envelope = notification.object as? WatchWorkoutCommandEnvelope else { return }
+      switch envelope.command {
       case .requestState:
         break
       case .addRest15:
+        guard phase == .rest else { return }
         adjustRest(by: 15)
       case .subtractRest15:
+        guard phase == .rest else { return }
         adjustRest(by: -15)
+      case .registerSet:
+        registerCurrentSetFromWatch()
+      case .skipSet:
+        guard phase == .workingSet else { return }
+        skipCurrentSet()
+      case .startTimedSet:
+        startTimedSetFromWatch()
+      case .pauseTimedSet:
+        pauseTimedSetFromWatch()
+      case .resetTimedSet:
+        resetTimedSetFromWatch()
       }
     }
   }
@@ -443,6 +454,60 @@ struct SetExecutionView: View {
     }
 
     advanceAfterRecord(advance)
+  }
+
+  private func registerCurrentSetFromWatch() {
+    guard phase == .workingSet,
+          let current = execution.current
+    else { return }
+
+    let isTimed = execution.trainingSet(for: current)?.type == .timed
+    if isTimed, setTimerEndsAt.map({ $0 > .now }) != false { return }
+
+    let setFeedback = WorkoutSetFeedback(
+      rir: isTimed ? nil : 2,
+      painKnee: 0,
+      painWrist: 0,
+      painShoulder: 0,
+      painLowerBack: 0,
+      note: "Registrada desde Apple Watch"
+    )
+    guard let advance = execution.recordCurrent(feedback: setFeedback) else {
+      finishWorkout()
+      return
+    }
+    advanceAfterRecord(advance)
+  }
+
+  private func startTimedSetFromWatch() {
+    guard phase == .workingSet,
+          let current = execution.current,
+          execution.trainingSet(for: current)?.type == .timed,
+          setTimerEndsAt == nil,
+          let duration = execution.targets(for: current)?.durationSeconds
+    else { return }
+    let remaining = setTimerRemaining > 0 ? setTimerRemaining : duration
+    setTimerRemaining = remaining
+    setTimerEndsAt = .now.addingTimeInterval(TimeInterval(remaining))
+    persistActiveWorkout()
+  }
+
+  private func pauseTimedSetFromWatch() {
+    guard phase == .workingSet, let setTimerEndsAt else { return }
+    setTimerRemaining = max(0, Int(setTimerEndsAt.timeIntervalSinceNow.rounded(.up)))
+    self.setTimerEndsAt = nil
+    persistActiveWorkout()
+  }
+
+  private func resetTimedSetFromWatch() {
+    guard phase == .workingSet,
+          let current = execution.current,
+          execution.trainingSet(for: current)?.type == .timed,
+          let duration = execution.targets(for: current)?.durationSeconds
+    else { return }
+    setTimerEndsAt = nil
+    setTimerRemaining = duration
+    persistActiveWorkout()
   }
 }
 

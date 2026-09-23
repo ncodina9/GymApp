@@ -1355,6 +1355,8 @@ Actualización v0.1.108: primera entrega de la cabecera de ejecución nativa. Se
 
 Actualización v0.1.109: se crea la base de la companion watchOS. El iPhone publica por `WatchConnectivity` una instantánea versionada de la sesión activa; el reloj muestra ejercicio, serie, objetivos, descanso y progreso, y puede ajustar el descanso en tiempo real mediante `±15 s`. El registro de series continúa siendo autoritativo en el iPhone hasta definir un flujo de feedback completo e idempotente para la muñeca.
 
+Actualización v0.1.110: la companion comparte el contrato de estado y comandos con el núcleo nativo. Las órdenes del reloj se identifican y confirman para descartar reintentos; permite registrar u omitir series normales, controlar una serie temporizada y ajustar el descanso. Las superseries muestran sus ejercicios vinculados y el reloj avisa hápticamente al confirmar una orden o terminar una temporizada. El feedback detallado y la cola offline siguen pendientes.
+
 Planificado para el siguiente bloque nativo: una cabecera común y centrada para las fases de ejecución. En Serie y Evaluar serie mostrará el ejercicio y píldoras de progreso sin material; en Descanso mostrará exclusivamente la cuenta atrás y no abrirá historial; en finalización solo dirá «Entrenamiento completado». El histórico por ejercicio se desplegará desde el borde inferior discreto de cabeceras con nombre, sin usar el gesto de inicio del dispositivo. Incluirá récords por material, RM mediante Epley, gráfico elemental y registros nativos; desde Preview se consultará con pulsación prolongada y previsualización nativa para no interferir con iniciar o priorizar un ejercicio.
 
 ### Futuro: onboarding y perfil de entrenamiento
@@ -1382,14 +1384,14 @@ Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin
 
 Prioridad 1:
 
-- [ ] crear el target watchOS y un canal de sincronización con el iPhone que publique la sesión, serie actual, objetivos, material, progreso y descanso
-- [ ] diseñar la pantalla de serie para reloj: ejercicio, progreso, reps/tiempo, peso y acciones grandes de registrar o saltar
-- [ ] diseñar la pantalla de descanso con cuenta atrás, próxima serie y háptica al finalizar
-- [ ] aplicar las acciones del reloj de forma idempotente sobre el estado del iPhone, evitando registros duplicados al reconectar
+- [x] crear el target watchOS y un canal de sincronización con el iPhone que publique la sesión, serie actual, objetivos, material, progreso y descanso
+- [x] diseñar la pantalla de serie para reloj: ejercicio, progreso, reps/tiempo, peso y acciones grandes de registrar o saltar
+- [~] diseñar la pantalla de descanso con cuenta atrás, próxima serie y háptica al finalizar
+- [x] aplicar las acciones del reloj de forma idempotente sobre el estado del iPhone, evitando registros duplicados al reconectar
 
 Prioridad 2:
 
-- [ ] mostrar superseries como secuencia de ejercicios vinculados, manteniendo clara la integrante actual
+- [x] mostrar superseries como secuencia de ejercicios vinculados, manteniendo clara la integrante actual
 - [ ] incorporar una cola local en el reloj para registrar acciones sin conexión temporal con el teléfono y reconciliarlas al volver
 - [ ] definir notificaciones y sonidos de finalización coherentes entre iPhone y reloj, sin avisos duplicados
 

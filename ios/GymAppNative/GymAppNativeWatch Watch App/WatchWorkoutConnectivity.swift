@@ -1,53 +1,24 @@
-import Foundation
 import Combine
+import Foundation
 import WatchConnectivity
-
-// Keep this transport contract independent from the view layer. It mirrors the
-// iPhone's versioned payload so the Watch can evolve without owning workout data.
-struct WatchWorkoutState: Codable, Equatable {
-  enum Phase: String, Codable {
-    case workingSet
-    case feedback
-    case rest
-    case exerciseReview
-    case warmup
-  }
-
-  let schemaVersion: Int
-  let sessionID: String
-  let workoutName: String
-  let exerciseName: String
-  let equipmentName: String
-  let phase: Phase
-  let completedSetCount: Int
-  let totalSetCount: Int
-  let exerciseSetNumber: Int
-  let exerciseSetTotal: Int
-  let reps: Int?
-  let weightKg: Double
-  let durationSeconds: Int?
-  let timerEndsAt: Date?
-  let updatedAt: Date
-}
-
-enum WatchWorkoutCommand: String, Codable {
-  case requestState
-  case addRest15
-  case subtractRest15
-}
+import WatchKit
+import GymAppNativeCore
 
 @MainActor
 final class WatchWorkoutConnectivity: NSObject, ObservableObject {
   @Published private(set) var workout: WatchWorkoutState?
   @Published private(set) var connectionStatus = "Conectando con el iPhone"
+  @Published private(set) var pendingCommand: WatchWorkoutCommand?
 
   private enum Key {
     static let workoutState = "workoutState"
-    static let workoutCommand = "workoutCommand"
+    static let workoutCommandEnvelope = "workoutCommandEnvelope"
+    static let workoutCommandAcknowledgement = "workoutCommandAcknowledgement"
   }
 
   private let encoder = JSONEncoder()
   private let decoder = JSONDecoder()
+  private var pendingCommandID: UUID?
 
   override init() {
     super.init()
@@ -57,16 +28,55 @@ final class WatchWorkoutConnectivity: NSObject, ObservableObject {
     session.activate()
   }
 
+  var isSendingAction: Bool { pendingCommand != nil }
+
   func send(_ command: WatchWorkoutCommand) {
-    guard WCSession.default.isReachable,
-          let data = try? encoder.encode(command)
-    else { return }
-    let payload = [Key.workoutCommand: data]
-    WCSession.default.sendMessage(payload, replyHandler: nil, errorHandler: nil)
+    let session = WCSession.default
+    guard session.isReachable else {
+      connectionStatus = "Abre GymApp en el iPhone para continuar"
+      return
+    }
+    guard pendingCommand == nil else { return }
+
+    let envelope = WatchWorkoutCommandEnvelope(command: command)
+    guard let data = try? encoder.encode(envelope) else { return }
+    if command != .requestState {
+      pendingCommand = command
+      pendingCommandID = envelope.id
+    }
+
+    session.sendMessage(
+      [Key.workoutCommandEnvelope: data],
+      replyHandler: { [weak self] response in
+        guard let data = response[Key.workoutCommandAcknowledgement] as? Data,
+              let acknowledgement = try? JSONDecoder().decode(WatchWorkoutCommandAcknowledgement.self, from: data)
+        else { return }
+        Task { @MainActor in self?.apply(acknowledgement) }
+      },
+      errorHandler: { [weak self] _ in
+        Task { @MainActor in
+          self?.pendingCommand = nil
+          self?.pendingCommandID = nil
+          self?.connectionStatus = "No se pudo enviar la acción"
+        }
+      }
+    )
   }
 
   func requestState() {
     send(.requestState)
+  }
+
+  private func apply(_ acknowledgement: WatchWorkoutCommandAcknowledgement) {
+    guard acknowledgement.commandID == pendingCommandID || pendingCommandID == nil else { return }
+    pendingCommand = nil
+    pendingCommandID = nil
+    if acknowledgement.result != .rejected {
+      WKInterfaceDevice.current().play(.click)
+    }
+    connectionStatus = acknowledgement.result == .rejected
+      ? "La acción ya no está disponible"
+      : "Acción confirmada"
   }
 
   private func apply(_ payload: [String: Any]) {

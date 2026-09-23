@@ -3,6 +3,26 @@ import Testing
 @testable import GymAppNativeCore
 
 struct TrainingPlanDecodingTests {
+  @Test("Codifica órdenes del Watch con acuse y deduplicación")
+  func encodesWatchCommandEnvelope() throws {
+    let id = UUID()
+    let envelope = WatchWorkoutCommandEnvelope(id: id, command: .registerSet)
+    let decodedEnvelope = try JSONDecoder().decode(
+      WatchWorkoutCommandEnvelope.self,
+      from: JSONEncoder().encode(envelope)
+    )
+    let acknowledgement = WatchWorkoutCommandAcknowledgement(commandID: id, result: .applied)
+    let decodedAcknowledgement = try JSONDecoder().decode(
+      WatchWorkoutCommandAcknowledgement.self,
+      from: JSONEncoder().encode(acknowledgement)
+    )
+
+    #expect(decodedEnvelope.id == id)
+    #expect(decodedEnvelope.command == .registerSet)
+    #expect(decodedAcknowledgement.commandID == id)
+    #expect(decodedAcknowledgement.result == .applied)
+  }
+
   @Test("Decodifica el plan de producción compartido")
   func decodesProductionPlan() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))

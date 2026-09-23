@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import GymAppNativeCore
+import WatchKit
 
 struct ContentView: View {
     @EnvironmentObject private var connectivity: WatchWorkoutConnectivity
@@ -13,7 +15,11 @@ struct ContentView: View {
     var body: some View {
         Group {
             if let workout = connectivity.workout {
-                WatchWorkoutView(workout: workout, onCommand: connectivity.send)
+                WatchWorkoutView(
+                    workout: workout,
+                    isSendingAction: connectivity.isSendingAction,
+                    onCommand: connectivity.send
+                )
             } else {
                 VStack(spacing: 12) {
                     ContentUnavailableView(
@@ -36,9 +42,11 @@ struct ContentView: View {
 
 private struct WatchWorkoutView: View {
     let workout: WatchWorkoutState
+    let isSendingAction: Bool
     let onCommand: (WatchWorkoutCommand) -> Void
 
     private var isResting: Bool { workout.phase == .rest }
+    private var isTimed: Bool { workout.durationSeconds != nil }
 
     var body: some View {
         ScrollView {
@@ -52,6 +60,13 @@ private struct WatchWorkoutView: View {
                     .font(.title3.weight(.bold))
                     .multilineTextAlignment(.center)
 
+                if let superset = workout.supersetExerciseNames, superset.count > 1 {
+                    Text("Superserie: \(superset.joined(separator: " + "))")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
                 Text("Serie \(workout.exerciseSetNumber)/\(workout.exerciseSetTotal)")
                     .font(.headline)
 
@@ -60,7 +75,7 @@ private struct WatchWorkoutView: View {
                     metric("Peso", value: WeightFormatter.string(from: workout.weightKg))
                 }
 
-                if let endsAt = workout.timerEndsAt {
+                if let endsAt = workout.timerEndsAt, !isTimed || isResting {
                     TimelineView(.periodic(from: .now, by: 1)) { _ in
                         Text(endsAt, style: .timer)
                             .font(.system(size: 34, weight: .bold, design: .rounded))
@@ -75,11 +90,33 @@ private struct WatchWorkoutView: View {
                         Button("+15") { onCommand(.addRest15) }
                     }
                     .buttonStyle(.borderedProminent)
+                    .disabled(isSendingAction)
+                } else if workout.phase == .workingSet, isTimed {
+                    WatchTimedSetControls(
+                        durationSeconds: workout.durationSeconds ?? 0,
+                        endsAt: workout.timerEndsAt,
+                        isSendingAction: isSendingAction,
+                        onCommand: onCommand
+                    )
+                } else if workout.phase == .workingSet {
+                    Button("Registrar serie") { onCommand(.registerSet) }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                        .disabled(isSendingAction)
+
+                    Button("Omitir serie", role: .destructive) { onCommand(.skipSet) }
+                        .buttonStyle(.bordered)
+                        .disabled(isSendingAction)
                 } else {
-                    Label("Registra la serie en el iPhone", systemImage: "iphone")
+                    Label("Completa la evaluación en el iPhone", systemImage: "iphone")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
+                }
+
+                if isSendingAction {
+                    ProgressView()
+                        .controlSize(.small)
                 }
 
                 ProgressView(
@@ -102,6 +139,55 @@ private struct WatchWorkoutView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+private struct WatchTimedSetControls: View {
+    let durationSeconds: Int
+    let endsAt: Date?
+    let isSendingAction: Bool
+    let onCommand: (WatchWorkoutCommand) -> Void
+    @State private var didAnnounceCompletion = false
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let remaining = max(0, Int((endsAt?.timeIntervalSince(context.date) ?? 0).rounded(.up)))
+            let isComplete = endsAt != nil && remaining == 0
+
+            VStack(spacing: 8) {
+                Text(clock(endsAt == nil ? durationSeconds : remaining))
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(isComplete ? .green : .primary)
+                    .onChange(of: isComplete) { _, finished in
+                        guard finished, !didAnnounceCompletion else { return }
+                        didAnnounceCompletion = true
+                        WKInterfaceDevice.current().play(.notification)
+                    }
+
+                if isComplete {
+                    Button("Registrar serie") { onCommand(.registerSet) }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                        .disabled(isSendingAction)
+                } else if endsAt == nil {
+                    HStack(spacing: 8) {
+                        Button("Iniciar") { onCommand(.startTimedSet) }
+                        Button("Reiniciar") { onCommand(.resetTimedSet) }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isSendingAction)
+                } else {
+                    Button("Pausar") { onCommand(.pauseTimedSet) }
+                        .buttonStyle(.bordered)
+                        .disabled(isSendingAction)
+                }
+            }
+        }
+    }
+
+    private func clock(_ seconds: Int) -> String {
+        "\(seconds / 60):\(String(format: "%02d", seconds % 60))"
     }
 }
 

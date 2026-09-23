@@ -12,7 +12,8 @@ final class WatchWorkoutConnectivity: NSObject {
 
   private enum Key {
     static let workoutState = "workoutState"
-    static let workoutCommand = "workoutCommand"
+    static let workoutCommandEnvelope = "workoutCommandEnvelope"
+    static let workoutCommandAcknowledgement = "workoutCommandAcknowledgement"
     static let persistedWorkoutState = "watchPersistedWorkoutState"
   }
 
@@ -20,6 +21,7 @@ final class WatchWorkoutConnectivity: NSObject {
   private let decoder = JSONDecoder()
   private var didActivate = false
   private var latestState: WatchWorkoutState?
+  private var processedCommandDates: [UUID: Date] = [:]
 
   private override init() {
     super.init()
@@ -64,6 +66,11 @@ final class WatchWorkoutConnectivity: NSObject {
     let timerEndsAt = snapshot.phase == .rest
       ? snapshot.restEndsAt
       : snapshot.setTimerEndsAt
+    let supersetExerciseNames = exercise.supersetID.map { supersetID in
+      execution.session.exercises
+        .filter { $0.supersetID == supersetID }
+        .map(\.baseExerciseName)
+    }
 
     publish(
       WatchWorkoutState(
@@ -71,6 +78,7 @@ final class WatchWorkoutConnectivity: NSObject {
         workoutName: execution.session.label,
         exerciseName: exercise.name,
         equipmentName: (execution.equipment(for: locator) ?? exercise.equipment).executionLabel,
+        supersetExerciseNames: supersetExerciseNames,
         phase: phase,
         completedSetCount: execution.completedSetCount,
         totalSetCount: execution.totalSetCount,
@@ -128,23 +136,53 @@ extension WatchWorkoutConnectivity: WCSessionDelegate {
   }
 
   nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-    receive(commandFrom: message)
+    receive(commandFrom: message, replyHandler: nil)
+  }
+
+  nonisolated func session(
+    _ session: WCSession,
+    didReceiveMessage message: [String: Any],
+    replyHandler: @escaping ([String: Any]) -> Void
+  ) {
+    receive(commandFrom: message, replyHandler: replyHandler)
   }
 
   nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
-    receive(commandFrom: applicationContext)
+    receive(commandFrom: applicationContext, replyHandler: nil)
   }
 
-  private nonisolated func receive(commandFrom payload: [String: Any]) {
-    guard let data = payload["workoutCommand"] as? Data else { return }
-
+  private nonisolated func receive(
+    commandFrom payload: [String: Any],
+    replyHandler: (([String: Any]) -> Void)?
+  ) {
+    guard let data = payload["workoutCommandEnvelope"] as? Data else { return }
     Task { @MainActor in
-      guard let command = try? self.decoder.decode(WatchWorkoutCommand.self, from: data) else { return }
-      if command == .requestState {
-        self.publishLatestStateIfPossible()
-      } else {
-        NotificationCenter.default.post(name: .watchWorkoutCommandReceived, object: command)
+      guard let envelope = try? self.decoder.decode(WatchWorkoutCommandEnvelope.self, from: data) else {
+        return
       }
+      let acknowledgement = self.apply(envelope)
+      guard let encodedAcknowledgement = try? self.encoder.encode(acknowledgement) else { return }
+      replyHandler?([Key.workoutCommandAcknowledgement: encodedAcknowledgement])
     }
+  }
+
+  private func apply(_ envelope: WatchWorkoutCommandEnvelope) -> WatchWorkoutCommandAcknowledgement {
+    pruneProcessedCommands()
+    if processedCommandDates[envelope.id] != nil {
+      return WatchWorkoutCommandAcknowledgement(commandID: envelope.id, result: .duplicate)
+    }
+
+    processedCommandDates[envelope.id] = .now
+    if envelope.command == .requestState {
+      publishLatestStateIfPossible()
+    } else {
+      NotificationCenter.default.post(name: .watchWorkoutCommandReceived, object: envelope)
+    }
+    return WatchWorkoutCommandAcknowledgement(commandID: envelope.id, result: .applied)
+  }
+
+  private func pruneProcessedCommands() {
+    let cutoff = Date.now.addingTimeInterval(-300)
+    processedCommandDates = processedCommandDates.filter { $0.value >= cutoff }
   }
 }
