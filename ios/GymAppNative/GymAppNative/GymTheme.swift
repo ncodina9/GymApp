@@ -105,6 +105,8 @@ private enum ThemeColor {
   case controlSelectionFill
   case controlSelectionForeground
   case progressFill
+  case tertiary
+  case completed
 }
 
 enum GymTheme {
@@ -144,6 +146,31 @@ enum GymTheme {
       case .controlSelectionForeground:
         return usesDarkCanvas ? .white : .white
       case .progressFill: return accent.withAlphaComponent(0.22)
+      case .tertiary:
+        switch premiumScheme {
+        case .monochrome: return UIColor(red: 0.21, green: 0.35, blue: 0.61, alpha: 1)
+        case .amberViolet:
+          return usesDarkCanvas
+            ? UIColor(red: 0.15, green: 0.31, blue: 0.54, alpha: 1)
+            : UIColor(red: 0.09, green: 0.15, blue: 0.32, alpha: 1)
+        case .greenBlue:
+          return usesDarkCanvas
+            ? UIColor(red: 0.32, green: 0.22, blue: 0.47, alpha: 1)
+            : UIColor(red: 0.16, green: 0.08, blue: 0.27, alpha: 1)
+        case .whiteNavy: return UIColor(red: 0.03, green: 0.45, blue: 0.50, alpha: 1)
+        case .grayBurgundy:
+          return usesDarkCanvas
+            ? UIColor(red: 0.15, green: 0.36, blue: 0.60, alpha: 1)
+            : UIColor(red: 0.09, green: 0.21, blue: 0.38, alpha: 1)
+        }
+      case .completed:
+        switch premiumScheme {
+        case .monochrome: return UIColor(red: 0.09, green: 0.42, blue: 0.29, alpha: 1)
+        case .amberViolet: return UIColor(red: 0.03, green: 0.37, blue: 0.33, alpha: 1)
+        case .greenBlue: return UIColor(red: 0.04, green: 0.40, blue: 0.31, alpha: 1)
+        case .whiteNavy: return UIColor(red: 0.04, green: 0.39, blue: 0.30, alpha: 1)
+        case .grayBurgundy: return UIColor(red: 0.04, green: 0.38, blue: 0.30, alpha: 1)
+        }
       }
     }
 
@@ -159,6 +186,8 @@ enum GymTheme {
     case .controlSelectionFill: return accent.primaryColor
     case .controlSelectionForeground: return .white
     case .progressFill: return accent.primaryColor.withAlphaComponent(0.22)
+    case .tertiary: return accent.primaryColor
+    case .completed: return UIColor(red: 0.09, green: 0.45, blue: 0.29, alpha: 1)
     }
   }
 }
@@ -173,6 +202,8 @@ extension Color {
   static var gymControlSelectionFill: Color { Color(uiColor: UIColor { GymTheme.color(.controlSelectionFill, traits: $0) }) }
   static var gymControlSelectionForeground: Color { Color(uiColor: UIColor { GymTheme.color(.controlSelectionForeground, traits: $0) }) }
   static var gymProgressFill: Color { Color(uiColor: UIColor { GymTheme.color(.progressFill, traits: $0) }) }
+  static var gymTertiary: Color { Color(uiColor: UIColor { GymTheme.color(.tertiary, traits: $0) }) }
+  static var gymCompleted: Color { Color(uiColor: UIColor { GymTheme.color(.completed, traits: $0) }) }
   static let gymSuccess = Color(red: 0.09, green: 0.45, blue: 0.29)
   static let gymWarning = Color(red: 0.64, green: 0.43, blue: 0.00)
   static let gymDanger = Color(red: 0.70, green: 0.23, blue: 0.22)

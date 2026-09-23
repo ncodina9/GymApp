@@ -64,7 +64,7 @@ struct SettingsView: View {
           )
         }
 
-        Text("v0.1.103")
+        Text("v0.1.104")
           .font(.caption2.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -90,7 +90,7 @@ private struct SettingsCategory<Content: View>: View {
     VStack(alignment: .leading, spacing: 8) {
       Text(title)
         .font(.subheadline.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
         .padding(.horizontal, 4)
 
       VStack(spacing: 0) {
@@ -115,10 +115,10 @@ private struct SettingsRow<Destination: View>: View {
       HStack {
         VStack(alignment: .leading, spacing: 4) {
           Text(title).font(.headline.weight(.bold))
-          Text(detail).font(.subheadline).foregroundStyle(.secondary)
+          Text(detail).font(.subheadline).foregroundStyle(Color.gymSecondaryText)
         }
         Spacer()
-        Image(systemName: "chevron.right").foregroundStyle(.secondary)
+        Image(systemName: "chevron.right").foregroundStyle(Color.gymSecondaryText)
       }
       .padding(16)
       .frame(maxWidth: .infinity)
@@ -195,7 +195,7 @@ private struct AccentThemePreviewList: View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Color de resalte")
         .font(.subheadline.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
 
       ForEach(ThemeAccent.allCases) { theme in
         AccentThemePreviewCard(
@@ -219,11 +219,11 @@ private struct PremiumColorSchemePreviewList: View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Esquemas premium")
         .font(.subheadline.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
 
       Text("El fondo y el resalte se invierten entre la apariencia clara y la oscura.")
         .font(.caption)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
 
       ForEach(PremiumColorScheme.allCases) { scheme in
         PremiumColorSchemePreviewCard(
@@ -252,7 +252,7 @@ private struct PremiumColorSchemePreviewCard: View {
             .font(.headline.weight(.bold))
           Text(isSelected ? "Seleccionado" : "Fondo y resalte adaptativos")
             .font(.caption.weight(.medium))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.gymSecondaryText)
         }
 
         Spacer(minLength: 12)
@@ -312,7 +312,7 @@ private struct AccentThemePreviewCard: View {
             .foregroundStyle(.primary)
           Text(isSelected ? "Seleccionado" : "Color de interfaz")
             .font(.caption.weight(.medium))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.gymSecondaryText)
         }
 
         Spacer(minLength: 12)
@@ -464,7 +464,7 @@ private struct ExportSettingsView: View {
           .padding(.top, 8)
         Text("El backup JSON conserva todas las sesiones. El CSV se puede regenerar para sesiones con registro nativo detallado.")
           .font(.subheadline)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
 
         ForEach(completedRecords.sorted { $0.completedAt > $1.completedAt }) { record in
           SavedWorkoutCard(
@@ -623,7 +623,7 @@ private struct SavedWorkoutCard: View {
       VStack(alignment: .leading, spacing: 4) {
         Text(date)
           .font(.caption.weight(.semibold))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
         Text(label)
           .font(.headline.weight(.bold))
           .lineLimit(1)
@@ -639,7 +639,7 @@ private struct SavedWorkoutCard: View {
         } else {
           Text("Registro sin detalle. Solo las sesiones finalizadas desde v0.1.71 pueden reexportarse.")
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.gymSecondaryText)
         }
 
         Spacer(minLength: 0)

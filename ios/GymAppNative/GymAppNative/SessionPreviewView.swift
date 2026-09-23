@@ -54,7 +54,7 @@ struct SessionPreviewView: View {
             VStack(alignment: .leading, spacing: 12) {
               Text("Superserie")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.gymSecondaryText)
                 .textCase(.uppercase)
 
               ForEach(block.exercises) { exercise in
@@ -259,7 +259,7 @@ private struct EquipmentChip: View {
   var body: some View {
     Text(variantLabel ?? equipment.label)
       .font(.caption.weight(.semibold))
-      .foregroundStyle(.secondary)
+      .foregroundStyle(Color.gymSecondaryText)
       .padding(.horizontal, 10)
       .padding(.vertical, 6)
       .background(Color.gymSurface.opacity(0.72), in: Capsule())
@@ -274,7 +274,7 @@ private struct PreviewMetric: View {
     VStack(spacing: 5) {
       Text(label)
         .font(.caption2.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
         .lineLimit(1)
       Text(value)
         .font(.subheadline.weight(.bold))

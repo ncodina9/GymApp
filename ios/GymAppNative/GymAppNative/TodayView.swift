@@ -15,18 +15,28 @@ struct TodayView: View {
   }
 
   private var recommendedSession: TrainingSession? {
-    let sessionsByWeek = Dictionary(grouping: plan.sessions, by: \.week)
-      .values
-      .map { $0.sorted { $0.date < $1.date } }
-      .sorted { $0[0].week < $1[0].week }
-
-    if let nextWeek = sessionsByWeek.first(where: { week in
-      week.contains { !completedSessionIDs.contains($0.sessionID) }
-    }) {
-      return nextWeek.first
+    if let activeWorkout {
+      return activeWorkout.execution.session
     }
 
-    return plan.sessions.max { $0.date < $1.date }
+    let pendingSessions = plan.sessions
+      .filter { !completedSessionIDs.contains($0.sessionID) }
+      .sorted { $0.date < $1.date }
+    guard !pendingSessions.isEmpty else {
+      return plan.sessions.max { $0.date < $1.date }
+    }
+
+    let today = Calendar.current.startOfDay(for: .now)
+    return pendingSessions.first(where: { session in
+      Self.recommendationDate(session) >= today
+    }) ?? pendingSessions.first
+  }
+
+  private static func recommendationDate(_ session: TrainingSession) -> Date {
+    let parser = DateFormatter()
+    parser.locale = Locale(identifier: "en_US_POSIX")
+    parser.dateFormat = "yyyy-MM-dd"
+    return parser.date(from: session.date) ?? .distantPast
   }
 
   private var weekSessions: [TrainingSession] {
@@ -117,29 +127,23 @@ struct WeekSessionCard: View {
       HStack(alignment: .firstTextBaseline) {
         Text(session.weekday.capitalized)
           .font(.subheadline.weight(.bold))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
         Text(Self.dateLabel(session.date))
           .font(.subheadline.weight(.bold))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
         Spacer()
-        if isCompleted {
-          Text("Completado")
-            .font(.caption2.weight(.bold))
-            .foregroundStyle(Color.gymSuccess)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.gymSuccess.opacity(0.14), in: Capsule())
-        } else if isInProgress {
-          Text("En curso")
-            .font(.caption2.weight(.bold))
-            .foregroundStyle(Color.gymWarning)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.gymWarning.opacity(0.14), in: Capsule())
-        } else if isRecommended {
-          Image(systemName: "sparkle")
-            .font(.caption.weight(.bold))
-            .foregroundStyle(Color.gymAccent)
+        HStack(spacing: 6) {
+          if isRecommended {
+            Image(systemName: "sparkle")
+              .font(.caption2.weight(.bold))
+              .foregroundStyle(Color.gymAccent)
+              .accessibilityLabel("Entrenamiento recomendado")
+          }
+          if isCompleted {
+            SessionStatusBadge(label: "Completado", symbol: "checkmark", color: Color.gymCompleted)
+          } else if isInProgress {
+            SessionStatusBadge(label: "En curso", symbol: "figure.run", color: Color.gymTertiary)
+          }
         }
       }
 
@@ -150,7 +154,7 @@ struct WeekSessionCard: View {
 
       Text(session.focus)
         .font(.subheadline)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
         .lineLimit(2)
         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -166,7 +170,7 @@ struct WeekSessionCard: View {
     .overlay {
       RoundedRectangle(cornerRadius: 22)
         .stroke(
-          isCompleted ? Color.gymSuccess : (isInProgress ? Color.gymWarning : (isRecommended ? Color.gymAccent : Color.secondary.opacity(0.3))),
+          isCompleted ? Color.gymCompleted : (isInProgress ? Color.gymTertiary : (isRecommended ? Color.gymAccent : Color.secondary.opacity(0.3))),
           lineWidth: isRecommended || isInProgress || isCompleted ? 2 : 1
         )
     }
@@ -183,6 +187,28 @@ struct WeekSessionCard: View {
     formatter.dateFormat = "d MMM"
     return formatter.string(from: date).lowercased()
   }
+
+  private static func sessionDate(_ session: TrainingSession) -> Date {
+    let parser = DateFormatter()
+    parser.locale = Locale(identifier: "en_US_POSIX")
+    parser.dateFormat = "yyyy-MM-dd"
+    return parser.date(from: session.date) ?? .distantPast
+  }
+}
+
+private struct SessionStatusBadge: View {
+  let label: String
+  let symbol: String
+  let color: Color
+
+  var body: some View {
+    Label(label, systemImage: symbol)
+      .font(.caption2.weight(.bold))
+      .foregroundStyle(.white)
+      .padding(.horizontal, 8)
+      .padding(.vertical, 4)
+      .background(color, in: Capsule())
+  }
 }
 
 private struct SessionMetric: View {
@@ -193,7 +219,7 @@ private struct SessionMetric: View {
     VStack(spacing: 6) {
       Text(label)
         .font(.caption.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
       Text(value)
         .font(.title3.weight(.bold))
         .monospacedDigit()

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AudioToolbox
+import UserNotifications
 import UIKit
 import GymAppNativeCore
 
@@ -139,7 +140,10 @@ struct SetExecutionView: View {
       )
       .ignoresSafeArea(edges: .top)
     }
-    .onAppear(perform: persistActiveWorkout)
+    .onAppear {
+      persistActiveWorkout()
+      syncTimerNotifications()
+    }
     .onDisappear {
       if phase != .finished {
         persistActiveWorkout()
@@ -152,6 +156,8 @@ struct SetExecutionView: View {
     .onChange(of: feedbackPainLowerBack) { _, _ in persistActiveWorkout() }
     .onChange(of: feedbackNote) { _, _ in persistActiveWorkout() }
     .onChange(of: setTimerEndsAt) { _, _ in persistActiveWorkout() }
+    .onChange(of: restEndsAt) { _, _ in syncTimerNotifications() }
+    .onChange(of: setTimerEndsAt) { _, _ in syncTimerNotifications() }
     .onChange(of: setTimerRemaining) { _, _ in persistActiveWorkout() }
     .onChange(of: exerciseDecisions) { _, _ in persistActiveWorkout() }
   }
@@ -193,6 +199,7 @@ struct SetExecutionView: View {
   }
 
   private func finishWorkout() {
+    WorkoutTimerNotification.cancelAll()
     let completionDate = Date.now
     finishedAt = completionDate
     withAnimation(.smooth(duration: 0.3)) {
@@ -226,6 +233,21 @@ struct SetExecutionView: View {
   private func selectNextBlock(_ exerciseIndex: Int) {
     guard execution.selectNextBlock(exerciseIndex: exerciseIndex) else { return }
     persistActiveWorkout()
+  }
+
+  private func syncTimerNotifications() {
+    WorkoutTimerNotification.schedule(
+      identifier: .rest,
+      endsAt: restEndsAt,
+      title: "Descanso terminado",
+      body: "Ya puedes empezar la siguiente serie."
+    )
+    WorkoutTimerNotification.schedule(
+      identifier: .timedSet,
+      endsAt: setTimerEndsAt,
+      title: "Tiempo completado",
+      body: "La serie temporizada ha finalizado."
+    )
   }
 
   private func continueAfterExerciseReview() {
@@ -462,7 +484,7 @@ private struct WorkingSetView: View {
 
           Text(exercise.notes)
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.gymSecondaryText)
             .lineLimit(2)
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -929,7 +951,7 @@ private struct ExerciseReviewHeader: View {
     VStack(alignment: .leading, spacing: 6) {
       Text(exercises.count > 1 ? "Evaluar superserie" : "Evaluar ejercicio")
         .font(.title2.weight(.bold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
 
       Text(exercises.map(\.baseExerciseName).joined(separator: " + "))
         .font(.system(size: 31, weight: .bold))
@@ -987,14 +1009,14 @@ private struct ExerciseDecisionSection: View {
       }
       .font(.subheadline.weight(.bold))
       .frame(maxWidth: .infinity, minHeight: 58)
-      .foregroundStyle(selection == option ? .white : decisionColor(option))
+      .foregroundStyle(selection == option ? selectedForeground(option) : decisionColor(option))
       .background(
-        selection == option ? decisionColor(option) : decisionColor(option).opacity(0.14),
+        selection == option ? selectedFill(option) : decisionColor(option).opacity(0.14),
         in: RoundedRectangle(cornerRadius: 16)
       )
       .overlay {
         RoundedRectangle(cornerRadius: 16)
-          .stroke(decisionColor(option).opacity(selection == option ? 1 : 0.72), lineWidth: 2)
+          .stroke(selectedBorder(option).opacity(selection == option ? 1 : 0.72), lineWidth: 2)
       }
     }
     .accessibilityLabel(option)
@@ -1014,6 +1036,23 @@ private struct ExerciseDecisionSection: View {
     if lower.contains("bajar") || lower.contains("molestia") { return Color.gymDanger }
     if lower.contains("subir") { return Color.gymSuccess }
     return Color.gymAccent
+  }
+
+  private func selectedFill(_ option: String) -> Color {
+    usesThemeAccent(option) ? Color.gymControlSelectionFill : decisionColor(option)
+  }
+
+  private func selectedForeground(_ option: String) -> Color {
+    usesThemeAccent(option) ? Color.gymControlSelectionForeground : .white
+  }
+
+  private func selectedBorder(_ option: String) -> Color {
+    usesThemeAccent(option) ? Color.gymAccent : decisionColor(option)
+  }
+
+  private func usesThemeAccent(_ option: String) -> Bool {
+    let lower = option.lowercased()
+    return !lower.contains("subir") && !lower.contains("bajar") && !lower.contains("molestia")
   }
 }
 
@@ -1050,7 +1089,7 @@ private struct RestView: View {
 
         VStack(spacing: hasNextSuperset ? 8 : 3) {
           NextSetPreview(execution: execution, locator: next)
-            .frame(maxHeight: hasNextSuperset ? 186 : 132, alignment: .top)
+            .frame(maxHeight: hasNextSuperset ? 244 : 174, alignment: .top)
             .padding(10)
             .overlay {
               RoundedRectangle(cornerRadius: 18)
@@ -1060,7 +1099,6 @@ private struct RestView: View {
           PendingBlockSelector(
             execution: execution,
             next: next,
-            isRestFinished: remaining == 0,
             onSelect: onSelectBlock
           )
           .frame(maxHeight: hasNextSuperset ? 180 : .infinity, alignment: .top)
@@ -1169,18 +1207,18 @@ private struct RestAdjustmentButton: View {
 private struct PendingBlockSelector: View {
   let execution: WorkoutExecutionState
   let next: WorkoutSetLocator
-  let isRestFinished: Bool
   let onSelect: (Int) -> Void
 
   private var options: [PendingBlockOption] {
     guard next.setIndex == 1 else { return [] }
     let recordsByExercise = Set(execution.records.map(\.locator.exerciseIndex))
-    let nextSupersetID = execution.exercise(for: next)?.supersetID
+    let nextExercise = execution.exercise(for: next)
+    let nextBlockID = nextExercise?.supersetID.map { "superset:\($0)" } ?? "exercise:\(next.exerciseIndex)"
     var seenBlockIDs = Set<String>()
 
     return execution.session.exercises.enumerated().compactMap { index, exercise in
       let blockID = exercise.supersetID.map { "superset:\($0)" } ?? "exercise:\(index)"
-      guard blockID != nextSupersetID.map({ "superset:\($0)" }),
+      guard blockID != nextBlockID,
             seenBlockIDs.insert(blockID).inserted
       else { return nil }
 
@@ -1207,9 +1245,9 @@ private struct PendingBlockSelector: View {
   var body: some View {
     if !options.isEmpty {
       VStack(alignment: .leading, spacing: 7) {
-        Text("Cambiar siguiente bloque")
+        Text("Elegir otro siguiente bloque")
           .font(.caption.weight(.bold))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
           .textCase(.uppercase)
 
         ScrollView {
@@ -1231,21 +1269,19 @@ private struct PendingBlockSelector: View {
                       }
                       Text(option.equipmentSummary)
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.gymSecondaryText)
                     }
                   }
                   Spacer(minLength: 0)
                   Image(systemName: "chevron.right")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.gymSecondaryText)
                 }
                 .padding(.horizontal, 12)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 16))
               }
               .buttonStyle(.plain)
-              .disabled(!isRestFinished)
-              .opacity(isRestFinished ? 1 : 0.45)
             }
           }
         }
@@ -1284,7 +1320,7 @@ private struct NextSetPreview: View {
       VStack(alignment: .leading, spacing: 8) {
         Text(previews.count > 1 ? "Próxima superserie" : "Próxima serie")
           .font(.caption.weight(.bold))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
           .textCase(.uppercase)
 
         ScrollView {
@@ -1295,7 +1331,7 @@ private struct NextSetPreview: View {
           }
         }
         .scrollIndicators(.hidden)
-        .frame(maxHeight: previews.count > 1 ? 230 : 138)
+        .frame(maxHeight: previews.count > 1 ? 278 : 180)
       }
     }
   }
@@ -1339,7 +1375,7 @@ private struct RestPreviewCard: View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 8) {
         Text(preview.exercise.baseExerciseName)
-          .font(.subheadline.weight(.bold))
+          .font(.headline.weight(.bold))
           .lineLimit(2)
           .frame(maxWidth: .infinity, alignment: .leading)
         RestEquipmentChip(equipment: preview.equipment, variantLabel: preview.exercise.variantLabel)
@@ -1351,7 +1387,7 @@ private struct RestPreviewCard: View {
         RestPreviewMetric(label: loadLabel, value: loadValue)
       }
     }
-    .padding(12)
+    .padding(14)
     .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
     .overlay { RoundedRectangle(cornerRadius: 18).stroke(.separator, lineWidth: 1) }
   }
@@ -1380,10 +1416,10 @@ private struct RestPreviewMetric: View {
 
   var body: some View {
     VStack(spacing: 4) {
-      Text(label).font(.caption2.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1)
-      Text(value).font(.subheadline.weight(.bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+      Text(label).font(.caption.weight(.semibold)).foregroundStyle(Color.gymSecondaryText).lineLimit(1)
+      Text(value).font(.title3.weight(.bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
     }
-    .frame(maxWidth: .infinity, minHeight: 52)
+    .frame(maxWidth: .infinity, minHeight: 60)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
   }
 }
@@ -1394,8 +1430,8 @@ private struct RestEquipmentChip: View {
 
   var body: some View {
     Text(variantLabel ?? equipment.executionLabel)
-      .font(.caption2.weight(.semibold))
-      .foregroundStyle(.secondary)
+      .font(.caption.weight(.semibold))
+      .foregroundStyle(Color.gymSecondaryText)
       .lineLimit(1)
       .padding(.horizontal, 8)
       .padding(.vertical, 5)
@@ -1445,7 +1481,7 @@ private struct FinishedWorkoutView: View {
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
       Text("\(completedSetCount) series registradas en esta sesión.")
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.gymSecondaryText)
         .multilineTextAlignment(.center)
       VStack(spacing: 4) {
         Text("\(durationLabel(elapsedSeconds)) reales · \(SessionDurationEstimator.estimate(for: execution.session).totalMinutes) min estimados")
@@ -1453,7 +1489,7 @@ private struct FinishedWorkoutView: View {
           .monospacedDigit()
         Text(estimateComparison)
           .font(.subheadline)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
       }
       Spacer()
       if let csvURL {
@@ -1594,7 +1630,7 @@ private struct SetTargetCard: View {
       VStack(spacing: 8) {
         Text(label)
           .font(.headline.weight(.semibold))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
         ZStack(alignment: .top) {
           if let plateLayout, !plateLayout.sidePlatesKg.isEmpty {
             PlateStack(plates: plateLayout.sidePlatesKg, side: .left)
@@ -1613,7 +1649,7 @@ private struct SetTargetCard: View {
         if let unit {
           Text(unit)
             .font(.subheadline.weight(.medium))
-            .foregroundStyle(.secondary)
+          .foregroundStyle(Color.gymSecondaryText)
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1953,6 +1989,74 @@ private enum TimerCompletionFeedback {
     feedback.prepare()
     feedback.notificationOccurred(.success)
     AudioServicesPlaySystemSound(1005)
+  }
+}
+
+@MainActor
+private enum WorkoutTimerNotification {
+  enum Identifier: String, CaseIterable {
+    case rest = "workout-rest-timer"
+    case timedSet = "workout-timed-set-timer"
+  }
+
+  private static var generations: [Identifier: UInt] = [:]
+
+  static func schedule(
+    identifier: Identifier,
+    endsAt: Date?,
+    title: String,
+    body: String
+  ) {
+    let generation = (generations[identifier] ?? 0) &+ 1
+    generations[identifier] = generation
+
+    let center = UNUserNotificationCenter.current()
+    center.removePendingNotificationRequests(withIdentifiers: [identifier.rawValue])
+
+    guard let endsAt, endsAt > .now else { return }
+
+    Task {
+      let settings = await center.notificationSettings()
+      let isAuthorized: Bool
+      switch settings.authorizationStatus {
+      case .authorized, .provisional, .ephemeral:
+        isAuthorized = true
+      case .notDetermined:
+        isAuthorized = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+      case .denied:
+        isAuthorized = false
+      @unknown default:
+        isAuthorized = false
+      }
+
+      guard isAuthorized,
+            generations[identifier] == generation,
+            endsAt > .now
+      else { return }
+
+      let content = UNMutableNotificationContent()
+      content.title = title
+      content.body = body
+      content.sound = .default
+
+      let dateComponents = Calendar.current.dateComponents(
+        [.calendar, .timeZone, .year, .month, .day, .hour, .minute, .second],
+        from: endsAt
+      )
+      let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+      center.removePendingNotificationRequests(withIdentifiers: [identifier.rawValue])
+      let request = UNNotificationRequest(identifier: identifier.rawValue, content: content, trigger: trigger)
+      try? await center.add(request)
+    }
+  }
+
+  static func cancelAll() {
+    for identifier in Identifier.allCases {
+      generations[identifier] = (generations[identifier] ?? 0) &+ 1
+    }
+    UNUserNotificationCenter.current().removePendingNotificationRequests(
+      withIdentifiers: Identifier.allCases.map(\.rawValue)
+    )
   }
 }
 
