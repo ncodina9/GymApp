@@ -28,22 +28,25 @@ enum HealthWorkoutStore {
     else { return }
 
     do {
-      let workout = HKWorkout(
-        activityType: .traditionalStrengthTraining,
-        start: record.startedAt ?? record.completedAt,
-        end: record.completedAt,
-        workoutEvents: nil,
-        totalEnergyBurned: nil,
-        totalDistance: nil,
-        metadata: [
-          HKMetadataKeyExternalUUID: record.sessionID,
-          HKMetadataKeyWorkoutBrandName: "GymApp",
-          "GymAppSessionLabel": execution.session.sessionLabel,
-          "GymAppCompletedSets": execution.records.filter { $0.status == .completed }.count,
-          "GymAppSkippedSets": execution.records.filter { $0.status == .skipped }.count
-        ]
+      let configuration = HKWorkoutConfiguration()
+      configuration.activityType = .traditionalStrengthTraining
+      configuration.locationType = .indoor
+      let builder = HKWorkoutBuilder(
+        healthStore: store,
+        configuration: configuration,
+        device: .local()
       )
-      try await store.save(workout)
+      let start = record.startedAt ?? record.completedAt
+      try await builder.beginCollection(at: start)
+      try await builder.addMetadata([
+        HKMetadataKeyExternalUUID: record.sessionID,
+        HKMetadataKeyWorkoutBrandName: "GymApp",
+        "GymAppSessionLabel": execution.session.sessionLabel,
+        "GymAppCompletedSets": execution.records.filter { $0.status == .completed }.count,
+        "GymAppSkippedSets": execution.records.filter { $0.status == .skipped }.count
+      ])
+      try await builder.endCollection(at: record.completedAt)
+      guard let workout = try await builder.finishWorkout() else { return }
       record.healthKitWorkoutUUID = workout.uuid.uuidString
       try? context.save()
     } catch {

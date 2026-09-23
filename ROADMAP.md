@@ -1357,6 +1357,8 @@ Actualización v0.1.109: se crea la base de la companion watchOS. El iPhone publ
 
 Actualización v0.1.110: la companion comparte el contrato de estado y comandos con el núcleo nativo. Las órdenes del reloj se identifican y confirman para descartar reintentos; permite registrar u omitir series normales, controlar una serie temporizada y ajustar el descanso. Las superseries muestran sus ejercicios vinculados y el reloj avisa hápticamente al confirmar una orden o terminar una temporizada. El feedback detallado y la cola offline siguen pendientes.
 
+Actualización v0.1.111: la exportación opcional a Apple Salud migra de la construcción de `HKWorkout` obsoleta a `HKWorkoutBuilder`. Conserva fuerza tradicional, duración real, metadatos de GymApp y UUID externo por sesión. La siguiente etapa será una sesión viva iniciada desde el Apple Watch para recoger métricas del reloj sin duplicar el registro final del iPhone.
+
 Planificado para el siguiente bloque nativo: una cabecera común y centrada para las fases de ejecución. En Serie y Evaluar serie mostrará el ejercicio y píldoras de progreso sin material; en Descanso mostrará exclusivamente la cuenta atrás y no abrirá historial; en finalización solo dirá «Entrenamiento completado». El histórico por ejercicio se desplegará desde el borde inferior discreto de cabeceras con nombre, sin usar el gesto de inicio del dispositivo. Incluirá récords por material, RM mediante Epley, gráfico elemental y registros nativos; desde Preview se consultará con pulsación prolongada y previsualización nativa para no interferir con iniciar o priorizar un ejercicio.
 
 ### Futuro: onboarding y perfil de entrenamiento

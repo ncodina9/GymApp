@@ -59,7 +59,7 @@ Este documento es la lista de trabajo ejecutable de la migración SwiftUI. Compl
 | [~] | P2 | M | Notificación local y háptica al acabar descanso. | La programación local está implementada; falta validarla en dispositivo con permisos concedidos y denegados, sin bloquear el flujo. |
 | [~] | P2 | M | Aviso de finalización de descanso y serie temporizada. | En primer plano reproduce sonido corto más háptica y en segundo plano programa un aviso local; falta validación física completa. |
 | [ ] | P2 | M | Live Activity de descanso. | Se mantiene coherente con el temporizador interno y se limpia al continuar. |
-| [~] | P2 | M | HealthKit, widget y sincronización. | HealthKit guarda opcionalmente cada sesión nativa finalizada como fuerza tradicional, con un UUID local para impedir duplicados. Falta validar autorización, escritura y reintento en dispositivo; widget y sincronización siguen pendientes. |
+| [~] | P2 | M | HealthKit, widget y sincronización. | HealthKit guarda opcionalmente cada sesión nativa finalizada como fuerza tradicional mediante `HKWorkoutBuilder`, con UUID local para impedir duplicados. Falta validar autorización, escritura y reintento en dispositivo, además de la sesión viva de Watch; widget y sincronización siguen pendientes. |
 | [~] | P2 | L | Companion Apple Watch v1. | El iPhone conserva el estado autoritativo; el reloj comparte el contrato de transporte, muestra superseries, registra u omite series normales, controla temporizadas y ajusta `±15 s` con acuse e idempotencia. Faltan cola offline, feedback detallado, finalización íntegra y validación física. |
 
 ## Validación obligatoria por iteración
