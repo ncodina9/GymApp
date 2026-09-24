@@ -2097,6 +2097,10 @@ private struct FinishedWorkoutView: View {
     execution.records.filter { $0.status == .completed }.count
   }
 
+  private var skippedSetCount: Int {
+    execution.records.filter { $0.status == .skipped }.count
+  }
+
   private var elapsedSeconds: Int {
     max(0, Int(finishedAt.timeIntervalSince(startedAt).rounded()))
   }
@@ -2125,7 +2129,7 @@ private struct FinishedWorkoutView: View {
           .foregroundStyle(Color.gymSuccess)
           .symbolEffect(.bounce, value: rewardVisible)
       }
-      Text("\(completedSetCount) series registradas en esta sesión.")
+      Text(completionSummary)
         .foregroundStyle(Color.gymSecondaryText)
         .multilineTextAlignment(.center)
       VStack(spacing: 4) {
@@ -2171,6 +2175,13 @@ private struct FinishedWorkoutView: View {
 
   private func durationLabel(_ totalSeconds: Int) -> String {
     "\(totalSeconds / 60):\(String(format: "%02d", totalSeconds % 60))"
+  }
+
+  private var completionSummary: String {
+    guard skippedSetCount > 0 else {
+      return "\(completedSetCount) series registradas en esta sesión."
+    }
+    return "\(completedSetCount) series registradas · \(skippedSetCount) omitidas."
   }
 }
 
@@ -2363,6 +2374,18 @@ private struct ActiveWorkoutProgressView: View {
   let onHome: () -> Void
   let onFinish: () -> Void
 
+  private var completedSetCount: Int {
+    execution.records.filter { $0.status == .completed }.count
+  }
+
+  private var skippedSetCount: Int {
+    execution.records.filter { $0.status == .skipped }.count
+  }
+
+  private var pendingSetCount: Int {
+    execution.totalSetCount - execution.records.count
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 12) {
@@ -2382,7 +2405,7 @@ private struct ActiveWorkoutProgressView: View {
     .safeAreaInset(edge: .top, spacing: 0) {
       AccentHeaderCard(
         title: "Progreso del entrenamiento",
-        detail: "\(execution.records.count) de \(execution.totalSetCount) series registradas"
+        detail: "\(completedSetCount) hechas · \(skippedSetCount) omitidas · \(pendingSetCount) pendientes"
       )
     }
     .overlay(alignment: .bottom) {

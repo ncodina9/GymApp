@@ -2,6 +2,13 @@ import Foundation
 import SwiftData
 import GymAppNativeCore
 
+enum HealthWorkoutSyncStatus: String, Codable {
+  case pending
+  case syncing
+  case synced
+  case failed
+}
+
 @Model
 final class ActiveWorkoutRecord {
   @Attribute(.unique) var id: String
@@ -24,6 +31,17 @@ final class CompletedWorkoutRecord {
   var decisionsData: Data?
   var importedSessionData: Data?
   var healthKitWorkoutUUID: String?
+  var healthKitSyncStatusRaw: String?
+  var healthKitLastAttemptAt: Date?
+  var healthKitLastError: String?
+
+  var healthKitSyncStatus: HealthWorkoutSyncStatus {
+    get {
+      if healthKitWorkoutUUID != nil { return .synced }
+      return healthKitSyncStatusRaw.flatMap(HealthWorkoutSyncStatus.init(rawValue:)) ?? .pending
+    }
+    set { healthKitSyncStatusRaw = newValue.rawValue }
+  }
 
   init(
     sessionID: String,
@@ -32,7 +50,10 @@ final class CompletedWorkoutRecord {
     executionData: Data? = nil,
     decisionsData: Data? = nil,
     importedSessionData: Data? = nil,
-    healthKitWorkoutUUID: String? = nil
+    healthKitWorkoutUUID: String? = nil,
+    healthKitSyncStatus: HealthWorkoutSyncStatus = .pending,
+    healthKitLastAttemptAt: Date? = nil,
+    healthKitLastError: String? = nil
   ) {
     self.sessionID = sessionID
     self.startedAt = startedAt
@@ -41,6 +62,9 @@ final class CompletedWorkoutRecord {
     self.decisionsData = decisionsData
     self.importedSessionData = importedSessionData
     self.healthKitWorkoutUUID = healthKitWorkoutUUID
+    healthKitSyncStatusRaw = healthKitSyncStatus.rawValue
+    self.healthKitLastAttemptAt = healthKitLastAttemptAt
+    self.healthKitLastError = healthKitLastError
   }
 }
 

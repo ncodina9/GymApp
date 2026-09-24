@@ -61,6 +61,7 @@ private struct WatchWorkoutSyncHost: View {
       .onAppear {
         loadPlan()
         synchronize()
+        retryPendingHealthWorkouts()
       }
       .onChange(of: updateToken) { _, _ in synchronize() }
       .onChange(of: completedWorkoutRecords.map(\.completedAt)) { _, _ in synchronize() }
@@ -99,6 +100,15 @@ private struct WatchWorkoutSyncHost: View {
       WatchWorkoutConnectivity.shared.publish(snapshot)
     } else {
       WatchWorkoutConnectivity.shared.clear()
+    }
+  }
+
+  private func retryPendingHealthWorkouts() {
+    Task {
+      await HealthWorkoutStore.syncPendingIfEnabled(
+        records: completedWorkoutRecords,
+        in: modelContext
+      )
     }
   }
 

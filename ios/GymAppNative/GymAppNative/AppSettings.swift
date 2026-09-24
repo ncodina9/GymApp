@@ -191,7 +191,7 @@ private struct HealthSettingsView: View {
       ))
       .toggleStyle(ThemeToggleStyle())
 
-      Text("Cada entrenamiento finalizado se guarda como fuerza tradicional con su duración real. No se estiman calorías ni se leen datos de Salud.")
+      Text("Cada entrenamiento finalizado se guarda como fuerza tradicional con su duración real. Si no se pudo enviar en ese momento, se reintenta al abrir la app. No se estiman calorías ni se leen datos de Salud.")
         .font(.subheadline)
         .foregroundStyle(Color.gymSecondaryText)
 
@@ -231,7 +231,7 @@ private struct HealthSettingsView: View {
     Task {
       do {
         try await HealthWorkoutStore.requestAuthorization()
-        message = "Los próximos entrenamientos finalizados se guardarán en Salud."
+        message = "Los entrenamientos finalizados se guardarán en Salud; los pendientes se reintentarán al abrir la app."
       } catch {
         syncEnabled = false
         message = "No se ha podido solicitar el permiso de Salud."
