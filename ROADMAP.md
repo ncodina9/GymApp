@@ -1359,6 +1359,12 @@ Actualización v0.1.110: la companion comparte el contrato de estado y comandos 
 
 Actualización v0.1.111: la exportación opcional a Apple Salud migra de la construcción de `HKWorkout` obsoleta a `HKWorkoutBuilder`. Conserva fuerza tradicional, duración real, metadatos de GymApp y UUID externo por sesión. La siguiente etapa será una sesión viva iniciada desde el Apple Watch para recoger métricas del reloj sin duplicar el registro final del iPhone.
 
+Actualización v0.1.112: se define el flujo visual de la companion Apple Watch para cubrir la sesión completa sin trasladar la interfaz del iPhone. El reloj recibirá también los entrenamientos disponibles, no solo el borrador activo: selección equivalente a Hoy, previsualización navegable de ejercicios y primera/siguiente serie, ejecución de serie con edición mediante Digital Crown, descanso con cuenta atrás y próxima serie, y finalización compacta. Todos los lienzos, superficies, realce, estado de descanso terminado y contraste seguirán los tokens de apariencia y color elegidos en el iPhone. Por ahora se excluyen pulsaciones e imágenes de ejercicios. Queda por decidir explícitamente el papel del calentamiento y el comportamiento exacto de superseries y finalización para cerrar el contrato de navegación antes de construir las pantallas.
+
+Actualización v0.1.113: se confirman calentamiento desde Watch, superseries como bloque indivisible, cierre compacto y necesidad temporal de iPhone alcanzable. El contrato de WatchConnectivity pasa a distribuir catálogo, sesiones completadas, estado activo y tema; el reloj puede iniciar o priorizar un entrenamiento, iniciar y terminar el calentamiento, editar el objetivo de reps o peso mediante Digital Crown y registrar, omitir o controlar temporizadas sin que la app de iPhone tenga que estar en la pantalla de serie. Las acciones se enrutan a la vista de ejecución si esta está abierta, o al borrador persistido si no lo está, para no duplicar series. Falta validación visual y funcional en simulador emparejado y en reloj físico.
+
+Actualización v0.1.114: la companion adopta una regla de navegación estricta: ninguna pantalla usará scroll salvo la selección de entrenamientos equivalente a Hoy y la previsualización. Cuando una pantalla de Watch necesite más contenido, se dividirá en páginas verticales nativas, reconocibles por los indicadores junto a la Digital Crown. La primera página de ejecución debe contener siempre, sin desplazamiento, atrás, identidad compacta, métricas de serie y acciones de omitir/registrar.
+
 Planificado para el siguiente bloque nativo: una cabecera común y centrada para las fases de ejecución. En Serie y Evaluar serie mostrará el ejercicio y píldoras de progreso sin material; en Descanso mostrará exclusivamente la cuenta atrás y no abrirá historial; en finalización solo dirá «Entrenamiento completado». El histórico por ejercicio se desplegará desde el borde inferior discreto de cabeceras con nombre, sin usar el gesto de inicio del dispositivo. Incluirá récords por material, RM mediante Epley, gráfico elemental y registros nativos; desde Preview se consultará con pulsación prolongada y previsualización nativa para no interferir con iniciar o priorizar un ejercicio.
 
 ### Futuro: onboarding y perfil de entrenamiento
@@ -1387,13 +1393,19 @@ Objetivo: ofrecer una extensión de muñeca rápida durante el entrenamiento sin
 Prioridad 1:
 
 - [x] crear el target watchOS y un canal de sincronización con el iPhone que publique la sesión, serie actual, objetivos, material, progreso y descanso
-- [x] diseñar la pantalla de serie para reloj: ejercicio, progreso, reps/tiempo, peso y acciones grandes de registrar o saltar
+- [~] publicar en el reloj los entrenamientos disponibles y el estado activo, incluidos título, fecha, progreso y posibilidad de solicitar el inicio de uno desde la muñeca
+- [~] diseñar la selección de entrenamiento equivalente a Hoy: lista compacta, estados en curso/completado y acceso a previsualización; falta validar jerarquía y estados con datos reales
+- [~] diseñar la previsualización de Watch: ejercicios con primera serie, navegación nativa, selección de siguiente ejercicio y botón Play superior; falta reflejar la siguiente serie de un borrador reanudado
+- [~] diseñar la pantalla de serie: número de serie y material en etiqueta superior, dos cajas verticales para reps y peso, edición por Digital Crown con confirmación, y acciones inferiores de saltar (un tercio) y registrar (dos tercios); falta validar ergonomía física
 - [~] diseñar la pantalla de descanso con cuenta atrás, próxima serie y háptica al finalizar
+- [~] aplicar en descanso una animación de vaciado del realce como fondo, contador grande, tip de próxima serie y estado verde sutil con háptica al terminar; el vaciado continuo queda pendiente
+- [~] diseñar una pantalla compacta de entrenamiento completado, adaptada al resumen nativo del iPhone
 - [x] aplicar las acciones del reloj de forma idempotente sobre el estado del iPhone, evitando registros duplicados al reconectar
 
 Prioridad 2:
 
 - [x] mostrar superseries como secuencia de ejercicios vinculados, manteniendo clara la integrante actual
+- [ ] sincronizar tokens de apariencia y acento del iPhone con Watch: fondo, superficies, realce, variantes desaturadas, éxito, aviso y contraste accesible en todos los temas
 - [ ] incorporar una cola local en el reloj para registrar acciones sin conexión temporal con el teléfono y reconciliarlas al volver
 - [ ] definir notificaciones y sonidos de finalización coherentes entre iPhone y reloj, sin avisos duplicados
 

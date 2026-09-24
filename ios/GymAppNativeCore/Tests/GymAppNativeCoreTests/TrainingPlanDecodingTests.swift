@@ -21,6 +21,64 @@ struct TrainingPlanDecodingTests {
     #expect(decodedEnvelope.command == .registerSet)
     #expect(decodedAcknowledgement.commandID == id)
     #expect(decodedAcknowledgement.result == .applied)
+
+    let start = WatchWorkoutCommand.startWarmup(sessionID: "session-1")
+    let replacement = WatchWorkoutCommand.replaceActiveWorkout(
+      sessionID: "session-2",
+      startsWithWarmup: true,
+      exerciseIndex: nil
+    )
+    let edited = WatchWorkoutCommand.updateWorkingSet(reps: 8, weightKg: 42.5)
+    let equipment = WatchWorkoutCommand.selectEquipment(.multipower)
+    let feedback = WatchWorkoutCommand.submitSetFeedback(WorkoutSetFeedback(
+      rir: 1,
+      painKnee: 0,
+      painWrist: 2,
+      painShoulder: 0,
+      painLowerBack: 0,
+      note: "Molestia"
+    ))
+    let review = WatchWorkoutCommand.submitExerciseReview(decisions: [
+      "press-banca-inclinado": "Subir reps",
+      "remo-inclinado-barra": "Mantener"
+    ])
+    let decodedStart = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(start))
+    let decodedReplacement = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(replacement))
+    let decodedEdit = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(edited))
+    let decodedEquipment = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(equipment))
+    let decodedFeedback = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(feedback))
+    let decodedReview = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(review))
+    #expect(decodedStart == start)
+    #expect(decodedReplacement == replacement)
+    #expect(decodedEdit == edited)
+    #expect(decodedEquipment == equipment)
+    #expect(decodedFeedback == feedback)
+    #expect(decodedReview == review)
+
+    let state = WatchWorkoutState(
+      sessionID: "session-1",
+      workoutName: "Torso fuerza",
+      exerciseName: "Press banca inclinado",
+      equipment: .dumbbell,
+      equipmentName: "Mancuernas",
+      equipmentOptions: [.barbell, .dumbbell],
+      phase: .workingSet,
+      completedSetCount: 3,
+      totalSetCount: 20,
+      exerciseSetNumber: 2,
+      exerciseSetTotal: 4,
+      reps: 8,
+      weightKg: 24,
+      durationSeconds: nil,
+      restTotalSeconds: 90,
+      timerEndsAt: nil
+    )
+    let decodedState = try JSONDecoder().decode(
+      WatchWorkoutState.self,
+      from: JSONEncoder().encode(state)
+    )
+    #expect(decodedState.equipment == .dumbbell)
+    #expect(decodedState.equipmentOptions == [.barbell, .dumbbell])
   }
 
   @Test("Decodifica el plan de producción compartido")

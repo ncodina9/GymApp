@@ -6,7 +6,7 @@ import UIKit
 import GymAppNativeCore
 
 struct SetExecutionView: View {
-  let session: TrainingSession
+  @State private var session: TrainingSession
   let onFinishToToday: () -> Void
   @State private var execution: WorkoutExecutionState
   @State private var phase: ExecutionPhase = .workingSet
@@ -34,18 +34,19 @@ struct SetExecutionView: View {
   @State private var isSessionActionMenuPresented = false
   @State private var showsWorkoutProgress = false
   @State private var showsFinishConfirmation = false
+  @State private var wasReplacedFromWatch = false
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
 
   init(session: TrainingSession, onFinishToToday: @escaping () -> Void = {}) {
-    self.session = session
+    _session = State(initialValue: session)
     self.onFinishToToday = onFinishToToday
     _execution = State(initialValue: WorkoutExecutionState(session: session))
     _startedAt = State(initialValue: .now)
   }
 
   init(snapshot: ActiveWorkoutSnapshot, onFinishToToday: @escaping () -> Void = {}) {
-    session = snapshot.execution.session
+    _session = State(initialValue: snapshot.execution.session)
     self.onFinishToToday = onFinishToToday
     _execution = State(initialValue: snapshot.execution)
     _phase = State(initialValue: ExecutionPhase(snapshot.phase))
@@ -193,11 +194,13 @@ struct SetExecutionView: View {
     }
     .onAppear {
       WatchWorkoutConnectivity.shared.activate()
+      WatchWorkoutCommandRouter.shared.handler = handleWatchCommand
       persistActiveWorkout()
       syncTimerNotifications()
     }
     .onDisappear {
-      if phase != .finished {
+      WatchWorkoutCommandRouter.shared.handler = nil
+      if phase != .finished, !wasReplacedFromWatch {
         persistActiveWorkout()
       }
     }
@@ -212,19 +215,53 @@ struct SetExecutionView: View {
     .onChange(of: setTimerEndsAt) { _, _ in syncTimerNotifications() }
     .onChange(of: setTimerRemaining) { _, _ in persistActiveWorkout() }
     .onChange(of: exerciseDecisions) { _, _ in persistActiveWorkout() }
-    .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutCommandReceived)) { notification in
-      guard let envelope = notification.object as? WatchWorkoutCommandEnvelope else { return }
-      switch envelope.command {
+  }
+
+  private func handleWatchCommand(_ command: WatchWorkoutCommand) {
+      switch command {
       case .requestState:
         break
+      case .startWorkout, .startWarmup:
+        // These commands are resolved by the app-level Watch sync host before
+        // an execution view exists.
+        break
+      case let .prioritizeExercise(sessionID, exerciseIndex):
+        guard session.sessionID == sessionID,
+              execution.selectNextBlock(exerciseIndex: exerciseIndex)
+        else { return }
+        restEndsAt = nil
+        restTotalSeconds = 0
+        move(to: .workingSet, direction: .forward)
+      case let .replaceActiveWorkout(sessionID, startsWithWarmup, exerciseIndex):
+        replaceWorkoutFromWatch(
+          sessionID: sessionID,
+          startsWithWarmup: startsWithWarmup,
+          exerciseIndex: exerciseIndex
+        )
       case .addRest15:
         guard phase == .rest else { return }
         adjustRest(by: 15)
       case .subtractRest15:
         guard phase == .rest else { return }
         adjustRest(by: -15)
+      case .continueAfterTimer:
+        guard phase == .rest else { return }
+        continueFromRest()
       case .registerSet:
-        registerCurrentSetFromWatch()
+        beginFeedbackFromWatch()
+      case let .submitSetFeedback(feedback):
+        guard phase == .feedback else { return }
+        feedbackRir = feedback.rir ?? 2
+        feedbackPainKnee = feedback.painKnee
+        feedbackPainWrist = feedback.painWrist
+        feedbackPainShoulder = feedback.painShoulder
+        feedbackPainLowerBack = feedback.painLowerBack
+        feedbackNote = feedback.note
+        registerCurrentSet()
+      case let .submitExerciseReview(decisions):
+        guard phase == .exerciseReview else { return }
+        exerciseDecisions.merge(decisions) { _, incoming in incoming }
+        continueAfterExerciseReview()
       case .skipSet:
         guard phase == .workingSet else { return }
         skipCurrentSet()
@@ -234,8 +271,21 @@ struct SetExecutionView: View {
         pauseTimedSetFromWatch()
       case .resetTimedSet:
         resetTimedSetFromWatch()
+      case let .updateWorkingSet(reps, weightKg):
+        guard phase == .workingSet,
+              let locator = execution.current,
+              execution.trainingSet(for: locator)?.type == .working
+        else { return }
+        execution.updateWorkingTargets(for: locator, reps: reps, weightKg: weightKg)
+        persistActiveWorkout()
+      case let .selectEquipment(equipment):
+        guard phase == .workingSet,
+              let locator = execution.current,
+              execution.canSelectEquipment(equipment, for: locator),
+              execution.selectEquipment(equipment, for: locator)
+        else { return }
+        persistActiveWorkout()
       }
-    }
   }
 
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
@@ -456,7 +506,7 @@ struct SetExecutionView: View {
     advanceAfterRecord(advance)
   }
 
-  private func registerCurrentSetFromWatch() {
+  private func beginFeedbackFromWatch() {
     guard phase == .workingSet,
           let current = execution.current
     else { return }
@@ -464,19 +514,52 @@ struct SetExecutionView: View {
     let isTimed = execution.trainingSet(for: current)?.type == .timed
     if isTimed, setTimerEndsAt.map({ $0 > .now }) != false { return }
 
-    let setFeedback = WorkoutSetFeedback(
-      rir: isTimed ? nil : 2,
-      painKnee: 0,
-      painWrist: 0,
-      painShoulder: 0,
-      painLowerBack: 0,
-      note: "Registrada desde Apple Watch"
-    )
-    guard let advance = execution.recordCurrent(feedback: setFeedback) else {
-      finishWorkout()
+    move(to: .feedback, direction: .forward)
+  }
+
+  private func replaceWorkoutFromWatch(
+    sessionID: String,
+    startsWithWarmup: Bool,
+    exerciseIndex: Int?
+  ) {
+    guard let url = Bundle.main.url(forResource: "trainingPlan", withExtension: "json"),
+          let plan = try? TrainingPlanLoader.decode(data: Data(contentsOf: url)),
+          let replacement = plan.sessions.first(where: { $0.sessionID == sessionID })
+    else { return }
+
+    var replacementExecution = WorkoutExecutionState(session: replacement)
+    if let exerciseIndex, !startsWithWarmup,
+       !replacementExecution.selectNextBlock(exerciseIndex: exerciseIndex) {
       return
     }
-    advanceAfterRecord(advance)
+
+    execution = replacementExecution
+    session = replacement
+    feedbackRir = 2
+    feedbackPainKnee = 0
+    feedbackPainWrist = 0
+    feedbackPainShoulder = 0
+    feedbackPainLowerBack = 0
+    feedbackNote = "OK"
+    restEndsAt = nil
+    restTotalSeconds = 0
+    setTimerEndsAt = nil
+    setTimerRemaining = 0
+    reviewExerciseIndexes = []
+    reviewRestSeconds = 0
+    exerciseDecisions = [:]
+    warmupStatus = startsWithWarmup ? .running : .completed
+    let warmupSeconds = max(3, UserDefaults.standard.integer(forKey: "warmupMinutes")) * 60
+    warmupEndsAt = startsWithWarmup ? .now.addingTimeInterval(TimeInterval(warmupSeconds)) : nil
+    warmupRemaining = startsWithWarmup ? warmupSeconds : 0
+    startedAt = .now
+    finishedAt = nil
+    move(to: .workingSet, direction: .forward)
+
+    if startsWithWarmup {
+      wasReplacedFromWatch = true
+      onFinishToToday()
+    }
   }
 
   private func startTimedSetFromWatch() {

@@ -6,12 +6,19 @@ import GymAppNativeCore
 
 @MainActor
 final class WatchWorkoutConnectivity: NSObject, ObservableObject {
+  @Published private(set) var appState = WatchWorkoutAppState(
+    sessions: [],
+    completedSessionIDs: [],
+    activeWorkout: nil,
+    theme: WatchWorkoutTheme(appearance: "system", accent: "blue")
+  )
   @Published private(set) var workout: WatchWorkoutState?
   @Published private(set) var connectionStatus = "Conectando con el iPhone"
   @Published private(set) var pendingCommand: WatchWorkoutCommand?
 
   private enum Key {
     static let workoutState = "workoutState"
+    static let appState = "watchWorkoutAppState"
     static let workoutCommandEnvelope = "workoutCommandEnvelope"
     static let workoutCommandAcknowledgement = "workoutCommandAcknowledgement"
   }
@@ -80,9 +87,16 @@ final class WatchWorkoutConnectivity: NSObject, ObservableObject {
   }
 
   private func apply(_ payload: [String: Any]) {
+    if let data = payload[Key.appState] as? Data,
+       let appState = try? decoder.decode(WatchWorkoutAppState.self, from: data) {
+      self.appState = appState
+      workout = appState.activeWorkout
+      connectionStatus = workout == nil ? "Conectado, elige un entrenamiento" : "Sesión recibida"
+      return
+    }
     guard let data = payload[Key.workoutState] as? Data else {
       workout = nil
-      connectionStatus = "Conectado, sin sesión activa"
+      connectionStatus = "Conectado, elige un entrenamiento"
       return
     }
     workout = try? decoder.decode(WatchWorkoutState.self, from: data)
