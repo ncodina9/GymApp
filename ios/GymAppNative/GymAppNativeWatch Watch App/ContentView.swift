@@ -486,16 +486,21 @@ private struct WatchWorkoutView: View {
   let isSendingAction: Bool
   let onCommand: (WatchWorkoutCommand) -> Void
   let onBack: () -> Void
+  @State private var reviewExerciseIndex = 0
 
   private var palette: WatchPalette { WatchPalette(theme: theme) }
 
   private var navigationTitle: String {
     switch workout.phase {
-    case .warmup: "Calentamiento"
-    case .rest: "Descanso"
-    case .feedback: "Evaluar serie"
-    case .exerciseReview: "Evaluar ejercicio"
-    default: workout.equipmentName
+    case .warmup: return "Calentamiento"
+    case .rest: return "Descanso"
+    case .feedback: return "Evaluar serie"
+    case .exerciseReview:
+      guard workout.reviewExercises.indices.contains(reviewExerciseIndex) else {
+        return "Evaluar ejercicio"
+      }
+      return workout.reviewExercises[reviewExerciseIndex].exerciseName
+    default: return workout.equipmentName
     }
   }
 
@@ -547,6 +552,7 @@ private struct WatchWorkoutView: View {
               workout: workout,
               palette: palette,
               isSendingAction: isSendingAction,
+              selectedExerciseIndex: $reviewExerciseIndex,
               onCommand: onCommand
             )
           } else {
@@ -586,6 +592,57 @@ private struct WatchWorkoutView: View {
       }
     }
     .tint(palette.accent)
+    .onChange(of: workout.phase) { _, phase in
+      if phase != .exerciseReview { reviewExerciseIndex = 0 }
+    }
+  }
+}
+
+private enum WatchBottomBarMetrics {
+  static let height: CGFloat = 42
+  static let spacing: CGFloat = 8
+  static let horizontalPadding: CGFloat = 10
+  static let verticalPadding: CGFloat = 2
+  static let pagedFooterOffset: CGFloat = 17
+}
+
+private struct WatchBottomBarLayout<Content: View, Footer: View>: View {
+  private let footerOffset: CGFloat
+  private let content: Content
+  private let footer: Footer
+
+  init(
+    footerOffset: CGFloat = 0,
+    @ViewBuilder content: () -> Content,
+    @ViewBuilder footer: () -> Footer
+  ) {
+    self.footerOffset = footerOffset
+    self.content = content()
+    self.footer = footer()
+  }
+
+  var body: some View {
+    GeometryReader { proxy in
+      let innerWidth = max(0, proxy.size.width - (WatchBottomBarMetrics.horizontalPadding * 2))
+      let innerHeight = max(0, proxy.size.height - (WatchBottomBarMetrics.verticalPadding * 2))
+      let contentHeight = max(
+        0,
+        innerHeight - WatchBottomBarMetrics.height - WatchBottomBarMetrics.spacing + footerOffset
+      )
+
+      Color.clear
+        .frame(width: innerWidth, height: innerHeight)
+        .overlay(alignment: .topLeading) {
+          content
+            .frame(width: innerWidth, height: contentHeight, alignment: .top)
+        }
+        .overlay(alignment: .topLeading) {
+          footer
+            .frame(width: innerWidth, height: WatchBottomBarMetrics.height)
+            .offset(y: innerHeight - WatchBottomBarMetrics.height + footerOffset)
+        }
+      .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
+    }
   }
 }
 
@@ -600,6 +657,7 @@ private struct WatchFeedbackView: View {
   @State private var painWrist: Int
   @State private var painShoulder: Int
   @State private var painLowerBack: Int
+  @State private var selectedPage = 0
 
   init(
     workout: WatchWorkoutState,
@@ -621,35 +679,49 @@ private struct WatchFeedbackView: View {
 
   private var isTimed: Bool { workout.durationSeconds != nil }
 
-  var body: some View {
-    TabView {
-      if !isTimed {
-        WatchRIRFeedbackPage(rir: $rir, palette: palette, onRegister: submit)
-          .tag(0)
-      }
+  private var showsRegisterButton: Bool {
+    selectedPage == (isTimed ? 1 : 0)
+  }
 
-      if isTimed {
-        WatchFeedbackNotePage(note: $note, palette: palette, onRegister: submit)
-          .tag(1)
-      } else {
+  var body: some View {
+    WatchBottomBarLayout(footerOffset: WatchBottomBarMetrics.pagedFooterOffset) {
+      TabView(selection: $selectedPage) {
+        if !isTimed {
+          WatchRIRFeedbackPage(rir: $rir, palette: palette)
+            .tag(0)
+        }
+
         WatchFeedbackNotePage(note: $note, palette: palette)
           .tag(1)
+        WatchPainFeedbackPage(area: .knee, value: $painKnee, palette: palette)
+          .tag(2)
+        WatchPainFeedbackPage(area: .wrist, value: $painWrist, palette: palette)
+          .tag(3)
+        WatchPainFeedbackPage(area: .shoulder, value: $painShoulder, palette: palette)
+          .tag(4)
+        WatchPainFeedbackPage(
+          area: .lowerBack,
+          value: $painLowerBack,
+          palette: palette
+        )
+        .tag(5)
       }
-      WatchPainFeedbackPage(area: .knee, value: $painKnee, palette: palette)
-        .tag(2)
-      WatchPainFeedbackPage(area: .wrist, value: $painWrist, palette: palette)
-        .tag(3)
-      WatchPainFeedbackPage(area: .shoulder, value: $painShoulder, palette: palette)
-        .tag(4)
-      WatchPainFeedbackPage(
-        area: .lowerBack,
-        value: $painLowerBack,
-        palette: palette
-      )
-      .tag(5)
+      .tabViewStyle(.verticalPage)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } footer: {
+      if showsRegisterButton {
+        Button(action: submit) {
+          Image(systemName: "checkmark")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .foregroundStyle(palette.accentForeground)
+        }
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
+        .tint(palette.accent)
+      } else {
+        Color.clear
+      }
     }
-    .tabViewStyle(.verticalPage)
-    .padding(.top, 28)
     .disabled(isSendingAction)
   }
 
@@ -669,6 +741,7 @@ private struct WatchExerciseReviewView: View {
   let workout: WatchWorkoutState
   let palette: WatchPalette
   let isSendingAction: Bool
+  @Binding var selectedExerciseIndex: Int
   let onCommand: (WatchWorkoutCommand) -> Void
   @State private var decisions: [String: String]
 
@@ -676,11 +749,13 @@ private struct WatchExerciseReviewView: View {
     workout: WatchWorkoutState,
     palette: WatchPalette,
     isSendingAction: Bool,
+    selectedExerciseIndex: Binding<Int>,
     onCommand: @escaping (WatchWorkoutCommand) -> Void
   ) {
     self.workout = workout
     self.palette = palette
     self.isSendingAction = isSendingAction
+    _selectedExerciseIndex = selectedExerciseIndex
     self.onCommand = onCommand
     _decisions = State(initialValue: Dictionary(
       uniqueKeysWithValues: workout.reviewExercises.map { ($0.exerciseID, $0.decision) }
@@ -688,123 +763,135 @@ private struct WatchExerciseReviewView: View {
   }
 
   var body: some View {
-    TabView {
-      ForEach(Array(workout.reviewExercises.enumerated()), id: \.element.id) { index, exercise in
-        WatchExerciseReviewPage(
+    Group {
+      if workout.reviewExercises.indices.contains(selectedExerciseIndex) {
+        let exercise = workout.reviewExercises[selectedExerciseIndex]
+        WatchExerciseReviewExercisePager(
           exercise: exercise,
-          showsExerciseName: workout.reviewExercises.count > 1,
           selection: Binding(
             get: { decisions[exercise.exerciseID] ?? exercise.decision },
             set: { decisions[exercise.exerciseID] = $0 }
           ),
           palette: palette,
-          showsConfirmation: index == workout.reviewExercises.indices.last,
           isFinalReview: workout.isFinalExerciseReview,
-          onConfirm: submit
+          isLastExercise: selectedExerciseIndex == workout.reviewExercises.indices.last,
+          onNext: advanceExercise
         )
-        .tag(index)
+        .id(exercise.id)
+      } else {
+        Color.clear
       }
     }
-    .tabViewStyle(.verticalPage)
-    .padding(.top, 2)
     .disabled(isSendingAction)
   }
 
-  private func submit() {
-    onCommand(.submitExerciseReview(decisions: decisions))
+  private func advanceExercise() {
+    if selectedExerciseIndex == workout.reviewExercises.indices.last {
+      onCommand(.submitExerciseReview(decisions: decisions))
+    } else {
+      selectedExerciseIndex += 1
+    }
   }
 }
 
-private struct WatchExerciseReviewPage: View {
+private struct WatchExerciseReviewExercisePager: View {
   let exercise: WatchExerciseReviewItem
-  let showsExerciseName: Bool
   @Binding var selection: String
   let palette: WatchPalette
-  let showsConfirmation: Bool
   let isFinalReview: Bool
-  let onConfirm: () -> Void
+  let isLastExercise: Bool
+  let onNext: () -> Void
 
-  private var options: [WatchExerciseReviewOption] {
-    if exercise.isTimed {
-      return [
-        .init(decision: "Mantener tiempo", label: "Mantener", symbol: "equal"),
-        .init(decision: "Subir tiempo", label: "Tiempo", symbol: "arrow.up"),
-        .init(decision: "Bajar tiempo", label: "Tiempo", symbol: "arrow.down"),
-        .init(decision: "Mejorar posición", label: "Posición", symbol: "figure.strengthtraining.traditional"),
-        .init(decision: "Marcar molestia", label: "Molestia", symbol: "cross.case.fill")
-      ]
-    }
-
-    let canChangeWeight = exercise.equipment != .bodyweight && exercise.equipment != .cable
-    var options = [WatchExerciseReviewOption(decision: "Mantener", label: "Mantener", symbol: "equal")]
-    if canChangeWeight {
-      options += [
-        .init(decision: "Subir peso", label: "Peso", symbol: "arrow.up"),
-        .init(decision: "Bajar peso", label: "Peso", symbol: "arrow.down")
-      ]
-    }
-    options += [
-      .init(decision: "Subir reps", label: "Reps", symbol: "arrow.up"),
-      .init(decision: "Bajar reps", label: "Reps", symbol: "arrow.down"),
-      .init(decision: "Marcar molestia", label: "Molestia", symbol: "cross.case.fill")
-    ]
-    return options
-  }
-
-  private var columns: [GridItem] {
-    [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+  private var canChangeWeight: Bool {
+    exercise.equipment != .bodyweight && exercise.equipment != .cable
   }
 
   var body: some View {
-    VStack(spacing: 7) {
-      if showsExerciseName {
-        Text(exercise.exerciseName)
-          .font(.caption.weight(.semibold))
-          .lineLimit(2)
-          .multilineTextAlignment(.center)
-          .foregroundStyle(palette.secondaryText)
-          .frame(maxWidth: .infinity)
-      }
+    WatchBottomBarLayout(footerOffset: WatchBottomBarMetrics.pagedFooterOffset) {
+      TabView {
+        WatchExerciseReviewOptionsPage(
+          options: [
+            .init(decision: exercise.isTimed ? "Mantener tiempo" : "Mantener", label: "Mantener", symbol: "equal"),
+            .init(decision: "Marcar molestia", label: "Molestia", symbol: "cross.case.fill")
+          ],
+          selection: $selection,
+          palette: palette
+        )
 
-      LazyVGrid(columns: columns, spacing: 7) {
+        WatchExerciseReviewOptionsPage(
+          options: exercise.isTimed
+            ? [
+                .init(decision: "Subir tiempo", label: "Tiempo", symbol: "arrow.up"),
+                .init(decision: "Bajar tiempo", label: "Tiempo", symbol: "arrow.down")
+              ]
+            : [
+                .init(decision: "Subir reps", label: "Reps", symbol: "arrow.up"),
+                .init(decision: "Bajar reps", label: "Reps", symbol: "arrow.down")
+              ],
+          selection: $selection,
+          palette: palette
+        )
+
+        if !exercise.isTimed, canChangeWeight {
+          WatchExerciseReviewOptionsPage(
+            options: [
+              .init(decision: "Subir peso", label: "Peso", symbol: "arrow.up"),
+              .init(decision: "Bajar peso", label: "Peso", symbol: "arrow.down")
+            ],
+            selection: $selection,
+            palette: palette
+          )
+        }
+      }
+      .tabViewStyle(.verticalPage)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } footer: {
+      Button(action: onNext) {
+        Image(systemName: isLastExercise && isFinalReview ? "checkmark" : "arrow.right")
+          .frame(maxWidth: .infinity, minHeight: 42)
+          .foregroundStyle(palette.accentForeground)
+      }
+      .buttonStyle(.borderedProminent)
+      .buttonBorderShape(.capsule)
+      .tint(palette.accent)
+      .accessibilityLabel(isLastExercise && isFinalReview ? "Finalizar entrenamiento" : "Siguiente ejercicio")
+    }
+  }
+}
+
+private struct WatchExerciseReviewOptionsPage: View {
+  let options: [WatchExerciseReviewOption]
+  @Binding var selection: String
+  let palette: WatchPalette
+
+  private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+
+  var body: some View {
+    GeometryReader { proxy in
+      LazyVGrid(columns: columns, spacing: 8) {
         ForEach(options) { option in
           Button { selection = option.decision } label: {
-            VStack(spacing: 3) {
+            VStack(spacing: 5) {
               Image(systemName: option.symbol)
-                .font(.caption.weight(.bold))
+                .font(.title3.weight(.bold))
               Text(option.label)
-                .font(.caption2.weight(.semibold))
-                .lineLimit(2)
+                .font(.caption.weight(.bold))
+                .lineLimit(1)
                 .minimumScaleFactor(0.75)
-                .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity, minHeight: 34)
+            .frame(maxWidth: .infinity, minHeight: proxy.size.height)
           }
           .buttonStyle(.plain)
           .foregroundStyle(selection == option.decision ? palette.accentForeground : palette.primaryText)
           .background(
             selection == option.decision ? palette.accent : palette.surface,
-            in: RoundedRectangle(cornerRadius: 10)
+            in: RoundedRectangle(cornerRadius: 14)
           )
           .accessibilityLabel(option.decision)
         }
       }
-
-      Spacer(minLength: 0)
-
-      if showsConfirmation {
-        Button(action: onConfirm) {
-          Image(systemName: isFinalReview ? "checkmark" : "arrow.right")
-            .frame(maxWidth: .infinity, minHeight: 42)
-            .foregroundStyle(palette.accentForeground)
-        }
-        .buttonStyle(.borderedProminent)
-        .buttonBorderShape(.capsule)
-        .tint(palette.accent)
-        .accessibilityLabel(isFinalReview ? "Finalizar entrenamiento" : "Continuar")
-      }
+      .padding(.horizontal, 4)
     }
-    .padding(.horizontal, 8)
   }
 }
 
@@ -818,7 +905,6 @@ private struct WatchExerciseReviewOption: Identifiable {
 private struct WatchRIRFeedbackPage: View {
   @Binding var rir: Int
   let palette: WatchPalette
-  let onRegister: () -> Void
 
   var body: some View {
     VStack(spacing: 12) {
@@ -848,33 +934,22 @@ private struct WatchRIRFeedbackPage: View {
         .buttonStyle(.borderedProminent)
         .buttonBorderShape(.circle)
         .tint(palette.accent)
-        .disabled(rir == 5)
+          .disabled(rir == 5)
       }
       Spacer(minLength: 0)
-      Button(action: onRegister) {
-        Image(systemName: "checkmark")
-          .frame(maxWidth: .infinity, minHeight: 42)
-          .foregroundStyle(palette.accentForeground)
-      }
-      .buttonStyle(.borderedProminent)
-      .buttonBorderShape(.capsule)
-      .tint(palette.accent)
     }
-    .padding(.horizontal, 10)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 }
 
 private struct WatchFeedbackNotePage: View {
   @Binding var note: String
   let palette: WatchPalette
-  var onRegister: (() -> Void)?
   private let options = ["OK", "Pesado", "Técnica", "Molestia"]
   private let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
   var body: some View {
     VStack(spacing: 10) {
-      Text("Valoración")
-        .font(.headline)
       LazyVGrid(columns: columns, spacing: 8) {
         ForEach(options, id: \.self) { option in
           Button { note = option } label: {
@@ -890,18 +965,8 @@ private struct WatchFeedbackNotePage: View {
         }
       }
       Spacer(minLength: 0)
-      if let onRegister {
-        Button(action: onRegister) {
-          Image(systemName: "checkmark")
-            .frame(maxWidth: .infinity, minHeight: 42)
-            .foregroundStyle(palette.accentForeground)
-        }
-        .buttonStyle(.borderedProminent)
-        .buttonBorderShape(.capsule)
-        .tint(palette.accent)
-      }
     }
-    .padding(.horizontal, 10)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 }
 
@@ -954,41 +1019,59 @@ private struct WatchSetView: View {
   let isSendingAction: Bool
   let onCommand: (WatchWorkoutCommand) -> Void
   @State private var editor: WatchMetricEditor?
+  @State private var selectedPage = 0
 
   private var isTimed: Bool { workout.durationSeconds != nil }
 
   var body: some View {
-    TabView {
-      WatchSetPrimaryPage(
-        workout: workout,
-        palette: palette,
-        isSendingAction: isSendingAction,
-        isTimed: isTimed,
-        onEdit: { editor = $0 },
-        onCommand: onCommand
-      )
-      .tag(0)
-
-      if let options = workout.equipmentOptions, !options.isEmpty {
-        WatchEquipmentPage(
-          options: options,
-          currentEquipmentName: workout.equipmentName,
+    WatchBottomBarLayout(footerOffset: WatchBottomBarMetrics.pagedFooterOffset) {
+      TabView(selection: $selectedPage) {
+        WatchSetPrimaryPage(
+          workout: workout,
           palette: palette,
-          onSelect: { onCommand(.selectEquipment($0)) }
+          isTimed: isTimed,
+          isSendingAction: isSendingAction,
+          onEdit: { editor = $0 },
+          onCommand: onCommand
         )
-        .tag(1)
+        .tag(0)
+
+        if let options = workout.equipmentOptions, !options.isEmpty {
+          WatchEquipmentPage(
+            options: options,
+            currentEquipmentName: workout.equipmentName,
+            palette: palette,
+            onSelect: { onCommand(.selectEquipment($0)) }
+          )
+          .tag(1)
+        }
+      }
+      .tabViewStyle(.verticalPage)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } footer: {
+      if selectedPage == 0 {
+        WatchSetActions(
+          palette: palette,
+          isSendingAction: isSendingAction,
+          onSkip: { onCommand(.skipSet) },
+          onRegister: { onCommand(.registerSet) }
+        )
+      } else {
+        Color.clear
       }
     }
-    .tabViewStyle(.verticalPage)
-    .sheet(item: $editor) { metric in
+    .fullScreenCover(item: $editor) { metric in
       WatchSetEditor(
         metric: metric,
         reps: workout.reps ?? 0,
         weightKg: workout.weightKg,
-        equipment: workout.equipment
+        equipment: workout.equipment,
+        palette: palette
       ) { reps, weight in
         onCommand(.updateWorkingSet(reps: reps, weightKg: weight))
       }
+      .presentationBackground(palette.canvas)
+      .preferredColorScheme(palette.colorScheme)
     }
   }
 
@@ -997,64 +1080,51 @@ private struct WatchSetView: View {
 private struct WatchSetPrimaryPage: View {
   let workout: WatchWorkoutState
   let palette: WatchPalette
-  let isSendingAction: Bool
   let isTimed: Bool
+  let isSendingAction: Bool
   let onEdit: (WatchMetricEditor) -> Void
   let onCommand: (WatchWorkoutCommand) -> Void
 
   var body: some View {
-    GeometryReader { proxy in
-      VStack(spacing: 5) {
-        Text(workout.exerciseName)
-          .font(.subheadline.weight(.bold))
-          .multilineTextAlignment(.center)
-          .lineLimit(1)
-          .minimumScaleFactor(0.68)
-        if isTimed {
-          WatchTimedSetControls(
-            durationSeconds: workout.durationSeconds ?? 0,
-            endsAt: workout.timerEndsAt,
-            palette: palette,
-            isSendingAction: isSendingAction,
-            onCommand: onCommand
-          )
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
+    VStack(spacing: 7) {
+      Text(workout.exerciseName)
+        .font(.subheadline.weight(.bold))
+        .multilineTextAlignment(.center)
+        .lineLimit(1)
+        .minimumScaleFactor(0.68)
+      if isTimed {
+        WatchTimedSetControls(
+          durationSeconds: workout.durationSeconds ?? 0,
+          endsAt: workout.timerEndsAt,
+          palette: palette,
+          isSendingAction: isSendingAction,
+          onCommand: onCommand
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else {
+        HStack(spacing: 8) {
           Button { onEdit(.reps) } label: {
             WatchMetricCard(
-              label: "Reps",
+              label: "reps",
               value: workout.reps.map(String.init) ?? "-",
-              height: metricHeight(in: proxy.size.height),
               palette: palette
             )
           }
           .buttonStyle(.plain)
+
           Button { onEdit(.weight) } label: {
             WatchMetricCard(
-              label: "Peso",
-              value: WeightFormatter.string(from: workout.weightKg),
-              height: metricHeight(in: proxy.size.height),
+              label: "kg",
+              value: WeightFormatter.numberString(from: workout.weightKg),
               palette: palette
             )
           }
           .buttonStyle(.plain)
         }
-        Spacer(minLength: 0)
-        WatchSetActions(
-          palette: palette,
-          isSendingAction: isSendingAction,
-          onSkip: { onCommand(.skipSet) },
-          onRegister: { onCommand(.registerSet) }
-        )
-        .frame(height: 42)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .padding(.horizontal, 8)
-      .padding(.vertical, 2)
+      Spacer(minLength: 0)
     }
-  }
-
-  private func metricHeight(in availableHeight: CGFloat) -> CGFloat {
-    max(38, min(54, (availableHeight - 116) / 2))
   }
 }
 
@@ -1101,27 +1171,28 @@ private struct WatchEquipmentPage: View {
 private struct WatchMetricCard: View {
   let label: String
   let value: String
-  let height: CGFloat
   let palette: WatchPalette
+
   var body: some View {
-    VStack(spacing: 2) {
-      Spacer(minLength: 6)
+    VStack {
+      Spacer(minLength: 12)
       Text(value)
-        .font(.title3.weight(.bold))
+        .font(.system(size: 34, weight: .bold, design: .rounded))
+        .monospacedDigit()
         .lineLimit(1)
-        .minimumScaleFactor(0.65)
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.trailing, 16)
+        .minimumScaleFactor(0.5)
+        .allowsTightening(true)
+        .padding(.horizontal, 5)
       Spacer(minLength: 2)
     }
-    .frame(maxWidth: .infinity, minHeight: height)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.quaternary, in: RoundedRectangle(cornerRadius: 14))
     .overlay(alignment: .topLeading) {
       Text(label)
-        .font(.caption2.weight(.bold))
+        .font(.system(size: 10, weight: .bold))
         .foregroundStyle(palette.accentForeground)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 3)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
         .background(palette.accent, in: UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 0, bottomTrailingRadius: 9, topTrailingRadius: 0))
     }
   }
@@ -1225,61 +1296,60 @@ private struct WatchRestView: View {
       let remaining = max(0, Int((workout.timerEndsAt?.timeIntervalSince(context.date) ?? 0).rounded(.up)))
       let complete = workout.timerEndsAt != nil && remaining == 0
       VStack(spacing: 7) {
-          Spacer(minLength: 10)
-          Text(clock(remaining))
-            .font(.system(size: 46, weight: .bold, design: .rounded))
-            .monospacedDigit()
-            .foregroundStyle(complete ? Color.green : palette.primaryText)
-            .focusable(true)
-            .digitalCrownRotation(
-              $crownRestAdjustment,
-              from: -60,
-              through: 60,
-              by: 1,
-              sensitivity: .medium,
-              isContinuous: false,
-              isHapticFeedbackEnabled: true
-            )
-            .onChange(of: crownRestAdjustment) { previous, current in
-              adjustRest(using: current - previous)
-            }
-            .onChange(of: complete) { _, didFinish in
-              if didFinish { WKInterfaceDevice.current().play(.notification) }
-            }
-
-          HStack(spacing: 7) {
-            Image(systemName: "forward.end.fill")
-              .font(.system(size: 10, weight: .bold))
-              .foregroundStyle(palette.accent)
-            VStack(alignment: .leading, spacing: 1) {
-              Text(workout.exerciseName)
-                .font(.system(size: 11, weight: .semibold))
-                .lineLimit(1)
-              Text(nextSetSummary)
-                .font(.system(size: 9))
-                .foregroundStyle(palette.secondaryText)
-                .lineLimit(1)
-            }
-            Spacer(minLength: 0)
+        Spacer(minLength: 10)
+        Text(clock(remaining))
+          .font(.system(size: 46, weight: .bold, design: .rounded))
+          .monospacedDigit()
+          .foregroundStyle(complete ? Color.green : palette.primaryText)
+          .focusable(true)
+          .digitalCrownRotation(
+            $crownRestAdjustment,
+            from: -60,
+            through: 60,
+            by: 1,
+            sensitivity: .medium,
+            isContinuous: false,
+            isHapticFeedbackEnabled: true
+          )
+          .onChange(of: crownRestAdjustment) { previous, current in
+            adjustRest(using: current - previous)
           }
-          .padding(.horizontal, 8)
-          .frame(maxWidth: .infinity, minHeight: 34)
-          .background(palette.surface, in: RoundedRectangle(cornerRadius: 10))
-
-          Spacer(minLength: 2)
-
-          Button { onCommand(.continueAfterTimer) } label: {
-            Image(systemName: complete ? "arrow.right" : "forward.fill")
-              .frame(maxWidth: .infinity, minHeight: 42)
-              .foregroundStyle(complete ? Color.white : palette.accentForeground)
+          .onChange(of: complete) { _, didFinish in
+            if didFinish { WKInterfaceDevice.current().play(.notification) }
           }
-          .buttonStyle(.borderedProminent)
-          .buttonBorderShape(.capsule)
-          .tint(complete ? .green : palette.accent)
-          .disabled(isSendingAction)
+
+        HStack(spacing: 7) {
+          Image(systemName: "forward.end.fill")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(palette.accent)
+          VStack(alignment: .leading, spacing: 1) {
+            Text(workout.exerciseName)
+              .font(.system(size: 11, weight: .semibold))
+              .lineLimit(1)
+            Text(nextSetSummary)
+              .font(.system(size: 9))
+              .foregroundStyle(palette.secondaryText)
+              .lineLimit(1)
+          }
+          Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, minHeight: 34)
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 10))
+
+        Spacer(minLength: 2)
+
+        Button { onCommand(.continueAfterTimer) } label: {
+          Image(systemName: complete ? "arrow.right" : "forward.fill")
+            .frame(maxWidth: .infinity, minHeight: 42)
+            .foregroundStyle(complete ? Color.white : palette.accentForeground)
+        }
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
+        .tint(complete ? .green : palette.accent)
+        .disabled(isSendingAction)
       }
-      .padding(.horizontal, 10)
-      .padding(.vertical, 2)
+      .padding(.horizontal, 8)
     }
   }
 
@@ -1409,6 +1479,7 @@ private struct WatchSetEditor: View {
   let reps: Int
   let weightKg: Double
   let equipment: Equipment
+  let palette: WatchPalette
   let onConfirm: (Int?, Double) -> Void
   @Environment(\.dismiss) private var dismiss
   @State private var crownValue: Double
@@ -1418,12 +1489,14 @@ private struct WatchSetEditor: View {
     reps: Int,
     weightKg: Double,
     equipment: Equipment,
+    palette: WatchPalette,
     onConfirm: @escaping (Int?, Double) -> Void
   ) {
     self.metric = metric
     self.reps = reps
     self.weightKg = weightKg
     self.equipment = equipment
+    self.palette = palette
     self.onConfirm = onConfirm
 
     let loads = EquipmentLoadRules.availableLoads(for: equipment)
@@ -1448,17 +1521,51 @@ private struct WatchSetEditor: View {
   }
 
   var body: some View {
-    VStack(spacing: 10) {
-      Text(metric == .reps ? "Modificar reps" : "Modificar peso").font(.headline)
-      Text(displayValue).font(.system(size: 34, weight: .bold, design: .rounded)).focusable(true)
-        .digitalCrownRotation($crownValue, from: lowerBound, through: upperBound, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
-      Text("Gira la corona digital").font(.caption).foregroundStyle(.secondary)
-      Button {
-        if metric == .reps { onConfirm(max(0, Int(value.rounded())), weightKg) }
-        else { onConfirm(reps, max(0, value)) }
-        dismiss()
-      } label: { Image(systemName: "checkmark") }.buttonStyle(.borderedProminent)
-    }.padding()
+    ZStack {
+      palette.canvas.ignoresSafeArea()
+
+      VStack(spacing: 10) {
+        Text(metric == .reps ? "Modificar reps" : "Modificar peso")
+          .font(.headline)
+          .foregroundStyle(palette.primaryText)
+        Text(displayValue)
+          .font(.system(size: 34, weight: .bold, design: .rounded))
+          .foregroundStyle(palette.primaryText)
+          .focusable(true)
+          .digitalCrownRotation(
+            $crownValue,
+            from: lowerBound,
+            through: upperBound,
+            by: 1,
+            sensitivity: .medium,
+            isContinuous: false,
+            isHapticFeedbackEnabled: true
+          )
+        Text("Gira la corona digital")
+          .font(.caption2)
+          .foregroundStyle(palette.secondaryText)
+        Button {
+          if metric == .reps { onConfirm(max(0, Int(value.rounded())), weightKg) }
+          else { onConfirm(reps, max(0, value)) }
+          dismiss()
+        } label: {
+          Image(systemName: "checkmark")
+            .foregroundStyle(palette.accentForeground)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(palette.accent)
+      }
+      .padding()
+    }
+    .overlay(alignment: .topLeading) {
+      Image(systemName: "xmark")
+        .font(.caption.weight(.bold))
+        .foregroundStyle(palette.accentForeground)
+        .frame(width: 44, height: 44)
+        .padding(.leading, 4)
+        .padding(.top, -33)
+        .allowsHitTesting(false)
+    }
   }
   private var displayValue: String { metric == .reps ? "\(max(0, Int(value.rounded())))" : WeightFormatter.string(from: max(0, value)) }
   private var lowerBound: Double { metric == .reps ? -Double(reps) : 0 }
@@ -1541,9 +1648,12 @@ private struct WatchPalette {
 }
 
 private enum WeightFormatter {
+  static func numberString(from value: Double) -> String {
+    value.formatted(.number.precision(.fractionLength(0 ... 2)).locale(Locale(identifier: "es_ES")))
+  }
+
   static func string(from value: Double) -> String {
-    let formatted = value.formatted(.number.precision(.fractionLength(0 ... 2)).locale(Locale(identifier: "es_ES")))
-    return "\(formatted) kg"
+    "\(numberString(from: value)) kg"
   }
 }
 
