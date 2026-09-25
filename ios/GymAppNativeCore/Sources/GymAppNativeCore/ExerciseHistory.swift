@@ -50,7 +50,7 @@ public enum ExerciseHistory {
       workout.execution.records.compactMap { record in
         guard record.status == .completed,
               let recordedExercise = workout.execution.exercise(for: record.locator),
-              recordedExercise.baseExerciseID == exercise.baseExerciseID,
+              recordedExercise.displayGroupID == exercise.displayGroupID,
               let targets = workout.execution.targets(for: record.locator)
         else {
           return nil

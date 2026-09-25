@@ -111,6 +111,59 @@ public struct TrainingExercise: Codable, Identifiable, Sendable {
   }
 }
 
+public extension TrainingExercise {
+  var displayGroupID: String {
+    switch baseExerciseID {
+    case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
+      "curl-biceps"
+    case "elevacion-gemelos", "elevacion-gemelos-sentado":
+      "elevacion-gemelos"
+    case "peso-muerto-rumano", "rdl-tecnico":
+      "peso-muerto-rumano"
+    case "elevacion-lateral-mecanica":
+      "elevaciones-laterales"
+    default:
+      baseExerciseID
+    }
+  }
+
+  /// Groups plan variants under a stable name for execution and history views.
+  var displayName: String {
+    switch baseExerciseID {
+    case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
+      "Curl de bíceps"
+    case "elevacion-gemelos", "elevacion-gemelos-sentado":
+      "Elevación de gemelos"
+    case "peso-muerto-rumano", "rdl-tecnico":
+      "Peso muerto rumano"
+    case "elevacion-lateral-mecanica":
+      "Elevaciones laterales"
+    default:
+      baseExerciseName
+    }
+  }
+
+  /// Materiales que la app puede convertir con las reglas del gimnasio.
+  var selectableEquipmentOptions: [Equipment] {
+    if let equipmentOptions, !equipmentOptions.isEmpty {
+      return equipmentOptions
+    }
+
+    let alternatives: [Equipment] = switch exerciseID {
+    case "press-banca-barra", "press-banca-inclinado", "press-militar-sentado", "press-militar-sentado-velocidad":
+      [.barbell, .multipower, .dumbbell]
+    case "press-cerrado-multipower":
+      [.multipower, .dumbbell]
+    case "remo-inclinado-barra", "remo-barra-multipower", "hip-thrust-barra", "hip-thrust-volumen", "peso-muerto-rumano-barra", "rdl-tecnico":
+      [.barbell, .multipower]
+    default:
+      [equipment]
+    }
+
+    return alternatives.contains(equipment) ? alternatives : [equipment] + alternatives
+  }
+}
+
 public struct TrainingSet: Codable, Identifiable, Sendable {
   public let setIndex: Int
   public let targetReps: Int?

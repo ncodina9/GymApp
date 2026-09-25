@@ -34,7 +34,7 @@ struct ExerciseHistoryView: View {
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .top, spacing: 0) {
       if showsAppChrome {
-        AccentHeaderCard(title: exercise.baseExerciseName, eyebrow: "Historial")
+        AccentHeaderCard(title: exercise.displayName, eyebrow: "Historial")
       }
     }
     .overlay(alignment: .bottomLeading) {
@@ -137,7 +137,7 @@ struct ExerciseHistoryContent: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
           if showsTitle {
-            Text(exercise.baseExerciseName)
+            Text(exercise.displayName)
               .font(.system(size: 31, weight: .bold))
               .multilineTextAlignment(.center)
               .frame(maxWidth: .infinity)
@@ -244,8 +244,8 @@ struct ExerciseHistoryContent: View {
       return true
     }
 
-    return session.planSession?.exercises.first(where: { $0.exerciseID == event.exerciseId })?.baseExerciseID
-      == exercise.baseExerciseID
+    return session.planSession?.exercises.first(where: { $0.exerciseID == event.exerciseId })?.displayGroupID
+      == exercise.displayGroupID
   }
 
   private func equipment(

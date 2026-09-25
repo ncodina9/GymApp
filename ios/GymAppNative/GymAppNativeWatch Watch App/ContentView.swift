@@ -344,7 +344,7 @@ private struct WatchSessionPreview: View {
       ToolbarItem(placement: .topBarTrailing) {
         Button { requestStart(startsWithWarmup: false) } label: { Image(systemName: "play.fill") }
         .disabled(isSendingAction || !canStartSelection)
-        .accessibilityLabel(selectedExercise == nil ? "Empezar entrenamiento" : "Empezar por \(selectedExercise!.baseExerciseName)")
+        .accessibilityLabel(selectedExercise == nil ? "Empezar entrenamiento" : "Empezar por \(selectedExercise!.displayName)")
       }
       if activeWorkout == nil || activeWorkout?.sessionID != session.sessionID {
         ToolbarItem(placement: .bottomBar) {
@@ -446,7 +446,7 @@ private struct WatchExercisePreviewRow: View {
   }
 
   private var isCurrent: Bool {
-    !isCompleted && activeWorkout?.exerciseName == exercise.baseExerciseName
+    !isCompleted && activeWorkout?.exerciseName == exercise.displayName
   }
 
   var body: some View {
@@ -457,7 +457,7 @@ private struct WatchExercisePreviewRow: View {
         .background(selected ? accent : Color.secondary.opacity(0.2), in: Circle())
         .foregroundStyle(selected ? .white : primaryText)
       VStack(alignment: .leading, spacing: 2) {
-        Text(exercise.baseExerciseName).font(.subheadline.weight(.semibold)).lineLimit(2)
+        Text(exercise.displayName).font(.subheadline.weight(.semibold)).lineLimit(2)
         if let firstSet = exercise.sets.first {
           Text(targetLabel(firstSet)).font(.caption2).foregroundStyle(secondaryText)
         }

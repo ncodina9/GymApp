@@ -23,7 +23,7 @@ enum ThemeAccent: String, CaseIterable, Identifiable {
     case .blue: UIColor(red: 0.00, green: 0.33, blue: 0.62, alpha: 1)
     case .red: UIColor(red: 0.56, green: 0.14, blue: 0.18, alpha: 1)
     case .amber: UIColor(red: 0.52, green: 0.31, blue: 0.00, alpha: 1)
-    case .graphite: UIColor(red: 0.19, green: 0.23, blue: 0.28, alpha: 1)
+    case .graphite: UIColor(red: 0.36, green: 0.45, blue: 0.55, alpha: 1)
     }
   }
 
@@ -32,7 +32,7 @@ enum ThemeAccent: String, CaseIterable, Identifiable {
     case .blue: UIColor(red: 0.16, green: 0.31, blue: 0.42, alpha: 1)
     case .red: UIColor(red: 0.37, green: 0.20, blue: 0.23, alpha: 1)
     case .amber: UIColor(red: 0.39, green: 0.30, blue: 0.10, alpha: 1)
-    case .graphite: UIColor(red: 0.13, green: 0.16, blue: 0.20, alpha: 1)
+    case .graphite: UIColor(red: 0.24, green: 0.31, blue: 0.39, alpha: 1)
     }
   }
 

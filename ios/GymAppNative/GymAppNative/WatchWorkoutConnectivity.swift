@@ -84,7 +84,7 @@ final class WatchWorkoutConnectivity: NSObject {
           let isTimed = exercise.sets.first?.type == .timed
           return WatchExerciseReviewItem(
             exerciseID: exercise.exerciseID,
-            exerciseName: exercise.baseExerciseName,
+            exerciseName: exercise.displayName,
             equipment: equipment,
             isTimed: isTimed,
             decision: snapshot.exerciseDecisions[exercise.exerciseID]
@@ -125,7 +125,7 @@ final class WatchWorkoutConnectivity: NSObject {
     let supersetExerciseNames = exercise.supersetID.map { supersetID in
       execution.session.exercises
         .filter { $0.supersetID == supersetID }
-        .map(\.baseExerciseName)
+        .map(\.displayName)
     }
     let selectableEquipment = equipmentOptions(for: exercise).filter {
       execution.canSelectEquipment($0, for: locator)
@@ -146,7 +146,7 @@ final class WatchWorkoutConnectivity: NSObject {
       WatchWorkoutState(
         sessionID: execution.session.sessionID,
         workoutName: execution.session.label,
-        exerciseName: exercise.baseExerciseName,
+        exerciseName: exercise.displayName,
         equipment: execution.equipment(for: locator) ?? exercise.equipment,
         equipmentName: (execution.equipment(for: locator) ?? exercise.equipment).executionLabel,
         equipmentOptions: selectableEquipment,
@@ -185,22 +185,7 @@ final class WatchWorkoutConnectivity: NSObject {
   }
 
   private func equipmentOptions(for exercise: TrainingExercise) -> [Equipment] {
-    if let equipmentOptions = exercise.equipmentOptions {
-      return equipmentOptions
-    }
-
-    let variants: [Equipment] = switch exercise.exerciseID {
-    case "press-banca-barra", "press-banca-inclinado", "press-militar-sentado", "press-militar-sentado-velocidad":
-      [.barbell, .multipower, .dumbbell]
-    case "remo-inclinado-barra", "remo-barra-multipower", "press-cerrado-multipower", "hip-thrust-barra", "hip-thrust-volumen", "peso-muerto-rumano-barra":
-      [.barbell, .multipower]
-    default:
-      [exercise.equipment]
-    }
-
-    return variants.contains(exercise.equipment)
-      ? variants
-      : [exercise.equipment] + variants
+    exercise.selectableEquipmentOptions
   }
 
   private func publishLatestStateIfPossible() {

@@ -31,6 +31,7 @@ struct SetExecutionView: View {
   @State private var startedAt: Date
   @State private var finishedAt: Date?
   @State private var isExerciseHistoryPresented = false
+  @State private var isCoachGuidancePresented = false
   @State private var isSessionActionMenuPresented = false
   @State private var showsWorkoutProgress = false
   @State private var showsFinishConfirmation = false
@@ -83,7 +84,8 @@ struct SetExecutionView: View {
               timerEndsAt: $setTimerEndsAt,
               timerRemaining: $setTimerRemaining,
               onExecutionChanged: persistActiveWorkout,
-              onSessionActionsRequested: { showSessionActionMenu() }
+              onSessionActionsRequested: { showSessionActionMenu() },
+              isCoachGuidancePresented: $isCoachGuidancePresented
             )
           } else {
             FinishedWorkoutView(
@@ -113,13 +115,14 @@ struct SetExecutionView: View {
         case .rest:
           if let restEndsAt, let next = execution.current {
             RestView(
-              execution: execution,
+              execution: $execution,
               next: next,
               endsAt: restEndsAt,
               totalSeconds: restTotalSeconds,
               onAdjust: adjustRest,
               onContinue: continueFromRest,
-              onSelectBlock: selectNextBlock
+              onSelectBlock: selectNextBlock,
+              onExecutionChanged: persistActiveWorkout
             )
           }
         case .exerciseReview:
@@ -147,11 +150,12 @@ struct SetExecutionView: View {
     .background(GymCanvas())
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .bottom, spacing: 0) {
-      WorkoutProgressBar(
-        completed: execution.completedSetCount,
-        total: execution.totalSetCount
-      )
-      .opacity(isExerciseHistoryPresented ? 0 : 1)
+      if !isExerciseHistoryPresented && !isCoachGuidancePresented {
+        WorkoutProgressBar(
+          completed: execution.completedSetCount,
+          total: execution.totalSetCount
+        )
+      }
     }
     .overlay {
       if isSessionActionMenuPresented {
@@ -682,6 +686,7 @@ private struct WorkingSetView: View {
   @State private var isHistoryExpanded = false
   @State private var historyRevealDistance: CGFloat?
   @Environment(\.dismiss) private var dismiss
+  @Binding var isCoachGuidancePresented: Bool
 
   private var exercise: TrainingExercise? { execution.exercise(for: locator) }
   private var trainingSet: TrainingSet? { execution.trainingSet(for: locator) }
@@ -748,13 +753,12 @@ private struct WorkingSetView: View {
             .frame(maxHeight: .infinity)
           }
 
-          Text(exercise.notes)
-            .font(.subheadline)
-            .foregroundStyle(Color.gymSecondaryText)
-            .lineLimit(2)
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+          ExerciseCoachCueCard(
+            exercise: exercise,
+            onLongPress: {
+              withAnimation(.smooth(duration: 0.2)) { isCoachGuidancePresented = true }
+            }
+          )
 
           BottomActions(
             primaryTitle: "Continuar",
@@ -778,6 +782,17 @@ private struct WorkingSetView: View {
               onDismiss: dismissHistory
             )
             .zIndex(20)
+          }
+        }
+        .overlay {
+          if isCoachGuidancePresented {
+            ExerciseCoachGuidanceOverlay(
+              exercise: exercise,
+              onDismiss: {
+                withAnimation(.smooth(duration: 0.18)) { isCoachGuidancePresented = false }
+              }
+            )
+            .zIndex(30)
           }
         }
       } else {
@@ -830,22 +845,7 @@ private struct WorkingSetView: View {
   }
 
   private func equipmentOptions(for exercise: TrainingExercise) -> [Equipment] {
-    if let equipmentOptions = exercise.equipmentOptions {
-      return equipmentOptions
-    }
-
-    let variants: [Equipment] = switch exercise.exerciseID {
-    case "press-banca-barra", "press-banca-inclinado", "press-militar-sentado", "press-militar-sentado-velocidad":
-      [.barbell, .multipower, .dumbbell]
-    case "remo-inclinado-barra", "remo-barra-multipower", "press-cerrado-multipower", "hip-thrust-barra", "hip-thrust-volumen", "peso-muerto-rumano-barra":
-      [.barbell, .multipower]
-    default:
-      [exercise.equipment]
-    }
-
-    return variants.contains(exercise.equipment)
-      ? variants
-      : [exercise.equipment] + variants
+    exercise.selectableEquipmentOptions
   }
 
   private func unavailableEquipment(for exercise: TrainingExercise) -> Set<Equipment> {
@@ -927,6 +927,156 @@ private enum SetEditField: String, Identifiable {
 
   var id: String { rawValue }
   var title: String { self == .reps ? "Reps" : "Peso" }
+}
+
+private struct ExerciseCoachCueCard: View {
+  let exercise: TrainingExercise
+  let onLongPress: () -> Void
+
+  var body: some View {
+    HStack(alignment: .top, spacing: 10) {
+      Image(systemName: "figure.strengthtraining.traditional")
+        .font(.headline.weight(.semibold))
+        .foregroundStyle(Color.gymAccent)
+        .frame(width: 24)
+
+      Text(ExerciseCoachGuidance(exercise: exercise).summary)
+        .font(.subheadline)
+        .foregroundStyle(Color.gymSecondaryText)
+        .multilineTextAlignment(.leading)
+        .lineLimit(2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .padding(14)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+    .contentShape(RoundedRectangle(cornerRadius: 18))
+    .onLongPressGesture(minimumDuration: 0.35, perform: onLongPress)
+    .accessibilityLabel("Indicaciones para \(exercise.displayName)")
+    .accessibilityHint("Mantén pulsado para ver las indicaciones completas")
+  }
+
+}
+
+private struct ExerciseCoachGuidanceOverlay: View {
+  let exercise: TrainingExercise
+  let onDismiss: () -> Void
+
+  private var guidance: ExerciseCoachGuidance { ExerciseCoachGuidance(exercise: exercise) }
+
+  var body: some View {
+    ZStack {
+      Rectangle()
+        .fill(.ultraThinMaterial)
+        .ignoresSafeArea()
+        .onTapGesture(perform: onDismiss)
+
+      VStack(alignment: .leading, spacing: 14) {
+        HStack(alignment: .top, spacing: 12) {
+          Text(exercise.displayName)
+            .font(.title3.weight(.bold))
+            .frame(maxWidth: .infinity, alignment: .leading)
+          Button(action: onDismiss) {
+            Image(systemName: "xmark")
+              .font(.subheadline.weight(.bold))
+              .frame(width: 32, height: 32)
+              .background(Color.gymSurface, in: Circle())
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel("Cerrar indicaciones")
+        }
+        Text(guidance.fullGuidance)
+          .font(.subheadline)
+          .foregroundStyle(Color.gymSecondaryText)
+        Text("Objetivo")
+          .font(.caption.weight(.bold))
+          .foregroundStyle(Color.gymAccent)
+        Text(guidance.trainingGoal)
+          .font(.headline.weight(.semibold))
+      }
+      .padding(20)
+      .frame(maxWidth: 360, alignment: .leading)
+      .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 24))
+      .overlay {
+        RoundedRectangle(cornerRadius: 24)
+          .stroke(Color.gymAccent.opacity(0.38), lineWidth: 1)
+      }
+      .shadow(color: .black.opacity(0.22), radius: 24, y: 10)
+      .padding(24)
+    }
+    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+    .accessibilityAddTraits(.isModal)
+  }
+}
+
+private struct ExerciseCoachGuidance {
+  let exercise: TrainingExercise
+
+  var summary: String { "\(technicalGuidance) Objetivo: \(trainingGoal)" }
+
+  var fullGuidance: String {
+    let variation = variationName.map { "Variación: \($0). " } ?? ""
+    return "\(technicalGuidance) \(variation)"
+  }
+
+  var trainingGoal: String {
+    let muscles = exercise.primaryMuscles.prefix(2).map(Self.muscleLabel).joined(separator: " y ")
+    let goal: String = switch exercise.trainingBlock {
+    case "fuerza":
+      "desarrollar fuerza con técnica estable\(muscles.isEmpty ? "" : " en \(muscles)")"
+    case "tecnica":
+      "consolidar el patrón y el control del movimiento"
+    case "volumen":
+      "acumular trabajo de calidad\(muscles.isEmpty ? "" : " en \(muscles)")"
+    default:
+      "estimular \(muscles.isEmpty ? "la musculatura objetivo" : muscles) con control"
+    }
+    return goal.prefix(1).uppercased() + goal.dropFirst()
+  }
+
+  private var variationName: String? {
+    guard exercise.name.localizedCaseInsensitiveCompare(exercise.displayName) != .orderedSame,
+          !isMaterialOnlyVariant
+    else { return nil }
+    return exercise.name
+  }
+
+  private var isMaterialOnlyVariant: Bool {
+    let normalizedName = exercise.name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    let materialTerms = [
+      "barra", "multipower", "mancuernas", "mancuerna", "polea", "cable", "discos", "lastre",
+    ]
+    guard materialTerms.contains(where: { normalizedName.contains($0) }) else { return false }
+
+    let normalizedDisplayName = exercise.displayName
+      .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+      .replacingOccurrences(of: " de ", with: " ")
+    let simplifiedName = materialTerms.reduce(normalizedName) { value, term in
+      value.replacingOccurrences(of: term, with: "")
+    }
+    .replacingOccurrences(of: "con", with: "")
+    .replacingOccurrences(of: "en", with: "")
+    .replacingOccurrences(of: " ", with: "")
+    let simplifiedDisplayName = normalizedDisplayName.replacingOccurrences(of: " ", with: "")
+    return simplifiedName == simplifiedDisplayName
+  }
+
+  private var technicalGuidance: String {
+    let sentences = exercise.notes
+      .split(separator: ".")
+      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .filter { !$0.isEmpty && !$0.localizedCaseInsensitiveContains("reps") }
+    return (sentences.isEmpty ? [exercise.notes] : sentences).joined(separator: ". ")
+  }
+
+  private nonisolated static func muscleLabel(_ rawValue: String) -> String {
+    switch rawValue {
+    case "triceps": "tríceps"
+    case "gluteo": "glúteo"
+    case "biceps": "bíceps"
+    default: rawValue
+    }
+  }
 }
 
 private struct FeedbackView: View {
@@ -1137,7 +1287,7 @@ private struct ExerciseExecutionHeader: View {
           .opacity(0.84)
       }
 
-      Text(exercise?.baseExerciseName ?? "Ejercicio")
+      Text(exercise?.displayName ?? "Ejercicio")
         .font(.system(size: 31, weight: .bold))
         .multilineTextAlignment(.center)
         .lineLimit(2)
@@ -1548,7 +1698,7 @@ private struct ExerciseReviewHeader: View {
         .font(.subheadline.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
 
-      Text(exercises.map(\.baseExerciseName).joined(separator: " + "))
+      Text(exercises.map(\.displayName).joined(separator: " + "))
         .font(.system(size: 31, weight: .bold))
         .lineLimit(2)
         .minimumScaleFactor(0.78)
@@ -1601,7 +1751,7 @@ private struct ExerciseDecisionSection: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       if showsExerciseName {
-        Text(exercise.baseExerciseName)
+        Text(exercise.displayName)
           .font(.title3.weight(.bold))
           .lineLimit(2)
       }
@@ -1672,13 +1822,14 @@ private struct ExerciseDecisionSection: View {
 }
 
 private struct RestView: View {
-  let execution: WorkoutExecutionState
+  @Binding var execution: WorkoutExecutionState
   let next: WorkoutSetLocator
   let endsAt: Date
   let totalSeconds: Int
   let onAdjust: (Int) -> Void
   let onContinue: () -> Void
   let onSelectBlock: (Int) -> Void
+  let onExecutionChanged: () -> Void
   @State private var hasAnnouncedCompletion = false
   @State private var completionWaveID = 0
 
@@ -1705,7 +1856,11 @@ private struct RestView: View {
         }
 
         VStack(spacing: hasNextSuperset ? 8 : 3) {
-          NextSetPreview(execution: execution, locator: next)
+          NextSetPreview(
+            execution: $execution,
+            locator: next,
+            onExecutionChanged: onExecutionChanged
+          )
             .frame(maxHeight: hasNextSuperset ? 244 : 174, alignment: .top)
             .padding(10)
             .overlay {
@@ -1942,7 +2097,7 @@ private struct PendingBlockOption: Identifiable {
   let isSuperset: Bool
 
   var id: String { exercises.map(\.exerciseID).joined(separator: "+") }
-  var exerciseNames: String { exercises.map(\.baseExerciseName).joined(separator: " + ") }
+  var exerciseNames: String { exercises.map(\.displayName).joined(separator: " + ") }
 
   var equipmentSummary: String {
     exercises.reduce(into: [String]()) { labels, exercise in
@@ -1956,8 +2111,9 @@ private struct PendingBlockOption: Identifiable {
 }
 
 private struct NextSetPreview: View {
-  let execution: WorkoutExecutionState
+  @Binding var execution: WorkoutExecutionState
   let locator: WorkoutSetLocator
+  let onExecutionChanged: () -> Void
 
   var body: some View {
     let previews = previews
@@ -1971,7 +2127,10 @@ private struct NextSetPreview: View {
         ScrollView {
           VStack(spacing: 8) {
             ForEach(previews) { preview in
-              RestPreviewCard(preview: preview)
+              RestPreviewCard(
+                preview: preview,
+                onCycleEquipment: { cycleEquipment(for: preview.locator) }
+              )
             }
           }
         }
@@ -2002,6 +2161,20 @@ private struct NextSetPreview: View {
       return RestSetPreview(locator: current, exercise: exercise, targets: targets, equipment: execution.equipment(for: current) ?? exercise.equipment)
     }
   }
+
+  private func cycleEquipment(for locator: WorkoutSetLocator) {
+    guard let exercise = execution.exercise(for: locator) else { return }
+    let current = execution.equipment(for: locator) ?? exercise.equipment
+    let available = exercise.selectableEquipmentOptions.filter {
+      execution.canSelectEquipment($0, for: locator)
+    }
+    guard available.count > 1,
+          let currentIndex = available.firstIndex(of: current)
+    else { return }
+    let nextEquipment = available[(currentIndex + 1) % available.count]
+    guard execution.selectEquipment(nextEquipment, for: locator) else { return }
+    onExecutionChanged()
+  }
 }
 
 private struct RestSetPreview: Identifiable {
@@ -2015,21 +2188,28 @@ private struct RestSetPreview: Identifiable {
 
 private struct RestPreviewCard: View {
   let preview: RestSetPreview
+  let onCycleEquipment: () -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 8) {
-        Text(preview.exercise.baseExerciseName)
+        Text(preview.exercise.displayName)
           .font(.headline.weight(.bold))
           .lineLimit(2)
           .frame(maxWidth: .infinity, alignment: .leading)
-        RestEquipmentChip(equipment: preview.equipment, variantLabel: preview.exercise.variantLabel)
+        RestEquipmentChip(
+          equipment: preview.equipment,
+          variantLabel: preview.equipment == preview.exercise.equipment
+            ? preview.exercise.variantLabel
+            : nil,
+          action: onCycleEquipment
+        )
       }
 
       HStack(spacing: 8) {
         RestPreviewMetric(label: "Serie", value: "\(preview.locator.setIndex)/\(preview.exercise.sets.count)")
         RestPreviewMetric(label: preview.targets.durationSeconds == nil ? "Reps" : "Tiempo", value: workValue)
-        RestPreviewMetric(label: loadLabel, value: loadValue)
+        RestPreviewMetric(label: loadLabel, value: loadValue, action: onCycleEquipment)
       }
     }
     .padding(14)
@@ -2058,29 +2238,47 @@ private struct RestPreviewCard: View {
 private struct RestPreviewMetric: View {
   let label: String
   let value: String
+  var action: (() -> Void)? = nil
 
   var body: some View {
-    VStack(spacing: 4) {
+    let content = VStack(spacing: 4) {
       Text(label).font(.caption.weight(.semibold)).foregroundStyle(Color.gymSecondaryText).lineLimit(1)
       Text(value).font(.title3.weight(.bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
     }
     .frame(maxWidth: .infinity, minHeight: 60)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
+
+    if let action {
+      Button(action: action) { content }
+        .buttonStyle(.plain)
+        .accessibilityHint("Toca para cambiar el material y ajustar el peso")
+    } else {
+      content
+    }
   }
 }
 
 private struct RestEquipmentChip: View {
   let equipment: Equipment
   let variantLabel: String?
+  var action: (() -> Void)? = nil
 
   var body: some View {
-    Text(variantLabel ?? equipment.executionLabel)
+    let content = Text(variantLabel ?? equipment.executionLabel)
       .font(.caption.weight(.semibold))
       .foregroundStyle(Color.gymSecondaryText)
       .lineLimit(1)
       .padding(.horizontal, 8)
       .padding(.vertical, 5)
       .background(Color.gymCanvas, in: Capsule())
+
+    if let action {
+      Button(action: action) { content }
+        .buttonStyle(.plain)
+        .accessibilityHint("Toca para cambiar el material y ajustar el peso")
+    } else {
+      content
+    }
   }
 }
 
@@ -2450,7 +2648,7 @@ private struct ExerciseProgressCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 8) {
-        Text(exercise.baseExerciseName)
+        Text(exercise.displayName)
           .font(.headline.weight(.bold))
           .lineLimit(2)
         Spacer(minLength: 0)
@@ -2516,7 +2714,7 @@ private struct SetHeader: View {
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
       VStack(alignment: .leading, spacing: 5) {
-        Text(exercise.baseExerciseName)
+        Text(exercise.displayName)
           .font(.system(size: 27, weight: .bold))
           .lineLimit(2)
           .frame(maxWidth: .infinity, alignment: .leading)

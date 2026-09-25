@@ -109,6 +109,23 @@ struct TrainingPlanDecodingTests {
     #expect(timedExercise.sets.allSatisfy { $0.targetDurationSeconds == 60 })
   }
 
+  @Test("Unifica variantes y expone materiales alternativos del gimnasio")
+  func normalizesExerciseNamesAndEquipmentOptions() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let exercises = plan.sessions.flatMap(\.exercises)
+    let hammerCurl = try #require(exercises.first { $0.exerciseID == "curl-martillo" })
+    let seatedCalves = try #require(exercises.first { $0.exerciseID == "gemelos-sentado-multipower" })
+    let technicalRDL = try #require(exercises.first { $0.exerciseID == "rdl-tecnico" })
+    let closeGripPress = try #require(exercises.first { $0.exerciseID == "press-cerrado-multipower" })
+
+    #expect(hammerCurl.displayName == "Curl de bíceps")
+    #expect(hammerCurl.displayGroupID == "curl-biceps")
+    #expect(seatedCalves.displayName == "Elevación de gemelos")
+    #expect(technicalRDL.displayName == "Peso muerto rumano")
+    #expect(closeGripPress.selectableEquipmentOptions == [.multipower, .dumbbell])
+    #expect(technicalRDL.selectableEquipmentOptions == [.barbell, .multipower])
+  }
+
   @Test("Estima las sesiones con la misma regla que la PWA")
   func estimatesSessionDurationUsingSharedRules() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))

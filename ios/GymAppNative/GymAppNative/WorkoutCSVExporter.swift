@@ -38,7 +38,7 @@ enum WorkoutCSVExporter {
         exercise.exerciseID,
         exercise.baseExerciseID,
         exercise.name,
-        exercise.baseExerciseName,
+        exercise.displayName,
         exercise.variantLabel ?? "",
         exercise.type,
         exercise.target,

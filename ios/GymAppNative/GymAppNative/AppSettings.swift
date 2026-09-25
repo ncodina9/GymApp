@@ -111,9 +111,9 @@ private struct ExercisesLibraryView: View {
     var seen = Set<String>()
     return plan.sessions
       .flatMap(\.exercises)
-      .filter { seen.insert($0.baseExerciseID).inserted }
+      .filter { seen.insert($0.displayGroupID).inserted }
       .sorted {
-        $0.baseExerciseName.localizedCaseInsensitiveCompare($1.baseExerciseName) == .orderedAscending
+        $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
       }
   }
 
@@ -131,7 +131,7 @@ private struct ExercisesLibraryView: View {
                 .frame(width: 30, height: 30)
 
               VStack(alignment: .leading, spacing: 4) {
-                Text(exercise.baseExerciseName)
+                Text(exercise.displayName)
                   .font(.headline.weight(.bold))
                   .foregroundStyle(.primary)
                 Text(equipmentLabel(exercise.equipment))
