@@ -48,6 +48,18 @@ const canonicalHeaders = [
   'superset_order',
   'round_number',
 ];
+const feedbackDecisions = new Set([
+  'Mantener',
+  'Subir peso',
+  'Bajar peso',
+  'Subir reps',
+  'Bajar reps',
+  'Marcar molestia',
+  'Mantener tiempo',
+  'Subir tiempo',
+  'Bajar tiempo',
+  'Mejorar posición',
+]);
 
 const args = parseArgs(process.argv.slice(2));
 const sourceDir = resolve(args.source ?? defaultSourceDir);
@@ -218,6 +230,15 @@ function normalizeRow(row, sourceHeaders) {
     row.variantLabel ||
     planExercise?.variantLabel ||
     '';
+
+  // Older app exports placed the exercise decision one column too early.
+  if (
+    !normalized.exercise_decision &&
+    feedbackDecisions.has(normalized.pain_other)
+  ) {
+    normalized.exercise_decision = normalized.pain_other;
+    normalized.pain_other = '';
+  }
 
   if (!sourceHeaders.includes('status')) {
     normalized.status = 'done';

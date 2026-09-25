@@ -880,6 +880,10 @@ function adaptExercise(item, week) {
     reps = applyWeek3RepAdjustment(item, reps);
   }
 
+  if (templateWeek >= 5 && templateWeek !== 8) {
+    weightKg = applyLaterFeedbackLoadAdjustment(item, weightKg);
+  }
+
   if (templateWeek >= 5 && templateWeek <= 7 && isBasic(item)) {
     setCount = getIntensificationSetCount(item);
     reps = getIntensificationReps(item);
@@ -1083,6 +1087,14 @@ function applyWeek3RepAdjustment(item, reps) {
   }
 
   return reps;
+}
+
+function applyLaterFeedbackLoadAdjustment(item, weightKg) {
+  if (item.exerciseId === 'press-banca-inclinado') {
+    return 47.5;
+  }
+
+  return weightKg;
 }
 
 function getWeekFocus(week) {

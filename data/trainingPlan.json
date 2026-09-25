@@ -6826,7 +6826,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "intensificacion",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "4x7 @ 45 kg",
+          "target": "4x7 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -6839,28 +6839,28 @@
             {
               "setIndex": 1,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             }
@@ -7991,7 +7991,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "intensificacion",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "4x7 @ 45 kg",
+          "target": "4x7 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -8004,28 +8004,28 @@
             {
               "setIndex": 1,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             }
@@ -9540,7 +9540,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "intensificacion",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "4x7 @ 45 kg",
+          "target": "4x7 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -9553,28 +9553,28 @@
             {
               "setIndex": 1,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 7,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 105,
               "type": "working"
             }
@@ -12470,7 +12470,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "realizacion",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "3x3 @ 45 kg",
+          "target": "3x3 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -12483,21 +12483,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -13949,7 +13949,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "realizacion",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "3x3 @ 45 kg",
+          "target": "3x3 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -13962,21 +13962,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -15372,7 +15372,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "readaptacion",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "3x8 @ 37.5 kg",
+          "target": "3x8 @ 40 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -15385,21 +15385,21 @@
             {
               "setIndex": 1,
               "targetReps": 8,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 40,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 8,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 40,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 8,
-              "targetWeightKg": 37.5,
+              "targetWeightKg": 40,
               "restSeconds": 120,
               "type": "working"
             }
@@ -16837,7 +16837,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "realizacion",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "3x3 @ 45 kg",
+          "target": "3x3 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -16850,21 +16850,21 @@
             {
               "setIndex": 1,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 3,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -18211,7 +18211,7 @@
           "secondaryMuscles": ["triceps"],
           "phase": "test",
           "notes": "Usar barra y mantener recorrido estable.",
-          "target": "2x8 @ 45 kg",
+          "target": "2x8 @ 47.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -18224,14 +18224,14 @@
             {
               "setIndex": 1,
               "targetReps": 8,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 180,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 8,
-              "targetWeightKg": 45,
+              "targetWeightKg": 47.5,
               "restSeconds": 180,
               "type": "working"
             }
