@@ -1373,16 +1373,26 @@ Planificado para el siguiente bloque nativo: una cabecera común y centrada para
 
 ### Futuro: onboarding y perfil de entrenamiento
 
+- Próximo bloque de producto: onboarding guiado antes de crear un plan y una pantalla equivalente en `Opciones > Perfil de entrenamiento` para revisar o modificar los mismos datos posteriormente.
 - [ ] Onboarding guiado antes de crear un plan: material disponible, días de entrenamiento, duración del plan, objetivo principal, duración deseada de cada sesión, preferencias de cardio, ejercicios favoritos y ejercicios a evitar.
 - [ ] Recoger nivel inicial sin obligar a introducir un 1RM: pesos y repeticiones cómodos aproximados por patrón o ejercicio, además de preferencia por aislados frente a superseries.
 - [ ] Registrar limitaciones y molestias declaradas durante el onboarding para condicionar las sustituciones y el diseño inicial del plan.
-- [ ] Permitir revisar y editar ese perfil sin alterar retroactivamente las sesiones ya registradas.
+- [ ] Permitir revisar y editar ese perfil desde `Opciones > Perfil de entrenamiento` sin alterar retroactivamente las sesiones ya registradas. Sus cambios condicionan solo propuestas y revisiones futuras del plan.
 
 ### Futuro: planificación y análisis con IA
 
-- [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, con explicaciones y confirmación explícita antes de modificar un plan.
-- [ ] Generar macrociclos y ajustar mesociclos, calendario, pesos, repeticiones, descansos y volumen a partir del perfil, el material y las sesiones ejecutadas.
-- [ ] Diseñar límites de seguridad: no proponer progresiones o sustituciones que contradigan molestias declaradas, material real o límites del usuario.
+- Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.
+- Principio de arquitectura: el agente interpreta la intención y propone cambios, pero no es la fuente de verdad ni modifica directamente el plan. El motor determinista valida calendario, volumen, material, restricciones, ejercicios compatibles y límites de progresión antes de que el usuario confirme.
+- [ ] Definir el perfil estructurado que condiciona toda propuesta: objetivo, experiencia, disponibilidad, duración máxima por sesión, material, preferencias, prioridades musculares, ejercicios a evitar y limitaciones.
+- [ ] Versionar el plan con fecha de vigencia. Una propuesta aceptada crea una nueva revisión para las sesiones futuras; nunca modifica una sesión activa o el historial ya ejecutado.
+- [ ] Crear operaciones de planificación tipadas y auditables: mover, cancelar, sustituir, añadir o quitar ejercicio, cambiar series, reps, carga, duración, descanso y prioridad. Cada operación debe incluir motivo, alcance y cambios resultantes.
+- [ ] Implementar un motor determinista de calendario y programación que funcione sin IA: comprobar conflictos, sesiones duplicadas, volumen, duración estimada, material, superseries, restricciones y progresiones máximas.
+- [ ] Añadir una pantalla de propuesta que muestre qué cambia, qué se conserva, por qué y el impacto semanal. Ningún ajuste se aplica sin aceptación explícita.
+- [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, siempre como propuesta explicada y confirmada antes de modificar un plan.
+- [ ] Integrar el chat como interfaz de intención sobre las operaciones validadas, con contexto limitado al perfil, plan efectivo, sesiones ejecutadas y restricciones relevantes.
+- [ ] Diseñar límites de seguridad: no proponer progresiones o sustituciones que contradigan molestias declaradas, material real o límites del usuario; dejar trazabilidad de la propuesta y de la decisión del usuario.
+- [ ] Definir backend, identidad, política de coste, retención, consentimiento y privacidad antes de enviar perfil, molestias o historial a un modelo externo.
+- [ ] Mantener la ejecución en gimnasio, el registro y el acceso a planes ya descargados plenamente funcionales sin IA ni conexión.
 
 ### Futuro: molestias y almacenamiento independiente
 
@@ -1476,10 +1486,12 @@ Criterio de aceptación:
 
 ## Próximo hito recomendado
 
-Restaurar el gesto nativo de vuelta desde el borde izquierdo en los destinos de `NavigationStack`, sin competir con los controles táctiles propios del entrenamiento. Es el último punto P1 de navegación pendiente antes de centrar la siguiente sesión real en validar el calentamiento, la recuperación del borrador y las notificaciones.
+Construir el onboarding y el perfil de entrenamiento editable desde `Opciones`. Será la base estructurada para generar y reajustar planes mediante el futuro agente, sin empezar todavía por un editor manual amplio.
 
 Checklist mínima de la siguiente iteración:
 
-- [ ] Confirmar en qué destinos se pierde el gesto y reproducirlo en simulador y dispositivo.
-- [ ] Preservar el botón inferior de vuelta o casa como alternativa explícita y accesible.
-- [ ] Verificar que el gesto no interfiere con el selector de material, hojas inferiores ni navegación de la sesión.
+- [ ] Definir y persistir un perfil versionado: objetivo, experiencia, disponibilidad, duración máxima, material, preferencias, prioridades, ejercicios a evitar y limitaciones.
+- [ ] Crear un onboarding que recoja el perfil por pasos y pueda retomarse sin perder el progreso.
+- [ ] Añadir `Opciones > Perfil de entrenamiento` para revisar y actualizar el perfil sin modificar entrenamientos activos o sesiones históricas.
+- [ ] Mostrar con claridad desde qué fecha se aplicarán los futuros ajustes del plan.
+- [ ] Mantener el gesto de vuelta como pulido posterior, no como un bloque prioritario.
