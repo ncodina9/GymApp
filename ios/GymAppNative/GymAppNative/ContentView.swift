@@ -6,11 +6,12 @@ struct ContentView: View {
   @State private var plan: TrainingPlan?
   @State private var loadingError: String?
   @Query private var trainingProfiles: [TrainingProfileRecord]
+  @AppStorage("trainingProfileOnboardingDeferred") private var onboardingDeferred = false
 
   var body: some View {
     Group {
-      if TrainingProfileStore.load(from: trainingProfiles) == nil {
-        TrainingProfileOnboardingView()
+      if TrainingProfileStore.load(from: trainingProfiles) == nil, !onboardingDeferred {
+        TrainingProfileOnboardingView(onDefer: { onboardingDeferred = true })
       } else if let plan {
         TodayView(plan: plan)
       } else if let loadingError {

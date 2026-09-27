@@ -3,6 +3,7 @@ import SwiftData
 import GymAppNativeCore
 
 struct TrainingProfileOnboardingView: View {
+  let onDefer: () -> Void
   @Environment(\.modelContext) private var modelContext
   @State private var profile = TrainingProfile.initial
   @State private var step = 0
@@ -47,6 +48,11 @@ struct TrainingProfileOnboardingView: View {
             .foregroundStyle(Color.gymSecondaryText)
             .buttonStyle(.plain)
         }
+
+        Button("Mantener mi planificación actual", action: onDefer)
+          .font(.gymBody.weight(.semibold))
+          .foregroundStyle(Color.gymSecondaryText)
+          .buttonStyle(.plain)
       }
       .padding(16)
     }
@@ -63,6 +69,7 @@ struct TrainingProfileSettingsView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var draft = TrainingProfile.initial
   @State private var hasLoaded = false
+  @AppStorage("trainingProfileOnboardingDeferred") private var onboardingDeferred = false
 
   var body: some View {
     ScrollView {
@@ -111,6 +118,7 @@ struct TrainingProfileSettingsView: View {
 
   private func save() {
     TrainingProfileStore.save(draft, in: modelContext)
+    onboardingDeferred = false
     dismiss()
   }
 }
