@@ -122,6 +122,9 @@ struct TrainingPlanDecodingTests {
     #expect(hammerCurl.displayGroupID == "curl-biceps")
     #expect(seatedCalves.displayName == "Elevación de gemelos")
     #expect(technicalRDL.displayName == "Peso muerto rumano")
+    #expect(closeGripPress.displayName == "Press banca")
+    #expect(closeGripPress.displayGroupID == "press-banca")
+    #expect(closeGripPress.coachingVariationName == "Agarre cerrado")
     #expect(closeGripPress.selectableEquipmentOptions == [.multipower, .dumbbell])
     #expect(technicalRDL.selectableEquipmentOptions == [.barbell, .multipower])
   }

@@ -1035,6 +1035,9 @@ private struct ExerciseCoachGuidance {
   }
 
   private var variationName: String? {
+    if let coachingVariationName = exercise.coachingVariationName {
+      return coachingVariationName
+    }
     guard exercise.name.localizedCaseInsensitiveCompare(exercise.displayName) != .orderedSame,
           !isMaterialOnlyVariant
     else { return nil }
@@ -1991,16 +1994,19 @@ private struct RestAdjustmentButton: View {
   let action: () -> Void
 
   var body: some View {
-    Button(title, action: action)
-      .font(.title3.weight(.bold))
-      .frame(maxWidth: .infinity, minHeight: 64)
-      .foregroundStyle(Color.gymAccent)
-      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 24))
-      .overlay {
-        RoundedRectangle(cornerRadius: 24)
-          .stroke(Color.gymAccent, lineWidth: 1.5)
-      }
-      .buttonStyle(.plain)
+    Button(action: action) {
+      Text(title)
+        .font(.title3.weight(.bold))
+        .frame(maxWidth: .infinity, minHeight: 64)
+        .contentShape(RoundedRectangle(cornerRadius: 24))
+    }
+    .foregroundStyle(Color.gymAccent)
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 24))
+    .overlay {
+      RoundedRectangle(cornerRadius: 24)
+        .stroke(Color.gymAccent, lineWidth: 1.5)
+    }
+    .buttonStyle(.plain)
   }
 }
 

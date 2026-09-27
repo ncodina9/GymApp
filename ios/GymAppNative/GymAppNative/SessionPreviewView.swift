@@ -145,7 +145,7 @@ struct SessionPreviewView: View {
       Button("Empezar de nuevo", role: .destructive) {
         ActiveWorkoutStore.clear(in: modelContext)
         executionSnapshot = nil
-        showsExecution = true
+        warmupSelectedExerciseIndex = nil
       }
     } message: {
       Text("Se sustituirá el entrenamiento en curso por una nueva sesión de \(session.label).")

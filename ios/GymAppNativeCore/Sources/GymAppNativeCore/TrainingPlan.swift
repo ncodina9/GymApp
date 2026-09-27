@@ -114,6 +114,8 @@ public struct TrainingExercise: Codable, Identifiable, Sendable {
 public extension TrainingExercise {
   var displayGroupID: String {
     switch baseExerciseID {
+    case "press-banca-agarre-cerrado":
+      "press-banca"
     case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
       "curl-biceps"
     case "elevacion-gemelos", "elevacion-gemelos-sentado":
@@ -130,6 +132,8 @@ public extension TrainingExercise {
   /// Groups plan variants under a stable name for execution and history views.
   var displayName: String {
     switch baseExerciseID {
+    case "press-banca-agarre-cerrado":
+      "Press banca"
     case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
       "Curl de bíceps"
     case "elevacion-gemelos", "elevacion-gemelos-sentado":
@@ -140,6 +144,16 @@ public extension TrainingExercise {
       "Elevaciones laterales"
     default:
       baseExerciseName
+    }
+  }
+
+  /// Variación técnica mostrada en las recomendaciones, sin repetir el material.
+  var coachingVariationName: String? {
+    switch exerciseID {
+    case "press-cerrado-multipower":
+      "Agarre cerrado"
+    default:
+      nil
     }
   }
 
