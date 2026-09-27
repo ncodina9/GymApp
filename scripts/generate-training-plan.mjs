@@ -194,8 +194,8 @@ const exercisePresentation = {
     'Barra',
   ),
   'press-cerrado-multipower': presentation(
-    'press-banca-agarre-cerrado',
-    'Press banca agarre cerrado',
+    'press-banca',
+    'Press banca',
     'Multipower',
   ),
   'remo-inclinado-barra': presentation(
@@ -907,8 +907,9 @@ function adaptExercise(item, week) {
   if (deload) {
     phase = 'descarga';
     setCount = item.type === 'Accesorio' ? 2 : Math.min(3, item.setCount);
-    reps = item.type === 'Accesorio' ? item.reps : Math.max(6, item.reps);
+    reps = getDeloadReps(item);
     weightKg = roundLoad(weightKg * 0.875);
+    weightKg = capDeloadWeight(item, weightKg);
     restSeconds = Math.min(restSeconds, 120);
   }
 
@@ -1095,6 +1096,29 @@ function applyLaterFeedbackLoadAdjustment(item, weightKg) {
   }
 
   return weightKg;
+}
+
+function getDeloadReps(item) {
+  if (item.exerciseId === 'press-militar-sentado-velocidad') {
+    return 3;
+  }
+
+  return item.type === 'Accesorio' ? item.reps : Math.max(6, item.reps);
+}
+
+function capDeloadWeight(item, weightKg) {
+  const week3ReferenceWeights = {
+    'dominadas-lastradas': 10,
+    'press-militar-sentado': 37.5,
+    'peso-muerto-rumano-barra': 70,
+  };
+  const referenceWeight = week3ReferenceWeights[item.exerciseId];
+
+  if (referenceWeight === undefined) {
+    return weightKg;
+  }
+
+  return Math.min(weightKg, roundLoad(referenceWeight * 0.875));
 }
 
 function getWeekFocus(week) {

@@ -2347,8 +2347,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -3889,8 +3889,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -4329,7 +4329,7 @@
           "secondaryMuscles": ["espalda-alta"],
           "phase": "descarga",
           "notes": "Registrar siempre el lastre exacto. Parar si la barbilla no pasa clara.",
-          "target": "3x6 @ 11.25 kg",
+          "target": "3x6 @ 8.75 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -4342,21 +4342,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 11.25,
+              "targetWeightKg": 8.75,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 11.25,
+              "targetWeightKg": 8.75,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 11.25,
+              "targetWeightKg": 8.75,
               "restSeconds": 120,
               "type": "working"
             }
@@ -4429,7 +4429,7 @@
           "secondaryMuscles": ["core"],
           "phase": "descarga",
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar.",
-          "target": "3x6 @ 22.5 kg",
+          "target": "3x6 @ 17.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -4442,21 +4442,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 22.5,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 22.5,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 22.5,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             }
@@ -4670,7 +4670,7 @@
           "secondaryMuscles": ["lumbar", "espalda-alta"],
           "phase": "descarga",
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
-          "target": "3x6 @ 70 kg",
+          "target": "3x6 @ 62.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -4683,21 +4683,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 70,
+              "targetWeightKg": 62.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 70,
+              "targetWeightKg": 62.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 70,
+              "targetWeightKg": 62.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -5042,7 +5042,7 @@
           "secondaryMuscles": ["core"],
           "phase": "descarga",
           "notes": "Sentado en banco para proteger la espalda. Mantener trayectoria estable y subir con intención rápida.",
-          "target": "3x6 @ 12.5 kg",
+          "target": "3x3 @ 12.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -5054,21 +5054,21 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 6,
+              "targetReps": 3,
               "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 6,
+              "targetReps": 3,
               "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 6,
+              "targetReps": 3,
               "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
@@ -5305,8 +5305,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -6430,8 +6430,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -8389,8 +8389,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -9938,8 +9938,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -10385,7 +10385,7 @@
           "secondaryMuscles": ["espalda-alta"],
           "phase": "descarga",
           "notes": "Registrar siempre el lastre exacto. Parar si la barbilla no pasa clara.",
-          "target": "3x6 @ 12.5 kg",
+          "target": "3x6 @ 8.75 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -10398,21 +10398,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 12.5,
+              "targetWeightKg": 8.75,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 12.5,
+              "targetWeightKg": 8.75,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 12.5,
+              "targetWeightKg": 8.75,
               "restSeconds": 120,
               "type": "working"
             }
@@ -10485,7 +10485,7 @@
           "secondaryMuscles": ["core"],
           "phase": "descarga",
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar.",
-          "target": "3x6 @ 27.5 kg",
+          "target": "3x6 @ 17.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -10498,21 +10498,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 27.5,
+              "targetWeightKg": 17.5,
               "restSeconds": 90,
               "type": "working"
             }
@@ -10726,7 +10726,7 @@
           "secondaryMuscles": ["lumbar", "espalda-alta"],
           "phase": "descarga",
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
-          "target": "3x6 @ 75 kg",
+          "target": "3x6 @ 62.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -10739,21 +10739,21 @@
             {
               "setIndex": 1,
               "targetReps": 6,
-              "targetWeightKg": 75,
+              "targetWeightKg": 62.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 6,
-              "targetWeightKg": 75,
+              "targetWeightKg": 62.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 6,
-              "targetWeightKg": 75,
+              "targetWeightKg": 62.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -11098,7 +11098,7 @@
           "secondaryMuscles": ["core"],
           "phase": "descarga",
           "notes": "Sentado en banco para proteger la espalda. Mantener trayectoria estable y subir con intención rápida.",
-          "target": "3x6 @ 12.5 kg",
+          "target": "3x3 @ 12.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -11110,21 +11110,21 @@
           "sets": [
             {
               "setIndex": 1,
-              "targetReps": 6,
+              "targetReps": 3,
               "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 2,
-              "targetReps": 6,
+              "targetReps": 3,
               "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
             },
             {
               "setIndex": 3,
-              "targetReps": 6,
+              "targetReps": 3,
               "targetWeightKg": 12.5,
               "restSeconds": 60,
               "type": "working"
@@ -11361,8 +11361,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -12840,8 +12840,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -14319,8 +14319,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -15728,8 +15728,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -17207,8 +17207,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
@@ -18539,8 +18539,8 @@
         {
           "exerciseId": "press-cerrado-multipower",
           "name": "Press banca agarre cerrado en multipower",
-          "baseExerciseId": "press-banca-agarre-cerrado",
-          "baseExerciseName": "Press banca agarre cerrado",
+          "baseExerciseId": "press-banca",
+          "baseExerciseName": "Press banca",
           "variantLabel": "Multipower",
           "type": "Básico",
           "block": "A",
