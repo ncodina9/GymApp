@@ -33,7 +33,7 @@ struct GymAppNativeApp: App {
           UIApplication.shared.isIdleTimerDisabled = enabled
         }
     }
-    .modelContainer(for: [ActiveWorkoutRecord.self, CompletedWorkoutRecord.self])
+    .modelContainer(for: [ActiveWorkoutRecord.self, CompletedWorkoutRecord.self, TrainingProfileRecord.self])
     .onChange(of: appearanceRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }
     .onChange(of: premiumSchemeRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }
   }

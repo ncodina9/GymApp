@@ -1374,10 +1374,12 @@ Planificado para el siguiente bloque nativo: una cabecera común y centrada para
 ### Futuro: onboarding y perfil de entrenamiento
 
 - Próximo bloque de producto: onboarding guiado antes de crear un plan y una pantalla equivalente en `Opciones > Perfil de entrenamiento` para revisar o modificar los mismos datos posteriormente.
-- [ ] Onboarding guiado antes de crear un plan: material disponible, días de entrenamiento, duración del plan, objetivo principal, duración deseada de cada sesión, preferencias de cardio, ejercicios favoritos y ejercicios a evitar.
+- [~] Onboarding guiado antes de crear un plan: recoge objetivo, horizonte temporal, disponibilidad, duración por sesión, experiencia, material, prioridades, preferencias, ejercicios a evitar y limitaciones. Pendientes: cardio y referencias iniciales por patrón.
 - [ ] Recoger nivel inicial sin obligar a introducir un 1RM: pesos y repeticiones cómodos aproximados por patrón o ejercicio, además de preferencia por aislados frente a superseries.
-- [ ] Registrar limitaciones y molestias declaradas durante el onboarding para condicionar las sustituciones y el diseño inicial del plan.
-- [ ] Permitir revisar y editar ese perfil desde `Opciones > Perfil de entrenamiento` sin alterar retroactivamente las sesiones ya registradas. Sus cambios condicionan solo propuestas y revisiones futuras del plan.
+- [~] Registrar limitaciones y molestias declaradas durante el onboarding para condicionar las sustituciones y el diseño inicial del plan. La captura existe; faltan las reglas que la apliquen a una propuesta.
+- [~] Permitir revisar y editar ese perfil desde `Opciones > Perfil de entrenamiento` sin alterar retroactivamente las sesiones ya registradas. La edición existe; falta conectar cambios a revisiones futuras del plan.
+
+Actualización v0.1.117: el perfil de entrenamiento se persiste en SwiftData como entidad independiente del plan, el borrador activo y las sesiones históricas. Si no existe, la app abre un onboarding de tres pasos para definir objetivo, horizonte en semanas, disponibilidad, duración máxima por sesión, experiencia, material y contexto personal. `Opciones > Perfil de entrenamiento` permite revisar los mismos datos sin alterar registros ya ejecutados. El horizonte temporal se conserva expresamente para que el futuro agente pueda estructurar macrociclos y hacer explícitas las expectativas poco realistas, no solo proponer sesiones aisladas.
 
 ### Futuro: planificación y análisis con IA
 

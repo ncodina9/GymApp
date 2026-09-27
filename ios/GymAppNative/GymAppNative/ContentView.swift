@@ -1,13 +1,17 @@
 import SwiftUI
+import SwiftData
 import GymAppNativeCore
 
 struct ContentView: View {
   @State private var plan: TrainingPlan?
   @State private var loadingError: String?
+  @Query private var trainingProfiles: [TrainingProfileRecord]
 
   var body: some View {
     Group {
-      if let plan {
+      if TrainingProfileStore.load(from: trainingProfiles) == nil {
+        TrainingProfileOnboardingView()
+      } else if let plan {
         TodayView(plan: plan)
       } else if let loadingError {
         ContentUnavailableView(

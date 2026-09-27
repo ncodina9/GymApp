@@ -68,6 +68,101 @@ final class CompletedWorkoutRecord {
   }
 }
 
+@Model
+final class TrainingProfileRecord {
+  @Attribute(.unique) var id: String
+  var profileData: Data
+  var updatedAt: Date
+
+  init(id: String = "training-profile", profileData: Data, updatedAt: Date = .now) {
+    self.id = id
+    self.profileData = profileData
+    self.updatedAt = updatedAt
+  }
+}
+
+enum TrainingGoal: String, Codable, CaseIterable, Identifiable {
+  case strength
+  case muscle
+  case health
+  case performance
+
+  var id: String { rawValue }
+  var label: String {
+    switch self {
+    case .strength: "Fuerza"
+    case .muscle: "Masa muscular"
+    case .health: "Salud y constancia"
+    case .performance: "Rendimiento"
+    }
+  }
+}
+
+enum TrainingExperience: String, Codable, CaseIterable, Identifiable {
+  case beginner
+  case intermediate
+  case advanced
+
+  var id: String { rawValue }
+  var label: String {
+    switch self {
+    case .beginner: "Principiante"
+    case .intermediate: "Intermedio"
+    case .advanced: "Avanzado"
+    }
+  }
+}
+
+struct TrainingProfile: Codable, Equatable {
+  var goal: TrainingGoal
+  var targetTimeframeWeeks: Int
+  var experience: TrainingExperience
+  var trainingWeekdays: Set<Int>
+  var sessionDurationMinutes: Int
+  var availableEquipment: Set<Equipment>
+  var priorityMuscleGroups: [String]
+  var exercisePreferences: String
+  var exercisesToAvoid: String
+  var limitations: String
+
+  static let initial = TrainingProfile(
+    goal: .strength,
+    targetTimeframeWeeks: 16,
+    experience: .intermediate,
+    trainingWeekdays: [1, 2, 4, 5],
+    sessionDurationMinutes: 60,
+    availableEquipment: Set(Equipment.allCases),
+    priorityMuscleGroups: [],
+    exercisePreferences: "",
+    exercisesToAvoid: "",
+    limitations: ""
+  )
+}
+
+@MainActor
+enum TrainingProfileStore {
+  static let recordID = "training-profile"
+
+  static func load(from records: [TrainingProfileRecord]) -> TrainingProfile? {
+    guard let record = records.first(where: { $0.id == recordID }) else { return nil }
+    return try? JSONDecoder().decode(TrainingProfile.self, from: record.profileData)
+  }
+
+  static func save(_ profile: TrainingProfile, in context: ModelContext) {
+    guard let data = try? JSONEncoder().encode(profile) else { return }
+    let descriptor = FetchDescriptor<TrainingProfileRecord>(
+      predicate: #Predicate { $0.id == recordID }
+    )
+    if let record = try? context.fetch(descriptor).first {
+      record.profileData = data
+      record.updatedAt = .now
+    } else {
+      context.insert(TrainingProfileRecord(profileData: data))
+    }
+    try? context.save()
+  }
+}
+
 @MainActor
 enum ActiveWorkoutStore {
   static let recordID = "active-workout"

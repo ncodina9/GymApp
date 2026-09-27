@@ -54,6 +54,12 @@ struct SettingsView: View {
           )
           SettingsDivider()
           SettingsRow(
+            title: "Perfil de entrenamiento",
+            detail: "Objetivos, disponibilidad y restricciones",
+            destination: TrainingProfileSettingsView()
+          )
+          SettingsDivider()
+          SettingsRow(
             title: "Ejercicios",
             detail: "Historial y récords por ejercicio",
             destination: ExercisesLibraryView(plan: plan)
@@ -84,7 +90,7 @@ struct SettingsView: View {
           )
         }
 
-        Text("v0.1.108")
+        Text("v0.1.117")
           .font(.gymSupport.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
