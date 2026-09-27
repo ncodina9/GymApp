@@ -36,11 +36,11 @@ struct WarmupView: View {
 
       VStack(spacing: 18) {
         Text("Calentamiento")
-          .font(.system(size: 31, weight: .bold))
+          .font(.gymH1.weight(.bold))
           .frame(maxWidth: .infinity, alignment: .leading)
 
         Text("Prepara el cuerpo antes de la primera serie.")
-          .font(.subheadline)
+          .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
           .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -58,7 +58,7 @@ struct WarmupView: View {
 
           VStack(spacing: 6) {
             Text("Tiempo restante")
-              .font(.headline.weight(.bold))
+              .font(.gymH2.weight(.bold))
             Text(clock(secondsLeft))
               .font(.system(size: 64, weight: .bold))
               .monospacedDigit()
@@ -74,7 +74,7 @@ struct WarmupView: View {
         Spacer(minLength: 0)
 
         Button("Continuar", action: completeWarmup)
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
           .foregroundStyle(Color.gymAccentForeground)
           .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())

@@ -10,19 +10,19 @@ struct AccentHeaderCard: View {
     VStack(spacing: 5) {
       if let eyebrow {
         Text(eyebrow)
-          .font(.caption.weight(.semibold))
+          .font(.gymSupport.weight(.semibold))
           .lineLimit(1)
           .opacity(0.82)
       }
 
       Text(title)
-        .font(.system(size: emphasizesTitle ? 28 : 22, weight: .bold))
+        .font((emphasizesTitle ? Font.gymH1 : .gymH2).weight(.bold))
         .lineLimit(emphasizesTitle ? 2 : 1)
         .minimumScaleFactor(0.78)
 
       if let detail {
         Text(detail)
-          .font(.subheadline.weight(.medium))
+          .font(.gymBody.weight(.medium))
           .lineLimit(1)
           .opacity(0.84)
       }

@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftData
 import GymAppNativeCore
+import CoreMotion
+import Combine
 
 struct TodayView: View {
   let plan: TrainingPlan
@@ -86,10 +88,10 @@ struct TodayView: View {
             SettingsView(plan: plan)
           } label: {
             Image(systemName: "gearshape.fill")
-              .font(.headline.weight(.bold))
+              .font(.gymH2.weight(.bold))
               .frame(width: 56, height: 56)
-              .foregroundStyle(.primary)
-              .glassEffect(.regular.interactive(), in: Circle())
+              .foregroundStyle(Color.gymAccentForeground)
+              .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
           }
           .accessibilityLabel("Opciones")
           .buttonStyle(.plain)
@@ -121,21 +123,23 @@ struct WeekSessionCard: View {
   let isRecommended: Bool
   let isInProgress: Bool
   let isCompleted: Bool
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @StateObject private var metallicMotion = RecommendedCardMotion()
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(alignment: .firstTextBaseline) {
         Text(session.weekday.capitalized)
-          .font(.subheadline.weight(.bold))
+          .font(.gymH3.weight(.bold))
           .foregroundStyle(Color.gymSecondaryText)
         Text(Self.dateLabel(session.date))
-          .font(.subheadline.weight(.bold))
+          .font(.gymH3.weight(.bold))
           .foregroundStyle(Color.gymSecondaryText)
         Spacer()
         HStack(spacing: 6) {
           if isRecommended {
             Image(systemName: "sparkle")
-              .font(.caption2.weight(.bold))
+              .font(.gymSupport.weight(.bold))
               .foregroundStyle(Color.gymAccent)
               .accessibilityLabel("Entrenamiento recomendado")
           }
@@ -148,12 +152,12 @@ struct WeekSessionCard: View {
       }
 
       Text(session.label)
-        .font(.title2.weight(.bold))
+        .font(.gymH1.weight(.bold))
         .lineLimit(2)
         .frame(maxWidth: .infinity, alignment: .leading)
 
       Text(session.focus)
-        .font(.subheadline)
+        .font(.gymBody)
         .foregroundStyle(Color.gymSecondaryText)
         .lineLimit(2)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -166,13 +170,32 @@ struct WeekSessionCard: View {
     .padding(16)
     .frame(maxWidth: .infinity, alignment: .leading)
     .foregroundStyle(.primary)
-    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 22))
+    .background {
+      RoundedRectangle(cornerRadius: 22)
+        .fill(Color.gymSurface)
+      if isRecommended {
+        RecommendedCardMetallicSurface(
+          horizontalTilt: metallicMotion.horizontalTilt,
+          verticalTilt: metallicMotion.verticalTilt
+        )
+      }
+    }
     .overlay {
       RoundedRectangle(cornerRadius: 22)
         .stroke(
           isCompleted ? Color.gymCompleted : (isInProgress ? Color.gymTertiary : (isRecommended ? Color.gymAccent : Color.secondary.opacity(0.3))),
           lineWidth: isRecommended || isInProgress || isCompleted ? 2 : 1
         )
+    }
+    .clipShape(RoundedRectangle(cornerRadius: 22))
+    .onAppear {
+      metallicMotion.start(enabled: isRecommended && !reduceMotion)
+    }
+    .onChange(of: reduceMotion) { _, reducesMotion in
+      metallicMotion.start(enabled: isRecommended && !reducesMotion)
+    }
+    .onDisappear {
+      metallicMotion.stop()
     }
   }
 
@@ -196,6 +219,79 @@ struct WeekSessionCard: View {
   }
 }
 
+private struct RecommendedCardMetallicSurface: View {
+  let horizontalTilt: CGFloat
+  let verticalTilt: CGFloat
+
+  var body: some View {
+    GeometryReader { proxy in
+      let shineOffset = CGSize(
+        width: horizontalTilt * proxy.size.width * 0.28,
+        height: verticalTilt * proxy.size.height * 0.24
+      )
+      ZStack {
+        LinearGradient(
+          colors: [
+            Color.gymAccent.opacity(0.14),
+            Color.gymAccentSecondary.opacity(0.10),
+            Color.gymAccent.opacity(0.05),
+          ],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+        LinearGradient(
+          stops: [
+            .init(color: .clear, location: 0.22),
+            .init(color: Color.gymAccent.opacity(0.06), location: 0.39),
+            .init(color: Color.gymAccent.opacity(0.20), location: 0.50),
+            .init(color: Color.gymAccent.opacity(0.06), location: 0.61),
+            .init(color: .clear, location: 0.78),
+          ],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+        .offset(shineOffset)
+      }
+      .overlay {
+        RoundedRectangle(cornerRadius: 22)
+          .stroke(
+            LinearGradient(
+              colors: [Color.gymAccent.opacity(0.52), Color.gymAccent.opacity(0.76), Color.gymAccent.opacity(0.30)],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            ),
+            lineWidth: 1
+          )
+      }
+    }
+    .allowsHitTesting(false)
+  }
+}
+
+private final class RecommendedCardMotion: ObservableObject {
+  @Published private(set) var horizontalTilt: CGFloat = 0
+  @Published private(set) var verticalTilt: CGFloat = 0
+  private let motionManager = CMMotionManager()
+
+  func start(enabled: Bool) {
+    stop()
+    guard enabled, motionManager.isDeviceMotionAvailable else { return }
+
+    motionManager.deviceMotionUpdateInterval = 1 / 30
+    motionManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
+      guard let attitude = motion?.attitude else { return }
+      self?.horizontalTilt = CGFloat(max(-1, min(1, attitude.roll)))
+      self?.verticalTilt = CGFloat(max(-1, min(1, attitude.pitch)))
+    }
+  }
+
+  func stop() {
+    motionManager.stopDeviceMotionUpdates()
+    horizontalTilt = 0
+    verticalTilt = 0
+  }
+}
+
 private struct SessionStatusBadge: View {
   let label: String
   let symbol: String
@@ -203,7 +299,7 @@ private struct SessionStatusBadge: View {
 
   var body: some View {
     Label(label, systemImage: symbol)
-      .font(.caption2.weight(.bold))
+      .font(.gymSupport.weight(.bold))
       .foregroundStyle(.white)
       .padding(.horizontal, 8)
       .padding(.vertical, 4)
@@ -218,10 +314,10 @@ private struct SessionMetric: View {
   var body: some View {
     VStack(spacing: 6) {
       Text(label)
-        .font(.caption.weight(.semibold))
+        .font(.gymSupport.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
       Text(value)
-        .font(.title3.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .monospacedDigit()
     }
     .frame(maxWidth: .infinity, minHeight: 54)

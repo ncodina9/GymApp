@@ -2,6 +2,14 @@ import SwiftUI
 import GymAppNativeCore
 import WatchKit
 
+private extension Font {
+  static let watchSupport = Font.system(size: 12)
+  static let watchBody = Font.system(size: 14)
+  static let watchH3 = Font.system(size: 16)
+  static let watchH2 = Font.system(size: 18)
+  static let watchH1 = Font.system(size: 24)
+}
+
 struct ContentView: View {
   @EnvironmentObject private var connectivity: WatchWorkoutConnectivity
   @State private var completedWorkoutName: String?
@@ -93,10 +101,10 @@ private struct WatchCompletedWorkoutView: View {
         .font(.system(size: 34))
         .foregroundStyle(.green)
       Text("Entrenamiento completado")
-        .font(.headline)
+        .font(.watchH2)
         .multilineTextAlignment(.center)
       Text(workoutName)
-        .font(.caption)
+        .font(.watchSupport)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
         .lineLimit(2)
@@ -201,13 +209,13 @@ private struct WatchTrainingRow: View {
     HStack(spacing: 8) {
       Image(systemName: status.symbol)
         .foregroundStyle(status.color(accent: accent))
-        .font(.headline)
+        .font(.watchH2)
       VStack(alignment: .leading, spacing: 4) {
         Text(session.label)
-          .font(.headline)
+          .font(.watchH2)
           .lineLimit(2)
         Text("Semana \(session.week) · \(session.estimatedMinutes) min")
-          .font(.caption)
+          .font(.watchSupport)
           .foregroundStyle(secondaryText)
       }
     }
@@ -296,11 +304,11 @@ private struct WatchSessionPreview: View {
       Section {
         VStack(alignment: .leading, spacing: 3) {
           Text("Semana \(session.week) · \(session.weekFocusLabel)")
-            .font(.caption2)
+            .font(.watchSupport)
             .foregroundStyle(palette.secondaryText)
-          Text(session.label).font(.headline)
+          Text(session.label).font(.watchH2)
           Text("\(session.exercises.count) ejercicios · \(session.estimatedMinutes) min")
-            .font(.caption)
+            .font(.watchSupport)
             .foregroundStyle(palette.secondaryText)
         }
         .padding(.vertical, 4)
@@ -452,14 +460,14 @@ private struct WatchExercisePreviewRow: View {
   var body: some View {
     HStack(spacing: 8) {
       Text("\(order)")
-        .font(.caption.weight(.bold))
+        .font(.watchSupport.weight(.bold))
         .frame(width: 18, height: 18)
         .background(selected ? accent : Color.secondary.opacity(0.2), in: Circle())
         .foregroundStyle(selected ? .white : primaryText)
       VStack(alignment: .leading, spacing: 2) {
-        Text(exercise.displayName).font(.subheadline.weight(.semibold)).lineLimit(2)
+        Text(exercise.displayName).font(.watchBody.weight(.semibold)).lineLimit(2)
         if let firstSet = exercise.sets.first {
-          Text(targetLabel(firstSet)).font(.caption2).foregroundStyle(secondaryText)
+          Text(targetLabel(firstSet)).font(.watchSupport).foregroundStyle(secondaryText)
         }
       }
       Spacer(minLength: 0)
@@ -562,7 +570,7 @@ private struct WatchWorkoutView: View {
         .navigationBarBackButtonHidden()
         .navigationTitle {
           Text(navigationTitle)
-            .font(.caption.weight(.semibold))
+            .font(.watchSupport.weight(.semibold))
             .foregroundStyle(palette.secondaryText)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -581,7 +589,7 @@ private struct WatchWorkoutView: View {
           } else if showsSetNumber {
             ToolbarItem(placement: .topBarTrailing) {
               Text("\(workout.exerciseSetNumber)")
-                .font(.subheadline.weight(.bold).monospacedDigit())
+                .font(.watchBody.weight(.bold).monospacedDigit())
                 .foregroundStyle(palette.accentForeground)
                 .frame(width: 28, height: 28)
                 .background(palette.accent, in: Circle())
@@ -873,9 +881,9 @@ private struct WatchExerciseReviewOptionsPage: View {
           Button { selection = option.decision } label: {
             VStack(spacing: 5) {
               Image(systemName: option.symbol)
-                .font(.title3.weight(.bold))
+                .font(.watchH2.weight(.bold))
               Text(option.label)
-                .font(.caption.weight(.bold))
+                .font(.watchSupport.weight(.bold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
             }
@@ -909,7 +917,7 @@ private struct WatchRIRFeedbackPage: View {
   var body: some View {
     VStack(spacing: 12) {
       Text("RIR")
-        .font(.headline)
+        .font(.watchH2)
       HStack(spacing: 12) {
         Button { rir = max(0, rir - 1) } label: {
           Image(systemName: "minus")
@@ -954,7 +962,7 @@ private struct WatchFeedbackNotePage: View {
         ForEach(options, id: \.self) { option in
           Button { note = option } label: {
             Text(option)
-              .font(.caption.weight(.bold))
+              .font(.watchSupport.weight(.bold))
               .lineLimit(1)
               .minimumScaleFactor(0.7)
               .frame(maxWidth: .infinity, minHeight: 40)
@@ -991,12 +999,12 @@ private struct WatchPainFeedbackPage: View {
   var body: some View {
     VStack(spacing: 12) {
       Text(area.label)
-        .font(.headline)
+        .font(.watchH2)
       HStack(spacing: 6) {
         ForEach(0 ... 3, id: \.self) { level in
           Button { value = level } label: {
             Text("\(level)")
-              .font(.headline.weight(.bold))
+              .font(.watchH2.weight(.bold))
               .frame(width: 38, height: 42)
           }
           .buttonStyle(.plain)
@@ -1005,7 +1013,7 @@ private struct WatchPainFeedbackPage: View {
         }
       }
       Text("Intensidad de la molestia")
-        .font(.caption2)
+        .font(.watchSupport)
         .foregroundStyle(palette.secondaryText)
       Spacer(minLength: 0)
     }
@@ -1088,7 +1096,7 @@ private struct WatchSetPrimaryPage: View {
   var body: some View {
     VStack(spacing: 7) {
       Text(workout.exerciseName)
-        .font(.subheadline.weight(.bold))
+        .font(.watchBody.weight(.bold))
         .multilineTextAlignment(.center)
         .lineLimit(1)
         .minimumScaleFactor(0.68)
@@ -1140,7 +1148,7 @@ private struct WatchEquipmentPage: View {
         Button { onSelect(equipment) } label: {
           HStack {
             Text(equipment.watchLabel)
-              .font(.subheadline.weight(.semibold))
+              .font(.watchBody.weight(.semibold))
             Spacer()
             if equipment.watchLabel == currentEquipmentName {
               Image(systemName: "checkmark.circle.fill")
@@ -1189,7 +1197,7 @@ private struct WatchMetricCard: View {
     .background(.quaternary, in: RoundedRectangle(cornerRadius: 14))
     .overlay(alignment: .topLeading) {
       Text(label)
-        .font(.system(size: 10, weight: .bold))
+        .font(.watchSupport.weight(.bold))
         .foregroundStyle(palette.accentForeground)
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
@@ -1240,7 +1248,7 @@ private struct WatchIconButton: View {
   var body: some View {
     Button(action: action) {
       Image(systemName: symbol)
-        .font(.headline.weight(.bold))
+        .font(.watchH2.weight(.bold))
         .frame(width: 30, height: 30)
     }
     .buttonStyle(.bordered)
@@ -1253,7 +1261,7 @@ private struct WatchBackButton: View {
   var body: some View {
     Button(action: action) {
       Image(systemName: "chevron.left")
-        .font(.headline.weight(.bold))
+        .font(.watchH2.weight(.bold))
         .frame(width: 28, height: 28)
     }
     .buttonStyle(.plain)
@@ -1276,7 +1284,7 @@ private struct WatchWorkoutProgressBadge: View {
         .stroke(palette.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round))
         .rotationEffect(.degrees(-90))
       Text("\(percent)")
-        .font(.system(size: 9, weight: .bold, design: .rounded))
+        .font(.watchSupport.weight(.bold))
         .monospacedDigit()
         .minimumScaleFactor(0.65)
     }
@@ -1320,14 +1328,14 @@ private struct WatchRestView: View {
 
         HStack(spacing: 7) {
           Image(systemName: "forward.end.fill")
-            .font(.system(size: 10, weight: .bold))
+            .font(.watchSupport.weight(.bold))
             .foregroundStyle(palette.accent)
           VStack(alignment: .leading, spacing: 1) {
             Text(workout.exerciseName)
-              .font(.system(size: 11, weight: .semibold))
+              .font(.watchSupport.weight(.semibold))
               .lineLimit(1)
             Text(nextSetSummary)
-              .font(.system(size: 9))
+              .font(.watchSupport)
               .foregroundStyle(palette.secondaryText)
               .lineLimit(1)
           }
@@ -1410,14 +1418,14 @@ private struct WatchWarmupView: View {
       let remaining = max(0, Int((workout.timerEndsAt?.timeIntervalSince(context.date) ?? 0).rounded(.up)))
       let complete = workout.timerEndsAt != nil && remaining == 0
       VStack(spacing: 12) {
-        Image(systemName: "flame.fill").font(.title2).foregroundStyle(palette.accent)
+        Image(systemName: "flame.fill").font(.watchH1).foregroundStyle(palette.accent)
         if complete {
           Text("Calentamiento terminado")
-            .font(.headline)
+            .font(.watchH2)
             .foregroundStyle(.green)
         }
         Text(clock(remaining)).font(.system(size: 38, weight: .bold, design: .rounded)).monospacedDigit()
-        Text("No afecta a las series").font(.caption).foregroundStyle(palette.secondaryText)
+        Text("No afecta a las series").font(.watchSupport).foregroundStyle(palette.secondaryText)
         Button {
           onCommand(.continueAfterTimer)
         } label: {
@@ -1526,7 +1534,7 @@ private struct WatchSetEditor: View {
 
       VStack(spacing: 10) {
         Text(metric == .reps ? "Modificar reps" : "Modificar peso")
-          .font(.headline)
+          .font(.watchH2)
           .foregroundStyle(palette.primaryText)
         Text(displayValue)
           .font(.system(size: 34, weight: .bold, design: .rounded))
@@ -1542,7 +1550,7 @@ private struct WatchSetEditor: View {
             isHapticFeedbackEnabled: true
           )
         Text("Gira la corona digital")
-          .font(.caption2)
+          .font(.watchSupport)
           .foregroundStyle(palette.secondaryText)
         Button {
           if metric == .reps { onConfirm(max(0, Int(value.rounded())), weightKg) }
@@ -1559,7 +1567,7 @@ private struct WatchSetEditor: View {
     }
     .overlay(alignment: .topLeading) {
       Image(systemName: "xmark")
-        .font(.caption.weight(.bold))
+        .font(.watchSupport.weight(.bold))
         .foregroundStyle(palette.accentForeground)
         .frame(width: 44, height: 44)
         .padding(.leading, 4)

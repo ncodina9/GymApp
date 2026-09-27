@@ -1,6 +1,16 @@
 import SwiftUI
 import UIKit
 
+/// Escala tipográfica editorial de la app. Las métricas de entrenamiento usan
+/// tamaños propios para conservar su lectura inmediata durante la ejecución.
+extension Font {
+  static let gymSupport = Font.system(size: 12)
+  static let gymBody = Font.system(size: 14)
+  static let gymH3 = Font.system(size: 16)
+  static let gymH2 = Font.system(size: 18)
+  static let gymH1 = Font.system(size: 24)
+}
+
 enum ThemeAccent: String, CaseIterable, Identifiable {
   case blue
   case red

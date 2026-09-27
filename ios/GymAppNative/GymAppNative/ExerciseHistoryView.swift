@@ -55,7 +55,7 @@ private struct HistoryBackButton: View {
   var body: some View {
     Button(action: action) {
       Image(systemName: "chevron.left")
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(width: 56, height: 56)
         .foregroundStyle(.primary)
         .glassEffect(.regular.interactive(), in: Circle())
@@ -138,7 +138,7 @@ struct ExerciseHistoryContent: View {
     VStack(alignment: .leading, spacing: 18) {
           if showsTitle {
             Text(exercise.displayName)
-              .font(.system(size: 31, weight: .bold))
+              .font(.gymH1.weight(.bold))
               .multilineTextAlignment(.center)
               .frame(maxWidth: .infinity)
           }
@@ -185,7 +185,7 @@ struct ExerciseHistoryContent: View {
 
             VStack(alignment: .leading, spacing: 10) {
               Text("Registros")
-                .font(.headline.weight(.bold))
+                .font(.gymH2.weight(.bold))
               ForEach(filteredEntries) { entry in
                 HStack {
                   Text(entry.date.formatted(date: .abbreviated, time: .omitted))
@@ -195,7 +195,7 @@ struct ExerciseHistoryContent: View {
                     .foregroundStyle(Color.gymSecondaryText)
                   Text(entry.reps.map { "\($0) reps" } ?? timeLabel(entry.durationSeconds))
                 }
-                .font(.subheadline.weight(.medium))
+                .font(.gymBody.weight(.medium))
                 .foregroundStyle(Color.gymSecondaryText)
                 .padding(.vertical, 10)
                 .overlay(alignment: .bottom) { Divider() }
@@ -275,10 +275,10 @@ private struct HistoryMetric: View {
   var body: some View {
     VStack(spacing: 5) {
       Text(title)
-        .font(.caption.weight(.bold))
+        .font(.gymSupport.weight(.bold))
         .foregroundStyle(Color.gymSecondaryText)
       Text(value)
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .lineLimit(1)
         .minimumScaleFactor(0.7)
     }

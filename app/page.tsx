@@ -809,7 +809,7 @@ function EquipmentChip({ equipment }: { equipment?: string }) {
   }
 
   return (
-    <span className="inline-flex rounded-full bg-secondary px-2 py-1 text-[0.65rem] font-black uppercase leading-none text-muted-foreground">
+    <span className="inline-flex rounded-full bg-secondary px-2 py-1 text-xs font-black uppercase leading-none text-muted-foreground">
       {label}
     </span>
   );
@@ -2754,7 +2754,7 @@ function TodayScreen({
         <p className="text-sm font-semibold leading-none text-muted-foreground">
           Hoy toca
         </p>
-        <h2 className="mt-3 h-[92px] overflow-hidden text-[2rem] font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <h2 className="mt-3 h-[92px] overflow-hidden text-2xl font-black leading-[1.08] tracking-normal [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {selectedSession.label}
         </h2>
         <p className="mt-2 h-12 overflow-hidden text-base leading-tight text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
@@ -2797,7 +2797,7 @@ function TodayScreen({
                 <span className="truncate">{session.weekday}</span>
                 {isComplete ? (
                   <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[0.68rem] font-black normal-case ${
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-black normal-case ${
                       isSelected
                         ? 'border-primary-foreground/35 text-primary-foreground'
                         : 'border-[var(--complete-border)] text-[var(--complete-foreground)]'
@@ -2953,7 +2953,7 @@ function PreviewScreen({
 function PreviewMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex min-w-0 flex-col items-center justify-center rounded-md bg-secondary px-2 py-2.5">
-      <p className="max-w-full truncate text-[0.62rem] font-black uppercase leading-none text-muted-foreground">
+      <p className="max-w-full truncate text-xs font-black uppercase leading-none text-muted-foreground">
         {label}
       </p>
       <p className="mt-1 max-w-full truncate text-xl font-black leading-none tabular-nums">
@@ -2986,7 +2986,7 @@ function ExercisePlanCard({
         </span>
         <div className="min-w-0">
           {exercise.supersetId ? (
-            <p className="mb-1 text-[0.68rem] font-black uppercase leading-none text-primary">
+            <p className="mb-1 text-xs font-black uppercase leading-none text-primary">
               Superserie {exercise.supersetOrder}/{supersetSize}
             </p>
           ) : null}
@@ -2994,7 +2994,7 @@ function ExercisePlanCard({
             {getExerciseDisplayName(exercise)}
           </p>
           {equipmentLabel ? (
-            <p className="mt-1 w-fit rounded-full bg-secondary px-2 py-1 text-[0.68rem] font-black uppercase leading-none text-muted-foreground">
+            <p className="mt-1 w-fit rounded-full bg-secondary px-2 py-1 text-xs font-black uppercase leading-none text-muted-foreground">
               {equipmentLabel}
             </p>
           ) : null}
@@ -4392,7 +4392,7 @@ function VolumeExerciseCard({
           <span className="block truncate text-sm font-black leading-tight">
             {summary.exerciseName}
           </span>
-          <span className="mt-1 flex min-w-0 flex-wrap gap-1.5 text-[0.68rem] font-black leading-none text-muted-foreground">
+          <span className="mt-1 flex min-w-0 flex-wrap gap-1.5 text-xs font-black leading-none text-muted-foreground">
             {summary.primaryMuscles.slice(0, 3).map((muscle) => (
               <span
                 key={muscle}
@@ -4437,7 +4437,7 @@ function VolumeExerciseCard({
                 <span className="truncate text-xs font-black leading-tight">
                   {exposure.sessionLabel ?? 'Sesión'}
                 </span>
-                <span className="shrink-0 text-[0.68rem] font-bold leading-tight text-muted-foreground">
+                <span className="shrink-0 text-xs font-bold leading-tight text-muted-foreground">
                   {exposure.sessionDate ? formatDate(exposure.sessionDate) : ''}
                 </span>
               </div>
@@ -4470,7 +4470,7 @@ function VolumeExerciseCard({
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 rounded-[0.9rem] border bg-secondary px-2 py-1.5">
-      <span className="block truncate text-[0.65rem] font-bold leading-none text-muted-foreground">
+      <span className="block truncate text-xs font-bold leading-none text-muted-foreground">
         {label}
       </span>
       <span className="mt-1 block truncate text-xs font-black leading-tight tabular-nums">
@@ -4573,7 +4573,7 @@ function DurationChart({ data }: { data: DurationChartPoint[] }) {
                 x={padding.left - 6}
                 y={y + 3}
                 textAnchor="end"
-                className="fill-muted-foreground text-[9px] font-bold"
+                className="fill-muted-foreground text-xs font-bold"
               >
                 {value}
               </text>
@@ -4625,7 +4625,7 @@ function DurationChart({ data }: { data: DurationChartPoint[] }) {
               x={toX(index)}
               y={height - 8}
               textAnchor="middle"
-              className="fill-muted-foreground text-[9px] font-bold"
+              className="fill-muted-foreground text-xs font-bold"
             >
               {point.shortDate}
             </text>
@@ -4718,7 +4718,7 @@ function ExerciseProgressionCard({
       >
         <span className="grid min-w-0 gap-0.5">
           <span className="min-w-0">
-            <span className="block truncate text-[0.95rem] font-black leading-tight">
+            <span className="block truncate text-base font-black leading-tight">
               {progression.exerciseName}
             </span>
             <span
@@ -4739,7 +4739,7 @@ function ExerciseProgressionCard({
           <ProgressionReviewSummary progression={progression} />
           <div className="grid gap-1.5">
             <div className="rounded-[1.1rem] border bg-card px-3 py-2 leading-tight text-secondary-foreground">
-              <span className="block text-[0.65rem] font-black uppercase text-muted-foreground">
+              <span className="block text-xs font-black uppercase text-muted-foreground">
                 Tu decisión
               </span>
               <span className="mt-0.5 block text-sm font-black">
@@ -4752,7 +4752,7 @@ function ExerciseProgressionCard({
                 progression.recommendation,
               )}`}
             >
-              <span className="block text-[0.65rem] font-black uppercase opacity-75">
+              <span className="block text-xs font-black uppercase opacity-75">
                 Señal de la app
               </span>
               <span className="mt-0.5 block text-sm font-black">
@@ -4802,7 +4802,7 @@ function ProgressionReviewSummary({
 
   return (
     <div className="rounded-[1.1rem] border bg-card px-3 py-2 leading-tight text-secondary-foreground">
-      <span className="block text-[0.65rem] font-black uppercase text-muted-foreground">
+      <span className="block text-xs font-black uppercase text-muted-foreground">
         Último registro
       </span>
       <span className="mt-0.5 block text-sm font-black">
@@ -5381,7 +5381,7 @@ function RestScreen({
                     {nextSetPreview.exerciseName}
                   </p>
                   {nextSetPreview.equipmentLabel ? (
-                    <span className="shrink-0 rounded-full bg-card px-2 py-1 text-[0.6rem] font-black uppercase leading-none text-muted-foreground">
+                    <span className="shrink-0 rounded-full bg-card px-2 py-1 text-xs font-black uppercase leading-none text-muted-foreground">
                       {nextSetPreview.equipmentLabel}
                     </span>
                   ) : null}
@@ -5423,14 +5423,14 @@ function RestScreen({
                   </span>
                   <span className="mt-0.5 flex flex-wrap gap-1">
                     {option.isSuperset ? (
-                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-primary">
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-black uppercase text-primary">
                         Superserie
                       </span>
                     ) : null}
                     {option.equipmentLabels.map((label, index) => (
                       <span
                         key={`${label}-${index}`}
-                        className="rounded-full bg-card px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-muted-foreground"
+                        className="rounded-full bg-card px-1.5 py-0.5 text-xs font-black uppercase text-muted-foreground"
                       >
                         {label}
                       </span>
@@ -5529,11 +5529,11 @@ function FeedbackScreen({
           </h2>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="inline-flex h-5 items-center rounded-full bg-secondary px-2 text-[0.65rem] font-black uppercase leading-none text-secondary-foreground">
+          <span className="inline-flex h-5 items-center rounded-full bg-secondary px-2 text-xs font-black uppercase leading-none text-secondary-foreground">
             Serie {setIndex + 1}/{totalExerciseSets}
           </span>
           {supersetPosition !== undefined && supersetSize !== undefined ? (
-            <span className="inline-flex h-5 items-center rounded-full bg-primary/10 px-2 text-[0.65rem] font-black uppercase leading-none text-primary">
+            <span className="inline-flex h-5 items-center rounded-full bg-primary/10 px-2 text-xs font-black uppercase leading-none text-primary">
               Superserie {supersetPosition}/{supersetSize}
               {supersetRound !== undefined && supersetRoundCount !== undefined
                 ? ` · ${supersetRound}/${supersetRoundCount}`
@@ -5541,7 +5541,7 @@ function FeedbackScreen({
             </span>
           ) : null}
           {equipment ? (
-            <span className="inline-flex h-5 items-center rounded-full bg-secondary px-2 text-[0.65rem] font-black uppercase leading-none text-muted-foreground">
+            <span className="inline-flex h-5 items-center rounded-full bg-secondary px-2 text-xs font-black uppercase leading-none text-muted-foreground">
               {formatEquipmentLabel(equipment)}
             </span>
           ) : null}
@@ -6231,7 +6231,7 @@ function PlateStack({
         return (
           <span
             key={`${plate}-${index}`}
-            className="flex items-center justify-center rounded-[0.45rem] border border-[var(--plate-border)] bg-[var(--plate-fill)] text-[0.55rem] font-black leading-none text-[var(--plate-foreground)] shadow-sm"
+            className="flex items-center justify-center rounded-[0.45rem] border border-[var(--plate-border)] bg-[var(--plate-fill)] text-xs font-black leading-none text-[var(--plate-foreground)] shadow-sm"
             style={{ width: `${size.width}px`, height: `${size.height}px` }}
           >
             {formatDecimal(plate)}

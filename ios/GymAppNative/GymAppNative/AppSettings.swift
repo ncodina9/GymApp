@@ -85,7 +85,7 @@ struct SettingsView: View {
         }
 
         Text("v0.1.108")
-          .font(.caption2.weight(.medium))
+          .font(.gymSupport.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
           .padding(.top, 8)
@@ -126,22 +126,22 @@ private struct ExercisesLibraryView: View {
           } label: {
             HStack(spacing: 12) {
               Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.headline.weight(.semibold))
+                .font(.gymH2.weight(.semibold))
                 .foregroundStyle(Color.gymAccent)
                 .frame(width: 30, height: 30)
 
               VStack(alignment: .leading, spacing: 4) {
                 Text(exercise.displayName)
-                  .font(.headline.weight(.bold))
+                  .font(.gymH2.weight(.bold))
                   .foregroundStyle(.primary)
                 Text(equipmentLabel(exercise.equipment))
-                  .font(.subheadline)
+                  .font(.gymBody)
                   .foregroundStyle(Color.gymSecondaryText)
               }
 
               Spacer(minLength: 8)
               Image(systemName: "chevron.right")
-                .font(.subheadline.weight(.bold))
+                .font(.gymBody.weight(.bold))
                 .foregroundStyle(Color.gymSecondaryText)
             }
             .padding(14)
@@ -192,12 +192,12 @@ private struct HealthSettingsView: View {
       .toggleStyle(ThemeToggleStyle())
 
       Text("Cada entrenamiento finalizado se guarda como fuerza tradicional con su duración real. Si no se pudo enviar en ese momento, se reintenta al abrir la app. No se estiman calorías ni se leen datos de Salud.")
-        .font(.subheadline)
+        .font(.gymBody)
         .foregroundStyle(Color.gymSecondaryText)
 
       if let message {
         Text(message)
-          .font(.caption.weight(.medium))
+          .font(.gymSupport.weight(.medium))
           .foregroundStyle(Color.gymSecondaryText)
           .padding(12)
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -247,7 +247,7 @@ private struct SettingsCategory<Content: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       Text(title)
-        .font(.subheadline.weight(.semibold))
+        .font(.gymBody.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
         .padding(.horizontal, 4)
 
@@ -272,8 +272,8 @@ private struct SettingsRow<Destination: View>: View {
     NavigationLink { destination } label: {
       HStack {
         VStack(alignment: .leading, spacing: 4) {
-          Text(title).font(.headline.weight(.bold))
-          Text(detail).font(.subheadline).foregroundStyle(Color.gymSecondaryText)
+          Text(title).font(.gymH2.weight(.bold))
+          Text(detail).font(.gymBody).foregroundStyle(Color.gymSecondaryText)
         }
         Spacer()
         Image(systemName: "chevron.right").foregroundStyle(Color.gymSecondaryText)
@@ -303,22 +303,22 @@ private struct WarmupSettingsView: View {
         .toggleStyle(ThemeToggleStyle())
 
       Text("El calentamiento inicia el tiempo real de la sesión, pero no genera series ni feedback.")
-        .font(.subheadline)
+        .font(.gymBody)
         .foregroundStyle(Color.gymSecondaryText)
 
       HStack {
         VStack(alignment: .leading, spacing: 4) {
           Text("Duración estándar")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
           Text("Se puede omitir al empezar directamente.")
-            .font(.caption)
+            .font(.gymSupport)
             .foregroundStyle(Color.gymSecondaryText)
         }
         Spacer()
         HStack(spacing: 10) {
           durationButton(symbol: "minus") { warmupMinutes = max(3, warmupMinutes - 1) }
           Text("\(warmupMinutes) min")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .monospacedDigit()
             .frame(minWidth: 54)
           durationButton(symbol: "plus") { warmupMinutes = min(20, warmupMinutes + 1) }
@@ -340,7 +340,7 @@ private struct WarmupSettingsView: View {
   private func durationButton(symbol: String, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       Image(systemName: symbol)
-        .font(.subheadline.weight(.bold))
+        .font(.gymBody.weight(.bold))
         .frame(width: 40, height: 40)
         .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
@@ -417,7 +417,7 @@ private struct AccentThemePreviewList: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Color de resalte")
-        .font(.subheadline.weight(.semibold))
+        .font(.gymBody.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
 
       ForEach(ThemeAccent.allCases) { theme in
@@ -441,11 +441,11 @@ private struct PremiumColorSchemePreviewList: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Esquemas premium")
-        .font(.subheadline.weight(.semibold))
+        .font(.gymBody.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
 
       Text("El fondo y el resalte se invierten entre la apariencia clara y la oscura.")
-        .font(.caption)
+        .font(.gymSupport)
         .foregroundStyle(Color.gymSecondaryText)
 
       ForEach(PremiumColorScheme.allCases) { scheme in
@@ -472,9 +472,9 @@ private struct PremiumColorSchemePreviewCard: View {
       HStack(spacing: 14) {
         VStack(alignment: .leading, spacing: 4) {
           Text(scheme.label)
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
           Text(isSelected ? "Seleccionado" : "Fondo y resalte adaptativos")
-            .font(.caption.weight(.medium))
+            .font(.gymSupport.weight(.medium))
             .foregroundStyle(Color.gymSecondaryText)
         }
 
@@ -531,10 +531,10 @@ private struct AccentThemePreviewCard: View {
       HStack(spacing: 14) {
         VStack(alignment: .leading, spacing: 4) {
           Text(theme.label)
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .foregroundStyle(.primary)
           Text(isSelected ? "Seleccionado" : "Color de interfaz")
-            .font(.caption.weight(.medium))
+            .font(.gymSupport.weight(.medium))
             .foregroundStyle(Color.gymSecondaryText)
         }
 
@@ -683,10 +683,10 @@ private struct ExportSettingsView: View {
         .tint(Color.gymDanger)
 
         Text("Sesiones guardadas: \(completedRecords.count)")
-          .font(.headline)
+          .font(.gymH2)
           .padding(.top, 8)
         Text("El backup JSON conserva todas las sesiones. El CSV se puede regenerar para sesiones con registro nativo detallado.")
-          .font(.subheadline)
+          .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
 
         ForEach(completedRecords.sorted { $0.completedAt > $1.completedAt }) { record in
@@ -845,10 +845,10 @@ private struct SavedWorkoutCard: View {
     VStack(alignment: .leading, spacing: 12) {
       VStack(alignment: .leading, spacing: 4) {
         Text(date)
-          .font(.caption.weight(.semibold))
+          .font(.gymSupport.weight(.semibold))
           .foregroundStyle(Color.gymSecondaryText)
         Text(label)
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .lineLimit(1)
       }
 
@@ -861,7 +861,7 @@ private struct SavedWorkoutCard: View {
           .tint(Color.gymAccent)
         } else {
           Text("Registro sin detalle. Solo las sesiones finalizadas desde v0.1.71 pueden reexportarse.")
-            .font(.caption)
+            .font(.gymSupport)
             .foregroundStyle(Color.gymSecondaryText)
         }
 
@@ -888,7 +888,7 @@ private struct BottomBackButton: View {
   var body: some View {
     Button(action: action) {
       Image(systemName: "chevron.left")
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(width: 56, height: 56)
         .foregroundStyle(.primary)
         .glassEffect(.regular.interactive(), in: Circle())

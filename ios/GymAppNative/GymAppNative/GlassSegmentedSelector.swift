@@ -34,7 +34,7 @@ struct GlassSegmentedSelector<Value: Hashable>: View {
               let isSelected = isVisuallySelected(option, segmentWidth: segmentWidth)
               Button { select(option) } label: {
                 Text(label(option))
-                  .font(.caption.weight(.bold))
+                  .font(.gymSupport.weight(.bold))
                   .lineLimit(1)
                   .minimumScaleFactor(0.7)
                   .frame(maxWidth: .infinity, minHeight: 42)

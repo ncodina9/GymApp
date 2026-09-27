@@ -936,12 +936,12 @@ private struct ExerciseCoachCueCard: View {
   var body: some View {
     HStack(alignment: .top, spacing: 10) {
       Image(systemName: "figure.strengthtraining.traditional")
-        .font(.headline.weight(.semibold))
+        .font(.gymH2.weight(.semibold))
         .foregroundStyle(Color.gymAccent)
         .frame(width: 24)
 
       Text(ExerciseCoachGuidance(exercise: exercise).summary)
-        .font(.subheadline)
+        .font(.gymBody)
         .foregroundStyle(Color.gymSecondaryText)
         .multilineTextAlignment(.leading)
         .lineLimit(2)
@@ -974,11 +974,11 @@ private struct ExerciseCoachGuidanceOverlay: View {
       VStack(alignment: .leading, spacing: 14) {
         HStack(alignment: .top, spacing: 12) {
           Text(exercise.displayName)
-            .font(.title3.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .frame(maxWidth: .infinity, alignment: .leading)
           Button(action: onDismiss) {
             Image(systemName: "xmark")
-              .font(.subheadline.weight(.bold))
+              .font(.gymBody.weight(.bold))
               .frame(width: 32, height: 32)
               .background(Color.gymSurface, in: Circle())
           }
@@ -986,13 +986,13 @@ private struct ExerciseCoachGuidanceOverlay: View {
           .accessibilityLabel("Cerrar indicaciones")
         }
         Text(guidance.fullGuidance)
-          .font(.subheadline)
+          .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
         Text("Objetivo")
-          .font(.caption.weight(.bold))
+          .font(.gymSupport.weight(.bold))
           .foregroundStyle(Color.gymAccent)
         Text(guidance.trainingGoal)
-          .font(.headline.weight(.semibold))
+          .font(.gymH2.weight(.semibold))
       }
       .padding(20)
       .frame(maxWidth: 360, alignment: .leading)
@@ -1158,7 +1158,7 @@ private struct FeedbackView: View {
         )
 
         Button("Registrar serie", action: onRegister)
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
           .foregroundStyle(Color.gymControlSelectionForeground)
           .background(Color.gymControlSelectionFill, in: Capsule())
@@ -1286,12 +1286,12 @@ private struct ExerciseExecutionHeader: View {
     VStack(spacing: 12) {
       if let eyebrow {
         Text(eyebrow)
-          .font(.subheadline.weight(.semibold))
+          .font(.gymBody.weight(.semibold))
           .opacity(0.84)
       }
 
       Text(exercise?.displayName ?? "Ejercicio")
-        .font(.system(size: 31, weight: .bold))
+        .font(.gymH1.weight(.bold))
         .multilineTextAlignment(.center)
         .lineLimit(2)
         .minimumScaleFactor(0.74)
@@ -1495,7 +1495,7 @@ private struct FeedbackChip: View {
 
   var body: some View {
     Text(text)
-      .font(.caption2.weight(.bold))
+      .font(.gymSupport.weight(.bold))
       .lineLimit(1)
       .padding(.horizontal, 8)
       .padding(.vertical, 4)
@@ -1511,10 +1511,10 @@ private struct FeedbackMetric: View {
 
   var body: some View {
     VStack(spacing: 5) {
-      Text(label).font(.subheadline.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
+      Text(label).font(.gymBody.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
       Text(value).font(.system(size: 31, weight: .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
       Text(footer ?? "Material")
-        .font(.caption2.weight(.semibold))
+        .font(.gymSupport.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
         .lineLimit(1)
         .opacity(footer == nil ? 0 : 1)
@@ -1532,13 +1532,13 @@ private struct FeedbackStepper: View {
 
   var body: some View {
     HStack(spacing: 14) {
-      Text(label).font(.headline.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
+      Text(label).font(.gymH2.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
       Spacer()
       adjustmentButton(symbol: "minus", accessibilityLabel: "Bajar RIR") {
         value = max(range.lowerBound, value - 1)
       }
       Text("\(value)")
-        .font(.title2.weight(.bold))
+        .font(.gymH1.weight(.bold))
         .monospacedDigit()
         .frame(width: 36)
       adjustmentButton(symbol: "plus", accessibilityLabel: "Subir RIR") {
@@ -1558,7 +1558,7 @@ private struct FeedbackStepper: View {
   ) -> some View {
     Button(action: action) {
       Image(systemName: symbol)
-        .font(.title3.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(width: 76, height: 64)
         .contentShape(RoundedRectangle(cornerRadius: 14))
     }
@@ -1583,7 +1583,7 @@ private struct PainFeedbackBlock: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Molestias")
-        .font(.subheadline.weight(.bold))
+        .font(.gymBody.weight(.bold))
         .foregroundStyle(Color.gymSecondaryText)
 
       ScrollView(.vertical) {
@@ -1609,11 +1609,11 @@ private struct PainLevelControl: View {
 
   var body: some View {
     HStack(spacing: 6) {
-      Text(label).font(.subheadline.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
+      Text(label).font(.gymBody.weight(.bold)).foregroundStyle(Color.gymSecondaryText)
       Spacer()
       ForEach(0 ... 3, id: \.self) { level in
         Button("\(level)") { value = level }
-          .font(.subheadline.weight(.bold))
+          .font(.gymBody.weight(.bold))
           .frame(width: 48, height: 48)
           .foregroundStyle(value == level ? Color.gymControlSelectionForeground : .primary)
           .background(value == level ? Color.gymControlSelectionFill : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
@@ -1635,7 +1635,7 @@ private struct NotePicker: View {
     HStack(spacing: 6) {
       ForEach(options, id: \.self) { option in
         Button(option) { note = option }
-          .font(.caption.weight(.bold))
+          .font(.gymSupport.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 48)
           .foregroundStyle(note == option ? Color.gymControlSelectionForeground : .primary)
           .background(note == option ? Color.gymControlSelectionFill : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
@@ -1682,7 +1682,7 @@ private struct ExerciseReviewView: View {
       .scrollIndicators(.hidden)
 
       Button(isFinalReview ? "Finalizar" : "Continuar", action: onContinue)
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -1698,11 +1698,11 @@ private struct ExerciseReviewHeader: View {
   var body: some View {
     VStack(spacing: 8) {
       Text(exercises.count > 1 ? "Evaluar superserie" : "Evaluar ejercicio")
-        .font(.subheadline.weight(.semibold))
+        .font(.gymBody.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
 
       Text(exercises.map(\.displayName).joined(separator: " + "))
-        .font(.system(size: 31, weight: .bold))
+        .font(.gymH1.weight(.bold))
         .lineLimit(2)
         .minimumScaleFactor(0.78)
         .multilineTextAlignment(.center)
@@ -1755,7 +1755,7 @@ private struct ExerciseDecisionSection: View {
     VStack(alignment: .leading, spacing: 10) {
       if showsExerciseName {
         Text(exercise.displayName)
-          .font(.title3.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .lineLimit(2)
       }
       LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -1770,12 +1770,12 @@ private struct ExerciseDecisionSection: View {
     Button { selection = option } label: {
       HStack(spacing: 6) {
         Text(decisionSymbol(for: option))
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
         Text(option)
           .lineLimit(1)
           .minimumScaleFactor(0.75)
       }
-      .font(.subheadline.weight(.bold))
+      .font(.gymBody.weight(.bold))
       .frame(maxWidth: .infinity, minHeight: 58)
       .foregroundStyle(selection == option ? selectedForeground(option) : decisionColor(option))
       .background(
@@ -1882,7 +1882,7 @@ private struct RestView: View {
         Spacer(minLength: 0)
 
         Button("Siguiente", action: onContinue)
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
           .foregroundStyle(Color.gymAccentForeground)
           .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -1931,7 +1931,7 @@ private struct RestExecutionHeader: View {
 
         VStack(spacing: 5) {
           Text(isFinished ? "Descanso terminado" : "Descanso")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
           Text("\(remaining / 60):\(String(format: "%02d", remaining % 60))")
             .font(.system(size: 56, weight: .bold))
             .monospacedDigit()
@@ -1996,7 +1996,7 @@ private struct RestAdjustmentButton: View {
   var body: some View {
     Button(action: action) {
       Text(title)
-        .font(.title3.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .contentShape(RoundedRectangle(cornerRadius: 24))
     }
@@ -2052,7 +2052,7 @@ private struct PendingBlockSelector: View {
     if !options.isEmpty {
       VStack(alignment: .leading, spacing: 7) {
         Text("Elegir otro siguiente bloque")
-          .font(.caption.weight(.bold))
+          .font(.gymSupport.weight(.bold))
           .foregroundStyle(Color.gymSecondaryText)
           .textCase(.uppercase)
 
@@ -2065,22 +2065,22 @@ private struct PendingBlockSelector: View {
                 HStack(spacing: 10) {
                   VStack(alignment: .leading, spacing: 4) {
                     Text(option.exerciseNames)
-                      .font(.subheadline.weight(.bold))
+                      .font(.gymBody.weight(.bold))
                       .lineLimit(option.isSuperset ? 2 : 1)
                     HStack(spacing: 5) {
                       if option.isSuperset {
                         Text("Superserie")
-                          .font(.caption2.weight(.bold))
+                          .font(.gymSupport.weight(.bold))
                           .foregroundStyle(Color.gymAccent)
                       }
                       Text(option.equipmentSummary)
-                        .font(.caption2.weight(.semibold))
+                        .font(.gymSupport.weight(.semibold))
                         .foregroundStyle(Color.gymSecondaryText)
                     }
                   }
                   Spacer(minLength: 0)
                   Image(systemName: "chevron.right")
-                    .font(.caption.weight(.bold))
+                    .font(.gymSupport.weight(.bold))
                     .foregroundStyle(Color.gymSecondaryText)
                 }
                 .padding(.horizontal, 12)
@@ -2126,7 +2126,7 @@ private struct NextSetPreview: View {
     if !previews.isEmpty {
       VStack(alignment: .leading, spacing: 8) {
         Text(previews.count > 1 ? "Próxima superserie" : "Próxima serie")
-          .font(.caption.weight(.bold))
+          .font(.gymSupport.weight(.bold))
           .foregroundStyle(Color.gymSecondaryText)
           .textCase(.uppercase)
 
@@ -2200,7 +2200,7 @@ private struct RestPreviewCard: View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 8) {
         Text(preview.exercise.displayName)
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .lineLimit(2)
           .frame(maxWidth: .infinity, alignment: .leading)
         RestEquipmentChip(
@@ -2248,8 +2248,8 @@ private struct RestPreviewMetric: View {
 
   var body: some View {
     let content = VStack(spacing: 4) {
-      Text(label).font(.caption.weight(.semibold)).foregroundStyle(Color.gymSecondaryText).lineLimit(1)
-      Text(value).font(.title3.weight(.bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+      Text(label).font(.gymSupport.weight(.semibold)).foregroundStyle(Color.gymSecondaryText).lineLimit(1)
+      Text(value).font(.gymH2.weight(.bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
     }
     .frame(maxWidth: .infinity, minHeight: 60)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
@@ -2271,7 +2271,7 @@ private struct RestEquipmentChip: View {
 
   var body: some View {
     let content = Text(variantLabel ?? equipment.executionLabel)
-      .font(.caption.weight(.semibold))
+      .font(.gymSupport.weight(.semibold))
       .foregroundStyle(Color.gymSecondaryText)
       .lineLimit(1)
       .padding(.horizontal, 8)
@@ -2338,10 +2338,10 @@ private struct FinishedWorkoutView: View {
         .multilineTextAlignment(.center)
       VStack(spacing: 4) {
         Text("\(durationLabel(elapsedSeconds)) reales · \(SessionDurationEstimator.estimate(for: execution.session).totalMinutes) min estimados")
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .monospacedDigit()
         Text(estimateComparison)
-          .font(.subheadline)
+          .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
       }
       Spacer()
@@ -2349,7 +2349,7 @@ private struct FinishedWorkoutView: View {
         ShareLink(item: csvURL) {
           Label("Exportar CSV", systemImage: "square.and.arrow.up")
         }
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -2357,7 +2357,7 @@ private struct FinishedWorkoutView: View {
       Button(action: onFinish) {
         Label("Volver a Hoy", systemImage: "house")
       }
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -2392,7 +2392,7 @@ private struct FinishedWorkoutView: View {
 private struct CompletedWorkoutHeader: View {
   var body: some View {
     Text("Entrenamiento completado")
-      .font(.system(size: 31, weight: .bold))
+      .font(.gymH1.weight(.bold))
       .multilineTextAlignment(.center)
       .minimumScaleFactor(0.8)
       .foregroundStyle(Color.gymAccentForeground)
@@ -2432,7 +2432,7 @@ private struct BottomActions: View {
       )
 
       Button(primaryTitle, action: primaryAction)
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -2442,7 +2442,7 @@ private struct BottomActions: View {
       if let skipAction {
         Button(action: skipAction) {
           Image(systemName: "arrowshape.turn.up.right.fill")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .frame(width: 64, height: 64)
             .foregroundStyle(.primary)
             .glassEffect(.regular.interactive(), in: Circle())
@@ -2460,7 +2460,7 @@ private struct SessionNavigationButton: View {
 
   var body: some View {
     Image(systemName: "chevron.left")
-      .font(.headline.weight(.bold))
+      .font(.gymH2.weight(.bold))
       .frame(width: 64, height: 64)
       .foregroundStyle(.primary)
       .glassEffect(.regular.interactive(), in: Circle())
@@ -2510,7 +2510,7 @@ private struct SessionActionFan: View {
 
       Button(action: onDismiss) {
         Image(systemName: "xmark")
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .frame(width: 64, height: 64)
           .foregroundStyle(.primary)
           .glassEffect(.regular.interactive(), in: Circle())
@@ -2537,7 +2537,7 @@ private struct SessionActionButton: View {
   var body: some View {
     Button(action: action) {
       Image(systemName: symbol)
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .frame(width: 56, height: 56)
         .foregroundStyle(destructive ? Color.white : Color.gymAccentForeground)
         .glassEffect(.regular.tint(tint).interactive(), in: Circle())
@@ -2554,7 +2554,7 @@ private struct ProgressActionButton: View {
   var body: some View {
     Button(action: action) {
       Text("\(percentage)%")
-        .font(.caption.weight(.bold))
+        .font(.gymSupport.weight(.bold))
         .monospacedDigit()
         .frame(width: 56, height: 56)
         .foregroundStyle(Color.gymAccent)
@@ -2616,7 +2616,7 @@ private struct ActiveWorkoutProgressView: View {
       HStack(spacing: 12) {
         Button(action: onBack) {
           Image(systemName: "chevron.left")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .frame(width: 56, height: 56)
             .foregroundStyle(.primary)
             .glassEffect(.regular.interactive(), in: Circle())
@@ -2626,7 +2626,7 @@ private struct ActiveWorkoutProgressView: View {
 
         Button(action: onHome) {
           Image(systemName: "house.fill")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .frame(width: 56, height: 56)
             .foregroundStyle(.primary)
             .glassEffect(.regular.interactive(), in: Circle())
@@ -2635,7 +2635,7 @@ private struct ActiveWorkoutProgressView: View {
         .accessibilityLabel("Volver a Hoy")
 
         Button("Finalizar", action: onFinish)
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 56)
           .foregroundStyle(.white)
           .glassEffect(.regular.tint(Color.gymDanger).interactive(), in: Capsule())
@@ -2655,11 +2655,11 @@ private struct ExerciseProgressCard: View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 8) {
         Text(exercise.displayName)
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .lineLimit(2)
         Spacer(minLength: 0)
         Text(execution.equipment(for: WorkoutSetLocator(exerciseIndex: exerciseIndex, setIndex: 1))?.executionLabel ?? exercise.equipment.executionLabel)
-          .font(.caption.weight(.semibold))
+          .font(.gymSupport.weight(.semibold))
           .foregroundStyle(Color.gymSecondaryText)
           .padding(.horizontal, 8)
           .padding(.vertical, 5)
@@ -2671,13 +2671,13 @@ private struct ExerciseProgressCard: View {
         let record = execution.records.first { $0.locator == locator }
         HStack {
           Text("Serie \(set.setIndex)")
-            .font(.subheadline.weight(.semibold))
+            .font(.gymBody.weight(.semibold))
           Spacer()
           Text(targetLabel(for: locator))
-            .font(.subheadline.weight(.bold))
+            .font(.gymBody.weight(.bold))
             .monospacedDigit()
           Text(statusLabel(record))
-            .font(.caption.weight(.bold))
+            .font(.gymSupport.weight(.bold))
             .foregroundStyle(statusColor(record))
         }
         .padding(.vertical, 7)
@@ -2721,7 +2721,7 @@ private struct SetHeader: View {
     HStack(alignment: .top, spacing: 12) {
       VStack(alignment: .leading, spacing: 5) {
         Text(exercise.displayName)
-          .font(.system(size: 27, weight: .bold))
+          .font(.gymH1.weight(.bold))
           .lineLimit(2)
           .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -2770,7 +2770,7 @@ private struct SetTargetCard: View {
     Button(action: action) {
       VStack(spacing: 8) {
         Text(label)
-          .font(.headline.weight(.semibold))
+          .font(.gymH2.weight(.semibold))
           .foregroundStyle(Color.gymSecondaryText)
         ZStack(alignment: .top) {
           if let plateLayout, !plateLayout.sidePlatesKg.isEmpty {
@@ -2789,7 +2789,7 @@ private struct SetTargetCard: View {
         .frame(maxWidth: .infinity, minHeight: 104)
         if let unit {
           Text(unit)
-            .font(.subheadline.weight(.medium))
+            .font(.gymBody.weight(.medium))
           .foregroundStyle(Color.gymSecondaryText)
         }
       }
@@ -2823,7 +2823,7 @@ private struct PlateStack: View {
     VStack(spacing: 4) {
       ForEach(Array(plates.enumerated()), id: \.offset) { _, plate in
         Text(plate.formatted(.number.precision(.fractionLength(0...2))))
-          .font(.system(size: 10, weight: .bold))
+          .font(.gymSupport.weight(.bold))
           .foregroundStyle(.primary)
           .frame(width: plateWidth(plate), height: plateHeight(plate))
           .background(Color.gymAccent.opacity(0.16), in: RoundedRectangle(cornerRadius: 6))
@@ -2869,7 +2869,7 @@ private struct SetTargetEditor: View {
       HStack {
         Button(action: dismiss.callAsFunction) {
           Image(systemName: "xmark")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .frame(width: 44, height: 44)
             .foregroundStyle(.primary)
             .glassEffect(.regular.interactive(), in: Circle())
@@ -2878,14 +2878,14 @@ private struct SetTargetEditor: View {
         .buttonStyle(.plain)
         Spacer()
         Text("Ajustar \(field.title)")
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
         Spacer()
         Button {
           onConfirm(value)
           dismiss()
         } label: {
           Image(systemName: "checkmark")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .frame(width: 44, height: 44)
             .foregroundStyle(Color.gymAccentForeground)
             .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
@@ -2984,7 +2984,7 @@ private struct TimedSetTarget: View {
 
             VStack(spacing: 5) {
               Text(isFinished ? "Ejercicio terminado" : "Tiempo")
-                .font(.headline.weight(.bold))
+                .font(.gymH2.weight(.bold))
               Text(clock(remaining))
                 .font(.system(size: 64, weight: .bold))
                 .monospacedDigit()
@@ -3008,7 +3008,7 @@ private struct TimedSetTarget: View {
         HStack(spacing: 12) {
           Button(action: reset) {
             Image(systemName: "arrow.counterclockwise")
-              .font(.headline.weight(.bold))
+              .font(.gymH2.weight(.bold))
               .frame(width: 58, height: 58)
               .foregroundStyle(.primary)
               .glassEffect(.regular.interactive(), in: Circle())
@@ -3021,7 +3021,7 @@ private struct TimedSetTarget: View {
               systemImage: isRunning ? "pause.fill" : "play.fill"
             )
           }
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 58)
           .foregroundStyle(Color.gymAccentForeground)
           .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -3089,7 +3089,7 @@ private struct TimedSetTarget: View {
 
   private func timeAdjustmentButton(title: String, action: @escaping () -> Void) -> some View {
     Button(title, action: action)
-      .font(.caption.weight(.bold))
+      .font(.gymSupport.weight(.bold))
       .foregroundStyle(.primary)
       .padding(.horizontal, 10)
       .padding(.vertical, 7)

@@ -87,7 +87,7 @@ struct SessionPreviewView: View {
           if block.isSuperset {
             VStack(alignment: .leading, spacing: 12) {
               Text("Superserie")
-                .font(.caption.weight(.bold))
+                .font(.gymSupport.weight(.bold))
                 .foregroundStyle(Color.gymSecondaryText)
                 .textCase(.uppercase)
 
@@ -162,7 +162,7 @@ struct SessionPreviewView: View {
       if readOnly {
         Button(action: { dismiss() }) {
           Image(systemName: "chevron.left")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
             .frame(width: 56, height: 56)
             .foregroundStyle(.primary)
             .glassEffect(.regular.interactive(), in: Circle())
@@ -174,18 +174,19 @@ struct SessionPreviewView: View {
       GlassEffectContainer(spacing: 16) {
         HStack(spacing: 16) {
           Button(action: { dismiss() }) {
-            Image(systemName: "house")
-              .font(.headline.weight(.bold))
+            Image(systemName: "chevron.left")
+              .font(.gymH2.weight(.bold))
               .frame(width: 56, height: 56)
-              .foregroundStyle(.primary)
-              .glassEffect(.regular.interactive(), in: Circle())
+              .foregroundStyle(Color.gymAccentForeground)
+              .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
           }
+          .accessibilityLabel("Volver")
           .buttonStyle(.plain)
 
           if warmupIsRunning {
             Button(action: beginWorkoutAfterWarmup) {
               Label("Empezar", systemImage: "play.fill")
-                .font(.subheadline.weight(.bold))
+                .font(.gymH2.weight(.bold))
                 .frame(maxWidth: .infinity, minHeight: 56)
                 .foregroundStyle(Color.gymAccentForeground)
                 .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -194,7 +195,7 @@ struct SessionPreviewView: View {
           } else if let resumableWorkout {
             Button(action: { resume(resumableWorkout) }) {
               Label("Reanudar", systemImage: "play.fill")
-                .font(.subheadline.weight(.bold))
+                .font(.gymH2.weight(.bold))
                 .frame(maxWidth: .infinity, minHeight: 56)
                 .foregroundStyle(Color.gymAccentForeground)
                 .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -203,7 +204,7 @@ struct SessionPreviewView: View {
           } else if warmupEnabled {
             Button(action: { startWarmup() }) {
               Label("Calentar", systemImage: "flame.fill")
-                .font(.subheadline.weight(.bold))
+                .font(.gymH2.weight(.bold))
                 .frame(maxWidth: .infinity, minHeight: 56)
                 .foregroundStyle(Color.gymAccentForeground)
                 .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
@@ -212,21 +213,29 @@ struct SessionPreviewView: View {
           }
 
           if !warmupIsRunning {
-            Button {
-              if currentActiveWorkout != nil {
-                showsRestartConfirmation = true
-              } else {
+            if currentActiveWorkout != nil {
+              Button(action: { showsRestartConfirmation = true }) {
+                Image(systemName: "arrow.counterclockwise")
+                  .font(.gymH2.weight(.bold))
+                  .frame(width: 56, height: 56)
+                  .foregroundStyle(Color.gymAccentForeground)
+                  .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
+              }
+              .accessibilityLabel("Empezar de nuevo")
+              .buttonStyle(.plain)
+            } else {
+              Button {
                 executionSnapshot = nil
                 showsExecution = true
+              } label: {
+                Label("Empezar", systemImage: "play.fill")
+                  .font(.gymH2.weight(.bold))
+                  .frame(maxWidth: .infinity, minHeight: 56)
+                  .foregroundStyle(Color.gymAccentForeground)
+                  .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
               }
-            } label: {
-              Label("Empezar", systemImage: "chevron.right")
-                .font(.headline.weight(.bold))
-                .frame(maxWidth: .infinity, minHeight: 56)
-                .foregroundStyle(Color.gymAccentForeground)
-                .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+              .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
           }
         }
       }
@@ -379,7 +388,7 @@ private struct WarmupPreviewHeader: View {
 
         VStack(spacing: 2) {
           Text(remaining == 0 ? "Calentamiento terminado" : "Calentamiento")
-            .font(.headline.weight(.bold))
+            .font(.gymH2.weight(.bold))
           Text("\(remaining / 60):\(String(format: "%02d", remaining % 60))")
             .font(.system(size: 56, weight: .bold))
             .monospacedDigit()
@@ -476,34 +485,45 @@ private struct ExercisePreviewRow: View {
   }
 
   private var content: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      HStack(alignment: .center, spacing: 12) {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(spacing: 10) {
         Text("\(order)")
-          .font(.subheadline.weight(.bold))
-          .frame(width: 32, height: 32)
-          .background(Color.gymSurface, in: Circle())
+          .font(.gymH3.weight(.bold))
+          .frame(width: 28, height: 28)
+          .background(headerForeground.opacity(0.18), in: Circle())
+        Text(exercise.displayName)
+          .font(.gymH2.weight(.semibold))
+          .lineLimit(2)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      .foregroundStyle(headerForeground)
+      .padding(.horizontal, 12)
+      .padding(.vertical, 9)
+      .background(headerColor, in: UnevenRoundedRectangle(
+        topLeadingRadius: 18,
+        bottomLeadingRadius: 0,
+        bottomTrailingRadius: 18,
+        topTrailingRadius: 0
+      ))
+      .padding(.top, -14)
+      .padding(.leading, -14)
 
-        VStack(alignment: .leading, spacing: 7) {
-          Text(exercise.displayName)
-            .font(.headline.weight(.semibold))
-            .lineLimit(2)
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-          EquipmentChip(equipment: exercise.equipment, variantLabel: exercise.variantLabel)
-        }
-
+      if isWarmupSelected || status.label != nil {
+        HStack(spacing: 8) {
+          Spacer(minLength: 8)
         if isWarmupSelected {
           Image(systemName: "checkmark.circle.fill")
-            .font(.title3.weight(.bold))
+            .font(.gymH3.weight(.bold))
             .foregroundStyle(Color.gymAccent)
             .accessibilityLabel("Ejercicio seleccionado para empezar al terminar el calentamiento")
         } else if let label = status.label, let color = status.color {
           Text(label)
-            .font(.caption2.weight(.bold))
+            .font(.gymSupport.weight(.bold))
             .foregroundStyle(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
             .background(color, in: Capsule())
+        }
         }
       }
 
@@ -512,6 +532,12 @@ private struct ExercisePreviewRow: View {
         PreviewMetric(label: workLabel, value: workValue)
         PreviewMetric(label: loadLabel, value: loadValue)
       }
+
+      Text("Material sugerido: \(exercise.variantLabel ?? exercise.equipment.label)")
+        .font(.gymSupport.weight(.semibold))
+        .foregroundStyle(Color.gymSecondaryText)
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
     .padding(14)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 18))
@@ -523,6 +549,15 @@ private struct ExercisePreviewRow: View {
         )
     }
     .contentShape(RoundedRectangle(cornerRadius: 18))
+  }
+
+  private var headerColor: Color {
+    isWarmupSelected ? Color.gymAccent : (status.color ?? Color.secondary.opacity(0.3))
+  }
+
+  private var headerForeground: Color {
+    if isWarmupSelected { return Color.gymAccentForeground }
+    return status == .pending ? .primary : .white
   }
 
   private var workLabel: String {
@@ -592,16 +627,16 @@ private struct WarmupPreviewRow: View {
   var body: some View {
     HStack(spacing: 12) {
       Image(systemName: "flame.fill")
-        .font(.headline.weight(.bold))
+        .font(.gymH2.weight(.bold))
         .foregroundStyle(Color.gymAccent)
         .frame(width: 32, height: 32)
         .background(Color.gymSurface, in: Circle())
 
       VStack(alignment: .leading, spacing: 4) {
         Text("Calentamiento")
-          .font(.headline.weight(.bold))
+          .font(.gymH2.weight(.bold))
         Text("\(minutes) min · No afecta a las series")
-          .font(.caption)
+          .font(.gymSupport)
           .foregroundStyle(Color.gymSecondaryText)
       }
 
@@ -609,14 +644,14 @@ private struct WarmupPreviewRow: View {
 
       if status == .completed {
         Text("Completado")
-          .font(.caption2.weight(.bold))
+          .font(.gymSupport.weight(.bold))
           .foregroundStyle(.white)
           .padding(.horizontal, 8)
           .padding(.vertical, 5)
           .background(Color.gymCompleted, in: Capsule())
       } else if status == .running {
         Text("En curso")
-          .font(.caption2.weight(.bold))
+          .font(.gymSupport.weight(.bold))
           .foregroundStyle(.white)
           .padding(.horizontal, 8)
           .padding(.vertical, 5)
@@ -632,20 +667,6 @@ private struct WarmupPreviewRow: View {
   }
 }
 
-private struct EquipmentChip: View {
-  let equipment: Equipment
-  let variantLabel: String?
-
-  var body: some View {
-    Text(variantLabel ?? equipment.label)
-      .font(.caption.weight(.semibold))
-      .foregroundStyle(Color.gymSecondaryText)
-      .padding(.horizontal, 10)
-      .padding(.vertical, 6)
-      .background(Color.gymSurface.opacity(0.72), in: Capsule())
-  }
-}
-
 private struct PreviewMetric: View {
   let label: String
   let value: String
@@ -653,11 +674,11 @@ private struct PreviewMetric: View {
   var body: some View {
     VStack(spacing: 5) {
       Text(label)
-        .font(.caption2.weight(.semibold))
+        .font(.gymSupport.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
         .lineLimit(1)
       Text(value)
-        .font(.subheadline.weight(.bold))
+        .font(.gymH3.weight(.bold))
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.7)
