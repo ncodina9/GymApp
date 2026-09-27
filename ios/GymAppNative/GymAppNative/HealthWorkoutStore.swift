@@ -84,6 +84,55 @@ enum HealthWorkoutStore {
       await syncIfEnabled(record: record, execution: execution, in: context)
     }
   }
+
+  /// A corrected session must replace, rather than duplicate, its HealthKit
+  /// workout. The local record stays authoritative if HealthKit is unavailable.
+  static func prepareForResync(
+    record: CompletedWorkoutRecord,
+    in context: ModelContext
+  ) async {
+    guard let rawUUID = record.healthKitWorkoutUUID,
+          let uuid = UUID(uuidString: rawUUID)
+    else {
+      record.healthKitSyncStatus = .pending
+      record.healthKitLastError = nil
+      try? context.save()
+      return
+    }
+
+    do {
+      let predicate = HKQuery.predicateForObject(with: uuid)
+      if let workout = try await workout(with: predicate) {
+        try await store.delete(workout)
+      }
+      record.healthKitWorkoutUUID = nil
+      record.healthKitSyncStatus = .pending
+      record.healthKitLastError = nil
+      try? context.save()
+    } catch {
+      record.healthKitSyncStatus = .failed
+      record.healthKitLastError = error.localizedDescription
+      try? context.save()
+    }
+  }
+
+  private static func workout(with predicate: NSPredicate) async throws -> HKWorkout? {
+    try await withCheckedThrowingContinuation { continuation in
+      let query = HKSampleQuery(
+        sampleType: HKObjectType.workoutType(),
+        predicate: predicate,
+        limit: 1,
+        sortDescriptors: nil
+      ) { _, samples, error in
+        if let error {
+          continuation.resume(throwing: error)
+        } else {
+          continuation.resume(returning: samples?.first as? HKWorkout)
+        }
+      }
+      store.execute(query)
+    }
+  }
 }
 
 enum HealthWorkoutError: LocalizedError {

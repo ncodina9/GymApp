@@ -226,8 +226,8 @@ private struct RecommendedCardMetallicSurface: View {
   var body: some View {
     GeometryReader { proxy in
       let shineOffset = CGSize(
-        width: horizontalTilt * proxy.size.width * 0.28,
-        height: verticalTilt * proxy.size.height * 0.24
+        width: horizontalTilt * proxy.size.width * 0.22,
+        height: verticalTilt * proxy.size.height * 0.18
       )
       ZStack {
         LinearGradient(
@@ -239,19 +239,24 @@ private struct RecommendedCardMetallicSurface: View {
           startPoint: .topLeading,
           endPoint: .bottomTrailing
         )
+        // Deliberately oversize the highlight before moving it. A regular
+        // gradient is clipped at its own bounds when device tilt changes.
         LinearGradient(
           stops: [
-            .init(color: .clear, location: 0.22),
-            .init(color: Color.gymAccent.opacity(0.06), location: 0.39),
-            .init(color: Color.gymAccent.opacity(0.20), location: 0.50),
-            .init(color: Color.gymAccent.opacity(0.06), location: 0.61),
-            .init(color: .clear, location: 0.78),
+            .init(color: .clear, location: 0.30),
+            .init(color: Color.gymAccent.opacity(0.05), location: 0.43),
+            .init(color: Color.gymAccent.opacity(0.19), location: 0.50),
+            .init(color: Color.gymAccent.opacity(0.05), location: 0.57),
+            .init(color: .clear, location: 0.70),
           ],
           startPoint: .topLeading,
           endPoint: .bottomTrailing
         )
+        .frame(width: proxy.size.width * 1.7, height: proxy.size.height * 1.7)
         .offset(shineOffset)
       }
+      .frame(width: proxy.size.width, height: proxy.size.height)
+      .clipped()
       .overlay {
         RoundedRectangle(cornerRadius: 22)
           .stroke(

@@ -1418,11 +1418,11 @@ Fuera de la primera versión:
 - edición del plan, historial, exportación, análisis y configuración completa desde el reloj
 - fuente de verdad independiente en watchOS; el iPhone seguirá guardando el borrador y las sesiones definitivas
 
-### Pendiente: corrección posterior de series
+### Corrección de series registradas
 
-- [ ] Permitir corregir `reps`, `peso` y duración, cuando aplique, de una serie ya registrada tanto en un entrenamiento activo como en uno finalizado.
-- [ ] Conservar la edición como una modificación explícita del registro: actualizar histórico, RM, CSV, backup JSON y la representación de progreso sin alterar el orden ni el estado (`completed` o `skipped`) de la serie.
-- [ ] Definir la reconciliación con Apple Salud para una sesión ya exportada: actualizar o recrear el `HKWorkout` vinculado sin duplicarlo.
+- [x] Permitir corregir `reps`, `peso` y duración, cuando aplique, de una serie ya registrada tanto en un entrenamiento activo como en uno finalizado.
+- [x] Conservar la edición como una modificación explícita del registro: actualizar histórico, RM, CSV, backup JSON y la representación de progreso sin alterar el orden ni el estado (`completed` o `skipped`) de la serie.
+- [x] Reconciliar Apple Salud para una sesión ya exportada: eliminar el `HKWorkout` vinculado antes de recrearlo, sin duplicados.
 
 Criterio de aceptación:
 

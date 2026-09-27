@@ -23,10 +23,10 @@ enum WorkoutCSVExporter {
     }
     let rows = orderedRecords.enumerated().compactMap { index, record -> [String]? in
       guard let exercise = execution.exercise(for: record.locator),
-            let targets = execution.targets(for: record.locator)
+            let targets = execution.targets(for: record)
       else { return nil }
 
-      let equipment = execution.equipment(for: record.locator) ?? exercise.equipment
+      let equipment = execution.equipment(for: record) ?? exercise.equipment
       let isSkipped = record.status == .skipped
       let isTimed = targets.durationSeconds != nil
 

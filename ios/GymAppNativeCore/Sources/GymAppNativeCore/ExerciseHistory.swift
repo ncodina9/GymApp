@@ -51,7 +51,7 @@ public enum ExerciseHistory {
         guard record.status == .completed,
               let recordedExercise = workout.execution.exercise(for: record.locator),
               recordedExercise.displayGroupID == exercise.displayGroupID,
-              let targets = workout.execution.targets(for: record.locator)
+              let targets = workout.execution.targets(for: record)
         else {
           return nil
         }
@@ -59,7 +59,7 @@ public enum ExerciseHistory {
         return ExerciseHistoryEntry(
           id: "\(workout.completedAt.timeIntervalSince1970)-\(record.locator.exerciseIndex)-\(record.locator.setIndex)",
           date: record.performedAt,
-          equipment: workout.execution.equipment(for: record.locator) ?? recordedExercise.equipment,
+          equipment: workout.execution.equipment(for: record) ?? recordedExercise.equipment,
           weightKg: targets.weightKg,
           reps: targets.reps,
           durationSeconds: targets.durationSeconds

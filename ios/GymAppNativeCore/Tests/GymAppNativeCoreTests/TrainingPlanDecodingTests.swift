@@ -187,6 +187,30 @@ struct TrainingPlanDecodingTests {
     #expect(entry.estimatedOneRepMax == 81.66666666666667)
   }
 
+  @Test("Corrige el resultado de una serie sin alterar las siguientes")
+  func correctsRecordedSetWithoutChangingOtherTargets() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let exercise = try #require(session.exercises.first { $0.sets.count > 1 && $0.sets.first?.type != .timed })
+    var execution = WorkoutExecutionState(session: session)
+    let locator = WorkoutSetLocator(exerciseIndex: 0, setIndex: 1)
+
+    while execution.current != locator { _ = execution.recordCurrent(feedback: .ok) }
+    _ = execution.recordCurrent(feedback: .ok)
+    let corrected = execution.correctRecordedSet(
+      at: locator,
+      reps: 9,
+      weightKg: 72.5,
+      durationSeconds: nil
+    )
+    #expect(corrected)
+
+    let record = try #require(execution.records.first { $0.locator == locator })
+    #expect(execution.targets(for: record)?.reps == 9)
+    #expect(execution.targets(for: record)?.weightKg == 72.5)
+    #expect(execution.targets(for: WorkoutSetLocator(exerciseIndex: 0, setIndex: 2))?.weightKg == exercise.sets[1].targetWeightKg)
+  }
+
   @Test("Conserva material y propaga objetivos homogéneos en una sesión")
   func keepsSessionMaterialAndTargets() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))

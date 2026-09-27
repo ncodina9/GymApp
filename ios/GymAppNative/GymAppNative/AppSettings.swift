@@ -691,6 +691,7 @@ private struct ExportSettingsView: View {
 
         ForEach(completedRecords.sorted { $0.completedAt > $1.completedAt }) { record in
           SavedWorkoutCard(
+            record: record,
             date: sessionDetails(for: record).date,
             label: sessionDetails(for: record).label,
             csvURL: csvURL(for: record),
@@ -836,6 +837,7 @@ private struct ExportSettingsView: View {
 }
 
 private struct SavedWorkoutCard: View {
+  let record: CompletedWorkoutRecord
   let date: String
   let label: String
   let csvURL: URL?
@@ -853,6 +855,16 @@ private struct SavedWorkoutCard: View {
       }
 
       HStack(spacing: 10) {
+        if record.executionData != nil {
+          NavigationLink {
+            CompletedWorkoutDetailView(record: record)
+          } label: {
+            Label("Corregir series", systemImage: "pencil")
+          }
+          .buttonStyle(.bordered)
+          .tint(Color.gymAccent)
+        }
+
         if let csvURL {
           ShareLink(item: csvURL) {
             Label("Exportar CSV", systemImage: "square.and.arrow.up")

@@ -487,10 +487,9 @@ private struct ExercisePreviewRow: View {
   private var content: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(spacing: 10) {
-        Text("\(order)")
-          .font(.gymH3.weight(.bold))
+        headerMarker
           .frame(width: 28, height: 28)
-          .background(headerForeground.opacity(0.18), in: Circle())
+          .background(markerBackground, in: Circle())
         Text(exercise.displayName)
           .font(.gymH2.weight(.semibold))
           .lineLimit(2)
@@ -507,25 +506,6 @@ private struct ExercisePreviewRow: View {
       ))
       .padding(.top, -14)
       .padding(.leading, -14)
-
-      if isWarmupSelected || status.label != nil {
-        HStack(spacing: 8) {
-          Spacer(minLength: 8)
-        if isWarmupSelected {
-          Image(systemName: "checkmark.circle.fill")
-            .font(.gymH3.weight(.bold))
-            .foregroundStyle(Color.gymAccent)
-            .accessibilityLabel("Ejercicio seleccionado para empezar al terminar el calentamiento")
-        } else if let label = status.label, let color = status.color {
-          Text(label)
-            .font(.gymSupport.weight(.bold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(color, in: Capsule())
-        }
-        }
-      }
 
       HStack(spacing: 8) {
         PreviewMetric(label: "Series", value: "\(exercise.sets.count)")
@@ -558,6 +538,36 @@ private struct ExercisePreviewRow: View {
   private var headerForeground: Color {
     if isWarmupSelected { return Color.gymAccentForeground }
     return status == .pending ? .primary : .white
+  }
+
+  private var markerBackground: Color {
+    isWarmupSelected || status != .pending ? Color.gymCanvas : headerForeground.opacity(0.18)
+  }
+
+  @ViewBuilder
+  private var headerMarker: some View {
+    if isWarmupSelected {
+      Image(systemName: "checkmark")
+        .font(.gymH3.weight(.bold))
+        .foregroundStyle(Color.gymAccent)
+        .accessibilityLabel("Ejercicio seleccionado para empezar al terminar el calentamiento")
+    } else {
+      switch status {
+      case .completed:
+        Image(systemName: "checkmark")
+          .font(.gymH3.weight(.bold))
+          .foregroundStyle(Color.gymCompleted)
+          .accessibilityLabel("Ejercicio completado")
+      case .inProgress:
+        Image(systemName: "play.fill")
+          .font(.gymSupport.weight(.bold))
+          .foregroundStyle(status.color ?? Color.gymAccent)
+          .accessibilityLabel("Ejercicio en curso")
+      case .pending:
+        Text("\(order)")
+          .font(.gymH3.weight(.bold))
+      }
+    }
   }
 
   private var workLabel: String {

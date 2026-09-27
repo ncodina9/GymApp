@@ -179,9 +179,10 @@ struct SetExecutionView: View {
     }
     .navigationDestination(isPresented: $showsWorkoutProgress) {
       ActiveWorkoutProgressView(
-        execution: execution,
+        execution: $execution,
         onBack: { showsWorkoutProgress = false },
         onHome: returnToToday,
+        onExecutionChanged: persistActiveWorkout,
         onFinish: {
           showsFinishConfirmation = true
         }
@@ -1160,9 +1161,8 @@ private struct FeedbackView: View {
         Button("Registrar serie", action: onRegister)
           .font(.gymH2.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 64)
-          .foregroundStyle(Color.gymControlSelectionForeground)
-          .background(Color.gymControlSelectionFill, in: Capsule())
-          .overlay { Capsule().stroke(Color.gymAccent, lineWidth: 1) }
+          .foregroundStyle(Color.gymAccentForeground)
+          .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
           .buttonStyle(.plain)
       }
       .zIndex(isHistoryExpanded ? -1 : 0)
@@ -1699,7 +1699,7 @@ private struct ExerciseReviewHeader: View {
     VStack(spacing: 8) {
       Text(exercises.count > 1 ? "Evaluar superserie" : "Evaluar ejercicio")
         .font(.gymBody.weight(.semibold))
-        .foregroundStyle(Color.gymSecondaryText)
+        .foregroundStyle(Color.gymAccentForeground.opacity(0.84))
 
       Text(exercises.map(\.displayName).joined(separator: " + "))
         .font(.gymH1.weight(.bold))
@@ -1707,12 +1707,18 @@ private struct ExerciseReviewHeader: View {
         .minimumScaleFactor(0.78)
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
+
+      SetProgressIndicators(
+        setCount: exercises.first?.sets.count ?? 0,
+        currentSetIndex: exercises.first?.sets.count ?? 0,
+        onAccent: true
+      )
     }
     .foregroundStyle(Color.gymAccentForeground)
     .padding(.horizontal, 20)
     .padding(.top, 16)
     .padding(.bottom, 22)
-    .frame(maxWidth: .infinity, minHeight: 106)
+    .frame(maxWidth: .infinity)
     .background(alignment: .top) {
       Color.gymAccent
         .frame(height: 112)
@@ -1741,86 +1747,97 @@ private struct ExerciseDecisionSection: View {
   static func defaultDecision(for exercise: TrainingExercise) -> String {
     exercise.sets.first?.type == .timed ? "Mantener tiempo" : "Mantener"
   }
-  private var options: [String] {
+  private var decisionGroups: [DecisionGroup] {
     if isTimed {
-      return ["Mantener tiempo", "Subir tiempo", "Bajar tiempo", "Mejorar posición", "Marcar molestia"]
+      return [
+        .init(title: "General", options: ["Mantener tiempo", "Mejorar posición", "Marcar molestia"]),
+        .init(title: "Tiempo", options: ["Subir tiempo", "Bajar tiempo"]),
+      ]
     }
+
     let canChangeWeight = exercise.equipment != .bodyweight && exercise.equipment != .cable
-    return canChangeWeight
-      ? ["Mantener", "Subir peso", "Bajar peso", "Subir reps", "Bajar reps", "Marcar molestia"]
-      : ["Mantener", "Subir reps", "Bajar reps", "Marcar molestia"]
+    var groups = [
+      DecisionGroup(title: "General", options: ["Mantener", "Marcar molestia"]),
+      DecisionGroup(title: "Repeticiones", options: ["Subir reps", "Bajar reps"]),
+    ]
+    if canChangeWeight {
+      groups.append(DecisionGroup(title: "Peso", options: ["Subir peso", "Bajar peso"]))
+    }
+    return groups
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
+    VStack(alignment: .leading, spacing: 16) {
       if showsExerciseName {
         Text(exercise.displayName)
           .font(.gymH2.weight(.bold))
           .lineLimit(2)
       }
-      LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-        ForEach(options, id: \.self) { option in
-          decisionButton(option)
+
+      ForEach(decisionGroups) { group in
+        VStack(alignment: .leading, spacing: 6) {
+          Text(group.title)
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymSecondaryText)
+            .textCase(.uppercase)
+
+          VStack(spacing: 6) {
+            ForEach(group.options, id: \.self) { option in
+              decisionButton(option)
+            }
+          }
         }
       }
     }
   }
 
   private func decisionButton(_ option: String) -> some View {
-    Button { selection = option } label: {
-      HStack(spacing: 6) {
-        Text(decisionSymbol(for: option))
-          .font(.gymH2.weight(.bold))
-        Text(option)
+    let isSelected = selection == option
+    return Button { selection = option } label: {
+      HStack(spacing: 12) {
+        Image(systemName: decisionSymbol(for: option))
+          .font(.gymH3.weight(.bold))
+          .frame(width: 22)
+        Text(decisionLabel(for: option))
           .lineLimit(1)
-          .minimumScaleFactor(0.75)
+        Spacer(minLength: 8)
+        if isSelected {
+          Image(systemName: "checkmark")
+            .font(.gymH3.weight(.bold))
+            .accessibilityHidden(true)
+        }
       }
-      .font(.gymBody.weight(.bold))
-      .frame(maxWidth: .infinity, minHeight: 58)
-      .foregroundStyle(selection == option ? selectedForeground(option) : decisionColor(option))
-      .background(
-        selection == option ? selectedFill(option) : decisionColor(option).opacity(0.14),
-        in: RoundedRectangle(cornerRadius: 16)
-      )
+      .font(.gymH3.weight(.semibold))
+      .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+      .padding(.horizontal, 14)
+      .foregroundStyle(isSelected ? Color.gymControlSelectionForeground : .primary)
+      .background(isSelected ? Color.gymControlSelectionFill : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
       .overlay {
-        RoundedRectangle(cornerRadius: 16)
-          .stroke(selectedBorder(option).opacity(selection == option ? 1 : 0.72), lineWidth: 2)
+        RoundedRectangle(cornerRadius: 14)
+          .stroke(isSelected ? Color.gymAccent : Color.secondary.opacity(0.38), lineWidth: 1)
       }
     }
-    .accessibilityLabel(option)
+    .accessibilityLabel(decisionLabel(for: option))
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
     .buttonStyle(.plain)
   }
 
   private func decisionSymbol(for option: String) -> String {
     let lower = option.lowercased()
-    if lower.contains("subir") || lower.contains("mejorar") { return "↗" }
-    if lower.contains("bajar") { return "↘" }
-    if lower.contains("molestia") { return "×" }
-    return "="
+    if lower.contains("subir") || lower.contains("mejorar") { return "arrow.up" }
+    if lower.contains("bajar") { return "arrow.down" }
+    if lower.contains("molestia") { return "cross.case.fill" }
+    return "equal"
   }
 
-  private func decisionColor(_ option: String) -> Color {
-    let lower = option.lowercased()
-    if lower.contains("bajar") || lower.contains("molestia") { return Color.gymDanger }
-    if lower.contains("subir") { return Color.gymSuccess }
-    return Color.gymAccent
+  private func decisionLabel(for option: String) -> String {
+    option == "Marcar molestia" ? "Molestia" : option
   }
 
-  private func selectedFill(_ option: String) -> Color {
-    usesThemeAccent(option) ? Color.gymControlSelectionFill : decisionColor(option)
-  }
-
-  private func selectedForeground(_ option: String) -> Color {
-    usesThemeAccent(option) ? Color.gymControlSelectionForeground : .white
-  }
-
-  private func selectedBorder(_ option: String) -> Color {
-    usesThemeAccent(option) ? Color.gymAccent : decisionColor(option)
-  }
-
-  private func usesThemeAccent(_ option: String) -> Bool {
-    let lower = option.lowercased()
-    return !lower.contains("subir") && !lower.contains("bajar") && !lower.contains("molestia")
+  private struct DecisionGroup: Identifiable {
+    let title: String
+    let options: [String]
+    var id: String { title }
   }
 }
 
@@ -2573,10 +2590,12 @@ private struct ProgressActionButton: View {
 }
 
 private struct ActiveWorkoutProgressView: View {
-  let execution: WorkoutExecutionState
+  @Binding var execution: WorkoutExecutionState
   let onBack: () -> Void
   let onHome: () -> Void
+  let onExecutionChanged: () -> Void
   let onFinish: () -> Void
+  @State private var editor: RecordedSetEditDraft?
 
   private var completedSetCount: Int {
     execution.records.filter { $0.status == .completed }.count
@@ -2597,7 +2616,8 @@ private struct ActiveWorkoutProgressView: View {
           ExerciseProgressCard(
             exercise: exercise,
             exerciseIndex: index,
-            execution: execution
+            execution: execution,
+            onEdit: openEditor
           )
         }
       }
@@ -2643,6 +2663,34 @@ private struct ActiveWorkoutProgressView: View {
       }
       .padding(16)
     }
+    .sheet(item: $editor) { draft in
+      RecordedSetEditor(draft: draft, onConfirm: apply)
+        .presentationDetents([.medium])
+    }
+  }
+
+  private func openEditor(_ record: WorkoutSetRecord, _ execution: WorkoutExecutionState) {
+    guard let targets = execution.targets(for: record),
+          let exercise = execution.exercise(for: record.locator)
+    else { return }
+    editor = RecordedSetEditDraft(
+      locator: record.locator,
+      exerciseName: exercise.displayName,
+      equipment: execution.equipment(for: record) ?? exercise.equipment,
+      reps: targets.reps,
+      weightKg: targets.weightKg,
+      durationSeconds: targets.durationSeconds
+    )
+  }
+
+  private func apply(_ draft: RecordedSetEditDraft) {
+    guard execution.correctRecordedSet(
+      at: draft.locator,
+      reps: draft.reps,
+      weightKg: draft.weightKg,
+      durationSeconds: draft.durationSeconds
+    ) else { return }
+    onExecutionChanged()
   }
 }
 
@@ -2650,6 +2698,7 @@ private struct ExerciseProgressCard: View {
   let exercise: TrainingExercise
   let exerciseIndex: Int
   let execution: WorkoutExecutionState
+  let onEdit: (WorkoutSetRecord, WorkoutExecutionState) -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -2679,6 +2728,19 @@ private struct ExerciseProgressCard: View {
           Text(statusLabel(record))
             .font(.gymSupport.weight(.bold))
             .foregroundStyle(statusColor(record))
+          if let record, record.status == .completed {
+            Button {
+              onEdit(record, execution)
+            } label: {
+              Image(systemName: "pencil")
+                .font(.gymSupport.weight(.bold))
+                .frame(width: 32, height: 32)
+                .foregroundStyle(Color.gymAccentForeground)
+                .background(Color.gymAccent, in: Circle())
+            }
+            .accessibilityLabel("Corregir serie \(record.locator.setIndex)")
+            .buttonStyle(.plain)
+          }
         }
         .padding(.vertical, 7)
         .padding(.horizontal, 10)

@@ -251,9 +251,9 @@ enum TrainingBackup {
 
   private static func event(from record: WorkoutSetRecord, execution: WorkoutExecutionState, plan: TrainingPlan) -> Event? {
     guard let exercise = execution.exercise(for: record.locator),
-          let targets = execution.targets(for: record.locator),
+          let targets = execution.targets(for: record),
           let plannedSet = execution.trainingSet(for: record.locator) else { return nil }
-    let equipment = execution.equipment(for: record.locator) ?? exercise.equipment
+    let equipment = execution.equipment(for: record) ?? exercise.equipment
     let isTimed = targets.durationSeconds != nil
     let isSkipped = record.status == .skipped
     return Event(

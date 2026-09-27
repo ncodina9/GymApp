@@ -54,17 +54,31 @@ public struct WorkoutSetRecord: Codable, Equatable, Sendable {
   public let feedback: WorkoutSetFeedback
   public let performedAt: Date
   public let status: WorkoutSetStatus
+  /// Effective values are captured at registration time so later draft changes
+  /// cannot rewrite the historical result of an already completed set.
+  public let actualReps: Int?
+  public let actualWeightKg: Double?
+  public let actualDurationSeconds: Int?
+  public let actualEquipment: Equipment?
 
   public init(
     locator: WorkoutSetLocator,
     feedback: WorkoutSetFeedback,
     performedAt: Date,
-    status: WorkoutSetStatus = .completed
+    status: WorkoutSetStatus = .completed,
+    actualReps: Int? = nil,
+    actualWeightKg: Double? = nil,
+    actualDurationSeconds: Int? = nil,
+    actualEquipment: Equipment? = nil
   ) {
     self.locator = locator
     self.feedback = feedback
     self.performedAt = performedAt
     self.status = status
+    self.actualReps = actualReps
+    self.actualWeightKg = actualWeightKg
+    self.actualDurationSeconds = actualDurationSeconds
+    self.actualEquipment = actualEquipment
   }
 }
 
@@ -114,6 +128,45 @@ public struct WorkoutExecutionState: Codable, Sendable {
   public func equipment(for locator: WorkoutSetLocator) -> Equipment? {
     guard let exercise = exercise(for: locator) else { return nil }
     return draft.equipment(for: exercise.exerciseID)
+  }
+
+  public func targets(for record: WorkoutSetRecord) -> WorkoutSetTargets? {
+    guard let targets = targets(for: record.locator) else { return nil }
+    return WorkoutSetTargets(
+      reps: record.actualReps ?? targets.reps,
+      weightKg: record.actualWeightKg ?? targets.weightKg,
+      durationSeconds: record.actualDurationSeconds ?? targets.durationSeconds
+    )
+  }
+
+  public func equipment(for record: WorkoutSetRecord) -> Equipment? {
+    record.actualEquipment ?? equipment(for: record.locator)
+  }
+
+  @discardableResult
+  public mutating func correctRecordedSet(
+    at locator: WorkoutSetLocator,
+    reps: Int?,
+    weightKg: Double?,
+    durationSeconds: Int?
+  ) -> Bool {
+    guard let index = records.firstIndex(where: { $0.locator == locator }),
+          records[index].status == .completed,
+          let currentTargets = targets(for: records[index])
+    else { return false }
+
+    let existing = records[index]
+    records[index] = WorkoutSetRecord(
+      locator: existing.locator,
+      feedback: existing.feedback,
+      performedAt: existing.performedAt,
+      status: existing.status,
+      actualReps: reps ?? currentTargets.reps,
+      actualWeightKg: weightKg ?? currentTargets.weightKg,
+      actualDurationSeconds: durationSeconds ?? currentTargets.durationSeconds,
+      actualEquipment: equipment(for: existing)
+    )
+    return true
   }
 
   public mutating func selectEquipment(_ equipment: Equipment, for locator: WorkoutSetLocator) -> Bool {
@@ -220,12 +273,17 @@ public struct WorkoutExecutionState: Codable, Sendable {
       return nil
     }
 
+    let targets = targets(for: current)
     records.append(
       WorkoutSetRecord(
         locator: current,
         feedback: feedback,
         performedAt: performedAt,
-        status: status
+        status: status,
+        actualReps: status == .completed ? targets?.reps : nil,
+        actualWeightKg: status == .completed ? targets?.weightKg : nil,
+        actualDurationSeconds: status == .completed ? targets?.durationSeconds : nil,
+        actualEquipment: status == .completed ? equipment(for: current) : nil
       )
     )
     currentPosition += 1
