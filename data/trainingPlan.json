@@ -5859,7 +5859,7 @@
           "secondaryMuscles": ["core"],
           "phase": "intensificacion",
           "notes": "Sentado en banco para proteger la espalda. Bloquear abdomen antes de despegar.",
-          "target": "4x5 @ 25 kg",
+          "target": "4x5 @ 22.5 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -5872,28 +5872,28 @@
             {
               "setIndex": 1,
               "targetReps": 5,
-              "targetWeightKg": 25,
+              "targetWeightKg": 22.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 5,
-              "targetWeightKg": 25,
+              "targetWeightKg": 22.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 5,
-              "targetWeightKg": 25,
+              "targetWeightKg": 22.5,
               "restSeconds": 120,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 5,
-              "targetWeightKg": 25,
+              "targetWeightKg": 22.5,
               "restSeconds": 120,
               "type": "working"
             }
@@ -6128,7 +6128,7 @@
           "secondaryMuscles": ["lumbar", "espalda-alta"],
           "phase": "intensificacion",
           "notes": "Cadera atrás, espalda neutra y barra pegada.",
-          "target": "4x5 @ 80 kg",
+          "target": "4x5 @ 75 kg",
           "decisionOptions": [
             "Mantener",
             "Subir peso",
@@ -6141,28 +6141,28 @@
             {
               "setIndex": 1,
               "targetReps": 5,
-              "targetWeightKg": 80,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 2,
               "targetReps": 5,
-              "targetWeightKg": 80,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 3,
               "targetReps": 5,
-              "targetWeightKg": 80,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             },
             {
               "setIndex": 4,
               "targetReps": 5,
-              "targetWeightKg": 80,
+              "targetWeightKg": 75,
               "restSeconds": 150,
               "type": "working"
             }

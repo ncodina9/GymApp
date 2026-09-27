@@ -884,6 +884,10 @@ function adaptExercise(item, week) {
     weightKg = applyLaterFeedbackLoadAdjustment(item, weightKg);
   }
 
+  if (templateWeek === 5) {
+    weightKg = applyReturnWeek5LoadAdjustment(item, weightKg);
+  }
+
   if (templateWeek >= 5 && templateWeek <= 7 && isBasic(item)) {
     setCount = getIntensificationSetCount(item);
     reps = getIntensificationReps(item);
@@ -1093,6 +1097,18 @@ function applyWeek3RepAdjustment(item, reps) {
 function applyLaterFeedbackLoadAdjustment(item, weightKg) {
   if (item.exerciseId === 'press-banca-inclinado') {
     return 47.5;
+  }
+
+  return weightKg;
+}
+
+function applyReturnWeek5LoadAdjustment(item, weightKg) {
+  if (item.exerciseId === 'press-militar-sentado') {
+    return 45;
+  }
+
+  if (item.exerciseId === 'peso-muerto-rumano-barra') {
+    return 75;
   }
 
   return weightKg;
