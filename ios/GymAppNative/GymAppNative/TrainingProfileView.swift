@@ -327,8 +327,7 @@ private struct LoadInventorySection: View {
       LoadNumberField(label: "Peso de la barra", value: $profile.barbellWeightKg)
       LoadNumberField(label: "Peso de la Multipower", value: $profile.multipowerBarWeightKg)
     }
-    .padding(14)
-    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 16))
+    .padding(.vertical, 4)
   }
 }
 

@@ -42,12 +42,6 @@ struct SettingsView: View {
       VStack(alignment: .leading, spacing: 22) {
         SettingsCategory(title: "Entrenamiento") {
           SettingsRow(
-            title: "Próximos entrenamientos",
-            detail: "Consulta del plan pendiente",
-            destination: UpcomingWorkoutsView(plan: plan)
-          )
-          SettingsDivider()
-          SettingsRow(
             title: "Calentamiento",
             detail: "Tiempo previo antes de la primera serie",
             destination: WarmupSettingsView()
@@ -61,8 +55,8 @@ struct SettingsView: View {
           SettingsDivider()
           SettingsRow(
             title: "Planificación",
-            detail: "Revisiones y propuestas del entrenador",
-            destination: PlanRevisionsView(plan: plan)
+            detail: "Calendario, sesiones, revisiones y datos locales",
+            destination: PlanningHubView(plan: plan)
           )
           SettingsDivider()
           SettingsRow(
@@ -85,14 +79,6 @@ struct SettingsView: View {
             title: "Apple Salud",
             detail: "Registrar sesiones de fuerza finalizadas",
             destination: HealthSettingsView()
-          )
-        }
-
-        SettingsCategory(title: "Datos locales") {
-          SettingsRow(
-            title: "Exportación",
-            detail: "Backup, CSV y datos locales",
-            destination: ExportSettingsView(plan: plan)
           )
         }
 
@@ -743,10 +729,13 @@ private struct AppearanceSegmentedSelector: View {
   }
 }
 
-private struct UpcomingWorkoutsView: View {
+private struct PlanningHubView: View {
   let plan: TrainingPlan
   @Query private var completedRecords: [CompletedWorkoutRecord]
   @Environment(\.dismiss) private var dismiss
+  @State private var displayMode: ScheduleDisplayMode = .calendar
+  @State private var displayedMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: .now)) ?? .now
+  @State private var selectedDay: Date?
 
   private var upcomingSessions: [TrainingSession] {
     let completed = Set(completedRecords.map(\.sessionID))
@@ -754,18 +743,70 @@ private struct UpcomingWorkoutsView: View {
     return plan.sessions.filter { $0.date >= today && !completed.contains($0.sessionID) }
   }
 
+  private var sessionsByDay: [Date: [TrainingSession]] {
+    Dictionary(grouping: plan.sessions, by: { Self.day(for: $0.date) })
+  }
+
+  private var selectedSessions: [TrainingSession] {
+    guard let selectedDay else { return [] }
+    return sessionsByDay[Calendar.current.startOfDay(for: selectedDay)] ?? []
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
-        LazyVStack(spacing: 12) {
-          ForEach(upcomingSessions) { session in
-            NavigationLink {
-              SessionPreviewView(session: session, onReturnHome: {}, readOnly: true)
-            } label: {
-              WeekSessionCard(session: session, isRecommended: false, isInProgress: false, isCompleted: false)
-            }
-            .buttonStyle(.plain)
+        Picker("Vista", selection: $displayMode) {
+          ForEach(ScheduleDisplayMode.allCases) { mode in
+            Label(mode.label, systemImage: mode.symbol).tag(mode)
           }
+        }
+        .pickerStyle(.segmented)
+
+        if displayMode == .calendar {
+          TrainingCalendarGrid(
+            displayedMonth: $displayedMonth,
+            selectedDay: $selectedDay,
+            sessionsByDay: sessionsByDay,
+            completedSessionIDs: Set(completedRecords.map(\.sessionID))
+          )
+
+          if selectedSessions.isEmpty {
+            ContentUnavailableView(
+              "Sin entrenamiento este día",
+              systemImage: "calendar",
+              description: Text("Elige un día marcado para consultar su sesión."))
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 22)
+          } else {
+            ForEach(selectedSessions) { session in
+              PlanningSessionCard(session: session, record: completedRecord(for: session))
+            }
+          }
+        } else {
+          LazyVStack(spacing: 12) {
+            ForEach(upcomingSessions) { session in
+              NavigationLink {
+                SessionPreviewView(session: session, onReturnHome: {}, readOnly: true)
+              } label: {
+                WeekSessionCard(session: session, isRecommended: false, isInProgress: false, isCompleted: false)
+              }
+              .buttonStyle(.plain)
+            }
+          }
+        }
+
+        SettingsCategory(title: "Plan y datos") {
+          SettingsRow(
+            title: "Revisiones del plan",
+            detail: "Propuestas pendientes y cambios aceptados",
+            destination: PlanRevisionsView(plan: plan)
+          )
+          SettingsDivider()
+          SettingsRow(
+            title: "Gestión de datos locales",
+            detail: "Backup, importación y sesiones guardadas",
+            destination: ExportSettingsView(plan: plan)
+          )
         }
       }
       .padding(16)
@@ -774,8 +815,30 @@ private struct UpcomingWorkoutsView: View {
     .background(GymCanvas())
     .navigationBarBackButtonHidden()
     .toolbar(.hidden, for: .navigationBar)
-    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Próximos entrenamientos") }
+    .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Planificación", detail: "Calendario, sesiones y revisiones") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+    .onAppear {
+      guard selectedDay == nil else { return }
+      let firstRelevant = plan.sessions
+        .map { Self.day(for: $0.date) }
+        .first(where: { $0 >= Calendar.current.startOfDay(for: .now) })
+        ?? sessionsByDay.keys.sorted().last
+      guard let firstRelevant else { return }
+      selectedDay = firstRelevant
+      displayedMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: firstRelevant)) ?? firstRelevant
+    }
+  }
+
+  private func completedRecord(for session: TrainingSession) -> CompletedWorkoutRecord? {
+    completedRecords.first(where: { $0.sessionID == session.sessionID })
+  }
+
+  private static func day(for value: String) -> Date {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return Calendar.current.startOfDay(for: formatter.date(from: value) ?? .distantPast)
   }
 
   private static var todayISODate: String {
@@ -784,6 +847,172 @@ private struct UpcomingWorkoutsView: View {
     formatter.timeZone = .current
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.string(from: .now)
+  }
+}
+
+private enum ScheduleDisplayMode: String, CaseIterable, Identifiable {
+  case calendar
+  case list
+
+  var id: String { rawValue }
+  var label: String { self == .calendar ? "Calendario" : "Lista" }
+  var symbol: String { self == .calendar ? "calendar" : "list.bullet" }
+}
+
+private struct TrainingCalendarGrid: View {
+  @Binding var displayedMonth: Date
+  @Binding var selectedDay: Date?
+  let sessionsByDay: [Date: [TrainingSession]]
+  let completedSessionIDs: Set<String>
+
+  private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+  private let calendar = Calendar.current
+
+  var body: some View {
+    VStack(spacing: 12) {
+      HStack {
+        Button { moveMonth(by: -1) } label: {
+          Image(systemName: "chevron.left").frame(width: 36, height: 36)
+        }
+        .buttonStyle(.plain)
+        Spacer()
+        Text(Self.monthFormatter.string(from: displayedMonth).capitalized)
+          .font(.gymH2.weight(.bold))
+        Spacer()
+        Button { moveMonth(by: 1) } label: {
+          Image(systemName: "chevron.right").frame(width: 36, height: 36)
+        }
+        .buttonStyle(.plain)
+      }
+
+      LazyVGrid(columns: columns, spacing: 8) {
+        ForEach(["L", "M", "X", "J", "V", "S", "D"], id: \.self) { label in
+          Text(label)
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymSecondaryText)
+            .frame(maxWidth: .infinity)
+        }
+
+        ForEach(Array(daysInGrid.enumerated()), id: \.offset) { _, day in
+          if let day {
+            dayButton(day)
+          } else {
+            Color.clear.frame(height: 40)
+          }
+        }
+      }
+    }
+    .padding(14)
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 16))
+  }
+
+  private var daysInGrid: [Date?] {
+    guard let interval = calendar.dateInterval(of: .month, for: displayedMonth),
+          let dayCount = calendar.range(of: .day, in: .month, for: displayedMonth)?.count else { return [] }
+    let weekday = calendar.component(.weekday, from: interval.start)
+    let leadingDays = (weekday + 5) % 7
+    return Array(repeating: nil, count: leadingDays) + (0 ..< dayCount).compactMap {
+      calendar.date(byAdding: .day, value: $0, to: interval.start)
+    }
+  }
+
+  private func dayButton(_ day: Date) -> some View {
+    let normalized = calendar.startOfDay(for: day)
+    let sessions = sessionsByDay[normalized] ?? []
+    let isSelected = selectedDay.map { calendar.isDate($0, inSameDayAs: normalized) } ?? false
+    let isCompleted = !sessions.isEmpty && sessions.allSatisfy { completedSessionIDs.contains($0.sessionID) }
+    let isToday = calendar.isDateInToday(normalized)
+    return Button { selectedDay = normalized } label: {
+      Text("\(calendar.component(.day, from: day))")
+        .font(.gymSupport.weight(isSelected || isToday ? .bold : .medium))
+      .frame(maxWidth: .infinity, minHeight: 40)
+      .foregroundStyle(isSelected ? Color.gymAccentForeground : .primary)
+      .background(dayFill(hasSession: !sessions.isEmpty, isCompleted: isCompleted, isToday: isToday, isSelected: isSelected), in: RoundedRectangle(cornerRadius: 12))
+      .overlay {
+        RoundedRectangle(cornerRadius: 12)
+          .stroke(isToday && !isSelected ? Color.gymAccent : .clear, lineWidth: 1.5)
+      }
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(Self.dayFormatter.string(from: day))
+  }
+
+  private func dayFill(hasSession: Bool, isCompleted: Bool, isToday: Bool, isSelected: Bool) -> Color {
+    if isSelected { return Color.gymAccent }
+    if isToday { return Color.gymTertiary.opacity(0.24) }
+    if isCompleted { return Color.gymCompleted.opacity(0.22) }
+    if hasSession { return Color.gymAccent.opacity(0.18) }
+    return .clear
+  }
+
+  private func moveMonth(by offset: Int) {
+    displayedMonth = calendar.date(byAdding: .month, value: offset, to: displayedMonth) ?? displayedMonth
+  }
+
+  private static let monthFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateFormat = "LLLL yyyy"
+    return formatter
+  }()
+
+  private static let dayFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateStyle = .long
+    return formatter
+  }()
+}
+
+private struct PlanningSessionCard: View {
+  let session: TrainingSession
+  let record: CompletedWorkoutRecord?
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      WeekSessionCard(
+        session: session,
+        isRecommended: false,
+        isInProgress: false,
+        isCompleted: record != nil
+      )
+
+      if let record {
+        HStack(spacing: 10) {
+          NavigationLink {
+            CompletedWorkoutDetailView(record: record)
+          } label: {
+            Label("Histórico", systemImage: "clock.arrow.circlepath")
+              .frame(maxWidth: .infinity, minHeight: 44)
+          }
+          .buttonStyle(.bordered)
+
+          if let csvURL = Self.csvURL(for: record) {
+            ShareLink(item: csvURL) {
+              Label("Exportar", systemImage: "square.and.arrow.up")
+                .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.bordered)
+          }
+        }
+      } else {
+        NavigationLink {
+          SessionPreviewView(session: session, onReturnHome: {}, readOnly: true)
+        } label: {
+          Label("Ver previsualización", systemImage: "play.circle")
+            .font(.gymBody.weight(.semibold))
+            .frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .buttonStyle(.bordered)
+      }
+    }
+  }
+
+  private static func csvURL(for record: CompletedWorkoutRecord) -> URL? {
+    guard let data = record.executionData,
+          let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data) else { return nil }
+    let decisions = record.decisionsData.flatMap { try? JSONDecoder().decode([String: String].self, from: $0) } ?? [:]
+    return try? WorkoutCSVExporter.write(session: execution.session, execution: execution, exerciseDecisions: decisions)
   }
 }
 
