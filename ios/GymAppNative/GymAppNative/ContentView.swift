@@ -6,6 +6,7 @@ struct ContentView: View {
   @State private var plan: TrainingPlan?
   @State private var loadingError: String?
   @Query private var trainingProfiles: [TrainingProfileRecord]
+  @Query private var planRevisionRecords: [PlanRevisionRecord]
   @AppStorage("trainingProfileOnboardingDeferred") private var onboardingDeferred = false
 
   var body: some View {
@@ -13,7 +14,7 @@ struct ContentView: View {
       if TrainingProfileStore.load(from: trainingProfiles) == nil, !onboardingDeferred {
         TrainingProfileOnboardingView(onDefer: { onboardingDeferred = true })
       } else if let plan {
-        TodayView(plan: plan)
+        TodayView(plan: PlanRevisionStore.resolvedPlan(basePlan: plan, records: planRevisionRecords))
       } else if let loadingError {
         ContentUnavailableView(
           "No se pudo cargar el plan",

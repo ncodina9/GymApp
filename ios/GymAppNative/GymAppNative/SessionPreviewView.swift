@@ -8,6 +8,7 @@ struct SessionPreviewView: View {
   let readOnly: Bool
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
+  @Query private var trainingProfileRecords: [TrainingProfileRecord]
   @AppStorage("warmupEnabled") private var warmupEnabled = true
   @AppStorage("warmupMinutes") private var warmupMinutes = 9
   @State private var showsExecution = false
@@ -38,6 +39,10 @@ struct SessionPreviewView: View {
 
   private var currentActiveWorkout: ActiveWorkoutSnapshot? {
     ActiveWorkoutStore.load(from: activeWorkoutRecords)
+  }
+
+  private var loadInventory: EquipmentLoadInventory {
+    (TrainingProfileStore.load(from: trainingProfileRecords) ?? .initial).loadInventory
   }
 
   private var warmupIsVisible: Bool {
@@ -137,7 +142,7 @@ struct SessionPreviewView: View {
       if let executionSnapshot {
         SetExecutionView(snapshot: executionSnapshot, onFinishToToday: returnToToday)
       } else {
-        SetExecutionView(session: session, onFinishToToday: returnToToday)
+        SetExecutionView(session: session, loadInventory: loadInventory, onFinishToToday: returnToToday)
       }
     }
     .alert("Empezar de nuevo", isPresented: $showsRestartConfirmation) {
@@ -291,7 +296,7 @@ struct SessionPreviewView: View {
     let seconds = max(1, warmupMinutes) * 60
     ActiveWorkoutStore.save(
       ActiveWorkoutSnapshot(
-        execution: WorkoutExecutionState(session: session),
+        execution: WorkoutExecutionState(session: session, loadInventory: loadInventory),
         phase: .workingSet,
         feedback: .init(rir: 2, painKnee: 0, painWrist: 0, painShoulder: 0, painLowerBack: 0, note: "OK"),
         restEndsAt: nil,

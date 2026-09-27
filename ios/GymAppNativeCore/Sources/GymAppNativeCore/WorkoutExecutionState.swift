@@ -96,9 +96,9 @@ public struct WorkoutExecutionState: Codable, Sendable {
   private var order: [WorkoutSetLocator]
   private var currentPosition: Int
 
-  public init(session: TrainingSession) {
+  public init(session: TrainingSession, loadInventory: EquipmentLoadInventory = .standard) {
     self.session = session
-    draft = WorkoutSessionDraft(session: session)
+    draft = WorkoutSessionDraft(session: session, loadInventory: loadInventory)
     records = []
     order = Self.makeOrder(for: session)
     currentPosition = 0
@@ -110,6 +110,7 @@ public struct WorkoutExecutionState: Codable, Sendable {
 
   public var completedSetCount: Int { records.count }
   public var totalSetCount: Int { order.count }
+  public var loadInventory: EquipmentLoadInventory { draft.loadInventory }
 
   public func exercise(for locator: WorkoutSetLocator) -> TrainingExercise? {
     guard session.exercises.indices.contains(locator.exerciseIndex) else { return nil }

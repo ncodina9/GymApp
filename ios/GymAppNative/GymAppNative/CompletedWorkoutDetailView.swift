@@ -84,6 +84,7 @@ struct CompletedWorkoutDetailView: View {
       locator: record.locator,
       exerciseName: exercise.displayName,
       equipment: execution.equipment(for: record) ?? exercise.equipment,
+      inventory: execution.loadInventory,
       reps: targets.reps,
       weightKg: targets.weightKg,
       durationSeconds: targets.durationSeconds
@@ -182,6 +183,7 @@ struct RecordedSetEditDraft: Identifiable {
   let locator: WorkoutSetLocator
   let exerciseName: String
   let equipment: Equipment
+  let inventory: EquipmentLoadInventory
   var reps: Int?
   var weightKg: Double
   var durationSeconds: Int?
@@ -269,7 +271,8 @@ struct RecordedSetEditor: View {
     draft.weightKg = EquipmentLoadRules.adjustedWeight(
       from: draft.weightKg,
       equipment: draft.equipment,
-      direction: direction
+      direction: direction,
+      inventory: draft.inventory
     )
   }
 

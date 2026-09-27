@@ -16,14 +16,18 @@ public struct WorkoutSessionDraft: Codable, Sendable {
   public let session: TrainingSession
   private var equipmentByExerciseID: [String: Equipment]
   private var targetOverrides: [SetTargetKey: TargetOverride]
+  private var loadInventoryOverride: EquipmentLoadInventory?
 
-  public init(session: TrainingSession) {
+  public init(session: TrainingSession, loadInventory: EquipmentLoadInventory = .standard) {
     self.session = session
     equipmentByExerciseID = Dictionary(
       uniqueKeysWithValues: session.exercises.map { ($0.exerciseID, $0.equipment) }
     )
     targetOverrides = [:]
+    loadInventoryOverride = loadInventory
   }
+
+  public var loadInventory: EquipmentLoadInventory { loadInventoryOverride ?? .standard }
 
   public func equipment(for exerciseID: String) -> Equipment? {
     equipmentByExerciseID[exerciseID]
@@ -47,7 +51,8 @@ public struct WorkoutSessionDraft: Codable, Sendable {
       reps: override?.reps ?? trainingSet.targetReps,
       weightKg: EquipmentLoadRules.weightForReferenceWeight(
         referenceWeightKg,
-        equipment: equipment
+        equipment: equipment,
+        inventory: loadInventory
       ),
       durationSeconds: override?.durationSeconds ?? trainingSet.targetDurationSeconds
     )
@@ -66,7 +71,8 @@ public struct WorkoutSessionDraft: Codable, Sendable {
       )
       return EquipmentLoadRules.canUse(
         equipment: equipment,
-        referenceWeightKg: referenceWeightKg
+        referenceWeightKg: referenceWeightKg,
+        inventory: loadInventory
       )
     }
   }

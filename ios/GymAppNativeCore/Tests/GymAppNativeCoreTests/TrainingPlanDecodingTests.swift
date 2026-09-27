@@ -155,6 +155,22 @@ struct TrainingPlanDecodingTests {
     #expect(!EquipmentLoadRules.canUse(equipment: .dumbbell, referenceWeightKg: 65))
   }
 
+  @Test("Usa el inventario personalizado para cargas y barras")
+  func usesCustomLoadInventory() {
+    let inventory = EquipmentLoadInventory(
+      dumbbellLoadsKg: [8, 14, 18],
+      plates: [.init(weightKg: 2.5, count: 4), .init(weightKg: 10, count: 4)],
+      cableStepKg: 2.5,
+      cableMaximumKg: 50,
+      barbellWeightKg: 15,
+      multipowerBarWeightKg: 12
+    )
+
+    #expect(EquipmentLoadRules.weightForReferenceWeight(30, equipment: .dumbbell, inventory: inventory) == 14)
+    #expect(EquipmentLoadRules.availableLoads(for: .cable, inventory: inventory).prefix(3) == [2.5, 5, 7.5])
+    #expect(EquipmentLoadRules.plateLayout(totalWeightKg: 35, equipment: .barbell, inventory: inventory)?.barWeightKg == 15)
+  }
+
   @Test("Desglosa los discos de una barra por lado")
   func createsPlateLayoutForBarbell() {
     let layout = EquipmentLoadRules.plateLayout(totalWeightKg: 70, equipment: .barbell)

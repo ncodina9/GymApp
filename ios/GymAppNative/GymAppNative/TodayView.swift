@@ -43,7 +43,12 @@ struct TodayView: View {
 
   private var weekSessions: [TrainingSession] {
     guard let recommendedSession else { return [] }
-    return plan.sessions.filter { $0.week == recommendedSession.week }
+    var sessions = plan.sessions.filter { $0.week == recommendedSession.week }
+    if let activeSession = activeWorkout?.execution.session,
+       !sessions.contains(where: { $0.sessionID == activeSession.sessionID }) {
+      sessions.append(activeSession)
+    }
+    return sessions.sorted { $0.date < $1.date }
   }
 
   private var activeWorkout: ActiveWorkoutSnapshot? {

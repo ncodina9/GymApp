@@ -75,11 +75,13 @@ struct TrainingProfileSettingsView: View {
     ScrollView {
       VStack(alignment: .leading, spacing: 22) {
         ProfileGoalStep(profile: $draft, showsTitle: false)
+        ProfileSectionDivider()
         ProfileScheduleStep(profile: $draft, showsTitle: false)
+        ProfileSectionDivider()
         ProfileContextStep(profile: $draft, showsTitle: false)
       }
       .padding(16)
-      .padding(.bottom, 96)
+      .padding(.bottom, 92)
     }
     .background(GymCanvas())
     .navigationBarBackButtonHidden()
@@ -88,25 +90,25 @@ struct TrainingProfileSettingsView: View {
       AccentHeaderCard(title: "Perfil de entrenamiento", detail: "Se aplicará a planes y propuestas futuras")
     }
     .overlay(alignment: .bottom) {
-      Button("Guardar perfil", action: save)
-        .font(.gymH2.weight(.bold))
-        .frame(maxWidth: .infinity, minHeight: 60)
-        .foregroundStyle(Color.gymAccentForeground)
-        .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
-        .padding(.horizontal, 16)
-        .padding(.bottom, 16)
-    }
-    .overlay(alignment: .bottomLeading) {
-      Button(action: dismiss.callAsFunction) {
-        Image(systemName: "chevron.left")
+      HStack(spacing: 12) {
+        Button(action: dismiss.callAsFunction) {
+          Image(systemName: "chevron.left")
+            .font(.gymH2.weight(.bold))
+            .frame(width: 56, height: 56)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Circle())
+        }
+        .accessibilityLabel("Atrás")
+        .buttonStyle(.plain)
+
+        Button("Guardar perfil", action: save)
           .font(.gymH2.weight(.bold))
-          .frame(width: 56, height: 56)
-          .foregroundStyle(.primary)
-          .glassEffect(.regular.interactive(), in: Circle())
+          .frame(maxWidth: .infinity, minHeight: 60)
+          .foregroundStyle(Color.gymAccentForeground)
+          .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+          .buttonStyle(.plain)
       }
-      .accessibilityLabel("Atrás")
-      .buttonStyle(.plain)
-      .padding(.leading, 20)
+      .padding(.horizontal, 16)
       .padding(.bottom, 8)
     }
     .onAppear {
@@ -287,12 +289,220 @@ private struct ProfileContextStep: View {
           }
         }
 
+        ProfileSectionDivider()
+        LoadInventorySection(profile: $profile)
+
+        ProfileSectionDivider()
         ProfileTextField(label: "Prioridades musculares", placeholder: "Ej. pecho, espalda y piernas", value: $profile.priorityText)
         ProfileTextField(label: "Preferencias", placeholder: "Ej. prefiero ejercicios con barra", value: $profile.exercisePreferences)
         ProfileTextField(label: "Ejercicios a evitar", placeholder: "Ej. fondos", value: $profile.exercisesToAvoid)
         ProfileTextField(label: "Limitaciones o molestias", placeholder: "Ej. hombro derecho sensible", value: $profile.limitations)
       }
     }
+  }
+}
+
+private struct LoadInventorySection: View {
+  @Binding var profile: TrainingProfile
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Cargas disponibles")
+        .font(.gymH3.weight(.bold))
+      Text("Añade cada peso y sus unidades. Toca una carga para eliminarla.")
+        .font(.gymSupport)
+        .foregroundStyle(Color.gymSecondaryText)
+
+      LoadInventoryEditor(
+        title: "Mancuernas",
+        values: $profile.dumbbellWeightsKg,
+        unitsByWeight: $profile.dumbbellUnitsByWeight
+      )
+      LoadInventoryEditor(
+        title: "Discos",
+        values: $profile.plateWeightsKg,
+        unitsByWeight: $profile.plateUnitsByWeight
+      )
+      LoadNumberField(label: "Paso de las poleas", value: $profile.cableStepKg)
+      LoadNumberField(label: "Peso de la barra", value: $profile.barbellWeightKg)
+      LoadNumberField(label: "Peso de la Multipower", value: $profile.multipowerBarWeightKg)
+    }
+    .padding(14)
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 16))
+  }
+}
+
+private struct LoadInventoryEditor: View {
+  let title: String
+  @Binding var values: [Double]
+  @Binding var unitsByWeight: [String: Int]
+  @State private var weightText = ""
+  @State private var units = 2
+  @State private var selectedWeights: Set<Double> = []
+
+  private let chipColumns = [GridItem(.adaptive(minimum: 78), spacing: 8, alignment: .leading)]
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(title).font(.gymH3.weight(.bold))
+
+      HStack(spacing: 8) {
+        TextField("Peso en kg", text: $weightText)
+          .font(.gymBody.weight(.semibold))
+          .keyboardType(.decimalPad)
+          .padding(.horizontal, 12)
+          .frame(minHeight: 44)
+          .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+          .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.35), lineWidth: 1) }
+
+        Button(action: add) {
+          Image(systemName: "plus")
+            .font(.gymH3.weight(.bold))
+            .frame(width: 44, height: 44)
+            .foregroundStyle(Color.gymAccentForeground)
+            .background(Color.gymAccent, in: Circle())
+        }
+        .accessibilityLabel("Añadir \(title.lowercased())")
+        .buttonStyle(.plain)
+        .disabled(parsedWeight == nil)
+        .opacity(parsedWeight == nil ? 0.45 : 1)
+      }
+
+      HStack(spacing: 10) {
+        Text("Unidades")
+          .font(.gymSupport.weight(.semibold))
+          .foregroundStyle(Color.gymSecondaryText)
+        Spacer()
+        Button { units = max(1, units - 1) } label: {
+          Image(systemName: "minus")
+            .font(.gymBody.weight(.bold))
+            .frame(width: 36, height: 36)
+            .background(Color.gymSurface, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(units == 1)
+        .opacity(units == 1 ? 0.4 : 1)
+
+        Text("\(units) ud")
+          .font(.gymBody.weight(.bold))
+          .frame(minWidth: 44)
+
+        Button { units = min(99, units + 1) } label: {
+          Image(systemName: "plus")
+            .font(.gymBody.weight(.bold))
+            .frame(width: 36, height: 36)
+            .foregroundStyle(Color.gymAccentForeground)
+            .background(Color.gymAccent, in: Circle())
+        }
+        .buttonStyle(.plain)
+      }
+
+      if !values.isEmpty {
+        LazyVGrid(columns: chipColumns, alignment: .leading, spacing: 8) {
+          ForEach(values, id: \.self) { weight in
+            Button { toggleSelection(weight) } label: {
+              VStack(spacing: 2) {
+                Text("\(weight.formatted(.number.precision(.fractionLength(0 ... 2)))) kg")
+                  .font(.gymBody.weight(.bold))
+                Text("\(units(for: weight)) ud")
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+              }
+              .frame(maxWidth: .infinity, minHeight: 50)
+              .padding(.horizontal, 6)
+              .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+              .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                  .stroke(selectedWeights.contains(weight) ? Color.gymAccent : Color.gymAccent.opacity(0.35), lineWidth: selectedWeights.contains(weight) ? 2 : 1)
+              }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Seleccionar \(weight.formatted()) kg")
+          }
+        }
+
+        if !selectedWeights.isEmpty {
+          Button(role: .destructive, action: removeSelected) {
+            Label("Eliminar seleccionados", systemImage: "trash")
+              .font(.gymBody.weight(.semibold))
+              .frame(maxWidth: .infinity, minHeight: 44)
+          }
+          .buttonStyle(.bordered)
+        }
+      }
+    }
+  }
+
+  private var parsedWeight: Double? {
+    Double(weightText.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: "."))
+      .flatMap { $0 > 0 ? ($0 * 100).rounded() / 100 : nil }
+  }
+
+  private func add() {
+    guard let weight = parsedWeight else { return }
+    if !values.contains(where: { abs($0 - weight) < 0.001 }) {
+      values.append(weight)
+      values.sort()
+    }
+    unitsByWeight[loadKey(weight)] = units
+    weightText = ""
+    selectedWeights.remove(weight)
+  }
+
+  private func toggleSelection(_ weight: Double) {
+    if selectedWeights.contains(weight) {
+      selectedWeights.remove(weight)
+    } else {
+      selectedWeights.insert(weight)
+    }
+  }
+
+  private func removeSelected() {
+    values.removeAll { selectedWeights.contains($0) }
+    for weight in selectedWeights {
+      unitsByWeight.removeValue(forKey: loadKey(weight))
+    }
+    selectedWeights.removeAll()
+  }
+
+  private func units(for weight: Double) -> Int {
+    max(1, unitsByWeight[loadKey(weight)] ?? 2)
+  }
+
+  private func loadKey(_ weight: Double) -> String {
+    String(format: "%.2f", weight)
+  }
+}
+
+private struct LoadNumberField: View {
+  let label: String
+  @Binding var value: Double
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(label).font(.gymH3.weight(.bold))
+      HStack {
+        Spacer()
+      TextField("kg", value: $value, format: .number.precision(.fractionLength(0 ... 2)))
+        .font(.gymBody.weight(.bold))
+        .multilineTextAlignment(.trailing)
+        .keyboardType(.decimalPad)
+        .frame(width: 88)
+      Text("kg").font(.gymSupport).foregroundStyle(Color.gymSecondaryText)
+      }
+      .padding(12)
+      .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 14))
+      .overlay { RoundedRectangle(cornerRadius: 14).stroke(Color.secondary.opacity(0.35), lineWidth: 1) }
+    }
+  }
+}
+
+private struct ProfileSectionDivider: View {
+  var body: some View {
+    Rectangle()
+      .fill(Color.gymAccent.opacity(0.18))
+      .frame(height: 1)
+      .padding(.vertical, 4)
   }
 }
 

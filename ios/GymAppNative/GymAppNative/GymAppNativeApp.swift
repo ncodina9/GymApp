@@ -33,7 +33,12 @@ struct GymAppNativeApp: App {
           UIApplication.shared.isIdleTimerDisabled = enabled
         }
     }
-    .modelContainer(for: [ActiveWorkoutRecord.self, CompletedWorkoutRecord.self, TrainingProfileRecord.self])
+    .modelContainer(for: [
+      ActiveWorkoutRecord.self,
+      CompletedWorkoutRecord.self,
+      TrainingProfileRecord.self,
+      PlanRevisionRecord.self
+    ])
     .onChange(of: appearanceRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }
     .onChange(of: premiumSchemeRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }
   }
@@ -43,6 +48,7 @@ struct GymAppNativeApp: App {
 private struct WatchWorkoutSyncHost: View {
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
+  @Query private var planRevisionRecords: [PlanRevisionRecord]
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
   @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
   @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
@@ -70,6 +76,7 @@ private struct WatchWorkoutSyncHost: View {
       .onChange(of: accentRaw) { _, _ in synchronize() }
       .onChange(of: premiumSchemeRaw) { _, _ in synchronize() }
       .onChange(of: plan?.planID) { _, _ in synchronize() }
+      .onChange(of: planRevisionRecords.map(\.updatedAt)) { _, _ in synchronize() }
       .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutCommandReceived)) { notification in
         guard let envelope = notification.object as? WatchWorkoutCommandEnvelope else { return }
         if let handler = WatchWorkoutCommandRouter.shared.handler {
@@ -82,8 +89,9 @@ private struct WatchWorkoutSyncHost: View {
 
   private func synchronize() {
     let activeWorkout = ActiveWorkoutStore.load(from: activeWorkoutRecords)
+    let resolvedPlan = plan.map { PlanRevisionStore.resolvedPlan(basePlan: $0, records: planRevisionRecords) }
     let sessions = todaySessions(
-      from: plan,
+      from: resolvedPlan,
       activeWorkout: activeWorkout,
       completedSessionIDs: Set(completedWorkoutRecords.map(\.sessionID))
     )

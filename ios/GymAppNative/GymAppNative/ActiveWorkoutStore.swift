@@ -120,10 +120,84 @@ struct TrainingProfile: Codable, Equatable {
   var trainingWeekdays: Set<Int>
   var sessionDurationMinutes: Int
   var availableEquipment: Set<Equipment>
+  var dumbbellWeightsKg: [Double]
+  var dumbbellUnitsByWeight: [String: Int]
+  var plateWeightsKg: [Double]
+  var plateUnitsByWeight: [String: Int]
+  var cableStepKg: Double
+  var barbellWeightKg: Double
+  var multipowerBarWeightKg: Double
   var priorityMuscleGroups: [String]
   var exercisePreferences: String
   var exercisesToAvoid: String
   var limitations: String
+
+  init(
+    goal: TrainingGoal,
+    targetTimeframeWeeks: Int,
+    experience: TrainingExperience,
+    trainingWeekdays: Set<Int>,
+    sessionDurationMinutes: Int,
+    availableEquipment: Set<Equipment>,
+    dumbbellWeightsKg: [Double],
+    dumbbellUnitsByWeight: [String: Int],
+    plateWeightsKg: [Double],
+    plateUnitsByWeight: [String: Int],
+    cableStepKg: Double,
+    barbellWeightKg: Double,
+    multipowerBarWeightKg: Double,
+    priorityMuscleGroups: [String],
+    exercisePreferences: String,
+    exercisesToAvoid: String,
+    limitations: String
+  ) {
+    self.goal = goal
+    self.targetTimeframeWeeks = targetTimeframeWeeks
+    self.experience = experience
+    self.trainingWeekdays = trainingWeekdays
+    self.sessionDurationMinutes = sessionDurationMinutes
+    self.availableEquipment = availableEquipment
+    self.dumbbellWeightsKg = dumbbellWeightsKg
+    self.dumbbellUnitsByWeight = dumbbellUnitsByWeight
+    self.plateWeightsKg = plateWeightsKg
+    self.plateUnitsByWeight = plateUnitsByWeight
+    self.cableStepKg = cableStepKg
+    self.barbellWeightKg = barbellWeightKg
+    self.multipowerBarWeightKg = multipowerBarWeightKg
+    self.priorityMuscleGroups = priorityMuscleGroups
+    self.exercisePreferences = exercisePreferences
+    self.exercisesToAvoid = exercisesToAvoid
+    self.limitations = limitations
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case goal, targetTimeframeWeeks, experience, trainingWeekdays, sessionDurationMinutes
+    case availableEquipment, dumbbellWeightsKg, dumbbellUnitsByWeight, plateWeightsKg, plateUnitsByWeight, cableStepKg
+    case barbellWeightKg, multipowerBarWeightKg, priorityMuscleGroups
+    case exercisePreferences, exercisesToAvoid, limitations
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = TrainingProfile.initial
+    goal = try container.decodeIfPresent(TrainingGoal.self, forKey: .goal) ?? defaults.goal
+    targetTimeframeWeeks = try container.decodeIfPresent(Int.self, forKey: .targetTimeframeWeeks) ?? defaults.targetTimeframeWeeks
+    experience = try container.decodeIfPresent(TrainingExperience.self, forKey: .experience) ?? defaults.experience
+    trainingWeekdays = try container.decodeIfPresent(Set<Int>.self, forKey: .trainingWeekdays) ?? defaults.trainingWeekdays
+    sessionDurationMinutes = try container.decodeIfPresent(Int.self, forKey: .sessionDurationMinutes) ?? defaults.sessionDurationMinutes
+    availableEquipment = try container.decodeIfPresent(Set<Equipment>.self, forKey: .availableEquipment) ?? defaults.availableEquipment
+    dumbbellWeightsKg = try container.decodeIfPresent([Double].self, forKey: .dumbbellWeightsKg) ?? defaults.dumbbellWeightsKg
+    dumbbellUnitsByWeight = try container.decodeIfPresent([String: Int].self, forKey: .dumbbellUnitsByWeight) ?? defaults.dumbbellUnitsByWeight
+    plateWeightsKg = try container.decodeIfPresent([Double].self, forKey: .plateWeightsKg) ?? defaults.plateWeightsKg
+    plateUnitsByWeight = try container.decodeIfPresent([String: Int].self, forKey: .plateUnitsByWeight) ?? defaults.plateUnitsByWeight
+    cableStepKg = try container.decodeIfPresent(Double.self, forKey: .cableStepKg) ?? defaults.cableStepKg
+    barbellWeightKg = try container.decodeIfPresent(Double.self, forKey: .barbellWeightKg) ?? defaults.barbellWeightKg
+    multipowerBarWeightKg = try container.decodeIfPresent(Double.self, forKey: .multipowerBarWeightKg) ?? defaults.multipowerBarWeightKg
+    priorityMuscleGroups = try container.decodeIfPresent([String].self, forKey: .priorityMuscleGroups) ?? defaults.priorityMuscleGroups
+    exercisePreferences = try container.decodeIfPresent(String.self, forKey: .exercisePreferences) ?? defaults.exercisePreferences
+    exercisesToAvoid = try container.decodeIfPresent(String.self, forKey: .exercisesToAvoid) ?? defaults.exercisesToAvoid
+    limitations = try container.decodeIfPresent(String.self, forKey: .limitations) ?? defaults.limitations
+  }
 
   static let initial = TrainingProfile(
     goal: .strength,
@@ -132,11 +206,32 @@ struct TrainingProfile: Codable, Equatable {
     trainingWeekdays: [1, 2, 4, 5],
     sessionDurationMinutes: 60,
     availableEquipment: Set(Equipment.allCases),
+    dumbbellWeightsKg: [5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30],
+    dumbbellUnitsByWeight: [:],
+    plateWeightsKg: [1.25, 2.5, 5, 10, 15, 20],
+    plateUnitsByWeight: ["1.25": 4, "2.50": 4, "5.00": 12, "10.00": 12, "15.00": 2, "20.00": 4],
+    cableStepKg: 5,
+    barbellWeightKg: 20,
+    multipowerBarWeightKg: 18,
     priorityMuscleGroups: [],
     exercisePreferences: "",
     exercisesToAvoid: "",
     limitations: ""
   )
+
+  var loadInventory: EquipmentLoadInventory {
+    return EquipmentLoadInventory(
+      dumbbellLoadsKg: dumbbellWeightsKg,
+      plates: plateWeightsKg.map { PlateLoad(weightKg: $0, count: plateUnits(for: $0)) },
+      cableStepKg: max(0.5, cableStepKg),
+      barbellWeightKg: max(0, barbellWeightKg),
+      multipowerBarWeightKg: max(0, multipowerBarWeightKg)
+    )
+  }
+
+  func dumbbellUnits(for weight: Double) -> Int { max(1, dumbbellUnitsByWeight[loadKey(weight)] ?? 2) }
+  func plateUnits(for weight: Double) -> Int { max(1, plateUnitsByWeight[loadKey(weight)] ?? 2) }
+  func loadKey(_ weight: Double) -> String { String(format: "%.2f", weight) }
 }
 
 @MainActor

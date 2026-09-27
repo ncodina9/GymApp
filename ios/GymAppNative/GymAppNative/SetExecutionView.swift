@@ -39,10 +39,10 @@ struct SetExecutionView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
 
-  init(session: TrainingSession, onFinishToToday: @escaping () -> Void = {}) {
+  init(session: TrainingSession, loadInventory: EquipmentLoadInventory = .standard, onFinishToToday: @escaping () -> Void = {}) {
     _session = State(initialValue: session)
     self.onFinishToToday = onFinishToToday
-    _execution = State(initialValue: WorkoutExecutionState(session: session))
+    _execution = State(initialValue: WorkoutExecutionState(session: session, loadInventory: loadInventory))
     _startedAt = State(initialValue: .now)
   }
 
@@ -532,7 +532,7 @@ struct SetExecutionView: View {
           let replacement = plan.sessions.first(where: { $0.sessionID == sessionID })
     else { return }
 
-    var replacementExecution = WorkoutExecutionState(session: replacement)
+    var replacementExecution = WorkoutExecutionState(session: replacement, loadInventory: execution.loadInventory)
     if let exerciseIndex, !startsWithWarmup,
        !replacementExecution.selectNextBlock(exerciseIndex: exerciseIndex) {
       return
@@ -746,7 +746,8 @@ private struct WorkingSetView: View {
                 numericValue: activeTargets?.weightKg ?? trainingSet.targetWeightKg,
                 plateLayout: EquipmentLoadRules.plateLayout(
                   totalWeightKg: activeTargets?.weightKg ?? trainingSet.targetWeightKg,
-                  equipment: activeEquipment
+                  equipment: activeEquipment,
+                  inventory: execution.loadInventory
                 ),
                 action: { editField = .weight }
               )
@@ -806,6 +807,7 @@ private struct WorkingSetView: View {
           field: field,
           initialValue: field == .reps ? Double(targets.reps ?? 0) : targets.weightKg,
           equipment: activeEquipment,
+          inventory: execution.loadInventory,
           onConfirm: { value in
             switch field {
             case .reps:
@@ -2677,6 +2679,7 @@ private struct ActiveWorkoutProgressView: View {
       locator: record.locator,
       exerciseName: exercise.displayName,
       equipment: execution.equipment(for: record) ?? exercise.equipment,
+      inventory: execution.loadInventory,
       reps: targets.reps,
       weightKg: targets.weightKg,
       durationSeconds: targets.durationSeconds
@@ -2909,6 +2912,7 @@ private struct SetTargetEditor: View {
   let field: SetEditField
   let initialValue: Double
   let equipment: Equipment
+  let inventory: EquipmentLoadInventory
   let onConfirm: (Double) -> Void
   @Environment(\.dismiss) private var dismiss
   @State private var value: Double
@@ -2917,11 +2921,13 @@ private struct SetTargetEditor: View {
     field: SetEditField,
     initialValue: Double,
     equipment: Equipment,
+    inventory: EquipmentLoadInventory,
     onConfirm: @escaping (Double) -> Void
   ) {
     self.field = field
     self.initialValue = initialValue
     self.equipment = equipment
+    self.inventory = inventory
     self.onConfirm = onConfirm
     _value = State(initialValue: initialValue)
   }
@@ -2996,7 +3002,8 @@ private struct SetTargetEditor: View {
       value = EquipmentLoadRules.adjustedWeight(
         from: value,
         equipment: equipment,
-        direction: direction
+        direction: direction,
+        inventory: inventory
       )
     }
   }

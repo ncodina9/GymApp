@@ -60,6 +60,12 @@ struct SettingsView: View {
           )
           SettingsDivider()
           SettingsRow(
+            title: "Planificación",
+            detail: "Revisiones y propuestas del entrenador",
+            destination: PlanRevisionsView(plan: plan)
+          )
+          SettingsDivider()
+          SettingsRow(
             title: "Ejercicios",
             detail: "Historial y récords por ejercicio",
             destination: ExercisesLibraryView(plan: plan)
@@ -90,7 +96,7 @@ struct SettingsView: View {
           )
         }
 
-        Text("v0.1.117")
+        Text("v0.1.118")
           .font(.gymSupport.weight(.medium))
           .foregroundStyle(.tertiary)
           .frame(maxWidth: .infinity, alignment: .center)
@@ -106,6 +112,155 @@ struct SettingsView: View {
     .safeAreaInset(edge: .top, spacing: 0) { AccentHeaderCard(title: "Opciones") }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
   }
+}
+
+private struct PlanRevisionsView: View {
+  let plan: TrainingPlan
+  @Query private var revisionRecords: [PlanRevisionRecord]
+  @Environment(\.modelContext) private var modelContext
+  @Environment(\.dismiss) private var dismiss
+
+  private var revisions: [PlanRevisionRecord] {
+    revisionRecords
+      .filter { $0.basePlanID == plan.planID }
+      .sorted {
+        if $0.status == .proposed, $1.status != .proposed { return true }
+        if $0.status != .proposed, $1.status == .proposed { return false }
+        return $0.effectiveFrom > $1.effectiveFrom
+      }
+  }
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 6) {
+          Text("Plan actual")
+            .font(.gymH3.weight(.bold))
+          Text(plan.sourceDocument)
+            .font(.gymBody)
+            .foregroundStyle(Color.gymSecondaryText)
+          Text("Vigente desde \(Self.dateFormatter.string(from: planStartDate))")
+            .font(.gymSupport)
+            .foregroundStyle(Color.gymSecondaryText)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 16))
+
+        Text("Revisiones")
+          .font(.gymH2.weight(.bold))
+
+        if revisions.isEmpty {
+          ContentUnavailableView(
+            "Sin propuestas pendientes",
+            systemImage: "calendar.badge.checkmark",
+            description: Text("Las propuestas del entrenador se revisarán aquí antes de modificar la planificación."))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 36)
+        } else {
+          ForEach(revisions, id: \.id) { revision in
+            PlanRevisionCard(
+              revision: revision,
+              onAccept: { PlanRevisionStore.accept(revision, in: modelContext) },
+              onReject: { PlanRevisionStore.reject(revision, in: modelContext) }
+            )
+          }
+        }
+      }
+      .padding(16)
+      .padding(.bottom, 76)
+    }
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) {
+      AccentHeaderCard(title: "Planificación", detail: "Propuestas con vigencia y confirmación")
+    }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+
+  private var planStartDate: Date {
+    Self.isoDateFormatter.date(from: plan.startsOn) ?? .now
+  }
+
+  private static let isoDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter
+  }()
+
+  private static let dateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateStyle = .medium
+    return formatter
+  }()
+}
+
+private struct PlanRevisionCard: View {
+  let revision: PlanRevisionRecord
+  let onAccept: () -> Void
+  let onReject: () -> Void
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      HStack(alignment: .firstTextBaseline) {
+        Text("Revisión \(revision.revisionNumber)")
+          .font(.gymH3.weight(.bold))
+        Spacer()
+        Text(revision.status.label)
+          .font(.gymSupport.weight(.bold))
+          .foregroundStyle(statusColor)
+      }
+
+      Text(revision.reason)
+        .font(.gymBody)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      Text("Vigente desde \(Self.dateFormatter.string(from: revision.effectiveFrom))")
+        .font(.gymSupport)
+        .foregroundStyle(Color.gymSecondaryText)
+
+      if revision.status == .proposed {
+        HStack(spacing: 10) {
+          Button("Descartar", role: .destructive, action: onReject)
+            .font(.gymBody.weight(.semibold))
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .buttonStyle(.bordered)
+
+          Button("Aceptar", action: onAccept)
+            .font(.gymBody.weight(.semibold))
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .foregroundStyle(Color.gymAccentForeground)
+            .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+            .buttonStyle(.plain)
+        }
+      }
+    }
+    .padding(14)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 16))
+    .overlay {
+      RoundedRectangle(cornerRadius: 16)
+        .stroke(revision.status == .proposed ? Color.gymAccent.opacity(0.45) : Color.secondary.opacity(0.2), lineWidth: 1)
+    }
+  }
+
+  private var statusColor: Color {
+    switch revision.status {
+    case .proposed: Color.gymAccent
+    case .accepted: Color.gymCompleted
+    case .rejected: Color.gymSecondaryText
+    }
+  }
+
+  private static let dateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateStyle = .medium
+    return formatter
+  }()
 }
 
 private struct ExercisesLibraryView: View {
