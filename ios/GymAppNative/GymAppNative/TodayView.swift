@@ -22,10 +22,10 @@ struct TodayView: View {
     }
 
     let pendingSessions = plan.sessions
-      .filter { !completedSessionIDs.contains($0.sessionID) }
+      .filter { !$0.isCancelled && !completedSessionIDs.contains($0.sessionID) }
       .sorted { $0.date < $1.date }
     guard !pendingSessions.isEmpty else {
-      return plan.sessions.max { $0.date < $1.date }
+      return plan.sessions.filter { !$0.isCancelled }.max { $0.date < $1.date }
     }
 
     let today = Calendar.current.startOfDay(for: .now)
@@ -43,7 +43,7 @@ struct TodayView: View {
 
   private var weekSessions: [TrainingSession] {
     guard let recommendedSession else { return [] }
-    var sessions = plan.sessions.filter { $0.week == recommendedSession.week }
+    var sessions = plan.sessions.filter { $0.week == recommendedSession.week && !$0.isCancelled }
     if let activeSession = activeWorkout?.execution.session,
        !sessions.contains(where: { $0.sessionID == activeSession.sessionID }) {
       sessions.append(activeSession)

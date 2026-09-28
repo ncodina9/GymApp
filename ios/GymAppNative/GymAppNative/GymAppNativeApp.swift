@@ -141,13 +141,13 @@ private struct WatchWorkoutSyncHost: View {
       recommended = activeWorkout.execution.session
     } else {
       let pending = plan.sessions
-        .filter { !completedSessionIDs.contains($0.sessionID) }
+        .filter { !$0.isCancelled && !completedSessionIDs.contains($0.sessionID) }
         .sorted { $0.date < $1.date }
       let today = Calendar.current.startOfDay(for: .now)
       recommended = pending.first(where: { sessionDate($0) >= today }) ?? pending.first
     }
     guard let recommended else { return [] }
-    return plan.sessions.filter { $0.week == recommended.week }
+    return plan.sessions.filter { $0.week == recommended.week && !$0.isCancelled }
   }
 
   private func sessionDate(_ session: TrainingSession) -> Date {

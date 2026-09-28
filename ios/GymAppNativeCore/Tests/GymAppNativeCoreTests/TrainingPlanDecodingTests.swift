@@ -89,6 +89,81 @@ struct TrainingPlanDecodingTests {
     #expect(plan.durationWeeks == 13)
     #expect(plan.sessions.count == 51)
     #expect(plan.sessions.allSatisfy { !$0.exercises.isEmpty })
+    #expect(plan.sessions.allSatisfy { !$0.isCancelled })
+  }
+
+  @Test("Valida operaciones de planificación antes de proponer una revisión")
+  func validatesPlanningOperations() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let originalExercise = try #require(session.exercises.first)
+    let replacement = try #require(
+      plan.sessions
+        .flatMap(\.exercises)
+        .first { $0.exerciseID != originalExercise.exerciseID }
+    )
+    let referenceDate = try #require(isoDate("2026-01-01"))
+    let constraints = PlanningConstraints(
+      availableWeekdays: [2],
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 45,
+      referenceDate: referenceDate
+    )
+
+    let moved = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.moveSession(sessionID: session.sessionID, toDate: "2027-01-05")],
+      constraints: constraints
+    )
+    #expect(moved.plan.sessions.first?.date == "2027-01-05")
+    #expect(moved.warnings.contains(.durationExceedsPreference(
+      sessionID: session.sessionID,
+      minutes: session.estimatedMinutes,
+      maximum: 45
+    )))
+
+    let cancelled = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.cancelSession(sessionID: session.sessionID)],
+      constraints: constraints
+    )
+    #expect(cancelled.plan.sessions.first?.isCancelled == true)
+
+    let replaced = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [
+        .replaceExercise(
+          sessionID: session.sessionID,
+          exerciseID: originalExercise.exerciseID,
+          replacementExerciseID: replacement.exerciseID
+        ),
+      ],
+      constraints: constraints
+    )
+    #expect(replaced.plan.sessions.first?.exercises.first?.exerciseID == replacement.exerciseID)
+    #expect(replaced.plan.sessions.first?.exercises.first?.sets.count == originalExercise.sets.count)
+
+    var completedConstraints = constraints
+    completedConstraints.completedSessionIDs = [session.sessionID]
+    #expect(throws: PlanningOperationError.self) {
+      try PlanningOperationEngine.preview(
+        basePlan: plan,
+        operations: [.cancelSession(sessionID: session.sessionID)],
+        constraints: completedConstraints
+      )
+    }
+
+    if let pattern = replacement.movementPattern {
+      var restrictedConstraints = constraints
+      restrictedConstraints.restrictedMovementPatterns = [pattern]
+      #expect(throws: PlanningOperationError.self) {
+        try PlanningOperationEngine.preview(
+          basePlan: plan,
+          operations: [.replaceExercise(sessionID: session.sessionID, exerciseID: originalExercise.exerciseID, replacementExerciseID: replacement.exerciseID)],
+          constraints: restrictedConstraints
+        )
+      }
+    }
   }
 
   @Test("Conserva superseries, temporizados y material")
@@ -293,6 +368,7 @@ struct TrainingPlanDecodingTests {
       painWrist: 2,
       painShoulder: 1,
       painLowerBack: 0,
+      declaredDiscomfortLevels: ["Cadera derecha": 3],
       note: "Técnica"
     )
 
@@ -300,6 +376,7 @@ struct TrainingPlanDecodingTests {
 
     #expect(state.records.count == 1)
     #expect(state.records.first?.feedback == feedback)
+    #expect(state.records.first?.feedback.declaredDiscomfortLevels["Cadera derecha"] == 3)
   }
 
   @Test("Registra una serie saltada y avanza el flujo")
@@ -539,5 +616,13 @@ struct TrainingPlanDecodingTests {
       url.deleteLastPathComponent()
     }
     return url.appendingPathComponent("data/trainingPlan.json")
+  }
+
+  private func isoDate(_ value: String) -> Date? {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: value)
   }
 }

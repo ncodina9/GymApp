@@ -131,6 +131,7 @@ struct TrainingProfile: Codable, Equatable {
   var exercisePreferences: String
   var exercisesToAvoid: String
   var limitations: String
+  var declaredDiscomforts: [String]
 
   init(
     goal: TrainingGoal,
@@ -149,7 +150,8 @@ struct TrainingProfile: Codable, Equatable {
     priorityMuscleGroups: [String],
     exercisePreferences: String,
     exercisesToAvoid: String,
-    limitations: String
+    limitations: String,
+    declaredDiscomforts: [String] = []
   ) {
     self.goal = goal
     self.targetTimeframeWeeks = targetTimeframeWeeks
@@ -168,13 +170,14 @@ struct TrainingProfile: Codable, Equatable {
     self.exercisePreferences = exercisePreferences
     self.exercisesToAvoid = exercisesToAvoid
     self.limitations = limitations
+    self.declaredDiscomforts = declaredDiscomforts
   }
 
   private enum CodingKeys: String, CodingKey {
     case goal, targetTimeframeWeeks, experience, trainingWeekdays, sessionDurationMinutes
     case availableEquipment, dumbbellWeightsKg, dumbbellUnitsByWeight, plateWeightsKg, plateUnitsByWeight, cableStepKg
     case barbellWeightKg, multipowerBarWeightKg, priorityMuscleGroups
-    case exercisePreferences, exercisesToAvoid, limitations
+    case exercisePreferences, exercisesToAvoid, limitations, declaredDiscomforts
   }
 
   init(from decoder: Decoder) throws {
@@ -197,6 +200,8 @@ struct TrainingProfile: Codable, Equatable {
     exercisePreferences = try container.decodeIfPresent(String.self, forKey: .exercisePreferences) ?? defaults.exercisePreferences
     exercisesToAvoid = try container.decodeIfPresent(String.self, forKey: .exercisesToAvoid) ?? defaults.exercisesToAvoid
     limitations = try container.decodeIfPresent(String.self, forKey: .limitations) ?? defaults.limitations
+    declaredDiscomforts = try container.decodeIfPresent([String].self, forKey: .declaredDiscomforts)
+      ?? Self.discomforts(from: limitations)
   }
 
   static let initial = TrainingProfile(
@@ -216,7 +221,8 @@ struct TrainingProfile: Codable, Equatable {
     priorityMuscleGroups: [],
     exercisePreferences: "",
     exercisesToAvoid: "",
-    limitations: ""
+    limitations: "",
+    declaredDiscomforts: []
   )
 
   var loadInventory: EquipmentLoadInventory {
@@ -232,6 +238,13 @@ struct TrainingProfile: Codable, Equatable {
   func dumbbellUnits(for weight: Double) -> Int { max(1, dumbbellUnitsByWeight[loadKey(weight)] ?? 2) }
   func plateUnits(for weight: Double) -> Int { max(1, plateUnitsByWeight[loadKey(weight)] ?? 2) }
   func loadKey(_ weight: Double) -> String { String(format: "%.2f", weight) }
+
+  private static func discomforts(from value: String) -> [String] {
+    value
+      .split(whereSeparator: { $0 == "," || $0 == ";" || $0 == "\n" })
+      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .filter { !$0.isEmpty }
+  }
 }
 
 @MainActor

@@ -16,12 +16,12 @@ public enum TrainingSetKind: String, Codable, Sendable {
 }
 
 public struct TrainingPlan: Codable, Sendable {
-  public let planID: String
-  public let sourceDocument: String
-  public let startsOn: String
-  public let endsOn: String
-  public let durationWeeks: Int
-  public let sessions: [TrainingSession]
+  public var planID: String
+  public var sourceDocument: String
+  public var startsOn: String
+  public var endsOn: String
+  public var durationWeeks: Int
+  public var sessions: [TrainingSession]
 
   enum CodingKeys: String, CodingKey {
     case planID = "planId"
@@ -34,19 +34,21 @@ public struct TrainingPlan: Codable, Sendable {
 }
 
 public struct TrainingSession: Codable, Identifiable, Sendable {
-  public let sessionID: String
-  public let date: String
-  public let week: Int
-  public let weekday: String
-  public let sessionLabel: String
-  public let label: String
-  public let estimatedMinutes: Int
-  public let focus: String
-  public let weekFocusLabel: String
-  public let weekFocus: String
-  public let exercises: [TrainingExercise]
+  public var sessionID: String
+  public var date: String
+  public var week: Int
+  public var weekday: String
+  public var sessionLabel: String
+  public var label: String
+  public var estimatedMinutes: Int
+  public var focus: String
+  public var weekFocusLabel: String
+  public var weekFocus: String
+  public var exercises: [TrainingExercise]
+  public var cancelled: Bool?
 
   public var id: String { sessionID }
+  public var isCancelled: Bool { cancelled ?? false }
 
   enum CodingKeys: String, CodingKey {
     case sessionID = "sessionId"
@@ -60,30 +62,31 @@ public struct TrainingSession: Codable, Identifiable, Sendable {
     case weekFocusLabel
     case weekFocus
     case exercises
+    case cancelled
   }
 }
 
 public struct TrainingExercise: Codable, Identifiable, Sendable {
-  public let exerciseID: String
-  public let name: String
-  public let baseExerciseID: String
-  public let baseExerciseName: String
-  public let variantLabel: String?
-  public let type: String
-  public let block: String
-  public let equipment: Equipment
-  public let equipmentOptions: [Equipment]?
-  public let trainingBlock: String?
-  public let movementPattern: String?
-  public let primaryMuscles: [String]
-  public let secondaryMuscles: [String]
-  public let supersetID: String?
-  public let supersetOrder: Int?
-  public let phase: String
-  public let notes: String
-  public let target: String
-  public let decisionOptions: [String]
-  public let sets: [TrainingSet]
+  public var exerciseID: String
+  public var name: String
+  public var baseExerciseID: String
+  public var baseExerciseName: String
+  public var variantLabel: String?
+  public var type: String
+  public var block: String
+  public var equipment: Equipment
+  public var equipmentOptions: [Equipment]?
+  public var trainingBlock: String?
+  public var movementPattern: String?
+  public var primaryMuscles: [String]
+  public var secondaryMuscles: [String]
+  public var supersetID: String?
+  public var supersetOrder: Int?
+  public var phase: String
+  public var notes: String
+  public var target: String
+  public var decisionOptions: [String]
+  public var sets: [TrainingSet]
 
   public var id: String { exerciseID }
 
@@ -179,12 +182,12 @@ public extension TrainingExercise {
 }
 
 public struct TrainingSet: Codable, Identifiable, Sendable {
-  public let setIndex: Int
-  public let targetReps: Int?
-  public let targetWeightKg: Double
-  public let targetDurationSeconds: Int?
-  public let restSeconds: Int
-  public let type: TrainingSetKind
+  public var setIndex: Int
+  public var targetReps: Int?
+  public var targetWeightKg: Double
+  public var targetDurationSeconds: Int?
+  public var restSeconds: Int
+  public var type: TrainingSetKind
 
   public var id: Int { setIndex }
 }

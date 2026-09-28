@@ -151,11 +151,12 @@ private struct RecordedSetRow: View {
         Button {
           onEdit(record, execution)
         } label: {
-          Image(systemName: "pencil")
-            .font(.gymH3.weight(.bold))
-            .frame(width: 38, height: 38)
-            .foregroundStyle(Color.gymAccentForeground)
-            .background(Color.gymAccent, in: Circle())
+          Label("Editar", systemImage: "pencil")
+            .font(.gymSupport.weight(.bold))
+            .frame(minWidth: 70, minHeight: 38)
+            .foregroundStyle(Color.gymAccent)
+            .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 10))
+            .overlay { RoundedRectangle(cornerRadius: 10).stroke(Color.gymAccent.opacity(0.55), lineWidth: 1) }
         }
         .accessibilityLabel("Corregir serie \(record.locator.setIndex)")
         .buttonStyle(.plain)
@@ -166,6 +167,7 @@ private struct RecordedSetRow: View {
       }
     }
     .padding(.leading, 10)
+    .padding(.trailing, 14)
     .padding(.vertical, 7)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
   }

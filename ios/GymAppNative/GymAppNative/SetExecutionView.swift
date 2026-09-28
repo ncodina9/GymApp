@@ -15,6 +15,7 @@ struct SetExecutionView: View {
   @State private var feedbackPainWrist = 0
   @State private var feedbackPainShoulder = 0
   @State private var feedbackPainLowerBack = 0
+  @State private var feedbackDeclaredDiscomfortLevels: [String: Int] = [:]
   @State private var feedbackNote = "OK"
   @State private var restEndsAt: Date?
   @State private var restTotalSeconds = 0
@@ -38,6 +39,11 @@ struct SetExecutionView: View {
   @State private var wasReplacedFromWatch = false
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
+  @Query private var trainingProfileRecords: [TrainingProfileRecord]
+
+  private var declaredDiscomforts: [String] {
+    (TrainingProfileStore.load(from: trainingProfileRecords) ?? .initial).declaredDiscomforts
+  }
 
   init(session: TrainingSession, loadInventory: EquipmentLoadInventory = .standard, onFinishToToday: @escaping () -> Void = {}) {
     _session = State(initialValue: session)
@@ -56,6 +62,7 @@ struct SetExecutionView: View {
     _feedbackPainWrist = State(initialValue: snapshot.feedback.painWrist)
     _feedbackPainShoulder = State(initialValue: snapshot.feedback.painShoulder)
     _feedbackPainLowerBack = State(initialValue: snapshot.feedback.painLowerBack)
+    _feedbackDeclaredDiscomfortLevels = State(initialValue: snapshot.feedback.declaredDiscomfortLevels)
     _feedbackNote = State(initialValue: snapshot.feedback.note)
     _restEndsAt = State(initialValue: snapshot.restEndsAt)
     _restTotalSeconds = State(initialValue: snapshot.restTotalSeconds)
@@ -106,7 +113,9 @@ struct SetExecutionView: View {
               painWrist: $feedbackPainWrist,
               painShoulder: $feedbackPainShoulder,
               painLowerBack: $feedbackPainLowerBack,
+              declaredDiscomfortLevels: $feedbackDeclaredDiscomfortLevels,
               note: $feedbackNote,
+              declaredDiscomforts: declaredDiscomforts,
               onBack: { move(to: .workingSet, direction: .backward) },
               onRegister: registerCurrentSet,
               onSessionActionsRequested: { showSessionActionMenu() }
@@ -261,6 +270,7 @@ struct SetExecutionView: View {
         feedbackPainWrist = feedback.painWrist
         feedbackPainShoulder = feedback.painShoulder
         feedbackPainLowerBack = feedback.painLowerBack
+        feedbackDeclaredDiscomfortLevels = feedback.declaredDiscomfortLevels
         feedbackNote = feedback.note
         registerCurrentSet()
       case let .submitExerciseReview(decisions):
@@ -313,6 +323,7 @@ struct SetExecutionView: View {
           painWrist: feedbackPainWrist,
           painShoulder: feedbackPainShoulder,
           painLowerBack: feedbackPainLowerBack,
+          declaredDiscomfortLevels: feedbackDeclaredDiscomfortLevels,
           note: feedbackNote
         ),
         restEndsAt: restEndsAt,
@@ -484,6 +495,7 @@ struct SetExecutionView: View {
       painWrist: feedbackPainWrist,
       painShoulder: feedbackPainShoulder,
       painLowerBack: feedbackPainLowerBack,
+      declaredDiscomfortLevels: feedbackDeclaredDiscomfortLevels,
       note: feedbackNote
     )
     guard let advance = execution.recordCurrent(feedback: setFeedback) else {
@@ -496,6 +508,7 @@ struct SetExecutionView: View {
     feedbackPainWrist = 0
     feedbackPainShoulder = 0
     feedbackPainLowerBack = 0
+    feedbackDeclaredDiscomfortLevels = [:]
     feedbackNote = "OK"
     setTimerEndsAt = nil
     setTimerRemaining = 0
@@ -1093,7 +1106,9 @@ private struct FeedbackView: View {
   @Binding var painWrist: Int
   @Binding var painShoulder: Int
   @Binding var painLowerBack: Int
+  @Binding var declaredDiscomfortLevels: [String: Int]
   @Binding var note: String
+  let declaredDiscomforts: [String]
   let onBack: () -> Void
   let onRegister: () -> Void
   let onSessionActionsRequested: () -> Void
@@ -1144,7 +1159,9 @@ private struct FeedbackView: View {
           painKnee: $painKnee,
           painWrist: $painWrist,
           painShoulder: $painShoulder,
-          painLowerBack: $painLowerBack
+          painLowerBack: $painLowerBack,
+          declaredDiscomfortLevels: $declaredDiscomfortLevels,
+          declaredDiscomforts: declaredDiscomforts
         )
         NotePicker(note: $note)
       }
@@ -1581,6 +1598,8 @@ private struct PainFeedbackBlock: View {
   @Binding var painWrist: Int
   @Binding var painShoulder: Int
   @Binding var painLowerBack: Int
+  @Binding var declaredDiscomfortLevels: [String: Int]
+  let declaredDiscomforts: [String]
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -1594,6 +1613,20 @@ private struct PainFeedbackBlock: View {
           PainLevelControl(label: "Muñeca", value: $painWrist)
           PainLevelControl(label: "Hombro", value: $painShoulder)
           PainLevelControl(label: "Lumbar", value: $painLowerBack)
+          if !declaredDiscomforts.isEmpty {
+            Text("Declaradas en tu perfil")
+              .font(.gymSupport.weight(.bold))
+              .foregroundStyle(Color.gymSecondaryText)
+            ForEach(declaredDiscomforts, id: \.self) { discomfort in
+              PainLevelControl(
+                label: discomfort,
+                value: Binding(
+                  get: { declaredDiscomfortLevels[discomfort] ?? 0 },
+                  set: { declaredDiscomfortLevels[discomfort] = $0 }
+                )
+              )
+            }
+          }
         }
       }
       .scrollIndicators(.visible)

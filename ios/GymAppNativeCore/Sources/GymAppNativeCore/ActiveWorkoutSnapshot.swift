@@ -19,6 +19,7 @@ public struct ActiveWorkoutFeedbackDraft: Codable, Sendable {
   public var painWrist: Int
   public var painShoulder: Int
   public var painLowerBack: Int
+  public var declaredDiscomfortLevels: [String: Int]
   public var note: String
 
   public init(
@@ -27,6 +28,7 @@ public struct ActiveWorkoutFeedbackDraft: Codable, Sendable {
     painWrist: Int,
     painShoulder: Int,
     painLowerBack: Int,
+    declaredDiscomfortLevels: [String: Int] = [:],
     note: String
   ) {
     self.rir = rir
@@ -34,7 +36,23 @@ public struct ActiveWorkoutFeedbackDraft: Codable, Sendable {
     self.painWrist = painWrist
     self.painShoulder = painShoulder
     self.painLowerBack = painLowerBack
+    self.declaredDiscomfortLevels = declaredDiscomfortLevels
     self.note = note
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case rir, painKnee, painWrist, painShoulder, painLowerBack, declaredDiscomfortLevels, note
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    rir = try container.decodeIfPresent(Int.self, forKey: .rir) ?? 2
+    painKnee = try container.decodeIfPresent(Int.self, forKey: .painKnee) ?? 0
+    painWrist = try container.decodeIfPresent(Int.self, forKey: .painWrist) ?? 0
+    painShoulder = try container.decodeIfPresent(Int.self, forKey: .painShoulder) ?? 0
+    painLowerBack = try container.decodeIfPresent(Int.self, forKey: .painLowerBack) ?? 0
+    declaredDiscomfortLevels = try container.decodeIfPresent([String: Int].self, forKey: .declaredDiscomfortLevels) ?? [:]
+    note = try container.decodeIfPresent(String.self, forKey: .note) ?? "OK"
   }
 }
 

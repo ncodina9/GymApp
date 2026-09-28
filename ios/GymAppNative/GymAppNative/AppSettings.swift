@@ -147,6 +147,8 @@ private struct PlanRevisionsView: View {
           ForEach(revisions, id: \.id) { revision in
             PlanRevisionCard(
               revision: revision,
+              operations: PlanRevisionStore.operations(for: revision),
+              warnings: PlanRevisionStore.warnings(for: revision),
               onAccept: { PlanRevisionStore.accept(revision, in: modelContext) },
               onReject: { PlanRevisionStore.reject(revision, in: modelContext) }
             )
@@ -186,6 +188,8 @@ private struct PlanRevisionsView: View {
 
 private struct PlanRevisionCard: View {
   let revision: PlanRevisionRecord
+  let operations: [PlanningOperation]
+  let warnings: [PlanningWarning]
   let onAccept: () -> Void
   let onReject: () -> Void
 
@@ -207,6 +211,29 @@ private struct PlanRevisionCard: View {
       Text("Vigente desde \(Self.dateFormatter.string(from: revision.effectiveFrom))")
         .font(.gymSupport)
         .foregroundStyle(Color.gymSecondaryText)
+
+      if !operations.isEmpty {
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Cambios")
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymSecondaryText)
+          ForEach(Array(operations.enumerated()), id: \.offset) { _, operation in
+            Label(operation.summary, systemImage: "arrow.triangle.branch")
+              .font(.gymSupport)
+              .foregroundStyle(Color.gymSecondaryText)
+          }
+        }
+      }
+
+      if !warnings.isEmpty {
+        VStack(alignment: .leading, spacing: 4) {
+          ForEach(Array(warnings.enumerated()), id: \.offset) { _, warning in
+            Label(warning.message, systemImage: "exclamationmark.triangle")
+              .font(.gymSupport)
+              .foregroundStyle(Color.gymWarning)
+          }
+        }
+      }
 
       if revision.status == .proposed {
         HStack(spacing: 10) {
@@ -740,11 +767,11 @@ private struct PlanningHubView: View {
   private var upcomingSessions: [TrainingSession] {
     let completed = Set(completedRecords.map(\.sessionID))
     let today = Self.todayISODate
-    return plan.sessions.filter { $0.date >= today && !completed.contains($0.sessionID) }
+    return plan.sessions.filter { !$0.isCancelled && $0.date >= today && !completed.contains($0.sessionID) }
   }
 
   private var sessionsByDay: [Date: [TrainingSession]] {
-    Dictionary(grouping: plan.sessions, by: { Self.day(for: $0.date) })
+    Dictionary(grouping: plan.sessions.filter { !$0.isCancelled }, by: { Self.day(for: $0.date) })
   }
 
   private var selectedSessions: [TrainingSession] {
@@ -803,6 +830,12 @@ private struct PlanningHubView: View {
           )
           SettingsDivider()
           SettingsRow(
+            title: "Simular propuesta",
+            detail: "Genera una revisión sin modificar el plan",
+            destination: ProposalSimulatorView(plan: plan)
+          )
+          SettingsDivider()
+          SettingsRow(
             title: "Gestión de datos locales",
             detail: "Backup, importación y sesiones guardadas",
             destination: ExportSettingsView(plan: plan)
@@ -820,6 +853,7 @@ private struct PlanningHubView: View {
     .onAppear {
       guard selectedDay == nil else { return }
       let firstRelevant = plan.sessions
+        .filter { !$0.isCancelled }
         .map { Self.day(for: $0.date) }
         .first(where: { $0 >= Calendar.current.startOfDay(for: .now) })
         ?? sessionsByDay.keys.sorted().last
@@ -850,6 +884,376 @@ private struct PlanningHubView: View {
   }
 }
 
+private struct ProposalSimulatorView: View {
+  let plan: TrainingPlan
+  @Query private var profileRecords: [TrainingProfileRecord]
+  @Query private var revisionRecords: [PlanRevisionRecord]
+  @Query private var activeRecords: [ActiveWorkoutRecord]
+  @Query private var completedRecords: [CompletedWorkoutRecord]
+  @Environment(\.modelContext) private var modelContext
+  @Environment(\.dismiss) private var dismiss
+  @State private var selectedSessionID = ""
+  @State private var intent: ProposalSimulationIntent = .move
+  @State private var targetDate = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now
+  @State private var selectedExerciseID = ""
+  @State private var replacementExerciseID = ""
+  @State private var selectedSetIndex = 1
+  @State private var adjustedReps = 8
+  @State private var adjustedWeightKg = 0.0
+  @State private var resultMessage: String?
+
+  private var activeSessionID: String? {
+    ActiveWorkoutStore.load(from: activeRecords)?.execution.session.sessionID
+  }
+
+  private var completedSessionIDs: Set<String> {
+    Set(completedRecords.map(\.sessionID))
+  }
+
+  private var editableSessions: [TrainingSession] {
+    plan.sessions
+      .filter {
+        !$0.isCancelled
+          && !completedSessionIDs.contains($0.sessionID)
+          && $0.sessionID != activeSessionID
+          && Self.date(from: $0.date) >= Calendar.current.startOfDay(for: .now)
+      }
+      .sorted { $0.date < $1.date }
+  }
+
+  private var selectedSession: TrainingSession? {
+    editableSessions.first(where: { $0.sessionID == selectedSessionID })
+  }
+
+  private var selectedExercise: TrainingExercise? {
+    selectedSession?.exercises.first(where: { $0.exerciseID == selectedExerciseID })
+  }
+
+  private var selectedSet: TrainingSet? {
+    selectedExercise?.sets.first(where: { $0.setIndex == selectedSetIndex })
+  }
+
+  private var replacementExercises: [TrainingExercise] {
+    let allExercises = plan.sessions.flatMap(\.exercises)
+    let unique = Dictionary(grouping: allExercises, by: \.exerciseID).compactMap(\.value.first)
+    return unique
+      .filter { $0.exerciseID != selectedExerciseID }
+      .sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
+  }
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 16) {
+        Text("Prueba una modificación antes de pedirla al agente. La propuesta se guarda como pendiente y no sustituye el plan hasta que se acepte.")
+          .font(.gymBody)
+          .foregroundStyle(Color.gymSecondaryText)
+
+        if editableSessions.isEmpty {
+          ContentUnavailableView(
+            "No hay sesiones editables",
+            systemImage: "calendar.badge.exclamationmark",
+            description: Text("Las sesiones completadas, pasadas o en curso se protegen de las propuestas."))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 36)
+        } else {
+          SettingsCategory(title: "Propuesta") {
+            Picker("Sesión", selection: $selectedSessionID) {
+              ForEach(editableSessions) { session in
+                Text("\(Self.dateLabel(session.date)) · \(session.sessionLabel)")
+                  .tag(session.sessionID)
+              }
+            }
+
+            SettingsDivider()
+
+            Picker("Acción", selection: $intent) {
+              ForEach(ProposalSimulationIntent.allCases) { action in
+                Text(action.label).tag(action)
+              }
+            }
+            .pickerStyle(.menu)
+
+            switch intent {
+            case .move:
+              SettingsDivider()
+              DatePicker(
+                "Nueva fecha",
+                selection: $targetDate,
+                in: Calendar.current.startOfDay(for: .now)...,
+                displayedComponents: .date
+              )
+            case .replaceExercise:
+              exercisePicker
+              SettingsDivider()
+              replacementPicker
+            case .adjustSet:
+              exercisePicker
+              SettingsDivider()
+              setAdjustmentControls
+            case .cancel:
+              EmptyView()
+            }
+          }
+
+          if let selectedSession {
+            SettingsCategory(title: "Validación") {
+              ValidationDetailRow(title: "Sesión", value: selectedSession.sessionLabel)
+              SettingsDivider()
+              ValidationDetailRow(title: "Material", value: equipmentSummary(for: selectedSession))
+              if !profile.declaredDiscomforts.isEmpty {
+                SettingsDivider()
+                ValidationDetailRow(title: "Molestias", value: profile.declaredDiscomforts.joined(separator: ", "))
+              }
+            }
+          }
+
+          Button(action: createProposal) {
+            Label(intent.buttonLabel, systemImage: intent.symbol)
+              .font(.gymH3.weight(.bold))
+              .frame(maxWidth: .infinity, minHeight: 54)
+          }
+          .foregroundStyle(Color.gymAccentForeground)
+          .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 16))
+        }
+      }
+      .padding(16)
+      .padding(.bottom, 88)
+    }
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) {
+      AccentHeaderCard(title: "Simulador de propuestas", detail: "Validación local del plan")
+    }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+    .onAppear {
+      if selectedSessionID.isEmpty {
+        selectedSessionID = editableSessions.first?.sessionID ?? ""
+      }
+      resetExerciseSelection()
+    }
+    .onChange(of: editableSessions.map(\.sessionID)) { _, sessionIDs in
+      if !sessionIDs.contains(selectedSessionID) {
+        selectedSessionID = sessionIDs.first ?? ""
+      }
+      resetExerciseSelection()
+    }
+    .onChange(of: selectedSessionID) { _, _ in
+      resetExerciseSelection()
+    }
+    .onChange(of: selectedExerciseID) { _, _ in
+      guard let exercise = selectedExercise else { return }
+      replacementExerciseID = replacementExercises.first?.exerciseID ?? ""
+      selectedSetIndex = exercise.sets.first?.setIndex ?? 1
+      syncAdjustmentValues()
+    }
+    .onChange(of: selectedSetIndex) { _, _ in
+      syncAdjustmentValues()
+    }
+    .alert(
+      "Simulador de propuestas",
+      isPresented: Binding(
+        get: { resultMessage != nil },
+        set: { if !$0 { resultMessage = nil } }
+      )
+    ) {
+      Button("Aceptar", role: .cancel) { resultMessage = nil }
+    } message: {
+      Text(resultMessage ?? "")
+    }
+  }
+
+  private var profile: TrainingProfile {
+    TrainingProfileStore.load(from: profileRecords) ?? .initial
+  }
+
+  private func createProposal() {
+    guard let session = selectedSession else { return }
+    let operation: PlanningOperation
+    switch intent {
+    case .move:
+      operation = .moveSession(sessionID: session.sessionID, toDate: Self.isoDate(targetDate))
+    case .cancel:
+      operation = .cancelSession(sessionID: session.sessionID)
+    case .replaceExercise:
+      guard !selectedExerciseID.isEmpty, !replacementExerciseID.isEmpty else {
+        resultMessage = "Elige el ejercicio actual y su sustitución."
+        return
+      }
+      operation = .replaceExercise(
+        sessionID: session.sessionID,
+        exerciseID: selectedExerciseID,
+        replacementExerciseID: replacementExerciseID
+      )
+    case .adjustSet:
+      guard !selectedExerciseID.isEmpty else {
+        resultMessage = "Elige el ejercicio y la serie que quieres ajustar."
+        return
+      }
+      operation = .adjustSet(
+        sessionID: session.sessionID,
+        exerciseID: selectedExerciseID,
+        setIndex: selectedSetIndex,
+        reps: selectedSet?.targetReps == nil ? nil : adjustedReps,
+        weightKg: adjustedWeightKg,
+        durationSeconds: nil,
+        restSeconds: nil
+      )
+    }
+
+    do {
+      let revision = try PlanRevisionStore.propose(
+        operations: [operation],
+        basedOn: plan,
+        effectiveFrom: intent == .move ? targetDate : .now,
+        reason: "Simulación interna: \(intent.reason)",
+        constraints: profile.planningConstraints(
+          activeSessionID: activeSessionID,
+          completedSessionIDs: completedSessionIDs
+        ),
+        in: modelContext,
+        existingRecords: revisionRecords
+      )
+      resultMessage = "Propuesta \(revision.revisionNumber) creada como pendiente. Puedes revisarla y aceptarla desde Planificación."
+    } catch {
+      resultMessage = error.localizedDescription
+    }
+  }
+
+  private func equipmentSummary(for session: TrainingSession) -> String {
+    let required = Set(session.exercises.map(\.equipment))
+    let unavailable = required.subtracting(profile.availableEquipment)
+    if unavailable.isEmpty { return "Compatible con el perfil" }
+    return "Falta: \(unavailable.map(\.executionLabel).sorted().joined(separator: ", "))"
+  }
+
+  @ViewBuilder
+  private var exercisePicker: some View {
+    SettingsDivider()
+    Picker("Ejercicio", selection: $selectedExerciseID) {
+      ForEach(selectedSession?.exercises ?? []) { exercise in
+        Text(exercise.displayName).tag(exercise.exerciseID)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var replacementPicker: some View {
+    Picker("Sustituir por", selection: $replacementExerciseID) {
+      ForEach(replacementExercises) { exercise in
+        Text(exercise.displayName).tag(exercise.exerciseID)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var setAdjustmentControls: some View {
+    Picker("Serie", selection: $selectedSetIndex) {
+      ForEach(selectedExercise?.sets ?? []) { trainingSet in
+        Text("Serie \(trainingSet.setIndex)").tag(trainingSet.setIndex)
+      }
+    }
+    SettingsDivider()
+    if selectedSet?.targetReps != nil {
+      Stepper("Reps: \(adjustedReps)", value: $adjustedReps, in: 1 ... 40)
+      SettingsDivider()
+    }
+    HStack {
+      Text("Peso")
+      Spacer()
+      TextField("kg", value: $adjustedWeightKg, format: .number.precision(.fractionLength(0 ... 2)))
+        .keyboardType(.decimalPad)
+        .multilineTextAlignment(.trailing)
+        .frame(width: 96)
+      Text("kg").foregroundStyle(Color.gymSecondaryText)
+    }
+  }
+
+  private func resetExerciseSelection() {
+    guard let firstExercise = selectedSession?.exercises.first else {
+      selectedExerciseID = ""
+      replacementExerciseID = ""
+      return
+    }
+    selectedExerciseID = firstExercise.exerciseID
+    replacementExerciseID = replacementExercises.first?.exerciseID ?? ""
+    selectedSetIndex = firstExercise.sets.first?.setIndex ?? 1
+    syncAdjustmentValues()
+  }
+
+  private func syncAdjustmentValues() {
+    guard let trainingSet = selectedSet else { return }
+    adjustedReps = trainingSet.targetReps ?? adjustedReps
+    adjustedWeightKg = trainingSet.targetWeightKg
+  }
+
+  private static func date(from value: String) -> Date {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return Calendar.current.startOfDay(for: formatter.date(from: value) ?? .distantPast)
+  }
+
+  private static func isoDate(_ value: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: value)
+  }
+
+  private static func dateLabel(_ value: String) -> String {
+    date(from: value).formatted(.dateTime.day().month(.abbreviated))
+  }
+}
+
+private enum ProposalSimulationIntent: String, CaseIterable, Identifiable {
+  case move
+  case cancel
+  case replaceExercise
+  case adjustSet
+
+  var id: String { rawValue }
+  var label: String {
+    switch self {
+    case .move: "Mover sesión"
+    case .cancel: "Cancelar sesión"
+    case .replaceExercise: "Sustituir ejercicio"
+    case .adjustSet: "Ajustar serie"
+    }
+  }
+
+  var buttonLabel: String { "Crear propuesta: \(label.lowercased())" }
+
+  var symbol: String {
+    switch self {
+    case .move: "calendar.badge.clock"
+    case .cancel: "calendar.badge.minus"
+    case .replaceExercise: "arrow.triangle.swap"
+    case .adjustSet: "slider.horizontal.3"
+    }
+  }
+
+  var reason: String { label.lowercased() }
+}
+
+private struct ValidationDetailRow: View {
+  let title: String
+  let value: String
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Text(title)
+        .font(.gymSupport.weight(.semibold))
+        .foregroundStyle(Color.gymSecondaryText)
+      Text(value)
+        .font(.gymBody.weight(.medium))
+        .foregroundStyle(.primary)
+    }
+  }
+}
+
 private enum ScheduleDisplayMode: String, CaseIterable, Identifiable {
   case calendar
   case list
@@ -864,6 +1268,7 @@ private struct TrainingCalendarGrid: View {
   @Binding var selectedDay: Date?
   let sessionsByDay: [Date: [TrainingSession]]
   let completedSessionIDs: Set<String>
+  @Environment(\.colorScheme) private var colorScheme
 
   private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
   private let calendar = Calendar.current
@@ -940,7 +1345,11 @@ private struct TrainingCalendarGrid: View {
   private func dayFill(hasSession: Bool, isCompleted: Bool, isToday: Bool, isSelected: Bool) -> Color {
     if isSelected { return Color.gymAccent }
     if isToday { return Color.gymTertiary.opacity(0.24) }
-    if isCompleted { return Color.gymCompleted.opacity(0.22) }
+    if isCompleted {
+      return colorScheme == .dark
+        ? Color(red: 0.16, green: 0.72, blue: 0.39).opacity(0.62)
+        : Color.gymCompleted.opacity(0.28)
+    }
     if hasSession { return Color.gymAccent.opacity(0.18) }
     return .clear
   }
@@ -982,7 +1391,7 @@ private struct PlanningSessionCard: View {
           NavigationLink {
             CompletedWorkoutDetailView(record: record)
           } label: {
-            Label("Histórico", systemImage: "clock.arrow.circlepath")
+            Label("Corregir series", systemImage: "pencil")
               .frame(maxWidth: .infinity, minHeight: 44)
           }
           .buttonStyle(.bordered)

@@ -296,7 +296,8 @@ private struct ProfileContextStep: View {
         ProfileTextField(label: "Prioridades musculares", placeholder: "Ej. pecho, espalda y piernas", value: $profile.priorityText)
         ProfileTextField(label: "Preferencias", placeholder: "Ej. prefiero ejercicios con barra", value: $profile.exercisePreferences)
         ProfileTextField(label: "Ejercicios a evitar", placeholder: "Ej. fondos", value: $profile.exercisesToAvoid)
-        ProfileTextField(label: "Limitaciones o molestias", placeholder: "Ej. hombro derecho sensible", value: $profile.limitations)
+        ProfileTextField(label: "Limitaciones", placeholder: "Ej. evitar superseries", value: $profile.limitations)
+        ProfileDiscomfortEditor(discomforts: $profile.declaredDiscomforts)
       }
     }
   }
@@ -470,6 +471,102 @@ private struct LoadInventoryEditor: View {
 
   private func loadKey(_ weight: Double) -> String {
     String(format: "%.2f", weight)
+  }
+}
+
+private struct ProfileDiscomfortEditor: View {
+  @Binding var discomforts: [String]
+  @State private var discomfortText = ""
+  @State private var selectedDiscomforts = Set<String>()
+
+  private let columns = [GridItem(.adaptive(minimum: 110), spacing: 8, alignment: .leading)]
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("Molestias declaradas")
+        .font(.gymH3.weight(.bold))
+      Text("Se mostrarán para valorarlas de 0 a 3 al evaluar una serie y condicionarán propuestas futuras.")
+        .font(.gymSupport)
+        .foregroundStyle(Color.gymSecondaryText)
+
+      HStack(spacing: 8) {
+        TextField("Ej. hombro derecho", text: $discomfortText)
+          .font(.gymBody.weight(.semibold))
+          .textInputAutocapitalization(.sentences)
+          .padding(.horizontal, 12)
+          .frame(minHeight: 44)
+          .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+          .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.35), lineWidth: 1) }
+
+        Button(action: add) {
+          Image(systemName: "plus")
+            .font(.gymH3.weight(.bold))
+            .frame(width: 44, height: 44)
+            .foregroundStyle(Color.gymAccentForeground)
+            .background(Color.gymAccent, in: Circle())
+        }
+        .accessibilityLabel("Añadir molestia")
+        .buttonStyle(.plain)
+        .disabled(trimmedDiscomfort.isEmpty)
+        .opacity(trimmedDiscomfort.isEmpty ? 0.45 : 1)
+      }
+
+      if !discomforts.isEmpty {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+          ForEach(discomforts, id: \.self) { discomfort in
+            Button { toggleSelection(discomfort) } label: {
+              Text(discomfort)
+                .font(.gymBody.weight(.semibold))
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .padding(.horizontal, 10)
+                .foregroundStyle(selectedDiscomforts.contains(discomfort) ? Color.gymControlSelectionForeground : .primary)
+                .background(selectedDiscomforts.contains(discomfort) ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay {
+                  RoundedRectangle(cornerRadius: 12)
+                    .stroke(selectedDiscomforts.contains(discomfort) ? Color.gymAccent : Color.gymAccent.opacity(0.35), lineWidth: selectedDiscomforts.contains(discomfort) ? 2 : 1)
+                }
+            }
+            .buttonStyle(.plain)
+          }
+        }
+
+        if !selectedDiscomforts.isEmpty {
+          Button(role: .destructive, action: removeSelected) {
+            Label("Eliminar seleccionadas", systemImage: "trash")
+              .font(.gymBody.weight(.semibold))
+              .frame(maxWidth: .infinity, minHeight: 44)
+          }
+          .buttonStyle(.bordered)
+        }
+      }
+    }
+  }
+
+  private var trimmedDiscomfort: String {
+    discomfortText.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  private func add() {
+    guard !trimmedDiscomfort.isEmpty,
+          !discomforts.contains(where: { $0.compare(trimmedDiscomfort, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame })
+    else { return }
+    discomforts.append(trimmedDiscomfort)
+    discomforts.sort { $0.localizedStandardCompare($1) == .orderedAscending }
+    discomfortText = ""
+  }
+
+  private func toggleSelection(_ discomfort: String) {
+    if selectedDiscomforts.contains(discomfort) {
+      selectedDiscomforts.remove(discomfort)
+    } else {
+      selectedDiscomforts.insert(discomfort)
+    }
+  }
+
+  private func removeSelected() {
+    discomforts.removeAll { selectedDiscomforts.contains($0) }
+    selectedDiscomforts.removeAll()
   }
 }
 
