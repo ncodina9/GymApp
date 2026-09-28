@@ -2,6 +2,7 @@ import Foundation
 
 public enum PlanningOperation: Codable, Equatable, Sendable {
   case moveSession(sessionID: String, toDate: String)
+  case shiftFutureSessions(fromDate: String, byDays: Int)
   case cancelSession(sessionID: String)
   case replaceExercise(sessionID: String, exerciseID: String, replacementExerciseID: String)
   case addExercise(sessionID: String, sourceExerciseID: String)
@@ -12,13 +13,14 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
     case type
     case sessionID
     case toDate
+    case fromDate, byDays
     case exerciseID
     case replacementExerciseID
     case sourceExerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds
   }
 
   private enum Kind: String, Codable {
-    case moveSession
+    case moveSession, shiftFutureSessions
     case cancelSession
     case replaceExercise
     case addExercise, removeExercise, adjustSet
@@ -31,6 +33,11 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
       self = .moveSession(
         sessionID: try container.decode(String.self, forKey: .sessionID),
         toDate: try container.decode(String.self, forKey: .toDate)
+      )
+    case .shiftFutureSessions:
+      self = .shiftFutureSessions(
+        fromDate: try container.decode(String.self, forKey: .fromDate),
+        byDays: try container.decode(Int.self, forKey: .byDays)
       )
     case .cancelSession:
       self = .cancelSession(sessionID: try container.decode(String.self, forKey: .sessionID))
@@ -56,6 +63,10 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
       try container.encode(Kind.moveSession, forKey: .type)
       try container.encode(sessionID, forKey: .sessionID)
       try container.encode(toDate, forKey: .toDate)
+    case let .shiftFutureSessions(fromDate, byDays):
+      try container.encode(Kind.shiftFutureSessions, forKey: .type)
+      try container.encode(fromDate, forKey: .fromDate)
+      try container.encode(byDays, forKey: .byDays)
     case let .cancelSession(sessionID):
       try container.encode(Kind.cancelSession, forKey: .type)
       try container.encode(sessionID, forKey: .sessionID)
@@ -76,6 +87,7 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
   public var summary: String {
     switch self {
     case let .moveSession(_, toDate): "Mover la sesión al \(toDate)"
+    case let .shiftFutureSessions(fromDate, byDays): "Desplazar sesiones desde \(fromDate) \(byDays) días"
     case .cancelSession: "Cancelar la sesión"
     case let .replaceExercise(_, _, replacementExerciseID): "Sustituir ejercicio por \(replacementExerciseID)"
     case let .addExercise(_, sourceExerciseID): "Añadir ejercicio \(sourceExerciseID)"
@@ -146,6 +158,15 @@ public struct PlanningImpact: Codable, Equatable, Sendable {
   public let supersetsBefore: Int
   public let supersetsAfter: Int
   public let weeklySetChanges: [WeeklySetChange]
+  public let shiftedMacrocycleWeeks: [Int]
+  public let scheduleEndBefore: String?
+  public let scheduleEndAfter: String?
+
+  private enum CodingKeys: String, CodingKey {
+    case changedSessionIDs, estimatedMinutesBefore, estimatedMinutesAfter
+    case supersetsBefore, supersetsAfter, weeklySetChanges, shiftedMacrocycleWeeks
+    case scheduleEndBefore, scheduleEndAfter
+  }
 
   public init(
     changedSessionIDs: [String],
@@ -153,7 +174,10 @@ public struct PlanningImpact: Codable, Equatable, Sendable {
     estimatedMinutesAfter: Int,
     supersetsBefore: Int,
     supersetsAfter: Int,
-    weeklySetChanges: [WeeklySetChange]
+    weeklySetChanges: [WeeklySetChange],
+    shiftedMacrocycleWeeks: [Int] = [],
+    scheduleEndBefore: String? = nil,
+    scheduleEndAfter: String? = nil
   ) {
     self.changedSessionIDs = changedSessionIDs
     self.estimatedMinutesBefore = estimatedMinutesBefore
@@ -161,6 +185,35 @@ public struct PlanningImpact: Codable, Equatable, Sendable {
     self.supersetsBefore = supersetsBefore
     self.supersetsAfter = supersetsAfter
     self.weeklySetChanges = weeklySetChanges
+    self.shiftedMacrocycleWeeks = shiftedMacrocycleWeeks
+    self.scheduleEndBefore = scheduleEndBefore
+    self.scheduleEndAfter = scheduleEndAfter
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    changedSessionIDs = try container.decode([String].self, forKey: .changedSessionIDs)
+    estimatedMinutesBefore = try container.decode(Int.self, forKey: .estimatedMinutesBefore)
+    estimatedMinutesAfter = try container.decode(Int.self, forKey: .estimatedMinutesAfter)
+    supersetsBefore = try container.decode(Int.self, forKey: .supersetsBefore)
+    supersetsAfter = try container.decode(Int.self, forKey: .supersetsAfter)
+    weeklySetChanges = try container.decode([WeeklySetChange].self, forKey: .weeklySetChanges)
+    shiftedMacrocycleWeeks = try container.decodeIfPresent([Int].self, forKey: .shiftedMacrocycleWeeks) ?? []
+    scheduleEndBefore = try container.decodeIfPresent(String.self, forKey: .scheduleEndBefore)
+    scheduleEndAfter = try container.decodeIfPresent(String.self, forKey: .scheduleEndAfter)
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(changedSessionIDs, forKey: .changedSessionIDs)
+    try container.encode(estimatedMinutesBefore, forKey: .estimatedMinutesBefore)
+    try container.encode(estimatedMinutesAfter, forKey: .estimatedMinutesAfter)
+    try container.encode(supersetsBefore, forKey: .supersetsBefore)
+    try container.encode(supersetsAfter, forKey: .supersetsAfter)
+    try container.encode(weeklySetChanges, forKey: .weeklySetChanges)
+    try container.encode(shiftedMacrocycleWeeks, forKey: .shiftedMacrocycleWeeks)
+    try container.encodeIfPresent(scheduleEndBefore, forKey: .scheduleEndBefore)
+    try container.encodeIfPresent(scheduleEndAfter, forKey: .scheduleEndAfter)
   }
 }
 
@@ -213,6 +266,7 @@ public enum PlanningOperationError: Error, Equatable, Sendable, LocalizedError {
   case invalidDate(String)
   case dateOutsideAvailability(String)
   case conflictingSession(String)
+  case invalidShift(Int)
   case exerciseNotFound(String)
   case replacementNotFound(String)
   case replacementUsesUnavailableEquipment(String)
@@ -229,6 +283,7 @@ public enum PlanningOperationError: Error, Equatable, Sendable, LocalizedError {
     case let .invalidDate(value): "La fecha \(value) no es válida."
     case let .dateOutsideAvailability(value): "La fecha \(value) queda fuera de la disponibilidad indicada."
     case let .conflictingSession(value): "Ya existe una sesión programada para \(value)."
+    case let .invalidShift(days): "No se pueden desplazar sesiones \(days) días."
     case let .exerciseNotFound(id): "No existe el ejercicio \(id) en la sesión."
     case let .replacementNotFound(id): "No existe el ejercicio alternativo \(id)."
     case let .replacementUsesUnavailableEquipment(id): "El ejercicio \(id) requiere material no disponible."
@@ -264,6 +319,29 @@ public enum PlanningOperationEngine {
         plan.sessions[index].date = toDate
         plan.sessions[index].weekday = weekdayLabel(for: targetDay)
         appendDurationWarning(for: plan.sessions[index], constraints: constraints, warnings: &warnings)
+
+      case let .shiftFutureSessions(fromDate, byDays):
+        guard byDays > 0 else { throw PlanningOperationError.invalidShift(byDays) }
+        let startDate = try date(from: fromDate)
+        let startDay = Calendar.current.startOfDay(for: startDate)
+        let affected = plan.sessions.indices.filter { index in
+          guard !plan.sessions[index].isCancelled, let date = try? date(from: plan.sessions[index].date) else { return false }
+          return Calendar.current.startOfDay(for: date) >= startDay
+        }
+        guard !affected.isEmpty else { throw PlanningOperationError.invalidShift(byDays) }
+        for index in affected {
+          _ = try editableSessionIndex(plan.sessions[index].sessionID, in: plan, constraints: constraints)
+        }
+        for index in affected {
+          let currentDate = try date(from: plan.sessions[index].date)
+          guard let shiftedDate = Calendar.current.date(byAdding: .day, value: byDays, to: currentDate) else {
+            throw PlanningOperationError.invalidShift(byDays)
+          }
+          plan.sessions[index].date = isoDateString(shiftedDate)
+          plan.sessions[index].weekday = weekdayLabel(for: shiftedDate)
+        }
+        let dates = plan.sessions.filter { !$0.isCancelled }.map(\.date)
+        guard Set(dates).count == dates.count else { throw PlanningOperationError.conflictingSession(fromDate) }
 
       case let .cancelSession(sessionID):
         let index = try editableSessionIndex(sessionID, in: plan, constraints: constraints)
@@ -366,14 +444,35 @@ public enum PlanningOperationEngine {
       lhs.week == rhs.week ? lhs.muscle < rhs.muscle : lhs.week < rhs.week
     }
 
+    let explicitlyChangedSessionIDs = Set(operations.compactMap(sessionID(for:)))
+    let shiftedWeeks = proposedPlan.sessions.compactMap { proposed -> Int? in
+      guard let original = basePlan.sessions.first(where: { $0.sessionID == proposed.sessionID }),
+            original.date != proposed.date else { return nil }
+      return proposed.week
+    }
     return PlanningImpact(
-      changedSessionIDs: Array(Set(operations.compactMap(sessionID(for:)))).sorted(),
+      changedSessionIDs: proposedPlan.sessions.compactMap { proposed in
+        guard let original = basePlan.sessions.first(where: { $0.sessionID == proposed.sessionID }) else { return proposed.sessionID }
+        return original.date != proposed.date || original.isCancelled != proposed.isCancelled || explicitlyChangedSessionIDs.contains(proposed.sessionID)
+          ? proposed.sessionID
+          : nil
+      }.sorted(),
       estimatedMinutesBefore: basePlan.sessions.filter { !$0.isCancelled }.reduce(0) { $0 + $1.estimatedMinutes },
       estimatedMinutesAfter: proposedPlan.sessions.filter { !$0.isCancelled }.reduce(0) { $0 + $1.estimatedMinutes },
       supersetsBefore: supersetCount(for: basePlan),
       supersetsAfter: supersetCount(for: proposedPlan),
-      weeklySetChanges: changedVolume
+      weeklySetChanges: changedVolume,
+      shiftedMacrocycleWeeks: Array(Set(shiftedWeeks)).sorted(),
+      scheduleEndBefore: scheduleEndDate(for: basePlan),
+      scheduleEndAfter: scheduleEndDate(for: proposedPlan)
     )
+  }
+
+  private static func scheduleEndDate(for plan: TrainingPlan) -> String? {
+    plan.sessions
+      .filter { !$0.isCancelled }
+      .map(\.date)
+      .max()
   }
 
   private static func weeklyVolume(for plan: TrainingPlan) -> [String: Int] {
@@ -435,6 +534,8 @@ public enum PlanningOperationEngine {
          let .replaceExercise(sessionID, _, _), let .addExercise(sessionID, _),
          let .removeExercise(sessionID, _), let .adjustSet(sessionID, _, _, _, _, _, _):
       sessionID
+    case .shiftFutureSessions:
+      nil
     }
   }
 
@@ -484,5 +585,13 @@ public enum PlanningOperationEngine {
   private static func weekdayLabel(for date: Date) -> String {
     let names = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
     return names[Calendar.current.component(.weekday, from: date) - 1]
+  }
+
+  private static func isoDateString(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
   }
 }

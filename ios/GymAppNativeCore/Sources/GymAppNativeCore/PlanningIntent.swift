@@ -4,6 +4,8 @@ import Foundation
 /// It contains no model-generated plan and never mutates a `TrainingPlan` directly.
 public enum PlanningIntent: Codable, Equatable, Sendable {
   case moveSession(sessionID: String, toDate: String)
+  case postponeFutureSessions(fromDate: String, byDays: Int)
+  case gymClosure(date: String)
   case cancelSession(sessionID: String)
   case replaceExercise(sessionID: String, exerciseID: String, replacementExerciseID: String)
   case adjustSet(
@@ -18,12 +20,12 @@ public enum PlanningIntent: Codable, Equatable, Sendable {
   case adaptSessionDuration(sessionID: String, maximumMinutes: Int)
 
   private enum CodingKeys: String, CodingKey {
-    case type, sessionID, toDate, exerciseID, replacementExerciseID
+    case type, sessionID, toDate, fromDate, byDays, exerciseID, replacementExerciseID
     case setIndex, reps, weightKg, durationSeconds, restSeconds, maximumMinutes
   }
 
   private enum Kind: String, Codable {
-    case moveSession, cancelSession, replaceExercise, adjustSet, adaptSessionDuration
+    case moveSession, postponeFutureSessions, gymClosure, cancelSession, replaceExercise, adjustSet, adaptSessionDuration
   }
 
   public init(from decoder: Decoder) throws {
@@ -31,6 +33,10 @@ public enum PlanningIntent: Codable, Equatable, Sendable {
     switch try container.decode(Kind.self, forKey: .type) {
     case .moveSession:
       self = .moveSession(sessionID: try container.decode(String.self, forKey: .sessionID), toDate: try container.decode(String.self, forKey: .toDate))
+    case .postponeFutureSessions:
+      self = .postponeFutureSessions(fromDate: try container.decode(String.self, forKey: .fromDate), byDays: try container.decode(Int.self, forKey: .byDays))
+    case .gymClosure:
+      self = .gymClosure(date: try container.decode(String.self, forKey: .fromDate))
     case .cancelSession:
       self = .cancelSession(sessionID: try container.decode(String.self, forKey: .sessionID))
     case .replaceExercise:
@@ -47,6 +53,10 @@ public enum PlanningIntent: Codable, Equatable, Sendable {
     switch self {
     case let .moveSession(sessionID, toDate):
       try container.encode(Kind.moveSession, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(toDate, forKey: .toDate)
+    case let .postponeFutureSessions(fromDate, byDays):
+      try container.encode(Kind.postponeFutureSessions, forKey: .type); try container.encode(fromDate, forKey: .fromDate); try container.encode(byDays, forKey: .byDays)
+    case let .gymClosure(date):
+      try container.encode(Kind.gymClosure, forKey: .type); try container.encode(date, forKey: .fromDate)
     case let .cancelSession(sessionID):
       try container.encode(Kind.cancelSession, forKey: .type); try container.encode(sessionID, forKey: .sessionID)
     case let .replaceExercise(sessionID, exerciseID, replacementExerciseID):
@@ -83,6 +93,10 @@ public enum PlanningIntentResolver {
     switch intent {
     case let .moveSession(sessionID, toDate):
       .operations([.moveSession(sessionID: sessionID, toDate: toDate)])
+    case let .postponeFutureSessions(fromDate, byDays):
+      .operations([.shiftFutureSessions(fromDate: fromDate, byDays: byDays)])
+    case let .gymClosure(date):
+      .operations([.shiftFutureSessions(fromDate: date, byDays: 1)])
     case let .cancelSession(sessionID):
       .operations([.cancelSession(sessionID: sessionID)])
     case let .replaceExercise(sessionID, exerciseID, replacementExerciseID):
@@ -170,7 +184,7 @@ public enum LocalPlanningIntentInterpreterError: LocalizedError, Equatable, Send
     case .missingSessionContext:
       "Elige primero la sesión sobre la que quieres hacer la solicitud."
     case .unsupportedRequest:
-      "Necesito saber si quieres cancelar, mover la sesión a una fecha o ajustar su duración. Puedes usar fechas como mañana, el jueves o 2026-10-03."
+      "Necesito saber si quieres cancelar, mover la sesión, indicar una ausencia o ajustar su duración. Puedes usar fechas como mañana, el jueves o 2026-10-03."
     }
   }
 }
@@ -182,14 +196,19 @@ public struct LocalPlanningIntentInterpreter: PlanningIntentInterpreting {
   public init() {}
 
   public func interpret(_ request: PlanningIntentRequest) async throws -> [PlanningIntent] {
-    guard let sessionID = request.referencedSessionID, !sessionID.isEmpty else {
-      throw LocalPlanningIntentInterpreterError.missingSessionContext
-    }
-
     let normalized = request.userText.folding(
       options: [.caseInsensitive, .diacriticInsensitive],
       locale: .current
     )
+    if normalized.contains("vacaciones"), let absence = Self.vacationPeriod(in: normalized, from: request.createdAt) {
+      return [.postponeFutureSessions(fromDate: absence.startDate, byDays: absence.days)]
+    }
+    if Self.describesGymClosure(normalized), let date = Self.singleDate(in: normalized, from: request.createdAt) {
+      return [.gymClosure(date: date)]
+    }
+    guard let sessionID = request.referencedSessionID, !sessionID.isEmpty else {
+      throw LocalPlanningIntentInterpreterError.missingSessionContext
+    }
     if normalized.contains("cancel") || normalized.contains("no puedo") || normalized.contains("no podre") {
       return [.cancelSession(sessionID: sessionID)]
     }
@@ -240,6 +259,134 @@ public struct LocalPlanningIntentInterpreter: PlanningIntentInterpreting {
     formatter.timeZone = .current
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.string(from: date)
+  }
+
+  private static func vacationPeriod(in text: String, from referenceDate: Date) -> (startDate: String, days: Int)? {
+    if let period = isoDateRange(in: text) { return period }
+    if let period = spanishCrossMonthDateRange(in: text, from: referenceDate) { return period }
+    if let period = spanishDateRange(in: text, from: referenceDate) { return period }
+    guard text.contains("semana que viene") || text.contains("proxima semana") else { return nil }
+    let calendar = Calendar.current
+    guard let nextWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: referenceDate),
+          let interval = calendar.dateInterval(of: .weekOfYear, for: nextWeek) else { return nil }
+    return (isoDateString(interval.start), 7)
+  }
+
+  private static func describesGymClosure(_ text: String) -> Bool {
+    text.contains("festivo") || text.contains("gym no abre") || text.contains("gimnasio no abre") || text.contains("gym cerrado") || text.contains("gimnasio cerrado")
+  }
+
+  private static func singleDate(in text: String, from referenceDate: Date) -> String? {
+    if let date = isoDate(in: text) { return date }
+    guard let captures = captures(in: text, pattern: "\\b(?:el\\s+dia\\s+|el\\s+)?(\\d{1,2})\\s+de\\s+([a-z]+)(?:\\s+de\\s+(\\d{4}))?\\b"),
+          captures.count == 3,
+          let day = Int(captures[0]),
+          let month = spanishMonth[captures[1]] else { return nil }
+    let calendar = Calendar.current
+    var year = Int(captures[2]) ?? calendar.component(.year, from: referenceDate)
+    guard var date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return nil }
+    if captures[2].isEmpty, date < calendar.startOfDay(for: referenceDate) {
+      year += 1
+      guard let nextYearDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return nil }
+      date = nextYearDate
+    }
+    return isoDateString(date)
+  }
+
+  /// The end date in a natural-language range is the return date, therefore it
+  /// is exclusive: "del 12 al 19" represents seven unavailable days.
+  private static func isoDateRange(in text: String) -> (startDate: String, days: Int)? {
+    guard let captures = captures(in: text, pattern: "\\b(?:del\\s+)?(\\d{4}-\\d{2}-\\d{2})\\s+(?:al|a)\\s+(\\d{4}-\\d{2}-\\d{2})\\b"),
+          captures.count == 2,
+          let start = date(from: captures[0]),
+          let end = date(from: captures[1]) else { return nil }
+    let days = Calendar.current.dateComponents([.day], from: start, to: end).day ?? 0
+    guard days > 0 else { return nil }
+    return (captures[0], days)
+  }
+
+  private static func spanishDateRange(in text: String, from referenceDate: Date) -> (startDate: String, days: Int)? {
+    guard let captures = captures(in: text, pattern: "\\b(?:del\\s+)?(\\d{1,2})\\s+(?:al|a)\\s+(\\d{1,2})\\s+de\\s+([a-z]+)(?:\\s+de\\s+(\\d{4}))?\\b"),
+          captures.count == 4,
+          let startDay = Int(captures[0]),
+          let endDay = Int(captures[1]),
+          let month = spanishMonth[captures[2]] else { return nil }
+    let calendar = Calendar.current
+    let referenceYear = calendar.component(.year, from: referenceDate)
+    var year = Int(captures[3]) ?? referenceYear
+    guard var start = calendar.date(from: DateComponents(year: year, month: month, day: startDay)),
+          var end = calendar.date(from: DateComponents(year: year, month: month, day: endDay)) else { return nil }
+    if captures[3].isEmpty, end < start {
+      year += 1
+      guard let nextYearEnd = calendar.date(from: DateComponents(year: year, month: month, day: endDay)) else { return nil }
+      end = nextYearEnd
+    }
+    if captures[3].isEmpty, start < calendar.startOfDay(for: referenceDate),
+       let nextYearStart = calendar.date(byAdding: .year, value: 1, to: start),
+       let nextYearEnd = calendar.date(byAdding: .year, value: 1, to: end) {
+      start = nextYearStart
+      end = nextYearEnd
+    }
+    let days = calendar.dateComponents([.day], from: start, to: end).day ?? 0
+    guard days > 0 else { return nil }
+    return (isoDateString(start), days)
+  }
+
+  private static func spanishCrossMonthDateRange(in text: String, from referenceDate: Date) -> (startDate: String, days: Int)? {
+    guard let captures = captures(in: text, pattern: "\\b(?:del\\s+)?(\\d{1,2})\\s+de\\s+([a-z]+)\\s+(?:al|a)\\s+(\\d{1,2})\\s+de\\s+([a-z]+)(?:\\s+de\\s+(\\d{4}))?\\b"),
+          captures.count == 5,
+          let startDay = Int(captures[0]),
+          let startMonth = spanishMonth[captures[1]],
+          let endDay = Int(captures[2]),
+          let endMonth = spanishMonth[captures[3]] else { return nil }
+    let calendar = Calendar.current
+    let explicitYear = Int(captures[4])
+    var startYear = explicitYear ?? calendar.component(.year, from: referenceDate)
+    var endYear = startYear
+    if explicitYear == nil, endMonth < startMonth { endYear += 1 }
+    guard var start = calendar.date(from: DateComponents(year: startYear, month: startMonth, day: startDay)),
+          var end = calendar.date(from: DateComponents(year: endYear, month: endMonth, day: endDay)) else { return nil }
+    if explicitYear == nil, start < calendar.startOfDay(for: referenceDate) {
+      startYear += 1
+      endYear += 1
+      guard let nextYearStart = calendar.date(from: DateComponents(year: startYear, month: startMonth, day: startDay)),
+            let nextYearEnd = calendar.date(from: DateComponents(year: endYear, month: endMonth, day: endDay)) else { return nil }
+      start = nextYearStart
+      end = nextYearEnd
+    }
+    let days = calendar.dateComponents([.day], from: start, to: end).day ?? 0
+    guard days > 0 else { return nil }
+    return (isoDateString(start), days)
+  }
+
+  private static let spanishMonth: [String: Int] = [
+    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
+    "julio": 7, "agosto": 8, "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12,
+  ]
+
+  private static func date(from value: String) -> Date? {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: value)
+  }
+
+  private static func isoDateString(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
+  }
+
+  private static func captures(in text: String, pattern: String) -> [String]? {
+    guard let expression = try? NSRegularExpression(pattern: pattern),
+          let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) else { return nil }
+    return (1 ..< match.numberOfRanges).map { index in
+      guard let range = Range(match.range(at: index), in: text) else { return "" }
+      return String(text[range])
+    }
   }
 
   private static func firstCapture(in text: String, pattern: String) -> String? {

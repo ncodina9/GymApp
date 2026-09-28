@@ -1412,6 +1412,16 @@ Actualización v0.1.130: el detalle semanal del macrociclo usa tarjetas independ
 
 Actualización v0.1.131: la disponibilidad del perfil guía las replanificaciones automáticas, pero no impide excepciones explícitas. Si no existen suficientes huecos compatibles, el planificador propone también fechas futuras sin conflicto fuera de la disponibilidad habitual y las etiqueta de forma visible antes de crear una revisión. La elección puntual no modifica los días generales configurados en el perfil.
 
+Actualización v0.1.132: cuando una sesión no tiene hueco directo, el planificador puede proponer una cadena corta de desplazamientos entre sesiones futuras y editables. Las operaciones se validan y aplican de atrás hacia delante para liberar cada fecha antes de ocuparla. La interfaz informa cuántas sesiones posteriores se desplazan; las sesiones activas, completadas, pasadas o una cadena sin hueco final siguen excluidas.
+
+Actualización v0.1.133: el entrenador local reconoce una ausencia de una semana, por ejemplo “estaré de vacaciones la semana que viene”, y genera una única revisión tipada que desplaza siete días todas las sesiones futuras desde el inicio de esa semana. El impacto enumera todas las sesiones aplazadas y la aplicación conserva intactas las sesiones activas, completadas, canceladas o pasadas; si alguna sesión afectada no es editable, la propuesta se rechaza antes de modificar el plan.
+
+Actualización v0.1.134: las ausencias aceptan ahora intervalos explícitos, tanto en ISO (`del 2026-11-02 al 2026-11-16`) como en español (`del 12 al 19 de octubre`). La fecha final representa el regreso y es exclusiva, por lo que el motor calcula el número exacto de días a desplazar. Cada revisión comunica también la nueva fecha de finalización del macrociclo; los impactos guardados antes de este campo se mantienen legibles.
+
+Actualización v0.1.135: los intervalos de ausencia en español pueden cruzar mes, por ejemplo `del 28 de noviembre al 6 de diciembre`, y el motor conserva la fase, el objetivo y el volumen de cada semana mientras traslada sus fechas. El impacto identifica las semanas de macrociclo reprogramadas (`S3`, `S4`, etc.) junto con la nueva fecha final, para distinguir con claridad un cambio temporal de una modificación de la carga planificada.
+
+Actualización v0.1.136: el entrenador local reconoce cierres puntuales del gimnasio, por ejemplo `El 12 de octubre es festivo y el gym no abre` o una fecha ISO equivalente. El cierre genera una intención auditable propia y una revisión que desplaza un día las sesiones futuras desde esa fecha, sin requerir seleccionar una sesión y sin modificar los objetivos ni las semanas del macrociclo.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.

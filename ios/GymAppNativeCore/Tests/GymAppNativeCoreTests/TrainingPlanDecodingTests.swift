@@ -289,6 +289,61 @@ struct TrainingPlanDecodingTests {
       createdAt: try #require(isoDate("2026-09-28"))
     ))
     #expect(movedToThursday == [.moveSession(sessionID: sessionID, toDate: "2026-10-01")])
+
+    let vacation = try await interpreter.interpret(.init(
+      userText: "Estaré de vacaciones la semana que viene",
+      createdAt: try #require(isoDate("2026-09-28"))
+    ))
+    #expect(vacation == [.postponeFutureSessions(fromDate: "2026-10-05", byDays: 7)])
+
+    let datedVacation = try await interpreter.interpret(.init(
+      userText: "Estaré de vacaciones del 12 al 19 de octubre",
+      createdAt: try #require(isoDate("2026-09-28"))
+    ))
+    #expect(datedVacation == [.postponeFutureSessions(fromDate: "2026-10-12", byDays: 7)])
+
+    let isoDatedVacation = try await interpreter.interpret(.init(
+      userText: "Vacaciones del 2026-11-02 al 2026-11-16",
+      createdAt: try #require(isoDate("2026-09-28"))
+    ))
+    #expect(isoDatedVacation == [.postponeFutureSessions(fromDate: "2026-11-02", byDays: 14)])
+
+    let crossMonthVacation = try await interpreter.interpret(.init(
+      userText: "Estaré de vacaciones del 28 de noviembre al 6 de diciembre",
+      createdAt: try #require(isoDate("2026-09-28"))
+    ))
+    #expect(crossMonthVacation == [.postponeFutureSessions(fromDate: "2026-11-28", byDays: 8)])
+
+    let holiday = try await interpreter.interpret(.init(
+      userText: "El 12 de octubre es festivo y el gym no abre",
+      createdAt: try #require(isoDate("2026-09-28"))
+    ))
+    #expect(holiday == [.gymClosure(date: "2026-10-12")])
+    #expect(PlanningIntentResolver.resolve(.gymClosure(date: "2026-10-12")) == .operations([
+      .shiftFutureSessions(fromDate: "2026-10-12", byDays: 1),
+    ]))
+  }
+
+  @Test("Retrasa el macrociclo sin alterar sesiones protegidas")
+  func postponesFutureSessionsForAbsence() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-09-28"))
+    )
+    let proposal = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.shiftFutureSessions(fromDate: "2026-10-05", byDays: 7)],
+      constraints: constraints
+    )
+    let original = try #require(plan.sessions.first { $0.date == "2026-10-05" })
+    let shifted = try #require(proposal.plan.sessions.first { $0.sessionID == original.sessionID })
+    #expect(shifted.date == "2026-10-12")
+    #expect(proposal.impact.changedSessionIDs.contains(original.sessionID))
+    #expect(proposal.impact.scheduleEndBefore != proposal.impact.scheduleEndAfter)
+    #expect(!proposal.impact.shiftedMacrocycleWeeks.isEmpty)
   }
 
   @Test("Codifica el contexto remoto mínimo sin histórico ni series")
@@ -402,6 +457,7 @@ struct TrainingPlanDecodingTests {
     )
     #expect(!fallbackOptions.isEmpty)
     #expect(fallbackOptions.allSatisfy { $0.isOutsideAvailability })
+    #expect(fallbackOptions.contains { $0.shiftsOtherSessions })
   }
 
   @Test("Conserva superseries, temporizados y material")

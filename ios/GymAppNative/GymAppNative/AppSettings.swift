@@ -296,6 +296,20 @@ private struct PlanningImpactSummary: View {
         impactMetric("Superseries", delta: impact.supersetsAfter - impact.supersetsBefore, suffix: "")
       }
 
+      if let previousEnd = impact.scheduleEndBefore,
+         let proposedEnd = impact.scheduleEndAfter,
+         previousEnd != proposedEnd {
+        Label("Fin del macrociclo: \(Self.dateLabel(proposedEnd))", systemImage: "calendar.badge.clock")
+          .font(.gymSupport.weight(.semibold))
+          .foregroundStyle(Color.gymAccent)
+      }
+
+      if !impact.shiftedMacrocycleWeeks.isEmpty {
+        Label("Semanas reprogramadas: \(impact.shiftedMacrocycleWeeks.map { "S\($0)" }.joined(separator: ", "))", systemImage: "arrow.left.and.right")
+          .font(.gymSupport)
+          .foregroundStyle(Color.gymSecondaryText)
+      }
+
       if impact.weeklySetChanges.isEmpty {
         Text("Sin cambio de volumen semanal por grupo muscular.")
           .font(.gymSupport)
@@ -320,6 +334,18 @@ private struct PlanningImpactSummary: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(8)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 10))
+  }
+
+  private static func dateLabel(_ value: String) -> String {
+    let parser = DateFormatter()
+    parser.locale = Locale(identifier: "en_US_POSIX")
+    parser.timeZone = .current
+    parser.dateFormat = "yyyy-MM-dd"
+    guard let date = parser.date(from: value) else { return value }
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateStyle = .medium
+    return formatter.string(from: date)
   }
 }
 
@@ -1422,6 +1448,7 @@ private struct CoachConversationView: View {
               coachPrompt("Solo tengo 45 minutos")
             }
             coachPrompt("Muévela al jueves")
+            coachPrompt("Vacaciones la semana que viene")
           }
 
           Button(action: interpretRequest) {
@@ -1484,6 +1511,11 @@ private struct CoachConversationView: View {
                           Text("Fuera de tu disponibilidad habitual")
                             .font(.gymSupport)
                             .foregroundStyle(Color.gymWarning)
+                        }
+                        if option.shiftsOtherSessions {
+                          Text("Desplaza \(option.shiftedSessionIDs.count) sesión\(option.shiftedSessionIDs.count == 1 ? "" : "es") posterior\(option.shiftedSessionIDs.count == 1 ? "" : "es")")
+                            .font(.gymSupport)
+                            .foregroundStyle(Color.gymSecondaryText)
                         }
                       }
                       Spacer(minLength: 0)
@@ -1586,7 +1618,9 @@ private struct CoachConversationView: View {
         ? "No podré entrenar esta sesión"
         : text == "Muévela al jueves"
           ? "Mueve esta sesión al jueves"
-          : "Quiero hacer esta sesión en 45 minutos"
+          : text == "Vacaciones la semana que viene"
+            ? "Estaré de vacaciones la semana que viene"
+            : "Quiero hacer esta sesión en 45 minutos"
     }
     .font(.gymSupport.weight(.semibold))
     .frame(maxWidth: .infinity, minHeight: 38)
@@ -1642,6 +1676,8 @@ private struct CoachConversationView: View {
   private func summary(for intent: PlanningIntent) -> String {
     switch intent {
     case let .moveSession(_, date): "Mover la sesión al \(Self.dateLabel(date))"
+    case let .postponeFutureSessions(fromDate, byDays): "Retrasar el macrociclo desde \(Self.dateLabel(fromDate)) \(byDays) días"
+    case let .gymClosure(date): "El gimnasio no abre el \(Self.dateLabel(date)); retrasar el macrociclo un día"
     case .cancelSession: "Cancelar la sesión seleccionada"
     case .replaceExercise: "Sustituir un ejercicio"
     case .adjustSet: "Ajustar una serie"
