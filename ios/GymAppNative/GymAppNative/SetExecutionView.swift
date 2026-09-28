@@ -7,6 +7,7 @@ import GymAppNativeCore
 
 struct SetExecutionView: View {
   @State private var session: TrainingSession
+  let plan: TrainingPlan?
   let onFinishToToday: () -> Void
   @State private var execution: WorkoutExecutionState
   @State private var phase: ExecutionPhase = .workingSet
@@ -47,15 +48,17 @@ struct SetExecutionView: View {
     (TrainingProfileStore.load(from: trainingProfileRecords) ?? .initial).declaredDiscomforts
   }
 
-  init(session: TrainingSession, loadInventory: EquipmentLoadInventory = .standard, onFinishToToday: @escaping () -> Void = {}) {
+  init(session: TrainingSession, loadInventory: EquipmentLoadInventory = .standard, plan: TrainingPlan? = nil, onFinishToToday: @escaping () -> Void = {}) {
     _session = State(initialValue: session)
+    self.plan = plan
     self.onFinishToToday = onFinishToToday
     _execution = State(initialValue: WorkoutExecutionState(session: session, loadInventory: loadInventory))
     _startedAt = State(initialValue: .now)
   }
 
-  init(snapshot: ActiveWorkoutSnapshot, onFinishToToday: @escaping () -> Void = {}) {
+  init(snapshot: ActiveWorkoutSnapshot, plan: TrainingPlan? = nil, onFinishToToday: @escaping () -> Void = {}) {
     _session = State(initialValue: snapshot.execution.session)
+    self.plan = plan
     self.onFinishToToday = onFinishToToday
     _execution = State(initialValue: snapshot.execution)
     _phase = State(initialValue: ExecutionPhase(snapshot.phase))
@@ -102,6 +105,7 @@ struct SetExecutionView: View {
               startedAt: startedAt,
               finishedAt: finishedAt ?? .now,
               exerciseDecisions: exerciseDecisions,
+              plan: plan,
               onFinish: onFinishToToday
             )
           }
@@ -150,6 +154,7 @@ struct SetExecutionView: View {
             startedAt: startedAt,
             finishedAt: finishedAt ?? .now,
             exerciseDecisions: exerciseDecisions,
+            plan: plan,
             onFinish: onFinishToToday
           )
         }
@@ -2391,9 +2396,28 @@ private struct FinishedWorkoutView: View {
   let startedAt: Date
   let finishedAt: Date
   let exerciseDecisions: [String: String]
+  let plan: TrainingPlan?
   let onFinish: () -> Void
   @State private var csvURL: URL?
   @State private var rewardVisible = false
+  @Query private var profileRecords: [TrainingProfileRecord]
+  @Query private var completedRecords: [CompletedWorkoutRecord]
+
+  private var weeklyReviewURL: URL? {
+    guard let plan else { return nil }
+    let completedIDs = Set(completedRecords.map(\.sessionID)).union([execution.session.sessionID])
+    let sessions = plan.sessions.filter { !$0.isCancelled && $0.week == execution.session.week }
+    guard !sessions.isEmpty, sessions.allSatisfy({ completedIDs.contains($0.sessionID) }) else { return nil }
+    let nextWeek = plan.sessions.filter { !$0.isCancelled && $0.week > execution.session.week }.map(\.week).min()
+    return try? WeeklyReviewBridge.write(
+      plan: plan,
+      profile: TrainingProfileStore.load(from: profileRecords) ?? .initial,
+      closedWeek: execution.session.week,
+      nextWeek: nextWeek,
+      completedRecords: completedRecords,
+      including: execution
+    )
+  }
 
   private var completedSetCount: Int {
     execution.records.filter { $0.status == .completed }.count
@@ -2451,6 +2475,14 @@ private struct FinishedWorkoutView: View {
         .frame(maxWidth: .infinity, minHeight: 64)
         .foregroundStyle(Color.gymAccentForeground)
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+      }
+      if let weeklyReviewURL {
+        ShareLink(item: weeklyReviewURL) {
+          Label("Exportar revisión semanal", systemImage: "square.and.arrow.up")
+        }
+        .font(.gymBody.weight(.semibold))
+        .frame(maxWidth: .infinity, minHeight: 48)
+        .foregroundStyle(Color.gymAccent)
       }
       Button(action: onFinish) {
         Label("Volver a Hoy", systemImage: "house")

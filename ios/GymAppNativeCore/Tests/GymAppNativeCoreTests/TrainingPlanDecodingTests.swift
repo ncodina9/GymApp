@@ -346,6 +346,31 @@ struct TrainingPlanDecodingTests {
     #expect(!proposal.impact.shiftedMacrocycleWeeks.isEmpty)
   }
 
+  @Test("Compone ausencias sucesivas sobre el plan efectivo")
+  func composesSequentialScheduleChanges() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-09-28"))
+    )
+    let vacation = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.shiftFutureSessions(fromDate: "2026-10-05", byDays: 7)],
+      constraints: constraints
+    )
+    let holiday = try PlanningOperationEngine.preview(
+      basePlan: vacation.plan,
+      operations: [.shiftFutureSessions(fromDate: "2026-10-12", byDays: 1)],
+      constraints: constraints
+    )
+    let original = try #require(plan.sessions.first { $0.date == "2026-10-05" })
+    let finalSession = try #require(holiday.plan.sessions.first { $0.sessionID == original.sessionID })
+    #expect(finalSession.date == "2026-10-13")
+    #expect(holiday.impact.scheduleEndAfter != vacation.impact.scheduleEndAfter)
+  }
+
   @Test("Codifica el contexto remoto mínimo sin histórico ni series")
   func encodesMinimalRemotePlanningContext() throws {
     let input = RemotePlanningInterpretationInput(

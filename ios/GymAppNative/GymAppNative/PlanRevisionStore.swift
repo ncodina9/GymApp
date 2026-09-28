@@ -27,6 +27,7 @@ final class PlanRevisionRecord {
   var reason: String
   var statusRaw: String
   var acceptedAt: Date?
+  var parentRevisionID: String?
   var planData: Data
   var operationsData: Data?
   var warningsData: Data?
@@ -44,6 +45,7 @@ final class PlanRevisionRecord {
     effectiveFrom: Date,
     reason: String,
     status: PlanRevisionStatus = .proposed,
+    parentRevisionID: String? = nil,
     planData: Data,
     operationsData: Data? = nil,
     warningsData: Data? = nil,
@@ -57,6 +59,7 @@ final class PlanRevisionRecord {
     self.effectiveFrom = effectiveFrom
     self.reason = reason
     statusRaw = status.rawValue
+    self.parentRevisionID = parentRevisionID
     self.planData = planData
     self.operationsData = operationsData
     self.warningsData = warningsData
@@ -74,18 +77,25 @@ enum PlanRevisionStore {
     records: [PlanRevisionRecord],
     at date: Date = .now
   ) -> TrainingPlan {
-    let accepted = records
+    guard let revision = sourceRevision(for: basePlan, records: records, at: date),
+          let plan = try? TrainingPlanLoader.decode(data: revision.planData) else {
+      return basePlan
+    }
+    return plan
+  }
+
+  static func sourceRevision(
+    for basePlan: TrainingPlan,
+    records: [PlanRevisionRecord],
+    at date: Date
+  ) -> PlanRevisionRecord? {
+    records
       .filter { $0.basePlanID == basePlan.planID && $0.status == .accepted && $0.effectiveFrom <= date }
       .sorted {
         if $0.effectiveFrom != $1.effectiveFrom { return $0.effectiveFrom < $1.effectiveFrom }
         return $0.revisionNumber < $1.revisionNumber
       }
-
-    guard let revision = accepted.last,
-          let plan = try? TrainingPlanLoader.decode(data: revision.planData) else {
-      return basePlan
-    }
-    return plan
+      .last
   }
 
   @discardableResult
@@ -98,6 +108,8 @@ enum PlanRevisionStore {
     existingRecords: [PlanRevisionRecord]
   ) -> PlanRevisionRecord? {
     guard let data = try? JSONEncoder().encode(plan) else { return nil }
+    let normalizedEffectiveFrom = Calendar.current.startOfDay(for: effectiveFrom)
+    let parentRevision = sourceRevision(for: basePlan, records: existingRecords, at: normalizedEffectiveFrom)
     let nextNumber = (existingRecords
       .filter { $0.basePlanID == basePlan.planID }
       .map(\.revisionNumber)
@@ -105,8 +117,9 @@ enum PlanRevisionStore {
     let revision = PlanRevisionRecord(
       basePlanID: basePlan.planID,
       revisionNumber: nextNumber,
-      effectiveFrom: Calendar.current.startOfDay(for: effectiveFrom),
+      effectiveFrom: normalizedEffectiveFrom,
       reason: reason,
+      parentRevisionID: parentRevision?.id,
       planData: data
     )
     context.insert(revision)
@@ -124,8 +137,16 @@ enum PlanRevisionStore {
     in context: ModelContext,
     existingRecords: [PlanRevisionRecord]
   ) throws -> PlanRevisionRecord {
+    let normalizedEffectiveFrom = Calendar.current.startOfDay(for: effectiveFrom)
+    let parentRevision = sourceRevision(for: basePlan, records: existingRecords, at: normalizedEffectiveFrom)
+    let effectiveBasePlan: TrainingPlan
+    if let parentRevision, let decoded = try? TrainingPlanLoader.decode(data: parentRevision.planData) {
+      effectiveBasePlan = decoded
+    } else {
+      effectiveBasePlan = basePlan
+    }
     let proposal = try PlanningOperationEngine.preview(
-      basePlan: basePlan,
+      basePlan: effectiveBasePlan,
       operations: operations,
       constraints: constraints
     )
@@ -142,8 +163,9 @@ enum PlanRevisionStore {
     let revision = PlanRevisionRecord(
       basePlanID: basePlan.planID,
       revisionNumber: nextNumber,
-      effectiveFrom: Calendar.current.startOfDay(for: effectiveFrom),
+      effectiveFrom: normalizedEffectiveFrom,
       reason: reason,
+      parentRevisionID: parentRevision?.id,
       planData: planData,
       operationsData: operationsData,
       warningsData: warningsData,
@@ -169,8 +191,60 @@ enum PlanRevisionStore {
     return try? JSONDecoder().decode(PlanningImpact.self, from: data)
   }
 
-  static func accept(_ revision: PlanRevisionRecord, in context: ModelContext) {
+  static func isCurrent(
+    _ revision: PlanRevisionRecord,
+    basedOn basePlan: TrainingPlan,
+    records: [PlanRevisionRecord]
+  ) -> Bool {
+    sourceRevision(for: basePlan, records: records, at: revision.effectiveFrom)?.id == revision.parentRevisionID
+  }
+
+  static func refresh(
+    _ revision: PlanRevisionRecord,
+    basedOn basePlan: TrainingPlan,
+    records: [PlanRevisionRecord],
+    constraints: PlanningConstraints,
+    in context: ModelContext
+  ) throws {
     guard revision.status == .proposed else { return }
+    let operations = operations(for: revision)
+    guard !operations.isEmpty else { throw PlanRevisionStoreError.missingOperations }
+    let parentRevision = sourceRevision(for: basePlan, records: records, at: revision.effectiveFrom)
+    let effectiveBasePlan: TrainingPlan
+    if let parentRevision, let decoded = try? TrainingPlanLoader.decode(data: parentRevision.planData) {
+      effectiveBasePlan = decoded
+    } else {
+      effectiveBasePlan = basePlan
+    }
+    let proposal = try PlanningOperationEngine.preview(
+      basePlan: effectiveBasePlan,
+      operations: operations,
+      constraints: constraints
+    )
+    guard let planData = try? JSONEncoder().encode(proposal.plan),
+          let warningsData = try? JSONEncoder().encode(proposal.warnings),
+          let impactData = try? JSONEncoder().encode(proposal.impact) else {
+      throw PlanRevisionStoreError.encodingFailed
+    }
+    revision.parentRevisionID = parentRevision?.id
+    revision.planData = planData
+    revision.warningsData = warningsData
+    revision.impactData = impactData
+    revision.updatedAt = .now
+    try context.save()
+  }
+
+  static func accept(
+    _ revision: PlanRevisionRecord,
+    basedOn basePlan: TrainingPlan,
+    records: [PlanRevisionRecord],
+    in context: ModelContext
+  ) throws {
+    guard revision.status == .proposed else { return }
+    let currentParentID = sourceRevision(for: basePlan, records: records, at: revision.effectiveFrom)?.id
+    guard currentParentID == revision.parentRevisionID else {
+      throw PlanRevisionStoreError.staleProposal
+    }
     revision.status = .accepted
     revision.acceptedAt = .now
     revision.updatedAt = .now
@@ -187,10 +261,16 @@ enum PlanRevisionStore {
 
 enum PlanRevisionStoreError: LocalizedError {
   case encodingFailed
+  case staleProposal
+  case missingOperations
 
   var errorDescription: String? {
     switch self {
     case .encodingFailed: "No se pudo guardar la propuesta de planificación."
+    case .staleProposal:
+      "Esta propuesta se basó en una planificación anterior. Crea una nueva propuesta para combinarla con los cambios ya aceptados."
+    case .missingOperations:
+      "Esta propuesta antigua no contiene operaciones para poder actualizarse."
     }
   }
 }

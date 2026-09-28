@@ -103,8 +103,20 @@ struct SettingsView: View {
 private struct PlanRevisionsView: View {
   let plan: TrainingPlan
   @Query private var revisionRecords: [PlanRevisionRecord]
+  @Query private var profileRecords: [TrainingProfileRecord]
+  @Query private var activeRecords: [ActiveWorkoutRecord]
+  @Query private var completedRecords: [CompletedWorkoutRecord]
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
+  @State private var revisionMessage: String?
+
+  private var planningConstraints: PlanningConstraints {
+    let profile = TrainingProfileStore.load(from: profileRecords) ?? .initial
+    return profile.planningConstraints(
+      activeSessionID: ActiveWorkoutStore.load(from: activeRecords)?.execution.session.sessionID,
+      completedSessionIDs: Set(completedRecords.map(\.sessionID))
+    )
+  }
 
   private var revisions: [PlanRevisionRecord] {
     revisionRecords
@@ -150,7 +162,31 @@ private struct PlanRevisionsView: View {
               operations: PlanRevisionStore.operations(for: revision),
               warnings: PlanRevisionStore.warnings(for: revision),
               impact: PlanRevisionStore.impact(for: revision),
-              onAccept: { PlanRevisionStore.accept(revision, in: modelContext) },
+              parentRevisionNumber: revision.parentRevisionID.flatMap { parentID in
+                revisionRecords.first(where: { $0.id == parentID })?.revisionNumber
+              },
+              isStale: !PlanRevisionStore.isCurrent(revision, basedOn: plan, records: revisionRecords),
+              onAccept: {
+                do {
+                  try PlanRevisionStore.accept(revision, basedOn: plan, records: revisionRecords, in: modelContext)
+                } catch {
+                  revisionMessage = error.localizedDescription
+                }
+              },
+              onRefresh: {
+                do {
+                  try PlanRevisionStore.refresh(
+                    revision,
+                    basedOn: plan,
+                    records: revisionRecords,
+                    constraints: planningConstraints,
+                    in: modelContext
+                  )
+                  revisionMessage = "La propuesta se ha actualizado sobre la planificación vigente."
+                } catch {
+                  revisionMessage = error.localizedDescription
+                }
+              },
               onReject: { PlanRevisionStore.reject(revision, in: modelContext) }
             )
           }
@@ -166,6 +202,14 @@ private struct PlanRevisionsView: View {
       AccentHeaderCard(title: "Planificación", detail: "Propuestas con vigencia y confirmación")
     }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+    .alert(
+      "Revisiones del plan",
+      isPresented: Binding(get: { revisionMessage != nil }, set: { if !$0 { revisionMessage = nil } })
+    ) {
+      Button("Aceptar", role: .cancel) { revisionMessage = nil }
+    } message: {
+      Text(revisionMessage ?? "")
+    }
   }
 
   private var planStartDate: Date {
@@ -192,7 +236,10 @@ private struct PlanRevisionCard: View {
   let operations: [PlanningOperation]
   let warnings: [PlanningWarning]
   let impact: PlanningImpact?
+  let parentRevisionNumber: Int?
+  let isStale: Bool
   let onAccept: () -> Void
+  let onRefresh: () -> Void
   let onReject: () -> Void
 
   var body: some View {
@@ -213,6 +260,12 @@ private struct PlanRevisionCard: View {
       Text("Vigente desde \(Self.dateFormatter.string(from: revision.effectiveFrom))")
         .font(.gymSupport)
         .foregroundStyle(Color.gymSecondaryText)
+
+      if let parentRevisionNumber {
+        Label("Basada en la revisión \(parentRevisionNumber)", systemImage: "arrow.triangle.branch")
+          .font(.gymSupport)
+          .foregroundStyle(Color.gymSecondaryText)
+      }
 
       if !operations.isEmpty {
         VStack(alignment: .leading, spacing: 4) {
@@ -242,13 +295,18 @@ private struct PlanRevisionCard: View {
       }
 
       if revision.status == .proposed {
+        if isStale {
+          Label("La planificación cambió desde que se creó esta propuesta.", systemImage: "arrow.triangle.2.circlepath")
+            .font(.gymSupport)
+            .foregroundStyle(Color.gymWarning)
+        }
         HStack(spacing: 10) {
           Button("Descartar", role: .destructive, action: onReject)
             .font(.gymBody.weight(.semibold))
             .frame(maxWidth: .infinity, minHeight: 44)
             .buttonStyle(.bordered)
 
-          Button("Aceptar", action: onAccept)
+          Button(isStale ? "Actualizar propuesta" : "Aceptar", action: isStale ? onRefresh : onAccept)
             .font(.gymBody.weight(.semibold))
             .frame(maxWidth: .infinity, minHeight: 44)
             .foregroundStyle(Color.gymAccentForeground)
@@ -487,7 +545,7 @@ private struct HealthSettingsView: View {
   }
 }
 
-private struct SettingsCategory<Content: View>: View {
+struct SettingsCategory<Content: View>: View {
   let title: String
   @ViewBuilder let content: Content
 
@@ -533,7 +591,7 @@ private struct SettingsRow<Destination: View>: View {
   }
 }
 
-private struct SettingsDivider: View {
+struct SettingsDivider: View {
   var body: some View {
     Divider().padding(.leading, 16)
   }
@@ -947,6 +1005,12 @@ private struct PlanningHubView: View {
           )
           SettingsDivider()
           SettingsRow(
+            title: "Revisión semanal",
+            detail: "Exporta contexto para recalcular la siguiente semana",
+            destination: WeeklyReviewExportView(plan: plan)
+          )
+          SettingsDivider()
+          SettingsRow(
             title: "Simular propuesta",
             detail: "Genera una revisión sin modificar el plan",
             destination: ProposalSimulatorView(plan: plan)
@@ -1322,13 +1386,17 @@ private struct CoachConversationView: View {
     ActiveWorkoutStore.load(from: activeRecords)?.execution.session.sessionID
   }
 
+  private var effectivePlan: TrainingPlan {
+    PlanRevisionStore.resolvedPlan(basePlan: plan, records: revisionRecords)
+  }
+
   private var completedSessionIDs: Set<String> {
     Set(completedRecords.map(\.sessionID))
   }
 
   private var selectableSessions: [TrainingSession] {
     let today = Calendar.current.startOfDay(for: .now)
-    return plan.sessions
+    return effectivePlan.sessions
       .filter { session in
         guard let date = Self.date(from: session.date) else { return false }
         return !session.isCancelled
@@ -1362,7 +1430,7 @@ private struct CoachConversationView: View {
   private var durationOptions: [SessionDurationAdaptationOption] {
     guard case let .adaptSessionDuration(sessionID, maximumMinutes) = suggestedIntent else { return [] }
     return (try? SessionDurationAdaptationPlanner.options(
-      basePlan: plan,
+      basePlan: effectivePlan,
       sessionID: sessionID,
       maximumMinutes: maximumMinutes,
       constraints: constraints
@@ -1376,7 +1444,7 @@ private struct CoachConversationView: View {
   private var reschedulingOptions: [SessionReschedulingOption] {
     guard case let .cancelSession(sessionID) = suggestedIntent else { return [] }
     return (try? SessionReschedulingPlanner.options(
-      basePlan: plan,
+      basePlan: effectivePlan,
       sessionID: sessionID,
       constraints: constraints
     )) ?? []
@@ -1754,8 +1822,12 @@ private struct ProposalSimulatorView: View {
     Set(completedRecords.map(\.sessionID))
   }
 
+  private var effectivePlan: TrainingPlan {
+    PlanRevisionStore.resolvedPlan(basePlan: plan, records: revisionRecords)
+  }
+
   private var editableSessions: [TrainingSession] {
-    plan.sessions
+    effectivePlan.sessions
       .filter {
         !$0.isCancelled
           && !completedSessionIDs.contains($0.sessionID)
@@ -1787,7 +1859,7 @@ private struct ProposalSimulatorView: View {
   private var durationOptions: [SessionDurationAdaptationOption] {
     guard let selectedSession else { return [] }
     return (try? SessionDurationAdaptationPlanner.options(
-      basePlan: plan,
+      basePlan: effectivePlan,
       sessionID: selectedSession.sessionID,
       maximumMinutes: requestedDuration,
       constraints: planningConstraints
@@ -1800,7 +1872,7 @@ private struct ProposalSimulatorView: View {
 
   private var replacementExercises: [TrainingExercise] {
     TrainingExerciseCatalog.canonicalExercises(
-      in: plan.sessions,
+      in: effectivePlan.sessions,
       excludingDisplayGroupID: selectedExercise?.displayGroupID
     )
   }
@@ -2668,7 +2740,7 @@ private struct SavedWorkoutCard: View {
   }
 }
 
-private struct BottomBackButton: View {
+struct BottomBackButton: View {
   let action: () -> Void
 
   var body: some View {

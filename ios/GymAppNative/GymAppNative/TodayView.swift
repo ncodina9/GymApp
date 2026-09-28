@@ -11,27 +11,17 @@ struct TodayView: View {
   @AppStorage("themeAccent") private var themeAccentRaw = ThemeAccent.blue.rawValue
   @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
   @State private var path: [String] = []
+  @State private var showsNextWeek = false
 
   init(plan: TrainingPlan) {
     self.plan = plan
   }
 
-  private var recommendedSession: TrainingSession? {
-    if let activeWorkout {
-      return activeWorkout.execution.session
-    }
-
-    let pendingSessions = plan.sessions
-      .filter { !$0.isCancelled && !completedSessionIDs.contains($0.sessionID) }
-      .sorted { $0.date < $1.date }
-    guard !pendingSessions.isEmpty else {
-      return plan.sessions.filter { !$0.isCancelled }.max { $0.date < $1.date }
-    }
-
+  private var currentWeek: Int? {
+    if let activeWorkout { return activeWorkout.execution.session.week }
     let today = Calendar.current.startOfDay(for: .now)
-    return pendingSessions.first(where: { session in
-      Self.recommendationDate(session) >= today
-    }) ?? pendingSessions.first
+    let sessions = plan.sessions.filter { !$0.isCancelled }.sorted { $0.date < $1.date }
+    return sessions.last(where: { Self.recommendationDate($0) <= today })?.week ?? sessions.first?.week
   }
 
   private static func recommendationDate(_ session: TrainingSession) -> Date {
@@ -41,14 +31,28 @@ struct TodayView: View {
     return parser.date(from: session.date) ?? .distantPast
   }
 
+  private var nextWeek: Int? {
+    guard let currentWeek else { return nil }
+    return plan.sessions.filter { !$0.isCancelled && $0.week > currentWeek }.map(\.week).min()
+  }
+
+  private var displayedWeek: Int? {
+    showsNextWeek ? nextWeek : currentWeek
+  }
+
   private var weekSessions: [TrainingSession] {
-    guard let recommendedSession else { return [] }
-    var sessions = plan.sessions.filter { $0.week == recommendedSession.week && !$0.isCancelled }
-    if let activeSession = activeWorkout?.execution.session,
-       !sessions.contains(where: { $0.sessionID == activeSession.sessionID }) {
-      sessions.append(activeSession)
-    }
-    return sessions.sorted { $0.date < $1.date }
+    guard let displayedWeek else { return [] }
+    return plan.sessions.filter { $0.week == displayedWeek && !$0.isCancelled }.sorted { $0.date < $1.date }
+  }
+
+  private var isReadOnlyWeek: Bool {
+    showsNextWeek && displayedWeek == nextWeek
+  }
+
+  private var recommendedSessionID: String? {
+    guard !isReadOnlyWeek else { return nil }
+    if let activeWorkout { return activeWorkout.execution.session.sessionID }
+    return weekSessions.first(where: { !completedSessionIDs.contains($0.sessionID) })?.sessionID
   }
 
   private var activeWorkout: ActiveWorkoutSnapshot? {
@@ -59,19 +63,50 @@ struct TodayView: View {
     Set(completedWorkoutRecords.map(\.sessionID))
   }
 
+  private var latestClosedWeek: Int? {
+    Dictionary(grouping: plan.sessions.filter { !$0.isCancelled }, by: \.week)
+      .filter { _, sessions in sessions.allSatisfy { completedSessionIDs.contains($0.sessionID) } }
+      .map(\.key)
+      .max()
+  }
+
   var body: some View {
     NavigationStack(path: $path) {
-      if let recommendedSession {
+      if let displayedWeek, !weekSessions.isEmpty {
         ScrollView {
           VStack(alignment: .leading, spacing: 12) {
             ForEach(weekSessions) { session in
               NavigationLink(value: session.sessionID) {
                 WeekSessionCard(
                   session: session,
-                  isRecommended: session.sessionID == recommendedSession.sessionID,
+                  isRecommended: session.sessionID == recommendedSessionID,
                   isInProgress: activeWorkout?.execution.session.sessionID == session.sessionID,
                   isCompleted: completedSessionIDs.contains(session.sessionID)
                 )
+              }
+              .buttonStyle(.plain)
+            }
+            if nextWeek != nil {
+              Button {
+                showsNextWeek.toggle()
+              } label: {
+                Label(showsNextWeek ? "Volver a la semana actual" : "Ver próxima semana", systemImage: showsNextWeek ? "arrow.uturn.backward" : "calendar.badge.plus")
+                  .font(.gymBody.weight(.semibold))
+                  .frame(maxWidth: .infinity, minHeight: 46)
+                  .foregroundStyle(Color.gymAccent)
+                  .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 14))
+              }
+              .buttonStyle(.plain)
+            }
+            if latestClosedWeek != nil {
+              NavigationLink {
+                WeeklyReviewExportView(plan: plan)
+              } label: {
+                Label("Exportar revisión semanal", systemImage: "square.and.arrow.up")
+                  .font(.gymBody.weight(.semibold))
+                  .frame(maxWidth: .infinity, minHeight: 48)
+                  .foregroundStyle(Color.gymAccentForeground)
+                  .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
               }
               .buttonStyle(.plain)
             }
@@ -84,8 +119,8 @@ struct TodayView: View {
         .background(GymCanvas())
         .safeAreaInset(edge: .top, spacing: 0) {
           AccentHeaderCard(
-            title: "Semana \(recommendedSession.week)",
-            detail: recommendedSession.weekFocusLabel
+            title: "Semana \(displayedWeek)",
+            detail: weekSessions.first?.weekFocusLabel ?? "Planificación"
           )
         }
         .overlay(alignment: .bottomTrailing) {
@@ -107,7 +142,9 @@ struct TodayView: View {
           if let session = plan.sessions.first(where: { $0.sessionID == sessionID }) {
             SessionPreviewView(
               session: session,
-              onReturnHome: { path.removeAll() }
+              onReturnHome: { path.removeAll() },
+              readOnly: isReadOnlyWeek,
+              plan: plan
             )
           }
         }

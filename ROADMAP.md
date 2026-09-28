@@ -1422,17 +1422,36 @@ Actualización v0.1.135: los intervalos de ausencia en español pueden cruzar me
 
 Actualización v0.1.136: el entrenador local reconoce cierres puntuales del gimnasio, por ejemplo `El 12 de octubre es festivo y el gym no abre` o una fecha ISO equivalente. El cierre genera una intención auditable propia y una revisión que desplaza un día las sesiones futuras desde esa fecha, sin requerir seleccionar una sesión y sin modificar los objetivos ni las semanas del macrociclo.
 
+Actualización v0.1.137: las revisiones aceptadas forman ahora una cadena explícita. Cada propuesta se simula sobre el plan efectivo en su fecha de vigencia, guarda la revisión aceptada de la que parte y la muestra en su tarjeta. Conversación y simulador usan la misma instantánea efectiva para seleccionar sesiones, alternativas y ejercicios. Si una propuesta hermana queda obsoleta al aceptar otra revisión, no se aplica silenciosamente: permanece pendiente y pide regenerarse sobre la planificación actual.
+
+Actualización v0.1.138: una revisión pendiente obsoleta puede actualizarse desde su propia tarjeta. La actualización conserva su motivo y sus operaciones, vuelve a validarlas contra perfil, sesiones protegidas y plan efectivo, renueva su impacto y reasigna la revisión base. Hasta completar este paso, la acción principal no permite aceptar una instantánea antigua.
+
+Actualización v0.1.139: Planificación incorpora `Revisión semanal`, una exportación versionada de contexto para el flujo externo de pruebas. Al cerrar una semana, comparte el plan efectivo, perfil, identificadores de sesiones cerradas, ejecuciones con cargas, RIR, descansos y molestias, y la referencia de la siguiente semana del macrociclo. El archivo no aplica cambios: permite que un agente externo proponga un borrador sin sustituir silenciosamente la planificación local.
+
+Actualización v0.1.140: la revisión semanal puede compartir instrucciones y reimportar una propuesta externa con contrato `gymapp.external-planning-proposal`. El agente debe devolver operaciones tipadas, nunca un plan completo; la app comprueba schema, versión, identificador de plan, restricciones, sesiones protegidas, volumen, progresión y conflictos antes de crear una revisión pendiente con diff e impacto.
+
+Actualización v0.1.141: `Hoy` se ancla a la semana correspondiente a la fecha real, o a la sesión activa si existe; ya no adelanta automáticamente la interfaz a una semana futura al completar la actual. Cuando el plan contiene una semana posterior, ofrece una consulta explícita en modo lectura: permite recorrer sus tarjetas y previsualizaciones, pero no iniciar ni reanudar entrenamientos. La exportación de revisión semanal queda accesible desde `Hoy` y desde el resumen de la última sesión de la semana, incluyendo esta última ejecución aunque SwiftData aún no haya actualizado su consulta.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.
 - Principio de arquitectura: el agente interpreta la intención y propone cambios, pero no es la fuente de verdad ni modifica directamente el plan. El motor determinista valida calendario, volumen, material, restricciones, ejercicios compatibles y límites de progresión antes de que el usuario confirme.
 - [~] Definir el perfil estructurado que condiciona toda propuesta: objetivo, experiencia, disponibilidad, duración máxima por sesión, material, preferencias, prioridades musculares, ejercicios a evitar y limitaciones existen; faltan cardio y referencias iniciales por patrón.
-- [~] Versionar el plan con fecha de vigencia. Las instantáneas, estados, operaciones, diff legible y generación validada de propuestas existen; falta encadenar de forma explícita revisiones complejas sobre una planificación futura ya aceptada.
+- [~] Versionar el plan con fecha de vigencia. Las instantáneas, estados, operaciones, diff legible, generación validada y encadenamiento explícito sobre el plan efectivo existen; falta una herramienta guiada para regenerar una propuesta obsoleta sin reescribir la petición.
 - [~] Crear operaciones de planificación tipadas y auditables: mover, cancelar, añadir, quitar y sustituir ejercicios, y cambiar reps, carga, duración o descanso existen con validación y cambios resultantes; faltan reglas más ricas para prioridades y superseries.
 - [~] Implementar un motor determinista de calendario y programación que funcione sin IA: comprueba conflictos, sesiones duplicadas, duración, material, restricciones y progresión conservadora; faltan límites por bloque, distribución semanal completa y reglas de periodización.
 - [~] Añadir una pantalla de propuesta que muestre qué cambia, qué se conserva, por qué y el impacto semanal. El simulador local crea revisiones pendientes para mover o cancelar sesiones, sustituir ejercicios y ajustar series con cambios y avisos auditables; falta el impacto semanal completo.
 - [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, siempre como propuesta explicada y confirmada antes de modificar un plan.
 - [ ] Integrar el chat como interfaz de intención sobre las operaciones validadas, con contexto limitado al perfil, plan efectivo, sesiones ejecutadas y restricciones relevantes.
+- [~] Definir una revisión semanal estructurada local: recopila cumplimiento, RIR y molestias para exportación externa; falta compararlos con la fase de la semana siguiente y generar una propuesta conservadora trazable sin llamada remota.
+- [~] Mantener durante las pruebas un puente de revisión externa: la app exporta contexto semanal, comparte el contrato e importa operaciones tipadas como revisión pendiente validada; falta permitir adjuntar la explicación extensa del agente y registrar proveedor/modelo/consentimiento cuando la integración sea remota.
+
+### Futuro: nuevo macrociclo
+
+- [ ] Al finalizar el macrociclo, ofrecer un asistente de creación de un nuevo plan, separado de las revisiones del anterior y conservando íntegros el histórico y las decisiones ya aceptadas.
+- [ ] Permitir reutilizar selectivamente perfil, disponibilidad, inventario de material, preferencias, molestias y referencias de carga, sin asumir que se conserva el objetivo.
+- [ ] Recoger objetivo nuevo, horizonte temporal, prioridad muscular, experiencia reciente y posibles cambios de disponibilidad antes de generar el borrador.
+- [ ] Generar una propuesta de nuevo macrociclo con versión y fecha de inicio explícitas; el plan actual debe archivarse, no sobrescribirse.
 - [ ] Diseñar límites de seguridad: no proponer progresiones o sustituciones que contradigan molestias declaradas, material real o límites del usuario; dejar trazabilidad de la propuesta y de la decisión del usuario.
 - [ ] Definir backend, identidad, política de coste, retención, consentimiento y privacidad antes de enviar perfil, molestias o historial a un modelo externo.
 - [ ] Mantener la ejecución en gimnasio, el registro y el acceso a planes ya descargados plenamente funcionales sin IA ni conexión.

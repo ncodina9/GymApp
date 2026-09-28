@@ -6,6 +6,7 @@ struct SessionPreviewView: View {
   let session: TrainingSession
   let onReturnHome: () -> Void
   let readOnly: Bool
+  let plan: TrainingPlan?
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
   @Query private var trainingProfileRecords: [TrainingProfileRecord]
@@ -23,11 +24,13 @@ struct SessionPreviewView: View {
   init(
     session: TrainingSession,
     onReturnHome: @escaping () -> Void,
-    readOnly: Bool = false
+    readOnly: Bool = false,
+    plan: TrainingPlan? = nil
   ) {
     self.session = session
     self.onReturnHome = onReturnHome
     self.readOnly = readOnly
+    self.plan = plan
   }
 
   private var resumableWorkout: ActiveWorkoutSnapshot? {
@@ -140,9 +143,9 @@ struct SessionPreviewView: View {
     }
     .navigationDestination(isPresented: $showsExecution) {
       if let executionSnapshot {
-        SetExecutionView(snapshot: executionSnapshot, onFinishToToday: returnToToday)
+        SetExecutionView(snapshot: executionSnapshot, plan: plan, onFinishToToday: returnToToday)
       } else {
-        SetExecutionView(session: session, loadInventory: loadInventory, onFinishToToday: returnToToday)
+        SetExecutionView(session: session, loadInventory: loadInventory, plan: plan, onFinishToToday: returnToToday)
       }
     }
     .alert("Empezar de nuevo", isPresented: $showsRestartConfirmation) {
