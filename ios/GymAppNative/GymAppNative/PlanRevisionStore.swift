@@ -30,6 +30,7 @@ final class PlanRevisionRecord {
   var planData: Data
   var operationsData: Data?
   var warningsData: Data?
+  var impactData: Data?
 
   var status: PlanRevisionStatus {
     get { PlanRevisionStatus(rawValue: statusRaw) ?? .proposed }
@@ -46,6 +47,7 @@ final class PlanRevisionRecord {
     planData: Data,
     operationsData: Data? = nil,
     warningsData: Data? = nil,
+    impactData: Data? = nil,
     createdAt: Date = .now,
     acceptedAt: Date? = nil
   ) {
@@ -58,6 +60,7 @@ final class PlanRevisionRecord {
     self.planData = planData
     self.operationsData = operationsData
     self.warningsData = warningsData
+    self.impactData = impactData
     self.createdAt = createdAt
     updatedAt = createdAt
     self.acceptedAt = acceptedAt
@@ -128,7 +131,8 @@ enum PlanRevisionStore {
     )
     guard let planData = try? JSONEncoder().encode(proposal.plan),
           let operationsData = try? JSONEncoder().encode(operations),
-          let warningsData = try? JSONEncoder().encode(proposal.warnings) else {
+          let warningsData = try? JSONEncoder().encode(proposal.warnings),
+          let impactData = try? JSONEncoder().encode(proposal.impact) else {
       throw PlanRevisionStoreError.encodingFailed
     }
     let nextNumber = (existingRecords
@@ -142,7 +146,8 @@ enum PlanRevisionStore {
       reason: reason,
       planData: planData,
       operationsData: operationsData,
-      warningsData: warningsData
+      warningsData: warningsData,
+      impactData: impactData
     )
     context.insert(revision)
     try? context.save()
@@ -157,6 +162,11 @@ enum PlanRevisionStore {
   static func warnings(for revision: PlanRevisionRecord) -> [PlanningWarning] {
     guard let data = revision.warningsData else { return [] }
     return (try? JSONDecoder().decode([PlanningWarning].self, from: data)) ?? []
+  }
+
+  static func impact(for revision: PlanRevisionRecord) -> PlanningImpact? {
+    guard let data = revision.impactData else { return nil }
+    return try? JSONDecoder().decode(PlanningImpact.self, from: data)
   }
 
   static func accept(_ revision: PlanRevisionRecord, in context: ModelContext) {

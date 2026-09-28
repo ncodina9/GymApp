@@ -37,7 +37,8 @@ struct GymAppNativeApp: App {
       ActiveWorkoutRecord.self,
       CompletedWorkoutRecord.self,
       TrainingProfileRecord.self,
-      PlanRevisionRecord.self
+      PlanRevisionRecord.self,
+      PlanningConversationRecord.self
     ])
     .onChange(of: appearanceRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }
     .onChange(of: premiumSchemeRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }

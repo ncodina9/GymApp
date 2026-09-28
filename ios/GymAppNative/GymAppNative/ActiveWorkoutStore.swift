@@ -200,8 +200,12 @@ struct TrainingProfile: Codable, Equatable {
     exercisePreferences = try container.decodeIfPresent(String.self, forKey: .exercisePreferences) ?? defaults.exercisePreferences
     exercisesToAvoid = try container.decodeIfPresent(String.self, forKey: .exercisesToAvoid) ?? defaults.exercisesToAvoid
     limitations = try container.decodeIfPresent(String.self, forKey: .limitations) ?? defaults.limitations
-    declaredDiscomforts = try container.decodeIfPresent([String].self, forKey: .declaredDiscomforts)
-      ?? Self.discomforts(from: limitations)
+    let legacyDiscomforts = Self.discomforts(from: limitations)
+    if let declared = try container.decodeIfPresent([String].self, forKey: .declaredDiscomforts) {
+      declaredDiscomforts = Self.mergingDiscomforts([], declared)
+    } else {
+      declaredDiscomforts = Self.mergingDiscomforts(["Hombro", "Lumbar", "Muñeca", "Rodilla"], legacyDiscomforts)
+    }
   }
 
   static let initial = TrainingProfile(
@@ -244,6 +248,15 @@ struct TrainingProfile: Codable, Equatable {
       .split(whereSeparator: { $0 == "," || $0 == ";" || $0 == "\n" })
       .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
       .filter { !$0.isEmpty }
+  }
+
+  private static func mergingDiscomforts(_ defaults: [String], _ legacy: [String]) -> [String] {
+    (defaults + legacy).reduce(into: []) { result, value in
+      guard !result.contains(where: {
+        $0.compare(value, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+      }) else { return }
+      result.append(value)
+    }
   }
 }
 

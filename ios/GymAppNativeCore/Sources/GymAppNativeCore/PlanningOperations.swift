@@ -123,11 +123,55 @@ public struct PlanningProposal: Sendable {
   public let plan: TrainingPlan
   public let operations: [PlanningOperation]
   public let warnings: [PlanningWarning]
+  public let impact: PlanningImpact
 
-  public init(plan: TrainingPlan, operations: [PlanningOperation], warnings: [PlanningWarning]) {
+  public init(plan: TrainingPlan, operations: [PlanningOperation], warnings: [PlanningWarning], impact: PlanningImpact) {
     self.plan = plan
     self.operations = operations
     self.warnings = warnings
+    self.impact = impact
+  }
+}
+
+public struct PlanningImpact: Codable, Equatable, Sendable {
+  public let changedSessionIDs: [String]
+  public let estimatedMinutesBefore: Int
+  public let estimatedMinutesAfter: Int
+  public let supersetsBefore: Int
+  public let supersetsAfter: Int
+  public let weeklySetChanges: [WeeklySetChange]
+
+  public init(
+    changedSessionIDs: [String],
+    estimatedMinutesBefore: Int,
+    estimatedMinutesAfter: Int,
+    supersetsBefore: Int,
+    supersetsAfter: Int,
+    weeklySetChanges: [WeeklySetChange]
+  ) {
+    self.changedSessionIDs = changedSessionIDs
+    self.estimatedMinutesBefore = estimatedMinutesBefore
+    self.estimatedMinutesAfter = estimatedMinutesAfter
+    self.supersetsBefore = supersetsBefore
+    self.supersetsAfter = supersetsAfter
+    self.weeklySetChanges = weeklySetChanges
+  }
+}
+
+public struct WeeklySetChange: Codable, Equatable, Sendable, Identifiable {
+  public let week: Int
+  public let muscle: String
+  public let before: Int
+  public let after: Int
+
+  public var id: String { "\(week)-\(muscle)" }
+  public var delta: Int { after - before }
+
+  public init(week: Int, muscle: String, before: Int, after: Int) {
+    self.week = week
+    self.muscle = muscle
+    self.before = before
+    self.after = after
   }
 }
 
@@ -193,10 +237,6 @@ public enum PlanningOperationEngine {
         let targetDay = Calendar.current.startOfDay(for: targetDate)
         let today = Calendar.current.startOfDay(for: constraints.referenceDate)
         guard targetDay >= today else { throw PlanningOperationError.invalidDate(toDate) }
-        let profileWeekday = profileWeekday(for: targetDay)
-        guard constraints.availableWeekdays.contains(profileWeekday) else {
-          throw PlanningOperationError.dateOutsideAvailability(toDate)
-        }
         guard !plan.sessions.contains(where: {
           $0.sessionID != sessionID && !$0.isCancelled && $0.date == toDate
         }) else {
@@ -265,7 +305,71 @@ public enum PlanningOperationEngine {
       }
     }
 
-    return PlanningProposal(plan: plan, operations: operations, warnings: warnings)
+    return PlanningProposal(
+      plan: plan,
+      operations: operations,
+      warnings: warnings,
+      impact: impact(from: basePlan, to: plan, operations: operations)
+    )
+  }
+
+  private static func impact(
+    from basePlan: TrainingPlan,
+    to proposedPlan: TrainingPlan,
+    operations: [PlanningOperation]
+  ) -> PlanningImpact {
+    let beforeVolume = weeklyVolume(for: basePlan)
+    let afterVolume = weeklyVolume(for: proposedPlan)
+    let changedVolume = Set(beforeVolume.keys).union(afterVolume.keys).compactMap { key -> WeeklySetChange? in
+      let before = beforeVolume[key] ?? 0
+      let after = afterVolume[key] ?? 0
+      guard before != after else { return nil }
+      let components = key.split(separator: "|", maxSplits: 1).map(String.init)
+      guard components.count == 2, let week = Int(components[0]) else { return nil }
+      return WeeklySetChange(week: week, muscle: components[1], before: before, after: after)
+    }
+    .sorted { lhs, rhs in
+      lhs.week == rhs.week ? lhs.muscle < rhs.muscle : lhs.week < rhs.week
+    }
+
+    return PlanningImpact(
+      changedSessionIDs: Array(Set(operations.compactMap(sessionID(for:)))).sorted(),
+      estimatedMinutesBefore: basePlan.sessions.filter { !$0.isCancelled }.reduce(0) { $0 + $1.estimatedMinutes },
+      estimatedMinutesAfter: proposedPlan.sessions.filter { !$0.isCancelled }.reduce(0) { $0 + $1.estimatedMinutes },
+      supersetsBefore: supersetCount(for: basePlan),
+      supersetsAfter: supersetCount(for: proposedPlan),
+      weeklySetChanges: changedVolume
+    )
+  }
+
+  private static func weeklyVolume(for plan: TrainingPlan) -> [String: Int] {
+    var volume: [String: Int] = [:]
+    for session in plan.sessions where !session.isCancelled {
+      for exercise in session.exercises {
+        for muscle in exercise.primaryMuscles {
+          let key = "\(session.week)|\(muscle)"
+          volume[key, default: 0] += exercise.sets.count
+        }
+      }
+    }
+    return volume
+  }
+
+  private static func supersetCount(for plan: TrainingPlan) -> Int {
+    Set(plan.sessions.filter { !$0.isCancelled }.flatMap { session in
+      session.exercises.compactMap { exercise in
+        exercise.supersetID.map { "\(session.sessionID)|\($0)" }
+      }
+    }).count
+  }
+
+  private static func sessionID(for operation: PlanningOperation) -> String? {
+    switch operation {
+    case let .moveSession(sessionID, _), let .cancelSession(sessionID),
+         let .replaceExercise(sessionID, _, _), let .addExercise(sessionID, _),
+         let .removeExercise(sessionID, _), let .adjustSet(sessionID, _, _, _, _, _, _):
+      sessionID
+    }
   }
 
   private static func editableSessionIndex(
@@ -309,11 +413,6 @@ public enum PlanningOperationEngine {
     formatter.dateFormat = "yyyy-MM-dd"
     guard let date = formatter.date(from: value) else { throw PlanningOperationError.invalidDate(value) }
     return date
-  }
-
-  private static func profileWeekday(for date: Date) -> Int {
-    let weekday = Calendar.current.component(.weekday, from: date)
-    return weekday == 1 ? 7 : weekday - 1
   }
 
   private static func weekdayLabel(for date: Date) -> String {

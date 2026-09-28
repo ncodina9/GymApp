@@ -36,6 +36,8 @@ struct SetExecutionView: View {
   @State private var isSessionActionMenuPresented = false
   @State private var showsWorkoutProgress = false
   @State private var showsFinishConfirmation = false
+  @State private var showsDiscomfortPrompt = false
+  @State private var newDiscomfortName = ""
   @State private var wasReplacedFromWatch = false
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
@@ -118,6 +120,7 @@ struct SetExecutionView: View {
               declaredDiscomforts: declaredDiscomforts,
               onBack: { move(to: .workingSet, direction: .backward) },
               onRegister: registerCurrentSet,
+              onNewDiscomfortRequested: requestNewDiscomfort,
               onSessionActionsRequested: { showSessionActionMenu() }
             )
           }
@@ -203,6 +206,13 @@ struct SetExecutionView: View {
     } message: {
       Text("Se marcarán como omitidas \(pendingSetCount) series pendientes. Las series ya registradas se conservarán.")
     }
+    .alert("¿Dónde notas la molestia?", isPresented: $showsDiscomfortPrompt) {
+      TextField("Ej. cadera derecha", text: $newDiscomfortName)
+      Button("Cancelar", role: .cancel) { newDiscomfortName = "" }
+      Button("Añadir", action: saveNewDiscomfort)
+    } message: {
+      Text("La zona se añadirá a tu perfil y podrás valorarla de 0 a 3 en esta serie.")
+    }
     .onPreferenceChange(ExerciseHistoryPresentationPreferenceKey.self) {
       isExerciseHistoryPresented = $0
     }
@@ -223,12 +233,39 @@ struct SetExecutionView: View {
     .onChange(of: feedbackPainWrist) { _, _ in persistActiveWorkout() }
     .onChange(of: feedbackPainShoulder) { _, _ in persistActiveWorkout() }
     .onChange(of: feedbackPainLowerBack) { _, _ in persistActiveWorkout() }
+    .onChange(of: feedbackDeclaredDiscomfortLevels) { _, _ in persistActiveWorkout() }
     .onChange(of: feedbackNote) { _, _ in persistActiveWorkout() }
     .onChange(of: setTimerEndsAt) { _, _ in persistActiveWorkout() }
     .onChange(of: restEndsAt) { _, _ in syncTimerNotifications() }
     .onChange(of: setTimerEndsAt) { _, _ in syncTimerNotifications() }
     .onChange(of: setTimerRemaining) { _, _ in persistActiveWorkout() }
     .onChange(of: exerciseDecisions) { _, _ in persistActiveWorkout() }
+  }
+
+  private func requestNewDiscomfort() {
+    guard declaredDiscomforts.isEmpty else {
+      feedbackNote = "Molestia"
+      return
+    }
+    newDiscomfortName = ""
+    showsDiscomfortPrompt = true
+  }
+
+  private func saveNewDiscomfort() {
+    let value = newDiscomfortName.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !value.isEmpty else { return }
+    var profile = TrainingProfileStore.load(from: trainingProfileRecords) ?? .initial
+    guard !profile.declaredDiscomforts.contains(where: {
+      $0.compare(value, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+    }) else {
+      feedbackNote = "Molestia"
+      return
+    }
+    profile.declaredDiscomforts.append(value)
+    TrainingProfileStore.save(profile, in: modelContext)
+    feedbackDeclaredDiscomfortLevels[value] = 0
+    feedbackNote = "Molestia"
+    newDiscomfortName = ""
   }
 
   private func handleWatchCommand(_ command: WatchWorkoutCommand) {
@@ -1111,6 +1148,7 @@ private struct FeedbackView: View {
   let declaredDiscomforts: [String]
   let onBack: () -> Void
   let onRegister: () -> Void
+  let onNewDiscomfortRequested: () -> Void
   let onSessionActionsRequested: () -> Void
   @State private var isHistoryExpanded = false
   @State private var historyRevealDistance: CGFloat?
@@ -1155,15 +1193,17 @@ private struct FeedbackView: View {
         if !isTimed {
           FeedbackStepper(label: "RIR", value: $rir, range: 0 ... 5)
         }
-        PainFeedbackBlock(
-          painKnee: $painKnee,
-          painWrist: $painWrist,
-          painShoulder: $painShoulder,
-          painLowerBack: $painLowerBack,
-          declaredDiscomfortLevels: $declaredDiscomfortLevels,
-          declaredDiscomforts: declaredDiscomforts
-        )
-        NotePicker(note: $note)
+        if !declaredDiscomforts.isEmpty {
+          PainFeedbackBlock(
+            painKnee: $painKnee,
+            painWrist: $painWrist,
+            painShoulder: $painShoulder,
+            painLowerBack: $painLowerBack,
+            declaredDiscomfortLevels: $declaredDiscomfortLevels,
+            declaredDiscomforts: declaredDiscomforts
+          )
+        }
+        NotePicker(note: $note, onNewDiscomfortRequested: onNewDiscomfortRequested)
       }
       .padding(10)
       .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
@@ -1609,23 +1649,8 @@ private struct PainFeedbackBlock: View {
 
       ScrollView(.vertical) {
         VStack(spacing: 8) {
-          PainLevelControl(label: "Rodilla", value: $painKnee)
-          PainLevelControl(label: "Muñeca", value: $painWrist)
-          PainLevelControl(label: "Hombro", value: $painShoulder)
-          PainLevelControl(label: "Lumbar", value: $painLowerBack)
-          if !declaredDiscomforts.isEmpty {
-            Text("Declaradas en tu perfil")
-              .font(.gymSupport.weight(.bold))
-              .foregroundStyle(Color.gymSecondaryText)
-            ForEach(declaredDiscomforts, id: \.self) { discomfort in
-              PainLevelControl(
-                label: discomfort,
-                value: Binding(
-                  get: { declaredDiscomfortLevels[discomfort] ?? 0 },
-                  set: { declaredDiscomfortLevels[discomfort] = $0 }
-                )
-              )
-            }
+          ForEach(declaredDiscomforts, id: \.self) { discomfort in
+            PainLevelControl(label: discomfort, value: levelBinding(for: discomfort))
           }
         }
       }
@@ -1635,6 +1660,20 @@ private struct PainFeedbackBlock: View {
     .padding(12)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 14))
     .overlay { RoundedRectangle(cornerRadius: 14).stroke(.separator, lineWidth: 1) }
+  }
+
+  private func levelBinding(for discomfort: String) -> Binding<Int> {
+    switch discomfort.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current) {
+    case "rodilla": $painKnee
+    case "muneca": $painWrist
+    case "hombro": $painShoulder
+    case "lumbar": $painLowerBack
+    default:
+      Binding(
+        get: { declaredDiscomfortLevels[discomfort] ?? 0 },
+        set: { declaredDiscomfortLevels[discomfort] = $0 }
+      )
+    }
   }
 }
 
@@ -1664,12 +1703,19 @@ private struct PainLevelControl: View {
 
 private struct NotePicker: View {
   @Binding var note: String
+  let onNewDiscomfortRequested: () -> Void
   private let options = ["OK", "Pesado", "Técnica", "Molestia"]
 
   var body: some View {
     HStack(spacing: 6) {
       ForEach(options, id: \.self) { option in
-        Button(option) { note = option }
+        Button(option) {
+          if option == "Molestia" {
+            onNewDiscomfortRequested()
+          } else {
+            note = option
+          }
+        }
           .font(.gymSupport.weight(.bold))
           .frame(maxWidth: .infinity, minHeight: 48)
           .foregroundStyle(note == option ? Color.gymControlSelectionForeground : .primary)

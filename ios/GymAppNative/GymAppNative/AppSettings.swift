@@ -149,6 +149,7 @@ private struct PlanRevisionsView: View {
               revision: revision,
               operations: PlanRevisionStore.operations(for: revision),
               warnings: PlanRevisionStore.warnings(for: revision),
+              impact: PlanRevisionStore.impact(for: revision),
               onAccept: { PlanRevisionStore.accept(revision, in: modelContext) },
               onReject: { PlanRevisionStore.reject(revision, in: modelContext) }
             )
@@ -190,6 +191,7 @@ private struct PlanRevisionCard: View {
   let revision: PlanRevisionRecord
   let operations: [PlanningOperation]
   let warnings: [PlanningWarning]
+  let impact: PlanningImpact?
   let onAccept: () -> Void
   let onReject: () -> Void
 
@@ -235,6 +237,10 @@ private struct PlanRevisionCard: View {
         }
       }
 
+      if let impact {
+        PlanningImpactSummary(impact: impact)
+      }
+
       if revision.status == .proposed {
         HStack(spacing: 10) {
           Button("Descartar", role: .destructive, action: onReject)
@@ -274,6 +280,47 @@ private struct PlanRevisionCard: View {
     formatter.dateStyle = .medium
     return formatter
   }()
+}
+
+private struct PlanningImpactSummary: View {
+  let impact: PlanningImpact
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("Impacto previsto")
+        .font(.gymSupport.weight(.bold))
+        .foregroundStyle(Color.gymSecondaryText)
+
+      HStack(spacing: 8) {
+        impactMetric("Duración", delta: impact.estimatedMinutesAfter - impact.estimatedMinutesBefore, suffix: " min")
+        impactMetric("Superseries", delta: impact.supersetsAfter - impact.supersetsBefore, suffix: "")
+      }
+
+      if impact.weeklySetChanges.isEmpty {
+        Text("Sin cambio de volumen semanal por grupo muscular.")
+          .font(.gymSupport)
+          .foregroundStyle(Color.gymSecondaryText)
+      } else {
+        ForEach(impact.weeklySetChanges) { change in
+          Text("Semana \(change.week) · \(change.muscle.capitalized): \(change.before) → \(change.after) series")
+            .font(.gymSupport)
+            .foregroundStyle(Color.gymSecondaryText)
+        }
+      }
+    }
+  }
+
+  private func impactMetric(_ title: String, delta: Int, suffix: String) -> some View {
+    VStack(alignment: .leading, spacing: 2) {
+      Text(title).font(.gymSupport.weight(.semibold)).foregroundStyle(Color.gymSecondaryText)
+      Text("\(delta >= 0 ? "+" : "")\(delta)\(suffix)")
+        .font(.gymBody.weight(.bold))
+        .foregroundStyle(delta == 0 ? Color.gymSecondaryText : (delta > 0 ? Color.gymCompleted : Color.gymWarning))
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(8)
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 10))
+  }
 }
 
 private struct ExercisesLibraryView: View {
@@ -830,6 +877,12 @@ private struct PlanningHubView: View {
           )
           SettingsDivider()
           SettingsRow(
+            title: "Hablar con el entrenador",
+            detail: "Convierte una solicitud en una propuesta revisable",
+            destination: CoachConversationView(plan: plan)
+          )
+          SettingsDivider()
+          SettingsRow(
             title: "Simular propuesta",
             detail: "Genera una revisión sin modificar el plan",
             destination: ProposalSimulatorView(plan: plan)
@@ -884,6 +937,373 @@ private struct PlanningHubView: View {
   }
 }
 
+private struct CoachConversationView: View {
+  let plan: TrainingPlan
+  @Query private var profileRecords: [TrainingProfileRecord]
+  @Query private var revisionRecords: [PlanRevisionRecord]
+  @Query private var activeRecords: [ActiveWorkoutRecord]
+  @Query private var completedRecords: [CompletedWorkoutRecord]
+  @Query private var conversationRecords: [PlanningConversationRecord]
+  @Environment(\.modelContext) private var modelContext
+  @Environment(\.dismiss) private var dismiss
+  @AppStorage("remotePlanningConsent") private var remotePlanningConsent = false
+  @State private var selectedSessionID = ""
+  @State private var requestText = ""
+  @State private var suggestedIntent: PlanningIntent?
+  @State private var selectedDurationOptionID = ""
+  @State private var responseText: String?
+  @State private var currentConversationID: String?
+
+  private var profile: TrainingProfile {
+    TrainingProfileStore.load(from: profileRecords) ?? .initial
+  }
+
+  private var activeSessionID: String? {
+    ActiveWorkoutStore.load(from: activeRecords)?.execution.session.sessionID
+  }
+
+  private var completedSessionIDs: Set<String> {
+    Set(completedRecords.map(\.sessionID))
+  }
+
+  private var selectableSessions: [TrainingSession] {
+    let today = Calendar.current.startOfDay(for: .now)
+    return plan.sessions
+      .filter { session in
+        guard let date = Self.date(from: session.date) else { return false }
+        return !session.isCancelled
+          && date >= today
+          && session.sessionID != activeSessionID
+          && !completedSessionIDs.contains(session.sessionID)
+      }
+      .sorted { $0.date < $1.date }
+  }
+
+  private var selectedSession: TrainingSession? {
+    selectableSessions.first(where: { $0.sessionID == selectedSessionID })
+  }
+
+  private var currentConversation: PlanningConversationRecord? {
+    guard let currentConversationID else { return nil }
+    return conversationRecords.first(where: { $0.id == currentConversationID })
+  }
+
+  private var recentConversations: [PlanningConversationRecord] {
+    conversationRecords.sorted { $0.updatedAt > $1.updatedAt }.prefix(5).map { $0 }
+  }
+
+  private var constraints: PlanningConstraints {
+    profile.planningConstraints(
+      activeSessionID: activeSessionID,
+      completedSessionIDs: completedSessionIDs
+    )
+  }
+
+  private var durationOptions: [SessionDurationAdaptationOption] {
+    guard case let .adaptSessionDuration(sessionID, maximumMinutes) = suggestedIntent else { return [] }
+    return (try? SessionDurationAdaptationPlanner.options(
+      basePlan: plan,
+      sessionID: sessionID,
+      maximumMinutes: maximumMinutes,
+      constraints: constraints
+    )) ?? []
+  }
+
+  private var selectedDurationOption: SessionDurationAdaptationOption? {
+    durationOptions.first(where: { $0.id == selectedDurationOptionID })
+  }
+
+  private var proposalOperations: [PlanningOperation]? {
+    guard let suggestedIntent else { return nil }
+    return switch PlanningIntentResolver.resolve(suggestedIntent) {
+    case let .operations(operations): operations
+    case .requiresPlanningStrategy: selectedDurationOption?.operations
+    }
+  }
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 16) {
+        Text("La interpretación local prepara una revisión. El plan solo cambia cuando la aceptas.")
+          .font(.gymBody)
+          .foregroundStyle(Color.gymSecondaryText)
+
+        SettingsCategory(title: "Privacidad") {
+          Toggle("Autorizar contexto mínimo para el futuro intérprete remoto", isOn: $remotePlanningConsent)
+            .font(.gymBody.weight(.semibold))
+          Text(remotePlanningConsent
+            ? "La autorización queda registrada, pero esta versión todavía no transmite datos a ningún servicio."
+            : "El intérprete actual funciona solo en el dispositivo.")
+            .font(.gymSupport)
+            .foregroundStyle(Color.gymSecondaryText)
+          Text("El futuro contexto incluirá objetivo, experiencia, disponibilidad, material y la sesión elegida. Excluirá Apple Salud, series ejecutadas, pesos reales, historial y molestias.")
+            .font(.gymSupport)
+            .foregroundStyle(Color.gymSecondaryText)
+        }
+
+        if selectableSessions.isEmpty {
+          ContentUnavailableView(
+            "No hay sesiones disponibles",
+            systemImage: "calendar.badge.exclamationmark",
+            description: Text("Las sesiones activas, completadas y pasadas se protegen de cambios."))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 36)
+        } else {
+          SettingsCategory(title: "Solicitud") {
+            Picker("Sesión", selection: $selectedSessionID) {
+              ForEach(selectableSessions) { session in
+                Text("\(Self.dateLabel(session.date)) · \(session.sessionLabel)")
+                  .tag(session.sessionID)
+              }
+            }
+
+            SettingsDivider()
+
+            TextEditor(text: $requestText)
+              .font(.gymBody)
+              .frame(minHeight: 96)
+              .padding(8)
+              .scrollContentBackground(.hidden)
+              .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
+              .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.25), lineWidth: 1) }
+
+            HStack(spacing: 8) {
+              coachPrompt("No podré entrenar")
+              coachPrompt("Solo tengo 45 minutos")
+            }
+          }
+
+          Button(action: interpretRequest) {
+            Label("Interpretar solicitud", systemImage: "text.bubble")
+              .font(.gymH3.weight(.bold))
+              .frame(maxWidth: .infinity, minHeight: 52)
+          }
+          .foregroundStyle(Color.gymAccentForeground)
+          .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 16))
+          .disabled(requestText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+          .opacity(requestText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.45 : 1)
+
+          if let suggestedIntent {
+            SettingsCategory(title: "Interpretación") {
+              Text(summary(for: suggestedIntent))
+                .font(.gymH3.weight(.bold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+              if case let .adaptSessionDuration(_, maximumMinutes) = suggestedIntent {
+                SettingsDivider()
+                if durationOptions.isEmpty {
+                  Text("No hay una alternativa conservadora para llegar a \(maximumMinutes) min.")
+                    .font(.gymBody)
+                    .foregroundStyle(Color.gymSecondaryText)
+                } else {
+                  ForEach(durationOptions) { option in
+                    Button { selectedDurationOptionID = option.id } label: {
+                      HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: selectedDurationOptionID == option.id ? "checkmark.circle.fill" : "circle")
+                          .foregroundStyle(selectedDurationOptionID == option.id ? Color.gymAccent : Color.gymSecondaryText)
+                        VStack(alignment: .leading, spacing: 3) {
+                          Text(option.title).font(.gymBody.weight(.bold))
+                          Text("\(option.detail) \(option.estimatedMinutes) min.")
+                            .font(.gymSupport)
+                            .multilineTextAlignment(.leading)
+                        }
+                      }
+                      .frame(maxWidth: .infinity, alignment: .leading)
+                      .padding(10)
+                      .background(selectedDurationOptionID == option.id ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                  }
+                }
+              }
+            }
+
+            Button(action: createReview) {
+              Label("Crear revisión", systemImage: "doc.badge.plus")
+                .font(.gymH3.weight(.bold))
+                .frame(maxWidth: .infinity, minHeight: 52)
+            }
+            .foregroundStyle(Color.gymAccentForeground)
+            .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 16))
+            .disabled(proposalOperations == nil)
+            .opacity(proposalOperations == nil ? 0.45 : 1)
+          }
+        }
+
+        if !recentConversations.isEmpty {
+          SettingsCategory(title: "Historial local") {
+            ForEach(recentConversations, id: \.id) { conversation in
+              VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                  Text(conversation.status.label)
+                    .font(.gymSupport.weight(.bold))
+                    .foregroundStyle(statusColor(for: conversation.status))
+                  Spacer()
+                  Text(Self.timeLabel(conversation.updatedAt))
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymSecondaryText)
+                }
+                Text(conversation.requestText)
+                  .font(.gymBody)
+                  .lineLimit(2)
+                if !conversation.responseText.isEmpty {
+                  Text(conversation.responseText)
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymSecondaryText)
+                    .lineLimit(2)
+                }
+              }
+              .frame(maxWidth: .infinity, alignment: .leading)
+
+              if conversation.id != recentConversations.last?.id {
+                SettingsDivider()
+              }
+            }
+
+            Button("Eliminar historial local", role: .destructive, action: deleteConversationHistory)
+              .font(.gymBody.weight(.semibold))
+              .frame(maxWidth: .infinity, minHeight: 42)
+              .buttonStyle(.bordered)
+          }
+        }
+      }
+      .padding(16)
+      .padding(.bottom, 88)
+    }
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) {
+      AccentHeaderCard(title: "Entrenador", detail: "Solicitud y propuesta")
+    }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+    .onAppear {
+      selectedSessionID = selectableSessions.first?.sessionID ?? ""
+    }
+    .onChange(of: selectedSessionID) { _, _ in
+      suggestedIntent = nil
+      selectedDurationOptionID = ""
+    }
+    .alert(
+      "Entrenador",
+      isPresented: Binding(
+        get: { responseText != nil },
+        set: { if !$0 { responseText = nil } }
+      )
+    ) {
+      Button("Aceptar", role: .cancel) { responseText = nil }
+    } message: {
+      Text(responseText ?? "")
+    }
+  }
+
+  @ViewBuilder
+  private func coachPrompt(_ text: String) -> some View {
+    Button(text) {
+      requestText = text == "No podré entrenar"
+        ? "No podré entrenar esta sesión"
+        : "Quiero hacer esta sesión en 45 minutos"
+    }
+    .font(.gymSupport.weight(.semibold))
+    .frame(maxWidth: .infinity, minHeight: 38)
+    .foregroundStyle(Color.gymControlSelectionForeground)
+    .background(Color.gymControlSelectionFill, in: RoundedRectangle(cornerRadius: 10))
+    .buttonStyle(.plain)
+  }
+
+  private func interpretRequest() {
+    let request = PlanningIntentRequest(userText: requestText, referencedSessionID: selectedSessionID)
+    let record = PlanningConversationStore.start(request, in: modelContext)
+    currentConversationID = record.id
+    Task { @MainActor in
+      do {
+        let intents = try await LocalPlanningIntentInterpreter().interpret(request)
+        guard let intent = intents.first else { return }
+        suggestedIntent = intent
+        selectedDurationOptionID = durationOptions.first?.id ?? ""
+        PlanningConversationStore.interpret(intent, summary: summary(for: intent), for: record, in: modelContext)
+      } catch {
+        suggestedIntent = nil
+        selectedDurationOptionID = ""
+        responseText = error.localizedDescription
+        PlanningConversationStore.needsClarification(error.localizedDescription, for: record, in: modelContext)
+      }
+    }
+  }
+
+  private func createReview() {
+    guard let operations = proposalOperations else { return }
+    do {
+      let revision = try PlanRevisionStore.propose(
+        operations: operations,
+        basedOn: plan,
+        effectiveFrom: .now,
+        reason: "Solicitud al entrenador: \(requestText)",
+        constraints: constraints,
+        in: modelContext,
+        existingRecords: revisionRecords
+      )
+      if let currentConversation {
+        PlanningConversationStore.link(revision, to: currentConversation, in: modelContext)
+      }
+      responseText = "Revisión \(revision.revisionNumber) creada como pendiente. Revísala y acéptala desde Planificación."
+      suggestedIntent = nil
+    } catch {
+      responseText = error.localizedDescription
+    }
+  }
+
+  private func summary(for intent: PlanningIntent) -> String {
+    switch intent {
+    case let .moveSession(_, date): "Mover la sesión al \(Self.dateLabel(date))"
+    case .cancelSession: "Cancelar la sesión seleccionada"
+    case .replaceExercise: "Sustituir un ejercicio"
+    case .adjustSet: "Ajustar una serie"
+    case let .adaptSessionDuration(_, minutes): "Adaptar esta sesión a \(minutes) min"
+    }
+  }
+
+  private func statusColor(for status: PlanningConversationStatus) -> Color {
+    switch status {
+    case .interpreted: Color.gymAccent
+    case .needsClarification: Color.gymWarning
+    case .proposed: Color.gymCompleted
+    }
+  }
+
+  private func deleteConversationHistory() {
+    for record in conversationRecords {
+      modelContext.delete(record)
+    }
+    currentConversationID = nil
+    try? modelContext.save()
+  }
+
+  private static func date(from value: String) -> Date? {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: value)
+  }
+
+  private static func dateLabel(_ value: String) -> String {
+    guard let date = date(from: value) else { return value }
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateStyle = .medium
+    return formatter.string(from: date)
+  }
+
+  private static func timeLabel(_ value: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "es_ES")
+    formatter.dateStyle = .short
+    formatter.timeStyle = .short
+    return formatter.string(from: value)
+  }
+}
+
 private struct ProposalSimulatorView: View {
   let plan: TrainingPlan
   @Query private var profileRecords: [TrainingProfileRecord]
@@ -900,6 +1320,8 @@ private struct ProposalSimulatorView: View {
   @State private var selectedSetIndex = 1
   @State private var adjustedReps = 8
   @State private var adjustedWeightKg = 0.0
+  @State private var requestedDuration = 45
+  @State private var selectedAdaptationID = ""
   @State private var resultMessage: String?
 
   private var activeSessionID: String? {
@@ -933,12 +1355,32 @@ private struct ProposalSimulatorView: View {
     selectedExercise?.sets.first(where: { $0.setIndex == selectedSetIndex })
   }
 
+  private var planningConstraints: PlanningConstraints {
+    profile.planningConstraints(
+      activeSessionID: activeSessionID,
+      completedSessionIDs: completedSessionIDs
+    )
+  }
+
+  private var durationOptions: [SessionDurationAdaptationOption] {
+    guard let selectedSession else { return [] }
+    return (try? SessionDurationAdaptationPlanner.options(
+      basePlan: plan,
+      sessionID: selectedSession.sessionID,
+      maximumMinutes: requestedDuration,
+      constraints: planningConstraints
+    )) ?? []
+  }
+
+  private var selectedDurationOption: SessionDurationAdaptationOption? {
+    durationOptions.first(where: { $0.id == selectedAdaptationID })
+  }
+
   private var replacementExercises: [TrainingExercise] {
-    let allExercises = plan.sessions.flatMap(\.exercises)
-    let unique = Dictionary(grouping: allExercises, by: \.exerciseID).compactMap(\.value.first)
-    return unique
-      .filter { $0.exerciseID != selectedExerciseID }
-      .sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
+    TrainingExerciseCatalog.canonicalExercises(
+      in: plan.sessions,
+      excludingDisplayGroupID: selectedExercise?.displayGroupID
+    )
   }
 
   var body: some View {
@@ -990,6 +1432,33 @@ private struct ProposalSimulatorView: View {
               exercisePicker
               SettingsDivider()
               setAdjustmentControls
+            case .adaptDuration:
+              SettingsDivider()
+              Stepper("Duración máxima: \(requestedDuration) min", value: $requestedDuration, in: 15 ... 120, step: 5)
+              if durationOptions.isEmpty {
+                Text("No hay una alternativa conservadora que reduzca esta sesión.")
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+              } else {
+                ForEach(durationOptions) { option in
+                  Button { selectedAdaptationID = option.id } label: {
+                    VStack(alignment: .leading, spacing: 3) {
+                      HStack {
+                        Text(option.title).font(.gymBody.weight(.bold))
+                        Spacer()
+                        Text("\(option.estimatedMinutes) min").font(.gymSupport.weight(.bold))
+                      }
+                      Text(option.detail).font(.gymSupport).multilineTextAlignment(.leading)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .foregroundStyle(selectedAdaptationID == option.id ? Color.gymControlSelectionForeground : .primary)
+                    .background(selectedAdaptationID == option.id ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay { RoundedRectangle(cornerRadius: 12).stroke(selectedAdaptationID == option.id ? Color.gymAccent : Color.secondary.opacity(0.3), lineWidth: 1) }
+                  }
+                  .buttonStyle(.plain)
+                }
+              }
             case .cancel:
               EmptyView()
             }
@@ -1004,6 +1473,8 @@ private struct ProposalSimulatorView: View {
                 SettingsDivider()
                 ValidationDetailRow(title: "Molestias", value: profile.declaredDiscomforts.joined(separator: ", "))
               }
+              SettingsDivider()
+              ValidationDetailRow(title: "Restricciones aplicadas", value: restrictionsSummary)
             }
           }
 
@@ -1031,6 +1502,7 @@ private struct ProposalSimulatorView: View {
         selectedSessionID = editableSessions.first?.sessionID ?? ""
       }
       resetExerciseSelection()
+      selectedAdaptationID = durationOptions.first?.id ?? ""
     }
     .onChange(of: editableSessions.map(\.sessionID)) { _, sessionIDs in
       if !sessionIDs.contains(selectedSessionID) {
@@ -1040,6 +1512,7 @@ private struct ProposalSimulatorView: View {
     }
     .onChange(of: selectedSessionID) { _, _ in
       resetExerciseSelection()
+      selectedAdaptationID = durationOptions.first?.id ?? ""
     }
     .onChange(of: selectedExerciseID) { _, _ in
       guard let exercise = selectedExercise else { return }
@@ -1049,6 +1522,14 @@ private struct ProposalSimulatorView: View {
     }
     .onChange(of: selectedSetIndex) { _, _ in
       syncAdjustmentValues()
+    }
+    .onChange(of: requestedDuration) { _, _ in
+      selectedAdaptationID = durationOptions.first?.id ?? ""
+    }
+    .onChange(of: intent) { _, newIntent in
+      if newIntent == .adaptDuration {
+        selectedAdaptationID = durationOptions.first?.id ?? ""
+      }
     }
     .alert(
       "Simulador de propuestas",
@@ -1099,18 +1580,26 @@ private struct ProposalSimulatorView: View {
         durationSeconds: nil,
         restSeconds: nil
       )
+    case .adaptDuration:
+      guard let option = selectedDurationOption else {
+        resultMessage = "Elige una alternativa para acortar la sesión."
+        return
+      }
+      createProposal(operations: option.operations, effectiveFrom: .now, reason: "Simulación interna: adaptar sesión a \(requestedDuration) min")
+      return
     }
 
+    createProposal(operations: [operation], effectiveFrom: .now, reason: "Simulación interna: \(intent.reason)")
+  }
+
+  private func createProposal(operations: [PlanningOperation], effectiveFrom: Date, reason: String) {
     do {
       let revision = try PlanRevisionStore.propose(
-        operations: [operation],
+        operations: operations,
         basedOn: plan,
-        effectiveFrom: intent == .move ? targetDate : .now,
-        reason: "Simulación interna: \(intent.reason)",
-        constraints: profile.planningConstraints(
-          activeSessionID: activeSessionID,
-          completedSessionIDs: completedSessionIDs
-        ),
+        effectiveFrom: effectiveFrom,
+        reason: reason,
+        constraints: planningConstraints,
         in: modelContext,
         existingRecords: revisionRecords
       )
@@ -1125,6 +1614,15 @@ private struct ProposalSimulatorView: View {
     let unavailable = required.subtracting(profile.availableEquipment)
     if unavailable.isEmpty { return "Compatible con el perfil" }
     return "Falta: \(unavailable.map(\.executionLabel).sorted().joined(separator: ", "))"
+  }
+
+  private var restrictionsSummary: String {
+    let restrictions = ProfilePlanningRestrictions.compile(from: profile)
+    var values: [String] = []
+    if !restrictions.exerciseIDs.isEmpty { values.append("Ejercicios vetados") }
+    if !restrictions.movementPatterns.isEmpty { values.append("Patrones restringidos") }
+    if restrictions.avoidsSupersets { values.append("Sin superseries") }
+    return values.isEmpty ? "Disponibilidad, duración y material" : values.joined(separator: " · ")
   }
 
   @ViewBuilder
@@ -1213,6 +1711,7 @@ private enum ProposalSimulationIntent: String, CaseIterable, Identifiable {
   case cancel
   case replaceExercise
   case adjustSet
+  case adaptDuration
 
   var id: String { rawValue }
   var label: String {
@@ -1221,6 +1720,7 @@ private enum ProposalSimulationIntent: String, CaseIterable, Identifiable {
     case .cancel: "Cancelar sesión"
     case .replaceExercise: "Sustituir ejercicio"
     case .adjustSet: "Ajustar serie"
+    case .adaptDuration: "Adaptar duración"
     }
   }
 
@@ -1232,6 +1732,7 @@ private enum ProposalSimulationIntent: String, CaseIterable, Identifiable {
     case .cancel: "calendar.badge.minus"
     case .replaceExercise: "arrow.triangle.swap"
     case .adjustSet: "slider.horizontal.3"
+    case .adaptDuration: "clock.arrow.2.circlepath"
     }
   }
 

@@ -121,6 +121,8 @@ public extension TrainingExercise {
       "press-banca"
     case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
       "curl-biceps"
+    case "dominadas-supinas":
+      "dominadas"
     case "elevacion-gemelos", "elevacion-gemelos-sentado":
       "elevacion-gemelos"
     case "peso-muerto-rumano", "rdl-tecnico":
@@ -139,6 +141,8 @@ public extension TrainingExercise {
       "Press banca"
     case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
       "Curl de bíceps"
+    case "dominadas-supinas":
+      "Dominadas"
     case "elevacion-gemelos", "elevacion-gemelos-sentado":
       "Elevación de gemelos"
     case "peso-muerto-rumano", "rdl-tecnico":
@@ -178,6 +182,25 @@ public extension TrainingExercise {
     }
 
     return alternatives.contains(equipment) ? alternatives : [equipment] + alternatives
+  }
+}
+
+/// A deterministic catalogue for selection UIs. It preserves the concrete
+/// exercise identifier required by plan operations while exposing one entry
+/// for every user-facing exercise family.
+public enum TrainingExerciseCatalog {
+  public static func canonicalExercises(
+    in sessions: [TrainingSession],
+    excludingDisplayGroupID excludedGroupID: String? = nil
+  ) -> [TrainingExercise] {
+    var seen = Set<String>()
+    return sessions
+      .flatMap(\.exercises)
+      .filter { exercise in
+        guard exercise.displayGroupID != excludedGroupID else { return false }
+        return seen.insert(exercise.displayGroupID).inserted
+      }
+      .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
   }
 }
 

@@ -188,6 +188,7 @@ const exerciseTaxonomy = {
 const exercisePresentation = {
   'press-banca-barra': presentation('press-banca', 'Press banca', 'Barra'),
   'dominadas-lastradas': presentation('dominadas', 'Dominadas'),
+  'dominadas-supinas': presentation('dominadas', 'Dominadas', 'Supinas'),
   'press-banca-inclinado': presentation(
     'press-banca-inclinado',
     'Press banca inclinado',
@@ -219,17 +220,17 @@ const exercisePresentation = {
     'peso-muerto-rumano',
     'Peso muerto rumano',
   ),
+  'rdl-tecnico': presentation('peso-muerto-rumano', 'Peso muerto rumano', 'Técnico'),
   'hip-thrust-barra': presentation('hip-thrust', 'Hip thrust'),
   'hip-thrust-volumen': presentation('hip-thrust', 'Hip thrust'),
   'curl-femoral-banco-discos': presentation('curl-femoral', 'Curl femoral'),
   'gemelos-pie': presentation('elevacion-gemelos', 'Elevación de gemelos'),
-  'gemelos-sentado-multipower': presentation(
-    'elevacion-gemelos-sentado',
-    'Elevación de gemelos sentado',
-  ),
+  'gemelos-sentado-multipower': presentation('elevacion-gemelos', 'Elevación de gemelos', 'Sentado'),
   'dominadas-peso-corporal': presentation('dominadas', 'Dominadas'),
   'pullover-mancuerna': presentation('pullover', 'Pull-over'),
   'curl-biceps-barra-mancuernas': presentation('curl-biceps', 'Curl bíceps'),
+  'curl-biceps-alterno': presentation('curl-biceps', 'Curl bíceps', 'Alterno'),
+  'curl-martillo': presentation('curl-biceps', 'Curl bíceps', 'Martillo'),
   'elevaciones-laterales': presentation(
     'elevaciones-laterales',
     'Elevaciones laterales',

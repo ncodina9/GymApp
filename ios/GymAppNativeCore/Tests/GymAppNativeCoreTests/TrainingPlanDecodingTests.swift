@@ -112,10 +112,11 @@ struct TrainingPlanDecodingTests {
 
     let moved = try PlanningOperationEngine.preview(
       basePlan: plan,
-      operations: [.moveSession(sessionID: session.sessionID, toDate: "2027-01-05")],
+      operations: [.moveSession(sessionID: session.sessionID, toDate: "2027-01-06")],
       constraints: constraints
     )
-    #expect(moved.plan.sessions.first?.date == "2027-01-05")
+    #expect(moved.plan.sessions.first?.date == "2027-01-06")
+    #expect(moved.plan.sessions.first?.weekday == "Miércoles")
     #expect(moved.warnings.contains(.durationExceedsPreference(
       sessionID: session.sessionID,
       minutes: session.estimatedMinutes,
@@ -128,6 +129,8 @@ struct TrainingPlanDecodingTests {
       constraints: constraints
     )
     #expect(cancelled.plan.sessions.first?.isCancelled == true)
+    #expect(cancelled.impact.changedSessionIDs == [session.sessionID])
+    #expect(cancelled.impact.estimatedMinutesAfter == cancelled.impact.estimatedMinutesBefore - session.estimatedMinutes)
 
     let replaced = try PlanningOperationEngine.preview(
       basePlan: plan,
@@ -163,6 +166,131 @@ struct TrainingPlanDecodingTests {
           constraints: restrictedConstraints
         )
       }
+    }
+  }
+
+  @Test("Traduce intenciones estructuradas sin modificar el plan")
+  func resolvesPlanningIntents() throws {
+    let intent = PlanningIntent.adjustSet(
+      sessionID: "session-1",
+      exerciseID: "press-banca-barra",
+      setIndex: 2,
+      reps: 6,
+      weightKg: 72.5,
+      durationSeconds: nil,
+      restSeconds: 150
+    )
+
+    let restored = try JSONDecoder().decode(PlanningIntent.self, from: JSONEncoder().encode(intent))
+    #expect(restored == intent)
+    #expect(PlanningIntentResolver.resolve(intent) == .operations([
+      .adjustSet(
+        sessionID: "session-1",
+        exerciseID: "press-banca-barra",
+        setIndex: 2,
+        reps: 6,
+        weightKg: 72.5,
+        durationSeconds: nil,
+        restSeconds: 150
+      ),
+    ]))
+    #expect(PlanningIntentResolver.resolve(.adaptSessionDuration(sessionID: "session-1", maximumMinutes: 10)) == .requiresPlanningStrategy(sessionID: "session-1", maximumMinutes: 15))
+  }
+
+  @Test("Interpreta solicitudes conversacionales locales sin tocar el plan")
+  func interpretsLocalPlanningRequests() async throws {
+    let interpreter = LocalPlanningIntentInterpreter()
+    let sessionID = "session-1"
+
+    let moved = try await interpreter.interpret(.init(
+      userText: "Mueve esta sesión al 2026-10-03",
+      referencedSessionID: sessionID
+    ))
+    #expect(moved == [.moveSession(sessionID: sessionID, toDate: "2026-10-03")])
+
+    let shortened = try await interpreter.interpret(.init(
+      userText: "Hoy solo tengo 45 minutos",
+      referencedSessionID: sessionID
+    ))
+    #expect(shortened == [.adaptSessionDuration(sessionID: sessionID, maximumMinutes: 45)])
+
+    let cancelled = try await interpreter.interpret(.init(
+      userText: "No podré entrenar esta sesión",
+      referencedSessionID: sessionID
+    ))
+    #expect(cancelled == [.cancelSession(sessionID: sessionID)])
+  }
+
+  @Test("Codifica el contexto remoto mínimo sin histórico ni series")
+  func encodesMinimalRemotePlanningContext() throws {
+    let input = RemotePlanningInterpretationInput(
+      request: .init(userText: "Quiero mover esta sesión", referencedSessionID: "session-1"),
+      profile: .init(
+        goal: "fuerza",
+        experience: "intermedio",
+        weeklyTrainingDays: 3,
+        maximumSessionMinutes: 60,
+        availableEquipment: ["dumbbell", "barbell"]
+      ),
+      session: .init(
+        sessionID: "session-1",
+        date: "2026-10-03",
+        label: "Torso",
+        estimatedMinutes: 60,
+        exerciseFamilies: ["Dominadas", "Press banca"]
+      )
+    )
+
+    let restored = try JSONDecoder().decode(
+      RemotePlanningInterpretationInput.self,
+      from: JSONEncoder().encode(input)
+    )
+    #expect(restored == input)
+    #expect(restored.session.exerciseFamilies == ["Dominadas", "Press banca"])
+    #expect(restored.profile.availableEquipment == ["barbell", "dumbbell"])
+  }
+
+  @Test("Propone acortar una sesión sin modificar el plan base")
+  func proposesSafeSessionDurationAdaptations() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let originalMinutes = SessionDurationEstimator.estimate(for: session).totalMinutes
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 45,
+      referenceDate: try #require(isoDate("2026-01-01"))
+    )
+
+    let options = try SessionDurationAdaptationPlanner.options(
+      basePlan: plan,
+      sessionID: session.sessionID,
+      maximumMinutes: 45,
+      constraints: constraints
+    )
+
+    #expect(!options.isEmpty)
+    #expect(options.allSatisfy { $0.estimatedMinutes < originalMinutes })
+    #expect(SessionDurationEstimator.estimate(for: plan.sessions[0]).totalMinutes == originalMinutes)
+    let protectedExerciseIDs = Set(session.exercises.compactMap { exercise in
+      let type = exercise.type.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+      return type == "basico" || type == "basico tecnico" ? exercise.exerciseID : nil
+    })
+
+    for option in options {
+      let preview = try PlanningOperationEngine.preview(
+        basePlan: plan,
+        operations: option.operations,
+        constraints: constraints
+      )
+      let adaptedSession = try #require(preview.plan.sessions.first { $0.sessionID == session.sessionID })
+      #expect(SessionDurationEstimator.estimate(for: adaptedSession).totalMinutes == option.estimatedMinutes)
+      #expect(option.operations.allSatisfy { operation in
+        if case let .removeExercise(_, exerciseID) = operation {
+          return !protectedExerciseIDs.contains(exerciseID)
+        }
+        return true
+      })
     }
   }
 
@@ -202,6 +330,11 @@ struct TrainingPlanDecodingTests {
     #expect(closeGripPress.coachingVariationName == "Agarre cerrado")
     #expect(closeGripPress.selectableEquipmentOptions == [.multipower, .dumbbell])
     #expect(technicalRDL.selectableEquipmentOptions == [.barbell, .multipower])
+
+    let canonicalExercises = TrainingExerciseCatalog.canonicalExercises(in: plan.sessions)
+    #expect(canonicalExercises.filter { $0.displayName == "Curl de bíceps" }.count == 1)
+    #expect(canonicalExercises.filter { $0.displayName == "Dominadas" }.count == 1)
+    #expect(canonicalExercises.filter { $0.displayName == "Elevación de gemelos" }.count == 1)
   }
 
   @Test("Estima las sesiones con la misma regla que la PWA")
