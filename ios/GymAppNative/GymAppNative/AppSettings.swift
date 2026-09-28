@@ -806,6 +806,7 @@ private struct AppearanceSegmentedSelector: View {
 private struct PlanningHubView: View {
   let plan: TrainingPlan
   @Query private var completedRecords: [CompletedWorkoutRecord]
+  @Query private var profileRecords: [TrainingProfileRecord]
   @Environment(\.dismiss) private var dismiss
   @State private var displayMode: ScheduleDisplayMode = .calendar
   @State private var displayedMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: .now)) ?? .now
@@ -817,6 +818,10 @@ private struct PlanningHubView: View {
     return plan.sessions.filter { !$0.isCancelled && $0.date >= today && !completed.contains($0.sessionID) }
   }
 
+  private var profile: TrainingProfile {
+    TrainingProfileStore.load(from: profileRecords) ?? .initial
+  }
+
   private var sessionsByDay: [Date: [TrainingSession]] {
     Dictionary(grouping: plan.sessions.filter { !$0.isCancelled }, by: { Self.day(for: $0.date) })
   }
@@ -824,6 +829,22 @@ private struct PlanningHubView: View {
   private var selectedSessions: [TrainingSession] {
     guard let selectedDay else { return [] }
     return sessionsByDay[Calendar.current.startOfDay(for: selectedDay)] ?? []
+  }
+
+  private var macrocycleWeeksByDay: [Date: MacrocycleWeekInfo] {
+    sessionsByDay.reduce(into: [:]) { result, entry in
+      guard let session = entry.value.first else { return }
+      result[entry.key] = MacrocycleWeekInfo(
+        week: session.week,
+        focusLabel: session.weekFocusLabel,
+        focus: session.weekFocus
+      )
+    }
+  }
+
+  private var selectedMacrocycleWeek: MacrocycleWeekInfo? {
+    guard let selectedDay else { return nil }
+    return macrocycleWeeksByDay[Calendar.current.startOfDay(for: selectedDay)]
   }
 
   var body: some View {
@@ -841,8 +862,13 @@ private struct PlanningHubView: View {
             displayedMonth: $displayedMonth,
             selectedDay: $selectedDay,
             sessionsByDay: sessionsByDay,
+            macrocycleWeeksByDay: macrocycleWeeksByDay,
             completedSessionIDs: Set(completedRecords.map(\.sessionID))
           )
+
+          if let selectedMacrocycleWeek {
+            MacrocycleWeekSummary(week: selectedMacrocycleWeek)
+          }
 
           if selectedSessions.isEmpty {
             ContentUnavailableView(
@@ -870,6 +896,18 @@ private struct PlanningHubView: View {
         }
 
         SettingsCategory(title: "Plan y datos") {
+          SettingsRow(
+            title: "Macrociclo",
+            detail: "Fases, objetivos y progreso del plan",
+            destination: MacrocycleDetailView(plan: plan)
+          )
+          SettingsDivider()
+          SettingsRow(
+            title: "Compatibilidad del perfil",
+            detail: "Revisa duración, material y restricciones futuras",
+            destination: ProfilePlanCompatibilityView(plan: plan, profile: profile)
+          )
+          SettingsDivider()
           SettingsRow(
             title: "Revisiones del plan",
             detail: "Propuestas pendientes y cambios aceptados",
@@ -937,6 +975,301 @@ private struct PlanningHubView: View {
   }
 }
 
+private struct ProfilePlanCompatibilityView: View {
+  let plan: TrainingPlan
+  let profile: TrainingProfile
+  @Environment(\.dismiss) private var dismiss
+
+  private var issues: [PlanningProfileIssue] {
+    PlanningProfileCompatibility.issues(
+      in: plan,
+      constraints: profile.planningConstraints(activeSessionID: nil, completedSessionIDs: [])
+    )
+  }
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 16) {
+        Text("Esta revisión no cambia el plan. Las correcciones se convierten siempre en una propuesta que debes aceptar.")
+          .font(.gymBody)
+          .foregroundStyle(Color.gymSecondaryText)
+
+        if blockingIssues.isEmpty {
+          ContentUnavailableView(
+            "Perfil compatible",
+            systemImage: "checkmark.seal.fill",
+            description: Text("Las sesiones futuras respetan el material, la duración y las restricciones actuales."))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 32)
+        } else {
+          SettingsCategory(title: "Requiere revisión") {
+            ForEach(blockingIssues) { issue in
+              ProfilePlanIssueRow(issue: issue, session: plan.sessions.first(where: { $0.sessionID == issue.sessionID }))
+              if issue.id != blockingIssues.last?.id { SettingsDivider() }
+            }
+          }
+        }
+
+        if !cautionIssues.isEmpty {
+          SettingsCategory(title: "Precauciones de ejecución") {
+            ForEach(cautionIssues) { issue in
+              ProfilePlanIssueRow(issue: issue, session: plan.sessions.first(where: { $0.sessionID == issue.sessionID }))
+              if issue.id != cautionIssues.last?.id { SettingsDivider() }
+            }
+          }
+        }
+
+        if !issues.isEmpty {
+          Text("Usa Simular propuesta o Hablar con el entrenador para preparar una revisión futura. Las sesiones en curso y ya realizadas nunca se modifican.")
+            .font(.gymSupport)
+            .foregroundStyle(Color.gymSecondaryText)
+        }
+      }
+      .padding(16)
+      .padding(.bottom, 88)
+    }
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) {
+      AccentHeaderCard(title: "Compatibilidad", detail: "Perfil y planificación futura")
+    }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+
+  private var blockingIssues: [PlanningProfileIssue] {
+    issues.filter { !$0.isCaution }
+  }
+
+  private var cautionIssues: [PlanningProfileIssue] {
+    issues.filter(\.isCaution)
+  }
+}
+
+private struct MacrocycleDetailView: View {
+  let plan: TrainingPlan
+  @Query private var completedRecords: [CompletedWorkoutRecord]
+  @Environment(\.dismiss) private var dismiss
+
+  private var weeks: [MacrocycleWeekInfo] {
+    Dictionary(grouping: plan.sessions.filter { !$0.isCancelled }, by: \.week)
+      .compactMap { week, sessions in
+        guard let session = sessions.first else { return nil }
+        return MacrocycleWeekInfo(week: week, focusLabel: session.weekFocusLabel, focus: session.weekFocus)
+      }
+      .sorted { $0.week < $1.week }
+  }
+
+  private var phases: [MacrocyclePhase] {
+    weeks.reduce(into: []) { phases, week in
+      if var last = phases.last, last.label == week.focusLabel {
+        last.endWeek = week.week
+        last.weeks.append(week)
+        phases[phases.count - 1] = last
+      } else {
+        phases.append(MacrocyclePhase(label: week.focusLabel, startWeek: week.week, endWeek: week.week, weeks: [week]))
+      }
+    }
+  }
+
+  private var completedIDs: Set<String> { Set(completedRecords.map(\.sessionID)) }
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 18) {
+        Text("El macrociclo organiza la progresión del plan. Las revisiones futuras conservan estas fases salvo que aceptes una propuesta que las cambie explícitamente.")
+          .font(.gymBody)
+          .foregroundStyle(Color.gymSecondaryText)
+
+        MacrocyclePhaseBar(phases: phases, totalWeeks: max(1, weeks.count))
+
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 138), spacing: 8)], alignment: .leading, spacing: 8) {
+          ForEach(phases) { phase in
+            HStack(spacing: 7) {
+              Circle().fill(phase.tint).frame(width: 9, height: 9)
+              Text(phase.label)
+                .font(.gymSupport.weight(.semibold))
+                .foregroundStyle(Color.gymSecondaryText)
+            }
+          }
+        }
+
+        LazyVStack(spacing: 12) {
+          ForEach(weeks) { week in
+            MacrocycleWeekRow(
+              week: week,
+              sessions: plan.sessions.filter { !$0.isCancelled && $0.week == week.week },
+              completedIDs: completedIDs
+            )
+          }
+        }
+      }
+      .padding(16)
+      .padding(.bottom, 88)
+    }
+    .background(GymCanvas())
+    .navigationBarBackButtonHidden()
+    .toolbar(.hidden, for: .navigationBar)
+    .safeAreaInset(edge: .top, spacing: 0) {
+      AccentHeaderCard(title: "Macrociclo", detail: "Progreso y objetivos semanales")
+    }
+    .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
+  }
+}
+
+private struct MacrocyclePhase: Identifiable {
+  let label: String
+  let startWeek: Int
+  var endWeek: Int
+  var weeks: [MacrocycleWeekInfo]
+
+  var id: String { "\(startWeek)-\(endWeek)-\(label)" }
+  var tint: Color { weeks.first?.tint ?? .gymAccent }
+  var weekCount: Int { endWeek - startWeek + 1 }
+  var rangeLabel: String { startWeek == endWeek ? "S\(startWeek)" : "S\(startWeek)-\(endWeek)" }
+}
+
+private struct MacrocyclePhaseBar: View {
+  let phases: [MacrocyclePhase]
+  let totalWeeks: Int
+
+  var body: some View {
+    GeometryReader { proxy in
+      HStack(spacing: 1) {
+        ForEach(phases) { phase in
+          Text(phase.rangeLabel)
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymAccentForeground)
+            .frame(width: proxy.size.width * CGFloat(phase.weekCount) / CGFloat(totalWeeks), height: 50)
+            .background(phase.tint)
+        }
+      }
+      .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+    .frame(height: 50)
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel("Fases del macrociclo")
+  }
+}
+
+private struct MacrocycleWeekRow: View {
+  let week: MacrocycleWeekInfo
+  let sessions: [TrainingSession]
+  let completedIDs: Set<String>
+
+  private var completedCount: Int { sessions.filter { completedIDs.contains($0.sessionID) }.count }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      VStack(alignment: .leading, spacing: 4) {
+        Text(week.focus)
+          .font(.gymBody)
+          .foregroundStyle(Color.gymSecondaryText)
+        Text("\(completedCount)/\(sessions.count) sesiones completadas")
+          .font(.gymSupport.weight(.semibold))
+          .foregroundStyle(completedCount == sessions.count && !sessions.isEmpty ? Color.gymCompleted : Color.gymSecondaryText)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 14)
+    .padding(.top, 58)
+    .padding(.bottom, 14)
+    .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 18))
+    .overlay(alignment: .topLeading) {
+      HStack(spacing: 10) {
+        Text("S\(week.week)")
+          .font(.gymH3.weight(.bold))
+          .frame(width: 30, height: 30)
+          .background(Color.gymAccentForeground.opacity(0.18), in: Circle())
+        Text(week.focusLabel)
+          .font(.gymH2.weight(.semibold))
+          .lineLimit(1)
+      }
+      .foregroundStyle(Color.gymAccentForeground)
+      .padding(.horizontal, 12)
+      .padding(.vertical, 10)
+      .background(week.tint, in: UnevenRoundedRectangle(
+        topLeadingRadius: 18,
+        bottomLeadingRadius: 0,
+        bottomTrailingRadius: 18,
+        topTrailingRadius: 0,
+        style: .continuous
+      ))
+    }
+    .overlay { RoundedRectangle(cornerRadius: 18).stroke(week.tint.opacity(0.42), lineWidth: 1) }
+  }
+}
+
+private struct ProfilePlanIssueRow: View {
+  let issue: PlanningProfileIssue
+  let session: TrainingSession?
+
+  var body: some View {
+    HStack(alignment: .top, spacing: 12) {
+      Image(systemName: symbol)
+        .font(.gymH3.weight(.bold))
+        .foregroundStyle(Color.gymWarning)
+        .frame(width: 24)
+      VStack(alignment: .leading, spacing: 4) {
+        Text(title)
+          .font(.gymH3.weight(.bold))
+        Text(session?.label ?? "Sesión futura")
+          .font(.gymSupport)
+          .foregroundStyle(Color.gymSecondaryText)
+      }
+      Spacer(minLength: 0)
+    }
+    .padding(.vertical, 4)
+  }
+
+  private var symbol: String {
+    switch issue {
+    case .duration: "clock.badge.exclamationmark"
+    case .unavailableEquipment: "dumbbell.fill"
+    case .restrictedExercise: "figure.strengthtraining.traditional"
+    case .superset: "rectangle.3.group.fill"
+    case .caution: "exclamationmark.triangle.fill"
+    }
+  }
+
+  private var title: String {
+    switch issue {
+    case let .duration(_, minutes, maximum): "Duración estimada: \(minutes) min · preferencia: \(maximum) min"
+    case let .unavailableEquipment(_, equipment): "Sin material compatible para \(equipmentLabel(equipment).lowercased())"
+    case .restrictedExercise: "Incluye un ejercicio restringido por el perfil"
+    case .superset: "Incluye una superserie que el perfil prefiere evitar"
+    case .caution: "Molestia declarada: usa carga y RIR conservadores"
+    }
+  }
+
+  private func equipmentLabel(_ equipment: Equipment) -> String {
+    switch equipment {
+    case .barbell: "Barra"
+    case .dumbbell: "Mancuernas"
+    case .cable: "Polea"
+    case .multipower: "Multipower"
+    case .plateLoadedMachine: "Máquina de discos"
+    case .external: "Carga externa"
+    case .bodyweight: "Peso corporal"
+    }
+  }
+}
+
+private extension PlanningProfileIssue {
+  var sessionID: String {
+    switch self {
+    case let .duration(sessionID, _, _), let .unavailableEquipment(sessionID, _),
+         let .restrictedExercise(sessionID, _), let .superset(sessionID),
+         let .caution(sessionID, _): sessionID
+    }
+  }
+
+  var isCaution: Bool {
+    if case .caution = self { return true }
+    return false
+  }
+}
+
 private struct CoachConversationView: View {
   let plan: TrainingPlan
   @Query private var profileRecords: [TrainingProfileRecord]
@@ -951,6 +1284,7 @@ private struct CoachConversationView: View {
   @State private var requestText = ""
   @State private var suggestedIntent: PlanningIntent?
   @State private var selectedDurationOptionID = ""
+  @State private var selectedReschedulingOptionID = ""
   @State private var responseText: String?
   @State private var currentConversationID: String?
 
@@ -1013,8 +1347,24 @@ private struct CoachConversationView: View {
     durationOptions.first(where: { $0.id == selectedDurationOptionID })
   }
 
+  private var reschedulingOptions: [SessionReschedulingOption] {
+    guard case let .cancelSession(sessionID) = suggestedIntent else { return [] }
+    return (try? SessionReschedulingPlanner.options(
+      basePlan: plan,
+      sessionID: sessionID,
+      constraints: constraints
+    )) ?? []
+  }
+
+  private var selectedReschedulingOption: SessionReschedulingOption? {
+    reschedulingOptions.first(where: { $0.id == selectedReschedulingOptionID })
+  }
+
   private var proposalOperations: [PlanningOperation]? {
     guard let suggestedIntent else { return nil }
+    if case .cancelSession = suggestedIntent, let selectedReschedulingOption {
+      return selectedReschedulingOption.operations
+    }
     return switch PlanningIntentResolver.resolve(suggestedIntent) {
     case let .operations(operations): operations
     case .requiresPlanningStrategy: selectedDurationOption?.operations
@@ -1071,6 +1421,7 @@ private struct CoachConversationView: View {
               coachPrompt("No podré entrenar")
               coachPrompt("Solo tengo 45 minutos")
             }
+            coachPrompt("Muévela al jueves")
           }
 
           Button(action: interpretRequest) {
@@ -1115,6 +1466,37 @@ private struct CoachConversationView: View {
                     .buttonStyle(.plain)
                   }
                 }
+              }
+
+              if case .cancelSession = suggestedIntent, !reschedulingOptions.isEmpty {
+                SettingsDivider()
+                Text("Alternativas disponibles")
+                  .font(.gymH3.weight(.bold))
+                ForEach(reschedulingOptions) { option in
+                  Button { selectedReschedulingOptionID = option.id } label: {
+                    HStack(spacing: 10) {
+                      Image(systemName: selectedReschedulingOptionID == option.id ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(selectedReschedulingOptionID == option.id ? Color.gymAccent : Color.gymSecondaryText)
+                      VStack(alignment: .leading, spacing: 2) {
+                        Text("Reprogramar al \(Self.dateLabel(option.date))")
+                          .font(.gymBody.weight(.semibold))
+                        if option.isOutsideAvailability {
+                          Text("Fuera de tu disponibilidad habitual")
+                            .font(.gymSupport)
+                            .foregroundStyle(Color.gymWarning)
+                        }
+                      }
+                      Spacer(minLength: 0)
+                    }
+                    .padding(10)
+                    .background(selectedReschedulingOptionID == option.id ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+                  }
+                  .buttonStyle(.plain)
+                }
+                Button("Cancelar la sesión", action: { selectedReschedulingOptionID = "" })
+                  .font(.gymSupport.weight(.semibold))
+                  .foregroundStyle(Color.gymDanger)
+                  .buttonStyle(.plain)
               }
             }
 
@@ -1202,7 +1584,9 @@ private struct CoachConversationView: View {
     Button(text) {
       requestText = text == "No podré entrenar"
         ? "No podré entrenar esta sesión"
-        : "Quiero hacer esta sesión en 45 minutos"
+        : text == "Muévela al jueves"
+          ? "Mueve esta sesión al jueves"
+          : "Quiero hacer esta sesión en 45 minutos"
     }
     .font(.gymSupport.weight(.semibold))
     .frame(maxWidth: .infinity, minHeight: 38)
@@ -1221,10 +1605,12 @@ private struct CoachConversationView: View {
         guard let intent = intents.first else { return }
         suggestedIntent = intent
         selectedDurationOptionID = durationOptions.first?.id ?? ""
+        selectedReschedulingOptionID = reschedulingOptions.first?.id ?? ""
         PlanningConversationStore.interpret(intent, summary: summary(for: intent), for: record, in: modelContext)
       } catch {
         suggestedIntent = nil
         selectedDurationOptionID = ""
+        selectedReschedulingOptionID = ""
         responseText = error.localizedDescription
         PlanningConversationStore.needsClarification(error.localizedDescription, for: record, in: modelContext)
       }
@@ -1764,10 +2150,52 @@ private enum ScheduleDisplayMode: String, CaseIterable, Identifiable {
   var symbol: String { self == .calendar ? "calendar" : "list.bullet" }
 }
 
+private struct MacrocycleWeekInfo: Equatable, Identifiable {
+  let week: Int
+  let focusLabel: String
+  let focus: String
+
+  var id: Int { week }
+
+  var tint: Color {
+    switch (week - 1) % 6 {
+    case 0: .gymAccent
+    case 1: .gymTertiary
+    case 2: .gymAccentSecondary
+    case 3: .gymWarning
+    case 4: .gymCompleted
+    default: .gymSystemAction
+    }
+  }
+}
+
+private struct MacrocycleWeekSummary: View {
+  let week: MacrocycleWeekInfo
+
+  var body: some View {
+    HStack(alignment: .firstTextBaseline, spacing: 10) {
+      Circle().fill(week.tint).frame(width: 10, height: 10)
+      VStack(alignment: .leading, spacing: 2) {
+        Text("Semana \(week.week) · \(week.focusLabel)")
+          .font(.gymH3.weight(.bold))
+        Text(week.focus)
+          .font(.gymSupport)
+          .foregroundStyle(Color.gymSecondaryText)
+      }
+      Spacer(minLength: 0)
+    }
+    .padding(.horizontal, 14)
+    .padding(.vertical, 12)
+    .background(week.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+    .overlay { RoundedRectangle(cornerRadius: 14).stroke(week.tint.opacity(0.28), lineWidth: 1) }
+  }
+}
+
 private struct TrainingCalendarGrid: View {
   @Binding var displayedMonth: Date
   @Binding var selectedDay: Date?
   let sessionsByDay: [Date: [TrainingSession]]
+  let macrocycleWeeksByDay: [Date: MacrocycleWeekInfo]
   let completedSessionIDs: Set<String>
   @Environment(\.colorScheme) private var colorScheme
 
@@ -1828,6 +2256,7 @@ private struct TrainingCalendarGrid: View {
     let isSelected = selectedDay.map { calendar.isDate($0, inSameDayAs: normalized) } ?? false
     let isCompleted = !sessions.isEmpty && sessions.allSatisfy { completedSessionIDs.contains($0.sessionID) }
     let isToday = calendar.isDateInToday(normalized)
+    let macrocycleWeek = macrocycleWeeksByDay[normalized]
     return Button { selectedDay = normalized } label: {
       Text("\(calendar.component(.day, from: day))")
         .font(.gymSupport.weight(isSelected || isToday ? .bold : .medium))
@@ -1837,6 +2266,15 @@ private struct TrainingCalendarGrid: View {
       .overlay {
         RoundedRectangle(cornerRadius: 12)
           .stroke(isToday && !isSelected ? Color.gymAccent : .clear, lineWidth: 1.5)
+      }
+      .overlay(alignment: .bottom) {
+        if let macrocycleWeek, !isSelected {
+          Capsule()
+            .fill(macrocycleWeek.tint)
+            .frame(height: 3)
+            .padding(.horizontal, 8)
+            .padding(.bottom, 4)
+        }
       }
     }
     .buttonStyle(.plain)

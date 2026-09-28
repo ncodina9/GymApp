@@ -132,6 +132,7 @@ struct TrainingProfile: Codable, Equatable {
   var exercisesToAvoid: String
   var limitations: String
   var declaredDiscomforts: [String]
+  var declaredInjuries: [String]
 
   init(
     goal: TrainingGoal,
@@ -151,7 +152,8 @@ struct TrainingProfile: Codable, Equatable {
     exercisePreferences: String,
     exercisesToAvoid: String,
     limitations: String,
-    declaredDiscomforts: [String] = []
+    declaredDiscomforts: [String] = [],
+    declaredInjuries: [String] = []
   ) {
     self.goal = goal
     self.targetTimeframeWeeks = targetTimeframeWeeks
@@ -171,13 +173,14 @@ struct TrainingProfile: Codable, Equatable {
     self.exercisesToAvoid = exercisesToAvoid
     self.limitations = limitations
     self.declaredDiscomforts = declaredDiscomforts
+    self.declaredInjuries = declaredInjuries
   }
 
   private enum CodingKeys: String, CodingKey {
     case goal, targetTimeframeWeeks, experience, trainingWeekdays, sessionDurationMinutes
     case availableEquipment, dumbbellWeightsKg, dumbbellUnitsByWeight, plateWeightsKg, plateUnitsByWeight, cableStepKg
     case barbellWeightKg, multipowerBarWeightKg, priorityMuscleGroups
-    case exercisePreferences, exercisesToAvoid, limitations, declaredDiscomforts
+    case exercisePreferences, exercisesToAvoid, limitations, declaredDiscomforts, declaredInjuries
   }
 
   init(from decoder: Decoder) throws {
@@ -206,6 +209,7 @@ struct TrainingProfile: Codable, Equatable {
     } else {
       declaredDiscomforts = Self.mergingDiscomforts(["Hombro", "Lumbar", "Muñeca", "Rodilla"], legacyDiscomforts)
     }
+    declaredInjuries = Self.mergingDiscomforts([], try container.decodeIfPresent([String].self, forKey: .declaredInjuries) ?? [])
   }
 
   static let initial = TrainingProfile(
@@ -226,7 +230,8 @@ struct TrainingProfile: Codable, Equatable {
     exercisePreferences: "",
     exercisesToAvoid: "",
     limitations: "",
-    declaredDiscomforts: []
+    declaredDiscomforts: [],
+    declaredInjuries: []
   )
 
   var loadInventory: EquipmentLoadInventory {

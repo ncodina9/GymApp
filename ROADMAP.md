@@ -993,6 +993,7 @@ Tareas:
 - [x] anadir filtros por bloque del plan, tipo de ejercicio y grupo muscular cuando el plan incluya esa taxonomia
 - [x] permitir exportar las tablas estadisticas principales en CSV reutilizable
 - [ ] permitir exportar graficas principales cuando existan visualizaciones nativas en la app
+- [ ] las gráficas nativas deberán ser interactivas: selección de rango, consulta de cada punto y filtros sin perder trazabilidad con las series fuente
 - [x] definir que las primeras graficas se generan en la PWA desde agregados exportables
 - [x] documentar los agregados estadisticos para poder replicarlos en Swift
 
@@ -1186,6 +1187,8 @@ Decisiones de compatibilidad:
 - los nombres visibles se normalizan mediante `baseExerciseName`; los identificadores, cargas, material planeado y material real de exports no cambian
 - la analítica se mantiene en librerías y exportaciones para Obsidian, pero no se muestra en la PWA hasta que tenga una presentación adecuada en SwiftUI
 - el cambio de orden pendiente debe vivir en el secuenciador y registrarse como orden real de ejecución, nunca simularse como una serie saltada
+
+Estado: cerrado mediante uso continuado en gimnasio real. Las incidencias menores que aparezcan durante ese uso se tratarán como correcciones del flujo nativo, no como una nueva fase de validación.
 
 ### Hito 26: Base nativa verificable
 
@@ -1401,14 +1404,22 @@ Actualización v0.1.126: una revisión que mueve una sesión queda vigente desde
 
 Actualización v0.1.127: las solicitudes al entrenador se guardan localmente con su texto, sesión de contexto, interpretación, estado de aclaración y revisión vinculada, y pueden borrarse desde la propia pantalla. La autorización para un futuro intérprete remoto es explícita y reversible; por ahora no activa ninguna transmisión. El contrato remoto v1 queda limitado a la solicitud, objetivo, experiencia, disponibilidad, material y resumen de la sesión elegida. Excluye por diseño Apple Salud, molestias, limitaciones en texto libre, series ejecutadas, cargas reales e historial de entrenamientos. Cualquier proveedor remoto deberá devolver únicamente intenciones tipadas, que seguirán siendo validadas y aceptadas localmente.
 
+Actualización v0.1.128: el motor de propuestas incorpora avisos auditables para aumentos de carga superiores al 10 %, incrementos semanales de volumen superiores al 30 % y reducciones de grupos musculares declarados prioritarios. No bloquea ni muta automáticamente un plan: obliga a revisar la intención antes de aceptar la revisión. El calendario de Planificación identifica cada semana del macrociclo con un color de baja intensidad y, al seleccionar una sesión, muestra el número de semana y su objetivo sin interferir con los estados de hoy, sesión prevista o completada.
+
+Actualización v0.1.129: el perfil separa molestias de lesiones. Las molestias se conservan como chips para el feedback 0–3 y generan precauciones de ejecución por patrón, con recomendación de carga y RIR conservadores, pero no bloquean ejercicios ni marcan incompatibilidad. Las lesiones o restricciones médicas se declaran por separado y sí se compilan como restricciones para el motor y la compatibilidad futura. Planificación incorpora el detalle de macrociclo: fases agrupadas, objetivo semanal y progreso de sesiones realizadas. El intérprete local reconoce además mañana, pasado mañana y días de la semana en español; los casos ambiguos siguen quedando como solicitudes que requieren aclaración.
+
+Actualización v0.1.130: el detalle semanal del macrociclo usa tarjetas independientes con cabecera integrada, color de fase y progreso de sesiones para conservar la jerarquía visual de la previsualización de entrenamiento. Ante una solicitud de cancelación, el entrenador local busca hasta tres fechas futuras disponibles, posteriores a la sesión afectada y sin conflictos de calendario. La persona puede escoger una alternativa o conservar la cancelación; ambas opciones crean únicamente una revisión pendiente tras confirmación.
+
+Actualización v0.1.131: la disponibilidad del perfil guía las replanificaciones automáticas, pero no impide excepciones explícitas. Si no existen suficientes huecos compatibles, el planificador propone también fechas futuras sin conflicto fuera de la disponibilidad habitual y las etiqueta de forma visible antes de crear una revisión. La elección puntual no modifica los días generales configurados en el perfil.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.
 - Principio de arquitectura: el agente interpreta la intención y propone cambios, pero no es la fuente de verdad ni modifica directamente el plan. El motor determinista valida calendario, volumen, material, restricciones, ejercicios compatibles y límites de progresión antes de que el usuario confirme.
-- [ ] Definir el perfil estructurado que condiciona toda propuesta: objetivo, experiencia, disponibilidad, duración máxima por sesión, material, preferencias, prioridades musculares, ejercicios a evitar y limitaciones.
-- [~] Versionar el plan con fecha de vigencia. Las instantáneas de revisión, estados y aceptación existen; faltan operaciones tipadas, diff legible y generación validada de propuestas.
-- [~] Crear operaciones de planificación tipadas y auditables: mover, cancelar, añadir, quitar y sustituir ejercicios, y cambiar reps, carga, duración o descanso existen con validación y cambios resultantes; faltan prioridad, volumen de bloque y reglas más ricas para superseries.
-- [ ] Implementar un motor determinista de calendario y programación que funcione sin IA: comprobar conflictos, sesiones duplicadas, volumen, duración estimada, material, superseries, restricciones y progresiones máximas.
+- [~] Definir el perfil estructurado que condiciona toda propuesta: objetivo, experiencia, disponibilidad, duración máxima por sesión, material, preferencias, prioridades musculares, ejercicios a evitar y limitaciones existen; faltan cardio y referencias iniciales por patrón.
+- [~] Versionar el plan con fecha de vigencia. Las instantáneas, estados, operaciones, diff legible y generación validada de propuestas existen; falta encadenar de forma explícita revisiones complejas sobre una planificación futura ya aceptada.
+- [~] Crear operaciones de planificación tipadas y auditables: mover, cancelar, añadir, quitar y sustituir ejercicios, y cambiar reps, carga, duración o descanso existen con validación y cambios resultantes; faltan reglas más ricas para prioridades y superseries.
+- [~] Implementar un motor determinista de calendario y programación que funcione sin IA: comprueba conflictos, sesiones duplicadas, duración, material, restricciones y progresión conservadora; faltan límites por bloque, distribución semanal completa y reglas de periodización.
 - [~] Añadir una pantalla de propuesta que muestre qué cambia, qué se conserva, por qué y el impacto semanal. El simulador local crea revisiones pendientes para mover o cancelar sesiones, sustituir ejercicios y ajustar series con cambios y avisos auditables; falta el impacto semanal completo.
 - [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, siempre como propuesta explicada y confirmada antes de modificar un plan.
 - [ ] Integrar el chat como interfaz de intención sobre las operaciones validadas, con contexto limitado al perfil, plan efectivo, sesiones ejecutadas y restricciones relevantes.
@@ -1418,7 +1429,7 @@ Actualización v0.1.127: las solicitudes al entrenador se guardan localmente con
 
 ### Futuro: molestias y almacenamiento independiente
 
-- [~] Ampliar molestias más allá del feedback puntual de cada serie: el perfil permite declararlas como chips y la pantalla de serie las valora de 0 a 3; faltan un modelo específico de zona, contexto, evolución y restricciones asociadas a ejercicios.
+- [~] Ampliar molestias más allá del feedback puntual de cada serie: el perfil permite declararlas como chips y la pantalla de serie las valora de 0 a 3; generan precauciones de ejecución, separadas de las lesiones que restringen ejercicios. Faltan un modelo específico de zona, contexto, evolución y recomendaciones individualizadas.
 - [ ] Definir un esquema de datos y exportación propio para molestias, separado del CSV de series y no dependiente de Obsidian, antes de almacenar información sensible.
 - [ ] Establecer reglas de retención, edición y borrado de esas entradas, junto con una exportación completa legible por el usuario.
 

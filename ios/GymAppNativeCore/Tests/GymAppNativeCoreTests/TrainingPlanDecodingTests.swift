@@ -169,6 +169,69 @@ struct TrainingPlanDecodingTests {
     }
   }
 
+  @Test("Advierte progresiones de carga agresivas antes de aceptar una revisión")
+  func warnsAboutAggressiveSetProgression() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let exercise = try #require(session.exercises.first { $0.sets.first?.targetWeightKg ?? 0 > 0 })
+    let trainingSet = try #require(exercise.sets.first)
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-01-01"))
+    )
+    let proposedWeight = trainingSet.targetWeightKg * 1.15
+
+    let proposal = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.adjustSet(
+        sessionID: session.sessionID,
+        exerciseID: exercise.exerciseID,
+        setIndex: trainingSet.setIndex,
+        reps: nil,
+        weightKg: proposedWeight,
+        durationSeconds: nil,
+        restSeconds: nil
+      )],
+      constraints: constraints
+    )
+
+    #expect(proposal.warnings.contains(.aggressiveSetProgression(
+      sessionID: session.sessionID,
+      exerciseID: exercise.exerciseID,
+      setIndex: trainingSet.setIndex,
+      before: trainingSet.targetWeightKg,
+      after: proposedWeight
+    )))
+  }
+
+  @Test("Advierte al reducir un grupo prioritario del perfil")
+  func warnsWhenReducingPriorityVolume() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first { $0.exercises.count > 1 })
+    let exercise = try #require(session.exercises.first { !$0.primaryMuscles.isEmpty })
+    let priority = try #require(exercise.primaryMuscles.first)
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      priorityMuscleGroups: [priority.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "es_ES"))],
+      referenceDate: try #require(isoDate("2026-01-01"))
+    )
+
+    let proposal = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.removeExercise(sessionID: session.sessionID, exerciseID: exercise.exerciseID)],
+      constraints: constraints
+    )
+
+    #expect(proposal.warnings.contains { warning in
+      if case .priorityVolumeReduced = warning { return true }
+      return false
+    })
+  }
+
   @Test("Traduce intenciones estructuradas sin modificar el plan")
   func resolvesPlanningIntents() throws {
     let intent = PlanningIntent.adjustSet(
@@ -219,6 +282,13 @@ struct TrainingPlanDecodingTests {
       referencedSessionID: sessionID
     ))
     #expect(cancelled == [.cancelSession(sessionID: sessionID)])
+
+    let movedToThursday = try await interpreter.interpret(.init(
+      userText: "Muévela al jueves",
+      referencedSessionID: sessionID,
+      createdAt: try #require(isoDate("2026-09-28"))
+    ))
+    #expect(movedToThursday == [.moveSession(sessionID: sessionID, toDate: "2026-10-01")])
   }
 
   @Test("Codifica el contexto remoto mínimo sin histórico ni series")
@@ -292,6 +362,46 @@ struct TrainingPlanDecodingTests {
         return true
       })
     }
+  }
+
+  @Test("Propone fechas disponibles al reprogramar una sesión")
+  func proposesAvailableReschedulingDates() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first { $0.date >= "2026-09-28" })
+    let constraints = PlanningConstraints(
+      availableWeekdays: [1],
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-09-28"))
+    )
+
+    let options = try SessionReschedulingPlanner.options(
+      basePlan: plan,
+      sessionID: session.sessionID,
+      constraints: constraints
+    )
+
+    #expect(!options.isEmpty)
+    #expect(options.allSatisfy { $0.date != session.date })
+    #expect(options.allSatisfy { option in
+      guard let date = isoDate(option.date) else { return false }
+      let weekday = Calendar.current.component(.weekday, from: date)
+      return [1].contains(weekday)
+    })
+
+    let fallbackConstraints = PlanningConstraints(
+      availableWeekdays: [],
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-09-28"))
+    )
+    let fallbackOptions = try SessionReschedulingPlanner.options(
+      basePlan: plan,
+      sessionID: session.sessionID,
+      constraints: fallbackConstraints
+    )
+    #expect(!fallbackOptions.isEmpty)
+    #expect(fallbackOptions.allSatisfy { $0.isOutsideAvailability })
   }
 
   @Test("Conserva superseries, temporizados y material")

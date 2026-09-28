@@ -170,7 +170,7 @@ public enum LocalPlanningIntentInterpreterError: LocalizedError, Equatable, Send
     case .missingSessionContext:
       "Elige primero la sesión sobre la que quieres hacer la solicitud."
     case .unsupportedRequest:
-      "Por ahora puedo entender cancelaciones, cambios a una fecha YYYY-MM-DD y objetivos de duración en minutos."
+      "Necesito saber si quieres cancelar, mover la sesión a una fecha o ajustar su duración. Puedes usar fechas como mañana, el jueves o 2026-10-03."
     }
   }
 }
@@ -196,7 +196,7 @@ public struct LocalPlanningIntentInterpreter: PlanningIntentInterpreting {
     if let minutes = Self.minutes(in: normalized) {
       return [.adaptSessionDuration(sessionID: sessionID, maximumMinutes: minutes)]
     }
-    if let date = Self.isoDate(in: normalized) {
+    if let date = Self.isoDate(in: normalized) ?? Self.relativeDate(in: normalized, from: request.createdAt) {
       return [.moveSession(sessionID: sessionID, toDate: date)]
     }
     throw LocalPlanningIntentInterpreterError.unsupportedRequest
@@ -208,6 +208,38 @@ public struct LocalPlanningIntentInterpreter: PlanningIntentInterpreting {
 
   private static func isoDate(in text: String) -> String? {
     firstCapture(in: text, pattern: "\\b(\\d{4}-\\d{2}-\\d{2})\\b")
+  }
+
+  private static func relativeDate(in text: String, from referenceDate: Date) -> String? {
+    let calendar = Calendar.current
+    let reference = calendar.startOfDay(for: referenceDate)
+    let offset: Int?
+    if text.contains("pasado manana") {
+      offset = 2
+    } else if text.contains("manana") {
+      offset = 1
+    } else {
+      let weekdays = [
+        "domingo": 1,
+        "lunes": 2,
+        "martes": 3,
+        "miercoles": 4,
+        "jueves": 5,
+        "viernes": 6,
+        "sabado": 7,
+      ]
+      guard let target = weekdays.first(where: { text.contains($0.key) })?.value else { return nil }
+      let current = calendar.component(.weekday, from: reference)
+      let daysUntil = (target - current + 7) % 7
+      offset = daysUntil == 0 ? 7 : daysUntil
+    }
+    guard let offset,
+          let date = calendar.date(byAdding: .day, value: offset, to: reference) else { return nil }
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
   }
 
   private static func firstCapture(in text: String, pattern: String) -> String? {

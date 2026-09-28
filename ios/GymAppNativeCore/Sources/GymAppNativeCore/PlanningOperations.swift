@@ -90,8 +90,10 @@ public struct PlanningConstraints: Sendable {
   public var availableEquipment: Set<Equipment>
   public var restrictedExerciseIDs: Set<String>
   public var restrictedMovementPatterns: Set<String>
+  public var cautionMovementPatterns: Set<String>
   public var avoidsSupersets: Bool
   public var maxSessionMinutes: Int
+  public var priorityMuscleGroups: Set<String>
   public var activeSessionID: String?
   public var completedSessionIDs: Set<String>
   public var referenceDate: Date
@@ -101,8 +103,10 @@ public struct PlanningConstraints: Sendable {
     availableEquipment: Set<Equipment>,
     restrictedExerciseIDs: Set<String> = [],
     restrictedMovementPatterns: Set<String> = [],
+    cautionMovementPatterns: Set<String> = [],
     avoidsSupersets: Bool = false,
     maxSessionMinutes: Int,
+    priorityMuscleGroups: Set<String> = [],
     activeSessionID: String? = nil,
     completedSessionIDs: Set<String> = [],
     referenceDate: Date = .now
@@ -111,8 +115,10 @@ public struct PlanningConstraints: Sendable {
     self.availableEquipment = availableEquipment
     self.restrictedExerciseIDs = restrictedExerciseIDs
     self.restrictedMovementPatterns = restrictedMovementPatterns
+    self.cautionMovementPatterns = cautionMovementPatterns
     self.avoidsSupersets = avoidsSupersets
     self.maxSessionMinutes = maxSessionMinutes
+    self.priorityMuscleGroups = priorityMuscleGroups
     self.activeSessionID = activeSessionID
     self.completedSessionIDs = completedSessionIDs
     self.referenceDate = referenceDate
@@ -177,12 +183,25 @@ public struct WeeklySetChange: Codable, Equatable, Sendable, Identifiable {
 
 public enum PlanningWarning: Codable, Equatable, Sendable {
   case durationExceedsPreference(sessionID: String, minutes: Int, maximum: Int)
+  case aggressiveSetProgression(sessionID: String, exerciseID: String, setIndex: Int, before: Double, after: Double)
+  case weeklyVolumeIncrease(week: Int, muscle: String, before: Int, after: Int)
+  case priorityVolumeReduced(week: Int, muscle: String, before: Int, after: Int)
 
   public var message: String {
     switch self {
     case let .durationExceedsPreference(_, minutes, maximum):
       "La sesión estima \(minutes) min, por encima de la preferencia de \(maximum) min."
+    case let .aggressiveSetProgression(_, _, _, before, after):
+      "La carga objetivo sube de \(Self.weight(before)) a \(Self.weight(after)) kg en una sola revisión."
+    case let .weeklyVolumeIncrease(week, muscle, before, after):
+      "La semana \(week) sube \(muscle) de \(before) a \(after) series; revisa que el aumento sea intencional."
+    case let .priorityVolumeReduced(week, muscle, before, after):
+      "La semana \(week) reduce el grupo prioritario \(muscle) de \(before) a \(after) series."
     }
+  }
+
+  private static func weight(_ value: Double) -> String {
+    value.formatted(.number.precision(.fractionLength(value.rounded() == value ? 0 : 1)))
   }
 }
 
@@ -298,12 +317,27 @@ public enum PlanningOperationEngine {
         guard let exerciseIndex = plan.sessions[sessionIndex].exercises.firstIndex(where: { $0.exerciseID == exerciseID }) else { throw PlanningOperationError.exerciseNotFound(exerciseID) }
         guard let targetIndex = plan.sessions[sessionIndex].exercises[exerciseIndex].sets.firstIndex(where: { $0.setIndex == setIndex }) else { throw PlanningOperationError.setNotFound(setIndex) }
         if let reps { plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].targetReps = max(1, reps) }
-        if let weightKg { plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].targetWeightKg = max(0, weightKg) }
+        if let weightKg {
+          let previousWeight = plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].targetWeightKg
+          let adjustedWeight = max(0, weightKg)
+          plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].targetWeightKg = adjustedWeight
+          if previousWeight > 0, adjustedWeight > previousWeight * 1.10 {
+            warnings.append(.aggressiveSetProgression(
+              sessionID: sessionID,
+              exerciseID: exerciseID,
+              setIndex: setIndex,
+              before: previousWeight,
+              after: adjustedWeight
+            ))
+          }
+        }
         if let durationSeconds { plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].targetDurationSeconds = max(15, durationSeconds) }
         if let restSeconds { plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].restSeconds = max(0, restSeconds) }
         appendDurationWarning(for: plan.sessions[sessionIndex], constraints: constraints, warnings: &warnings)
       }
     }
+
+    appendWeeklyVolumeWarnings(from: basePlan, to: plan, constraints: constraints, warnings: &warnings)
 
     return PlanningProposal(
       plan: plan,
@@ -353,6 +387,38 @@ public enum PlanningOperationEngine {
       }
     }
     return volume
+  }
+
+  private static func appendWeeklyVolumeWarnings(
+    from basePlan: TrainingPlan,
+    to proposedPlan: TrainingPlan,
+    constraints: PlanningConstraints,
+    warnings: inout [PlanningWarning]
+  ) {
+    let before = weeklyVolume(for: basePlan)
+    let after = weeklyVolume(for: proposedPlan)
+    for key in Set(before.keys).union(after.keys) {
+      guard let separator = key.firstIndex(of: "|"),
+            let week = Int(key[..<separator]) else { continue }
+      let muscle = String(key[key.index(after: separator)...])
+      let previous = before[key] ?? 0
+      let proposed = after[key] ?? 0
+      guard previous != proposed else { continue }
+
+      if previous > 0, proposed >= previous + 3, Double(proposed) > Double(previous) * 1.30 {
+        let warning = PlanningWarning.weeklyVolumeIncrease(week: week, muscle: muscle, before: previous, after: proposed)
+        if !warnings.contains(warning) { warnings.append(warning) }
+      }
+
+      if constraints.priorityMuscleGroups.contains(normalized(muscle)), proposed < previous {
+        let warning = PlanningWarning.priorityVolumeReduced(week: week, muscle: muscle, before: previous, after: proposed)
+        if !warnings.contains(warning) { warnings.append(warning) }
+      }
+    }
+  }
+
+  private static func normalized(_ value: String) -> String {
+    value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "es_ES"))
   }
 
   private static func supersetCount(for plan: TrainingPlan) -> Int {

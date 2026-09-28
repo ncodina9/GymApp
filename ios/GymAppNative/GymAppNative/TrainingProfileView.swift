@@ -297,7 +297,20 @@ private struct ProfileContextStep: View {
         ProfileTextField(label: "Preferencias", placeholder: "Ej. prefiero ejercicios con barra", value: $profile.exercisePreferences)
         ProfileTextField(label: "Ejercicios a evitar", placeholder: "Ej. fondos", value: $profile.exercisesToAvoid)
         ProfileTextField(label: "Limitaciones", placeholder: "Ej. evitar superseries", value: $profile.limitations)
-        ProfileDiscomfortEditor(discomforts: $profile.declaredDiscomforts)
+        ProfileHealthEntryEditor(
+          title: "Molestias declaradas",
+          detail: "Se muestran para valorarlas de 0 a 3 durante la serie. No bloquean ejercicios; el plan te pedirá precaución cuando afecten a un movimiento.",
+          placeholder: "Ej. hombro derecho",
+          addLabel: "Añadir molestia",
+          entries: $profile.declaredDiscomforts
+        )
+        ProfileHealthEntryEditor(
+          title: "Lesiones o restricciones médicas",
+          detail: "Una lesión sí bloquea patrones o ejercicios compatibles hasta que la elimines. Usa descripciones concretas, por ejemplo: lesión de rodilla.",
+          placeholder: "Ej. lesión de rodilla",
+          addLabel: "Añadir lesión",
+          entries: $profile.declaredInjuries
+        )
       }
     }
   }
@@ -474,23 +487,27 @@ private struct LoadInventoryEditor: View {
   }
 }
 
-private struct ProfileDiscomfortEditor: View {
-  @Binding var discomforts: [String]
-  @State private var discomfortText = ""
-  @State private var selectedDiscomforts = Set<String>()
+private struct ProfileHealthEntryEditor: View {
+  let title: String
+  let detail: String
+  let placeholder: String
+  let addLabel: String
+  @Binding var entries: [String]
+  @State private var entryText = ""
+  @State private var selectedEntries = Set<String>()
 
   private let columns = [GridItem(.adaptive(minimum: 110), spacing: 8, alignment: .leading)]
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text("Molestias declaradas")
+      Text(title)
         .font(.gymH3.weight(.bold))
-      Text("Se mostrarán para valorarlas de 0 a 3 al evaluar una serie y condicionarán propuestas futuras.")
+      Text(detail)
         .font(.gymSupport)
         .foregroundStyle(Color.gymSecondaryText)
 
       HStack(spacing: 8) {
-        TextField("Ej. hombro derecho", text: $discomfortText)
+        TextField(placeholder, text: $entryText)
           .font(.gymBody.weight(.semibold))
           .textInputAutocapitalization(.sentences)
           .padding(.horizontal, 12)
@@ -505,33 +522,33 @@ private struct ProfileDiscomfortEditor: View {
             .foregroundStyle(Color.gymAccentForeground)
             .background(Color.gymAccent, in: Circle())
         }
-        .accessibilityLabel("Añadir molestia")
+        .accessibilityLabel(addLabel)
         .buttonStyle(.plain)
-        .disabled(trimmedDiscomfort.isEmpty)
-        .opacity(trimmedDiscomfort.isEmpty ? 0.45 : 1)
+        .disabled(trimmedEntry.isEmpty)
+        .opacity(trimmedEntry.isEmpty ? 0.45 : 1)
       }
 
-      if !discomforts.isEmpty {
+      if !entries.isEmpty {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
-          ForEach(discomforts, id: \.self) { discomfort in
-            Button { toggleSelection(discomfort) } label: {
-              Text(discomfort)
+          ForEach(entries, id: \.self) { entry in
+            Button { toggleSelection(entry) } label: {
+              Text(entry)
                 .font(.gymBody.weight(.semibold))
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .padding(.horizontal, 10)
-                .foregroundStyle(selectedDiscomforts.contains(discomfort) ? Color.gymControlSelectionForeground : .primary)
-                .background(selectedDiscomforts.contains(discomfort) ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+                .foregroundStyle(selectedEntries.contains(entry) ? Color.gymControlSelectionForeground : .primary)
+                .background(selectedEntries.contains(entry) ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
                 .overlay {
                   RoundedRectangle(cornerRadius: 12)
-                    .stroke(selectedDiscomforts.contains(discomfort) ? Color.gymAccent : Color.gymAccent.opacity(0.35), lineWidth: selectedDiscomforts.contains(discomfort) ? 2 : 1)
+                    .stroke(selectedEntries.contains(entry) ? Color.gymAccent : Color.gymAccent.opacity(0.35), lineWidth: selectedEntries.contains(entry) ? 2 : 1)
                 }
             }
             .buttonStyle(.plain)
           }
         }
 
-        if !selectedDiscomforts.isEmpty {
+        if !selectedEntries.isEmpty {
           Button(role: .destructive, action: removeSelected) {
             Label("Eliminar seleccionadas", systemImage: "trash")
               .font(.gymBody.weight(.semibold))
@@ -543,30 +560,30 @@ private struct ProfileDiscomfortEditor: View {
     }
   }
 
-  private var trimmedDiscomfort: String {
-    discomfortText.trimmingCharacters(in: .whitespacesAndNewlines)
+  private var trimmedEntry: String {
+    entryText.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
   private func add() {
-    guard !trimmedDiscomfort.isEmpty,
-          !discomforts.contains(where: { $0.compare(trimmedDiscomfort, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame })
+    guard !trimmedEntry.isEmpty,
+          !entries.contains(where: { $0.compare(trimmedEntry, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame })
     else { return }
-    discomforts.append(trimmedDiscomfort)
-    discomforts.sort { $0.localizedStandardCompare($1) == .orderedAscending }
-    discomfortText = ""
+    entries.append(trimmedEntry)
+    entries.sort { $0.localizedStandardCompare($1) == .orderedAscending }
+    entryText = ""
   }
 
-  private func toggleSelection(_ discomfort: String) {
-    if selectedDiscomforts.contains(discomfort) {
-      selectedDiscomforts.remove(discomfort)
+  private func toggleSelection(_ entry: String) {
+    if selectedEntries.contains(entry) {
+      selectedEntries.remove(entry)
     } else {
-      selectedDiscomforts.insert(discomfort)
+      selectedEntries.insert(entry)
     }
   }
 
   private func removeSelected() {
-    discomforts.removeAll { selectedDiscomforts.contains($0) }
-    selectedDiscomforts.removeAll()
+    entries.removeAll { selectedEntries.contains($0) }
+    selectedEntries.removeAll()
   }
 }
 
