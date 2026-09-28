@@ -1378,6 +1378,7 @@ struct CoachConversationView: View {
   @State private var selectedReschedulingOptionID = ""
   @State private var responseText: String?
   @State private var currentConversationID: String?
+  @State private var showsPrivacyDetails = false
 
   init(plan: TrainingPlan, initialSessionID: String? = nil) {
     self.plan = plan
@@ -1471,21 +1472,28 @@ struct CoachConversationView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
-        Text("La interpretación local prepara una revisión. El plan solo cambia cuando la aceptas.")
+        Text("La interpretación local prepara una revisión; el plan solo cambia cuando la aceptas.")
           .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
 
         SettingsCategory(title: "Privacidad") {
-          Toggle("Autorizar contexto mínimo para el futuro intérprete remoto", isOn: $remotePlanningConsent)
-            .font(.gymBody.weight(.semibold))
-          Text(remotePlanningConsent
-            ? "La autorización queda registrada, pero esta versión todavía no transmite datos a ningún servicio."
-            : "El intérprete actual funciona solo en el dispositivo.")
-            .font(.gymSupport)
-            .foregroundStyle(Color.gymSecondaryText)
-          Text("El futuro contexto incluirá objetivo, experiencia, disponibilidad, material y la sesión elegida. Excluirá Apple Salud, series ejecutadas, pesos reales, historial y molestias.")
-            .font(.gymSupport)
-            .foregroundStyle(Color.gymSecondaryText)
+          VStack(alignment: .leading, spacing: 10) {
+            Toggle("Autorizar contexto remoto", isOn: $remotePlanningConsent)
+              .font(.gymBody.weight(.semibold))
+            Text(remotePlanningConsent
+              ? "La autorización queda registrada. Esta versión no transmite datos."
+              : "El intérprete actual funciona solo en el dispositivo.")
+              .font(.gymSupport)
+              .foregroundStyle(Color.gymSecondaryText)
+            DisclosureGroup("Ver datos incluidos", isExpanded: $showsPrivacyDetails) {
+              Text("Incluirá objetivo, experiencia, disponibilidad, material y la sesión elegida. Excluirá Salud, series ejecutadas, pesos reales, historial y molestias.")
+                .font(.gymSupport)
+                .foregroundStyle(Color.gymSecondaryText)
+                .padding(.top, 4)
+            }
+            .font(.gymSupport.weight(.semibold))
+          }
+          .padding(16)
         }
 
         if selectableSessions.isEmpty {
@@ -1496,30 +1504,39 @@ struct CoachConversationView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 36)
         } else {
-          SettingsCategory(title: "Solicitud") {
-            Picker("Sesión", selection: $selectedSessionID) {
-              ForEach(selectableSessions) { session in
-                Text("\(Self.dateLabel(session.date)) · \(session.sessionLabel)")
-                  .tag(session.sessionID)
+          SettingsCategory(title: "Sesión") {
+            VStack(alignment: .leading, spacing: 0) {
+              Picker("Sesión", selection: $selectedSessionID) {
+                ForEach(selectableSessions) { session in
+                  Text("\(Self.dateLabel(session.date)) · \(session.sessionLabel)")
+                    .tag(session.sessionID)
+                }
               }
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+          }
 
-            SettingsDivider()
+          SettingsCategory(title: "Solicitud") {
+            VStack(spacing: 10) {
+              TextEditor(text: $requestText)
+                .font(.gymBody)
+                .frame(minHeight: 72)
+                .padding(8)
+                .scrollContentBackground(.hidden)
+                .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
+                .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.25), lineWidth: 1) }
 
-            TextEditor(text: $requestText)
-              .font(.gymBody)
-              .frame(minHeight: 96)
-              .padding(8)
-              .scrollContentBackground(.hidden)
-              .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
-              .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.25), lineWidth: 1) }
-
-            HStack(spacing: 8) {
-              coachPrompt("No podré entrenar")
-              coachPrompt("Solo tengo 45 minutos")
+              HStack(spacing: 10) {
+                coachPrompt("No podré entrenar")
+                coachPrompt("Solo tengo 45 minutos")
+              }
+              HStack(spacing: 10) {
+                coachPrompt("Muévela al jueves")
+                coachPrompt("Vacaciones próximas")
+              }
             }
-            coachPrompt("Muévela al jueves")
-            coachPrompt("Vacaciones la semana que viene")
+            .padding(16)
           }
 
           Button(action: interpretRequest) {
@@ -1691,12 +1708,14 @@ struct CoachConversationView: View {
         ? "No podré entrenar esta sesión"
         : text == "Muévela al jueves"
           ? "Mueve esta sesión al jueves"
-          : text == "Vacaciones la semana que viene"
+        : text == "Vacaciones próximas"
             ? "Estaré de vacaciones la semana que viene"
             : "Quiero hacer esta sesión en 45 minutos"
     }
     .font(.gymSupport.weight(.semibold))
-    .frame(maxWidth: .infinity, minHeight: 38)
+    .lineLimit(1)
+    .minimumScaleFactor(0.85)
+    .frame(maxWidth: .infinity, minHeight: 34)
     .foregroundStyle(Color.gymControlSelectionForeground)
     .background(Color.gymControlSelectionFill, in: RoundedRectangle(cornerRadius: 10))
     .buttonStyle(.plain)

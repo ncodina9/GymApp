@@ -149,17 +149,30 @@ struct TodayView: View {
           )
         }
         .overlay(alignment: .bottomTrailing) {
-          NavigationLink {
-            SettingsView(plan: plan)
-          } label: {
-            Image(systemName: "gearshape.fill")
-              .font(.gymH2.weight(.bold))
-              .frame(width: 56, height: 56)
-              .foregroundStyle(Color.gymAccentForeground)
-              .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
+          VStack(spacing: 12) {
+            NavigationLink {
+              CoachConversationView(plan: plan)
+            } label: {
+              Image(systemName: "bubble.left.and.bubble.right.fill")
+                .font(.gymH2.weight(.bold))
+                .frame(width: 56, height: 56)
+                .foregroundStyle(Color.gymAccentForeground)
+                .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
+            }
+            .accessibilityLabel("Entrenador")
+            .buttonStyle(.plain)
+            NavigationLink {
+              SettingsView(plan: plan)
+            } label: {
+              Image(systemName: "gearshape.fill")
+                .font(.gymH2.weight(.bold))
+                .frame(width: 56, height: 56)
+                .foregroundStyle(Color.gymAccentForeground)
+                .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Circle())
+            }
+            .accessibilityLabel("Opciones")
+            .buttonStyle(.plain)
           }
-          .accessibilityLabel("Opciones")
-          .buttonStyle(.plain)
           .padding(.trailing, 20)
           .padding(.bottom, 16)
         }

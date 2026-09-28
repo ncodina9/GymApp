@@ -38,10 +38,21 @@ enum WeeklyReviewBridge {
     let tone: AdviceTone
   }
 
+  struct LocalProgressionProposal {
+    let operations: [PlanningOperation]
+    let summary: String
+    let details: [String]
+  }
+
   enum AdviceTone {
     case neutral
     case caution
     case positive
+  }
+
+  private enum AutomaticAdjustmentMode {
+    case progress
+    case recover
   }
 
   struct ExternalProposal: Codable {
@@ -195,16 +206,263 @@ enum WeeklyReviewBridge {
       ))
     }
     if let nextWeek,
-       let focus = plan.sessions.first(where: { !$0.isCancelled && $0.week == nextWeek })?.weekFocusLabel {
+       let nextSession = plan.sessions.first(where: { !$0.isCancelled && $0.week == nextWeek }) {
       advice.append(.init(
         id: "next-week",
         title: "Siguiente semana",
-        detail: "S\(nextWeek): \(focus). Las decisiones deben respetar este objetivo del macrociclo.",
+        detail: "S\(nextWeek): \(nextSession.weekFocusLabel). Las decisiones deben respetar este objetivo del macrociclo.",
         symbol: "calendar",
+        tone: .neutral
+      ))
+      advice.append(.init(
+        id: "phase-rule",
+        title: "Regla de fase",
+        detail: phaseRule(for: nextSession.exercises.first?.phase),
+        symbol: "slider.horizontal.3",
+        tone: .neutral
+      ))
+      advice.append(.init(
+        id: "automation-boundary",
+        title: "Límite automático",
+        detail: "Superseries completas y temporizados usan reglas de bloque. Peso corporal sin asistencia ni lastre puede progresar reps; el resto se revisa manualmente.",
+        symbol: "hand.raised",
         tone: .neutral
       ))
     }
     return advice
+  }
+
+  static func localProgressionProposal(
+    plan: TrainingPlan,
+    closedWeek: Int,
+    nextWeek: Int?,
+    completedRecords: [CompletedWorkoutRecord],
+    inventory: EquipmentLoadInventory,
+    referenceDate: Date = .now
+  ) -> LocalProgressionProposal? {
+    guard let nextWeek else { return nil }
+    let executions = completedRecords.compactMap { record -> WorkoutExecutionState? in
+      guard let data = record.executionData,
+            let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data),
+            execution.session.week == closedWeek else { return nil }
+      return execution
+    }
+    let records = executions.flatMap(\.records)
+    let completed = records.filter { $0.status == .completed }
+    let skipped = records.contains { $0.status == .skipped }
+    let maxDiscomfort = records.map {
+      max($0.feedback.painKnee, $0.feedback.painWrist, $0.feedback.painShoulder, $0.feedback.painLowerBack, $0.feedback.declaredDiscomfortLevels.values.max() ?? 0)
+    }.max() ?? 0
+    let rir = completed.compactMap(\.feedback.rir)
+    guard !skipped, maxDiscomfort == 0, !rir.isEmpty else { return nil }
+    let averageRIR = Double(rir.reduce(0, +)) / Double(rir.count)
+    let mode: AutomaticAdjustmentMode
+    if averageRIR >= 3 {
+      mode = .progress
+    } else if averageRIR < 1 {
+      mode = .recover
+    } else {
+      return nil
+    }
+
+    let completedGroups = Set(executions.flatMap { execution in
+      execution.records.compactMap { record -> String? in
+        guard record.status == .completed,
+              execution.session.exercises.indices.contains(record.locator.exerciseIndex) else { return nil }
+        return execution.session.exercises[record.locator.exerciseIndex].displayGroupID
+      }
+    })
+    let today = Calendar.current.startOfDay(for: referenceDate)
+    var operations: [PlanningOperation] = []
+    var details: [String] = []
+    var adjustedGroups = Set<String>()
+    for session in plan.sessions where !session.isCancelled && session.week == nextWeek && date(from: session.date) >= today {
+      let eligibleSupersets = Set(session.exercises.compactMap(\.supersetID)).filter { supersetID in
+        let members = session.exercises.filter { $0.supersetID == supersetID }
+        return members.allSatisfy {
+          completedGroups.contains($0.displayGroupID)
+            && canAdjustAutomatically($0, mode: mode, inventory: inventory)
+        }
+      }
+      for exercise in session.exercises where completedGroups.contains(exercise.displayGroupID) {
+        guard !adjustedGroups.contains(exercise.displayGroupID) else { continue }
+        guard exercise.equipment != .bodyweight
+          || exercise.sets.contains(where: { if case .timed = $0.type { return true }; return canProgressBodyweight(exercise, set: $0) }) else { continue }
+        if let supersetID = exercise.supersetID, !eligibleSupersets.contains(supersetID) { continue }
+        for set in exercise.sets {
+          switch (mode, set.type) {
+          case (.progress, .working):
+            if exercise.phase == "acumulacion",
+               let reps = set.targetReps,
+               reps < maximumReps(for: exercise),
+               exercise.equipment != .bodyweight || canProgressBodyweight(exercise, set: set) {
+              operations.append(.adjustSet(
+                sessionID: session.sessionID,
+                exerciseID: exercise.exerciseID,
+                setIndex: set.setIndex,
+                reps: reps + 1,
+                weightKg: nil,
+                durationSeconds: nil,
+                restSeconds: nil
+              ))
+              details.append("\(exercise.displayName): \(reps) → \(reps + 1) reps, prioridad de acumulación.")
+              adjustedGroups.insert(exercise.displayGroupID)
+            } else if exercise.phase == "intensificacion" {
+              let maximumWeight = set.targetWeightKg * (1 + maximumLoadIncrease(for: exercise.equipment))
+              guard set.targetWeightKg > 0,
+                    let weight = EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: inventory)
+                      .first(where: { $0 > set.targetWeightKg && $0 <= maximumWeight }) else { continue }
+              operations.append(.adjustSet(
+                sessionID: session.sessionID,
+                exerciseID: exercise.exerciseID,
+                setIndex: set.setIndex,
+                reps: nil,
+                weightKg: weight,
+                durationSeconds: nil,
+                restSeconds: nil
+              ))
+              details.append("\(exercise.displayName): \(weightLabel(set.targetWeightKg)) kg → \(weightLabel(weight)) kg, intensidad y material disponible.")
+              adjustedGroups.insert(exercise.displayGroupID)
+            }
+          case (.progress, .timed):
+            guard exercise.phase == "acumulacion",
+                  let duration = set.targetDurationSeconds,
+                  duration < maximumTimedDuration else { continue }
+            let nextDuration = min(maximumTimedDuration, duration + 5)
+            operations.append(.adjustSet(
+              sessionID: session.sessionID,
+              exerciseID: exercise.exerciseID,
+              setIndex: set.setIndex,
+              reps: nil,
+              weightKg: nil,
+              durationSeconds: nextDuration,
+              restSeconds: nil
+            ))
+            details.append("\(exercise.displayName): \(duration) s → \(nextDuration) s, progresión temporizada de acumulación.")
+            adjustedGroups.insert(exercise.displayGroupID)
+          case (.recover, .working), (.recover, .timed):
+            guard exercise.equipment != .bodyweight,
+                  exercise.phase != "descarga", exercise.phase != "readaptacion", exercise.phase != "test" else { continue }
+            let isTimed: Bool
+            if case .timed = set.type { isTimed = true } else { isTimed = false }
+            let rest = min(maximumRest(for: exercise, isTimed: isTimed), set.restSeconds + 15)
+            guard rest > set.restSeconds else { continue }
+            operations.append(.adjustSet(
+              sessionID: session.sessionID,
+              exerciseID: exercise.exerciseID,
+              setIndex: set.setIndex,
+              reps: nil,
+              weightKg: nil,
+              durationSeconds: nil,
+              restSeconds: rest
+            ))
+            details.append("\(exercise.displayName): descanso \(set.restSeconds) s → \(rest) s por RIR bajo.")
+            adjustedGroups.insert(exercise.displayGroupID)
+          }
+          if adjustedGroups.contains(exercise.displayGroupID) { break }
+        }
+      }
+    }
+    guard !operations.isEmpty else { return nil }
+    let summary = mode == .progress
+      ? "Progresión conservadora en S\(nextWeek), condicionada por la fase y el material disponible."
+      : "Recuperación conservadora en S\(nextWeek): más descanso tras un RIR medio bajo."
+    return .init(
+      operations: operations,
+      summary: summary,
+      details: Array(Set(details)).sorted()
+    )
+  }
+
+  private static func date(from value: String) -> Date {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: value) ?? .distantPast
+  }
+
+  private static func weightLabel(_ value: Double) -> String {
+    value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
+  }
+
+  private static func phaseRule(for phase: String?) -> String {
+    switch phase {
+    case "acumulacion": "Acumulación: prioriza una repetición adicional antes que aumentar carga."
+    case "intensificacion": "Intensificación: permite carga solo si el siguiente salto está disponible y es conservador."
+    case "descarga": "Descarga: no se generan progresiones automáticas."
+    case "readaptacion": "Readaptación: no se generan progresiones automáticas."
+    case "realizacion": "Realización: se mantiene la prescripción; no se progresa de forma automática."
+    case "test": "Test: se mantiene la prescripción; no se progresa de forma automática."
+    default: "La propuesta se mantiene conservadora hasta disponer de una regla específica para esta fase."
+    }
+  }
+
+  private static func maximumReps(for exercise: TrainingExercise) -> Int {
+    exercise.type == "Básico" ? 10 : 15
+  }
+
+  private static func maximumLoadIncrease(for equipment: Equipment) -> Double {
+    switch equipment {
+    case .barbell, .multipower:
+      0.025
+    case .dumbbell, .cable, .plateLoadedMachine, .external:
+      0.05
+    case .bodyweight:
+      0
+    }
+  }
+
+  private static func maximumRest(for exercise: TrainingExercise, isTimed: Bool = false) -> Int {
+    isTimed ? 90 : (exercise.type == "Básico" ? 240 : 150)
+  }
+
+  private static var maximumTimedDuration: Int { 90 }
+
+  private static func canAdjustAutomatically(
+    _ exercise: TrainingExercise,
+    mode: AutomaticAdjustmentMode,
+    inventory: EquipmentLoadInventory
+  ) -> Bool {
+    exercise.sets.contains { set in
+      switch (mode, set.type) {
+      case (.progress, .working):
+        if exercise.equipment == .bodyweight { return canProgressBodyweight(exercise, set: set) }
+        if exercise.phase == "acumulacion", let reps = set.targetReps {
+          return reps < maximumReps(for: exercise)
+        }
+        if exercise.phase == "intensificacion", set.targetWeightKg > 0 {
+          let maximumWeight = set.targetWeightKg * (1 + maximumLoadIncrease(for: exercise.equipment))
+          return EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: inventory)
+            .contains { $0 > set.targetWeightKg && $0 <= maximumWeight }
+        }
+        return false
+      case (.progress, .timed):
+        return exercise.phase == "acumulacion" && (set.targetDurationSeconds ?? maximumTimedDuration) < maximumTimedDuration
+      case (.recover, .working):
+        return exercise.equipment != .bodyweight
+          && exercise.phase != "descarga"
+          && exercise.phase != "readaptacion"
+          && exercise.phase != "test"
+          && set.restSeconds < maximumRest(for: exercise)
+      case (.recover, .timed):
+        return exercise.phase != "descarga"
+          && exercise.phase != "readaptacion"
+          && exercise.phase != "test"
+          && set.restSeconds < maximumRest(for: exercise, isTimed: true)
+      }
+    }
+  }
+
+  private static func canProgressBodyweight(_ exercise: TrainingExercise, set: TrainingSet) -> Bool {
+    guard exercise.equipment == .bodyweight,
+          exercise.phase == "acumulacion",
+          set.targetWeightKg == 0,
+          let reps = set.targetReps,
+          reps < maximumReps(for: exercise) else { return false }
+    let descriptor = "\(exercise.name) \(exercise.notes) \(exercise.variantLabel ?? "")"
+      .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    return !descriptor.contains("asist") && !descriptor.contains("lastre") && !descriptor.contains("lastrad")
   }
 
   static func instructionsURL(planID: String, reviewedWeek: Int, targetWeek: Int?) throws -> URL {
@@ -319,6 +577,17 @@ struct WeeklyReviewExportView: View {
     )
   }
 
+  private var localProgressionProposal: WeeklyReviewBridge.LocalProgressionProposal? {
+    guard let closedWeek else { return nil }
+    return WeeklyReviewBridge.localProgressionProposal(
+      plan: effectivePlan,
+      closedWeek: closedWeek,
+      nextWeek: nextWeek,
+      completedRecords: completedRecords,
+      inventory: profile.loadInventory
+    )
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
@@ -373,6 +642,30 @@ struct WeeklyReviewExportView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
               }
+              if let localProgressionProposal {
+                SettingsDivider()
+                Text(localProgressionProposal.summary)
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                ForEach(localProgressionProposal.details.prefix(4), id: \.self) { detail in
+                  Text(detail)
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymSecondaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if localProgressionProposal.details.count > 4 {
+                  Text("Y \(localProgressionProposal.details.count - 4) ajustes más en la revisión.")
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymSecondaryText)
+                }
+                Button(action: { createLocalProposal(localProgressionProposal) }) {
+                  Label("Crear propuesta conservadora", systemImage: "arrow.up.right")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .font(.gymBody.weight(.semibold))
+                .foregroundStyle(Color.gymAccentForeground)
+                .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
+              }
             }
           }
         } else {
@@ -425,6 +718,23 @@ struct WeeklyReviewExportView: View {
         existingRecords: revisionRecords
       )
       message = "Propuesta externa importada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
+    } catch {
+      message = error.localizedDescription
+    }
+  }
+
+  private func createLocalProposal(_ proposal: WeeklyReviewBridge.LocalProgressionProposal) {
+    do {
+      let revision = try PlanRevisionStore.propose(
+        operations: proposal.operations,
+        basedOn: plan,
+        effectiveFrom: .now,
+        reason: proposal.summary,
+        constraints: constraints,
+        in: modelContext,
+        existingRecords: revisionRecords
+      )
+      message = "Propuesta local creada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
     } catch {
       message = error.localizedDescription
     }
