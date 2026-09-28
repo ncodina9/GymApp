@@ -22,6 +22,7 @@ final class PlanningConversationRecord {
   var requestText: String
   var referencedSessionID: String?
   var intentData: Data?
+  var draftData: Data?
   var responseText: String
   var statusRaw: String
   var revisionID: String?
@@ -45,6 +46,7 @@ final class PlanningConversationRecord {
     self.requestText = requestText
     self.referencedSessionID = referencedSessionID
     intentData = nil
+    draftData = nil
     self.responseText = responseText
     statusRaw = status.rawValue
     revisionID = nil
@@ -74,10 +76,32 @@ enum PlanningConversationStore {
     try? context.save()
   }
 
+  static func interpret(_ operations: [PlanningOperation], summary: String, for record: PlanningConversationRecord, in context: ModelContext) {
+    record.intentData = try? JSONEncoder().encode(operations)
+    record.responseText = summary
+    record.status = .interpreted
+    record.updatedAt = .now
+    try? context.save()
+  }
+
   static func needsClarification(_ message: String, for record: PlanningConversationRecord, in context: ModelContext) {
     record.intentData = nil
     record.responseText = message
     record.status = .needsClarification
+    record.updatedAt = .now
+    try? context.save()
+  }
+
+  static func saveDraft(_ draft: CoachConversationDraft, message: String, for record: PlanningConversationRecord, in context: ModelContext) {
+    record.draftData = try? JSONEncoder().encode(draft)
+    record.responseText = message
+    record.status = .needsClarification
+    record.updatedAt = .now
+    try? context.save()
+  }
+
+  static func clearDraft(for record: PlanningConversationRecord, in context: ModelContext) {
+    record.draftData = nil
     record.updatedAt = .now
     try? context.save()
   }

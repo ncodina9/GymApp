@@ -318,6 +318,51 @@ struct TrainingPlanDecodingTests {
     ]))
   }
 
+  @Test("Conserva una solicitud de ajuste parcialmente resuelta")
+  func encodesCoachSetAdjustmentRequest() throws {
+    let request = CoachSetAdjustmentRequest(
+      kind: .weight,
+      direction: .decrease,
+      targetValue: 62.5,
+      scope: .matchingSets
+    )
+    let restored = try JSONDecoder().decode(
+      CoachSetAdjustmentRequest.self,
+      from: JSONEncoder().encode(request)
+    )
+    #expect(restored == request)
+  }
+
+  @Test("Bloquea propuestas que sustituyen y ajustan el mismo ejercicio")
+  func detectsConflictingCoachOperations() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let exercise = try #require(session.exercises.first)
+    let set = try #require(exercise.sets.first)
+    let issues = CoachRequestCoherence.issues(in: plan, operations: [
+      .replaceExercise(sessionID: session.sessionID, exerciseID: exercise.exerciseID, replacementExerciseID: exercise.exerciseID),
+      .adjustSet(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, reps: set.targetReps, weightKg: nil, durationSeconds: nil, restSeconds: nil),
+    ])
+    #expect(issues.contains { $0.severity == .blocking && $0.message.contains("sustituir y ajustar") })
+  }
+
+  @Test("Conserva una aclaración compuesta de Entrenador")
+  func encodesCoachConversationDraft() throws {
+    let draft = CoachConversationDraft(
+      request: .init(userText: "Sustituye dominadas y baja el peso", referencedSessionID: "session-1"),
+      activeTask: .setAdjustment(.init(kind: .weight, direction: .decrease)),
+      queuedTasks: [
+        .replacement,
+        .moveSession(toDate: "2026-10-03"),
+        .adaptDuration(maximumMinutes: 45),
+      ],
+      stagedOperations: [.adjustSet(sessionID: "session-1", exerciseID: "remo", setIndex: 1, reps: nil, weightKg: 55, durationSeconds: nil, restSeconds: nil)],
+      stagedSummaries: ["Bajar peso de remo"]
+    )
+    let restored = try JSONDecoder().decode(CoachConversationDraft.self, from: JSONEncoder().encode(draft))
+    #expect(restored == draft)
+  }
+
   @Test("Interpreta solicitudes conversacionales locales sin tocar el plan")
   func interpretsLocalPlanningRequests() async throws {
     let interpreter = LocalPlanningIntentInterpreter()

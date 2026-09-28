@@ -1380,6 +1380,8 @@ struct CoachConversationView: View {
     }
   }
 
+  private typealias CoachFollowup = CoachConversationPendingTask
+
   let plan: TrainingPlan
   let initialSessionID: String?
   @Query private var profileRecords: [TrainingProfileRecord]
@@ -1395,6 +1397,25 @@ struct CoachConversationView: View {
   @State private var selectedBodyweightSetIndex = 1
   @State private var pendingBodyweightAction: BodyweightClarificationAction?
   @State private var bodyweightExerciseSelectionRequired = false
+  @State private var pendingSetAdjustmentAction: CoachSetAdjustmentRequest?
+  @State private var selectedSetAdjustmentExerciseID = ""
+  @State private var selectedSetAdjustmentSetIndex = 1
+  @State private var setAdjustmentExerciseSelectionRequired = false
+  @State private var setAdjustmentScope: CoachSetAdjustmentRequest.Scope = .singleSet
+  @State private var preparedCoachOperations: [PlanningOperation]?
+  @State private var preparedCoachSummary: String?
+  @State private var replacementClarificationPending = false
+  @State private var selectedReplacementSourceExerciseID = ""
+  @State private var selectedReplacementExerciseID = ""
+  @State private var replacementSourceSelectionRequired = false
+  @State private var compositeTaskQueue: [CoachFollowup] = []
+  @State private var stagedCoachOperations: [PlanningOperation] = []
+  @State private var stagedCoachSummaries: [String] = []
+  @State private var isBuildingCompositeRequest = false
+  @State private var activeCompositeTask: CoachFollowup?
+  @State private var compositeRequest: PlanningIntentRequest?
+  @State private var pendingCompositeMaximumMinutes: Int?
+  @State private var selectedCompositeDurationOptionID = ""
   @State private var requestText = ""
   @State private var suggestedIntent: PlanningIntent?
   @State private var selectedDurationOptionID = ""
@@ -1466,6 +1487,90 @@ struct CoachConversationView: View {
     return profile.bodyweightWeightedLoadsKg.first(where: { $0 > currentBodyweightLoad.addedWeightKg })
   }
 
+  private var adjustableExercises: [TrainingExercise] {
+    selectedSession?.exercises.filter { !$0.sets.isEmpty } ?? []
+  }
+
+  private var selectedSetAdjustmentExercise: TrainingExercise? {
+    adjustableExercises.first(where: { $0.exerciseID == selectedSetAdjustmentExerciseID })
+  }
+
+  private var selectedSetAdjustmentSet: TrainingSet? {
+    selectedSetAdjustmentExercise?.sets.first(where: { $0.setIndex == selectedSetAdjustmentSetIndex })
+  }
+
+  private var selectedReplacementSourceExercise: TrainingExercise? {
+    selectedSession?.exercises.first(where: { $0.exerciseID == selectedReplacementSourceExerciseID })
+  }
+
+  private var replacementCandidates: [TrainingExercise] {
+    guard let source = selectedReplacementSourceExercise else { return [] }
+    let restrictions = ProfilePlanningRestrictions.compile(from: profile)
+    return TrainingExerciseCatalog.canonicalExercises(
+      in: effectivePlan.sessions,
+      excludingDisplayGroupID: source.displayGroupID
+    )
+    .filter { candidate in
+      guard candidate.exerciseID != source.exerciseID,
+            candidate.selectableEquipmentOptions.contains(where: profile.availableEquipment.contains),
+            !restrictions.exerciseIDs.contains(candidate.exerciseID),
+            !restrictions.exerciseIDs.contains(candidate.baseExerciseID),
+            !restrictions.movementPatterns.contains(candidate.movementPattern ?? "") else { return false }
+      let sharesPrimaryMuscle = !Set(candidate.primaryMuscles).isDisjoint(with: Set(source.primaryMuscles))
+      return candidate.movementPattern == source.movementPattern || sharesPrimaryMuscle
+    }
+    .sorted { lhs, rhs in
+      let lhsSamePattern = lhs.movementPattern == source.movementPattern
+      let rhsSamePattern = rhs.movementPattern == source.movementPattern
+      if lhsSamePattern != rhsSamePattern { return lhsSamePattern }
+      return lhs.displayName.localizedStandardCompare(rhs.displayName) == .orderedAscending
+    }
+  }
+
+  private var selectedReplacementExercise: TrainingExercise? {
+    replacementCandidates.first(where: { $0.exerciseID == selectedReplacementExerciseID })
+  }
+
+  private var setAdjustmentOperations: [PlanningOperation]? {
+    guard let action = pendingSetAdjustmentAction,
+          let session = selectedSession,
+          let exercise = selectedSetAdjustmentExercise,
+          let set = selectedSetAdjustmentSet else { return nil }
+    let sets = setAdjustmentScope == .singleSet ? [set] : exercise.sets
+    let operations = sets.compactMap { setAdjustmentOperation(action, session: session, exercise: exercise, set: $0) }
+    return operations.count == sets.count && !operations.isEmpty ? operations : nil
+  }
+
+  private func setAdjustmentOperation(
+    _ action: CoachSetAdjustmentRequest,
+    session: TrainingSession,
+    exercise: TrainingExercise,
+    set: TrainingSet
+  ) -> PlanningOperation? {
+    switch action.kind {
+    case .reps:
+      guard let reps = set.targetReps else { return nil }
+      let adjustedReps = action.targetValue.map { Int($0.rounded()) }
+        ?? min(40, max(1, reps + (action.direction == .increase ? 1 : -1)))
+      guard adjustedReps != reps else { return nil }
+      return .adjustSet(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, reps: adjustedReps, weightKg: nil, durationSeconds: nil, restSeconds: nil)
+    case .weight:
+      guard exercise.equipment != .bodyweight else { return nil }
+      let adjustedWeight = action.targetValue.flatMap { requestedWeight in
+        EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: profile.loadInventory)
+          .min { abs($0 - requestedWeight) < abs($1 - requestedWeight) }
+      } ?? EquipmentLoadRules.adjustedWeight(from: set.targetWeightKg, equipment: exercise.equipment, direction: action.direction == .increase ? 1 : -1, inventory: profile.loadInventory)
+      guard abs(adjustedWeight - set.targetWeightKg) > 0.001 else { return nil }
+      return .adjustSet(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, reps: nil, weightKg: adjustedWeight, durationSeconds: nil, restSeconds: nil)
+    case .rest:
+      let rest = action.targetValue.map { Int($0.rounded()) }
+        ?? min(300, max(30, set.restSeconds + (action.direction == .increase ? 15 : -15)))
+      let boundedRest = min(300, max(30, rest))
+      guard boundedRest != set.restSeconds else { return nil }
+      return .adjustSet(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, reps: nil, weightKg: nil, durationSeconds: nil, restSeconds: boundedRest)
+    }
+  }
+
   private var currentConversation: PlanningConversationRecord? {
     guard let currentConversationID else { return nil }
     return conversationRecords.first(where: { $0.id == currentConversationID })
@@ -1496,6 +1601,21 @@ struct CoachConversationView: View {
     durationOptions.first(where: { $0.id == selectedDurationOptionID })
   }
 
+  private var compositeDurationOptions: [SessionDurationAdaptationOption] {
+    guard let maximumMinutes = pendingCompositeMaximumMinutes,
+          let session = selectedSession else { return [] }
+    return (try? SessionDurationAdaptationPlanner.options(
+      basePlan: effectivePlan,
+      sessionID: session.sessionID,
+      maximumMinutes: maximumMinutes,
+      constraints: constraints
+    )) ?? []
+  }
+
+  private var selectedCompositeDurationOption: SessionDurationAdaptationOption? {
+    compositeDurationOptions.first(where: { $0.id == selectedCompositeDurationOptionID })
+  }
+
   private var reschedulingOptions: [SessionReschedulingOption] {
     guard case let .cancelSession(sessionID) = suggestedIntent else { return [] }
     return (try? SessionReschedulingPlanner.options(
@@ -1510,6 +1630,7 @@ struct CoachConversationView: View {
   }
 
   private var proposalOperations: [PlanningOperation]? {
+    if let preparedCoachOperations { return preparedCoachOperations }
     guard let suggestedIntent else { return nil }
     if case .cancelSession = suggestedIntent, let selectedReschedulingOption {
       return selectedReschedulingOption.operations
@@ -1518,6 +1639,26 @@ struct CoachConversationView: View {
     case let .operations(operations): operations
     case .requiresPlanningStrategy: selectedDurationOption?.operations
     }
+  }
+
+  private var proposalSummary: String? {
+    preparedCoachSummary ?? suggestedIntent.map(summary(for:))
+  }
+
+  private var coachCoherenceIssues: [CoachRequestCoherenceIssue] {
+    guard let proposalOperations else { return [] }
+    return CoachRequestCoherence.issues(
+      in: effectivePlan,
+      operations: proposalOperations,
+      context: .init(
+        globalGoal: profile.goal.label,
+        priorityMuscles: Set(profile.priorityMuscleGroups)
+      )
+    )
+  }
+
+  private var hasBlockingCoachCoherenceIssue: Bool {
+    coachCoherenceIssues.contains { $0.severity == .blocking }
   }
 
   var body: some View {
@@ -1643,6 +1784,145 @@ struct CoachConversationView: View {
             }
           }
 
+          if let pendingSetAdjustmentAction {
+            SettingsCategory(title: "Aclaración necesaria") {
+              VStack(alignment: .leading, spacing: 10) {
+                Label("Necesito concretar el ejercicio y la serie.", systemImage: "questionmark.circle")
+                  .font(.gymBody.weight(.semibold))
+                  .foregroundStyle(Color.gymAccent)
+                Text(setAdjustmentPrompt(pendingSetAdjustmentAction))
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                Picker("Ejercicio", selection: $selectedSetAdjustmentExerciseID) {
+                  if setAdjustmentExerciseSelectionRequired {
+                    Text("Elige el ejercicio").tag("")
+                  }
+                  ForEach(adjustableExercises) { exercise in
+                    Text(exercise.displayName).tag(exercise.exerciseID)
+                  }
+                }
+                if let exercise = selectedSetAdjustmentExercise {
+                  Picker("Serie", selection: $selectedSetAdjustmentSetIndex) {
+                    ForEach(exercise.sets, id: \.setIndex) { set in
+                      Text("Serie \(set.setIndex)").tag(set.setIndex)
+                    }
+                  }
+                }
+                Picker("Aplicar", selection: $setAdjustmentScope) {
+                  Text("Solo esta serie").tag(CoachSetAdjustmentRequest.Scope.singleSet)
+                  Text("Todas las series del ejercicio").tag(CoachSetAdjustmentRequest.Scope.matchingSets)
+                }
+                Text(setAdjustmentDetail)
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                Button(action: completeSetAdjustmentClarification) {
+                  Label(setAdjustmentConfirmationLabel(pendingSetAdjustmentAction), systemImage: "text.badge.checkmark")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .font(.gymBody.weight(.semibold))
+                .foregroundStyle(Color.gymAccentForeground)
+                .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.plain)
+                .disabled(setAdjustmentOperations == nil)
+                .opacity(setAdjustmentOperations == nil ? 0.45 : 1)
+              }
+              .padding(16)
+            }
+          }
+
+          if replacementClarificationPending {
+            SettingsCategory(title: "Sustituir ejercicio") {
+              VStack(alignment: .leading, spacing: 10) {
+                Label("Necesito concretar la sustitución.", systemImage: "arrow.triangle.swap")
+                  .font(.gymBody.weight(.semibold))
+                  .foregroundStyle(Color.gymAccent)
+                Text("Las alternativas mantienen el patrón o el grupo muscular principal y respetan tu perfil.")
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                Picker("Ejercicio actual", selection: $selectedReplacementSourceExerciseID) {
+                  if replacementSourceSelectionRequired {
+                    Text("Elige el ejercicio").tag("")
+                  }
+                  ForEach(selectedSession?.exercises ?? []) { exercise in
+                    Text(exercise.displayName).tag(exercise.exerciseID)
+                  }
+                }
+                if replacementCandidates.isEmpty, selectedReplacementSourceExercise != nil {
+                  Text("No hay una alternativa compatible con el material y las restricciones actuales.")
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymWarning)
+                } else {
+                  Picker("Sustituir por", selection: $selectedReplacementExerciseID) {
+                    Text("Elige una alternativa").tag("")
+                    ForEach(replacementCandidates) { exercise in
+                      Text(exercise.displayName).tag(exercise.exerciseID)
+                    }
+                  }
+                }
+                Text(replacementDetail)
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                Button(action: prepareReplacementReview) {
+                  Label("Preparar sustitución", systemImage: "text.badge.checkmark")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .font(.gymBody.weight(.semibold))
+                .foregroundStyle(Color.gymAccentForeground)
+                .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.plain)
+                .disabled(selectedReplacementSourceExercise == nil || selectedReplacementExercise == nil)
+                .opacity(selectedReplacementSourceExercise == nil || selectedReplacementExercise == nil ? 0.45 : 1)
+              }
+              .padding(16)
+            }
+          }
+
+          if let maximumMinutes = pendingCompositeMaximumMinutes {
+            SettingsCategory(title: "Adaptar duración") {
+              VStack(alignment: .leading, spacing: 10) {
+                Label("Elige una alternativa para \(maximumMinutes) min.", systemImage: "clock.arrow.2.circlepath")
+                  .font(.gymBody.weight(.semibold))
+                  .foregroundStyle(Color.gymAccent)
+                if compositeDurationOptions.isEmpty {
+                  Text("No hay una alternativa conservadora para acortar esta sesión.")
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymWarning)
+                } else {
+                  ForEach(compositeDurationOptions) { option in
+                    Button { selectedCompositeDurationOptionID = option.id } label: {
+                      VStack(alignment: .leading, spacing: 3) {
+                        HStack {
+                          Text(option.title).font(.gymBody.weight(.bold))
+                          Spacer()
+                          Image(systemName: selectedCompositeDurationOptionID == option.id ? "checkmark.circle.fill" : "circle")
+                        }
+                        Text("\(option.detail) \(option.estimatedMinutes) min.")
+                          .font(.gymSupport)
+                          .multilineTextAlignment(.leading)
+                      }
+                      .frame(maxWidth: .infinity, alignment: .leading)
+                      .padding(10)
+                      .foregroundStyle(selectedCompositeDurationOptionID == option.id ? Color.gymControlSelectionForeground : .primary)
+                      .background(selectedCompositeDurationOptionID == option.id ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                  }
+                }
+                Button(action: completeCompositeDuration) {
+                  Label("Añadir adaptación", systemImage: "text.badge.checkmark")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .font(.gymBody.weight(.semibold))
+                .foregroundStyle(Color.gymAccentForeground)
+                .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.plain)
+                .disabled(selectedCompositeDurationOption == nil)
+                .opacity(selectedCompositeDurationOption == nil ? 0.45 : 1)
+              }
+              .padding(16)
+            }
+          }
+
           SettingsCategory(title: "Solicitud") {
             VStack(spacing: 10) {
               TextEditor(text: $requestText)
@@ -1675,11 +1955,21 @@ struct CoachConversationView: View {
           .disabled(requestText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
           .opacity(requestText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.45 : 1)
 
-          if let suggestedIntent {
+          if let proposalSummary {
             SettingsCategory(title: "Interpretación") {
-              Text(summary(for: suggestedIntent))
+              Text(proposalSummary)
                 .font(.gymH3.weight(.bold))
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+              if !coachCoherenceIssues.isEmpty {
+                SettingsDivider()
+                ForEach(coachCoherenceIssues) { issue in
+                  Label(issue.message, systemImage: issue.severity == .blocking ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
+                    .font(.gymSupport.weight(.semibold))
+                    .foregroundStyle(issue.severity == .blocking ? Color.gymDanger : Color.gymWarning)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+              }
 
               if case let .adaptSessionDuration(_, maximumMinutes) = suggestedIntent {
                 SettingsDivider()
@@ -1754,7 +2044,8 @@ struct CoachConversationView: View {
             .foregroundStyle(Color.gymAccentForeground)
             .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 16))
             .disabled(proposalOperations == nil)
-            .opacity(proposalOperations == nil ? 0.45 : 1)
+            .disabled(hasBlockingCoachCoherenceIssue)
+            .opacity(proposalOperations == nil || hasBlockingCoachCoherenceIssue ? 0.45 : 1)
           }
         }
 
@@ -1782,6 +2073,8 @@ struct CoachConversationView: View {
                 }
               }
               .frame(maxWidth: .infinity, alignment: .leading)
+              .padding(.horizontal, 12)
+              .padding(.vertical, 10)
 
               if conversation.id != recentConversations.last?.id {
                 SettingsDivider()
@@ -1810,19 +2103,42 @@ struct CoachConversationView: View {
         ?? selectableSessions.first?.sessionID
         ?? ""
       selectInitialBodyweightExercise()
+      selectInitialSetAdjustmentExercise()
+      restoreCompositeDraft()
     }
     .onChange(of: selectedSessionID) { _, _ in
       suggestedIntent = nil
       selectedDurationOptionID = ""
       pendingBodyweightAction = nil
       bodyweightExerciseSelectionRequired = false
+      pendingSetAdjustmentAction = nil
+      setAdjustmentExerciseSelectionRequired = false
+      preparedCoachOperations = nil
+      preparedCoachSummary = nil
+      replacementClarificationPending = false
+      replacementSourceSelectionRequired = false
       selectInitialBodyweightExercise()
+      selectInitialSetAdjustmentExercise()
     }
     .onChange(of: selectedBodyweightExerciseID) { _, _ in
       selectedBodyweightSetIndex = selectedBodyweightExercise?.sets.first?.setIndex ?? 1
       if !selectedBodyweightExerciseID.isEmpty {
         bodyweightExerciseSelectionRequired = false
       }
+    }
+    .onChange(of: selectedSetAdjustmentExerciseID) { _, _ in
+      selectedSetAdjustmentSetIndex = selectedSetAdjustmentExercise?.sets.first?.setIndex ?? 1
+      if !selectedSetAdjustmentExerciseID.isEmpty {
+        setAdjustmentExerciseSelectionRequired = false
+      }
+      persistCompositeDraft()
+    }
+    .onChange(of: selectedReplacementSourceExerciseID) { _, _ in
+      if !selectedReplacementSourceExerciseID.isEmpty {
+        replacementSourceSelectionRequired = false
+      }
+      selectedReplacementExerciseID = replacementCandidates.first?.exerciseID ?? ""
+      persistCompositeDraft()
     }
     .alert(
       "Entrenador",
@@ -1861,8 +2177,28 @@ struct CoachConversationView: View {
     let request = PlanningIntentRequest(userText: requestText, referencedSessionID: selectedSessionID)
     let record = PlanningConversationStore.start(request, in: modelContext)
     currentConversationID = record.id
+    preparedCoachOperations = nil
+    preparedCoachSummary = nil
+    let followups = coachFollowups(in: requestText)
+    if followups.count > 1 {
+      isBuildingCompositeRequest = true
+      compositeTaskQueue = Array(followups.dropFirst())
+      stagedCoachOperations = []
+      stagedCoachSummaries = []
+      compositeRequest = request
+      activate(followups[0], request: request, record: record)
+      return
+    }
     if let action = bodyweightAction(in: requestText) {
       beginBodyweightClarification(action, request: request, record: record)
+      return
+    }
+    if replacementRequest(in: requestText) {
+      beginReplacementClarification(request: request, record: record)
+      return
+    }
+    if let action = setAdjustmentAction(in: requestText) {
+      beginSetAdjustmentClarification(action, request: request, record: record)
       return
     }
     Task { @MainActor in
@@ -1881,6 +2217,247 @@ struct CoachConversationView: View {
         PlanningConversationStore.needsClarification(error.localizedDescription, for: record, in: modelContext)
       }
     }
+  }
+
+  private func coachFollowups(in text: String) -> [CoachFollowup] {
+    var result: [CoachFollowup] = []
+    if let date = requestedDate(in: text) { result.append(.moveSession(toDate: date)) }
+    if let minutes = requestedMinutes(in: text) { result.append(.adaptDuration(maximumMinutes: minutes)) }
+    if replacementRequest(in: text) { result.append(.replacement) }
+    if let action = setAdjustmentAction(in: text) { result.append(.setAdjustment(action)) }
+    return result
+  }
+
+  private func activate(_ followup: CoachFollowup, request: PlanningIntentRequest, record: PlanningConversationRecord) {
+    activeCompositeTask = followup
+    switch followup {
+    case .replacement:
+      beginReplacementClarification(request: request, record: record)
+    case let .setAdjustment(action):
+      beginSetAdjustmentClarification(action, request: request, record: record)
+    case let .moveSession(toDate):
+      _ = stageCompositeOperation(
+        .moveSession(sessionID: request.referencedSessionID ?? "", toDate: toDate),
+        summary: "Mover la sesión al \(Self.dateLabel(toDate))"
+      )
+    case let .adaptDuration(maximumMinutes):
+      pendingCompositeMaximumMinutes = maximumMinutes
+      selectedCompositeDurationOptionID = compositeDurationOptions.first?.id ?? ""
+    }
+    persistCompositeDraft(for: record)
+  }
+
+  private func completeCompositeDuration() {
+    guard let option = selectedCompositeDurationOption else { return }
+    pendingCompositeMaximumMinutes = nil
+    _ = stageCompositeOperations(option.operations, summary: "Adaptar la sesión a \(option.estimatedMinutes) min")
+  }
+
+  private func requestedDate(in text: String) -> String? {
+    let pattern = "\\b(\\d{4}-\\d{2}-\\d{2})\\b"
+    guard let expression = try? NSRegularExpression(pattern: pattern),
+          let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+          let range = Range(match.range(at: 1), in: text) else {
+      let normalizedText = normalized(text)
+      let calendar = Calendar.current
+      let today = calendar.startOfDay(for: .now)
+      if normalizedText.contains("pasado manana") {
+        return Self.isoDate(calendar.date(byAdding: .day, value: 2, to: today) ?? today)
+      }
+      if normalizedText.contains("manana") {
+        return Self.isoDate(calendar.date(byAdding: .day, value: 1, to: today) ?? today)
+      }
+      let weekdays = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"]
+      for (index, weekday) in weekdays.enumerated() where normalizedText.contains(weekday) {
+        let current = calendar.component(.weekday, from: today) - 1
+        let delta = (index - current + 7) % 7
+        return Self.isoDate(calendar.date(byAdding: .day, value: delta == 0 ? 7 : delta, to: today) ?? today)
+      }
+      return nil
+    }
+    return String(text[range])
+  }
+
+  private func requestedMinutes(in text: String) -> Int? {
+    let pattern = "\\b(\\d{1,3})\\s*(?:min|mins|minutos)\\b"
+    guard let expression = try? NSRegularExpression(pattern: pattern),
+          let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+          let range = Range(match.range(at: 1), in: text),
+          let minutes = Int(text[range]) else { return nil }
+    return min(120, max(15, minutes))
+  }
+
+  private func beginReplacementClarification(
+    request: PlanningIntentRequest,
+    record: PlanningConversationRecord
+  ) {
+    guard let session = selectedSession, !session.exercises.isEmpty else {
+      let message = "La sesión elegida no contiene ejercicios que se puedan sustituir."
+      responseText = message
+      PlanningConversationStore.needsClarification(message, for: record, in: modelContext)
+      return
+    }
+    let matches = session.exercises.filter { exercise in
+      let name = normalized(exercise.displayName)
+      return name.count > 2 && normalized(request.userText).contains(name)
+    }
+    replacementClarificationPending = true
+    pendingBodyweightAction = nil
+    pendingSetAdjustmentAction = nil
+    suggestedIntent = nil
+    preparedCoachOperations = nil
+    preparedCoachSummary = nil
+    if matches.count == 1, let exercise = matches.first {
+      selectedReplacementSourceExerciseID = exercise.exerciseID
+      replacementSourceSelectionRequired = false
+      selectedReplacementExerciseID = preferredReplacement(for: exercise, text: request.userText)?.exerciseID
+        ?? replacementCandidates.first?.exerciseID
+        ?? ""
+    } else {
+      selectedReplacementSourceExerciseID = ""
+      selectedReplacementExerciseID = ""
+      replacementSourceSelectionRequired = true
+    }
+    PlanningConversationStore.needsClarification(
+      matches.count == 1
+        ? "Falta confirmar la alternativa para sustituir el ejercicio."
+        : "Falta seleccionar el ejercicio y su alternativa compatible.",
+      for: record,
+      in: modelContext
+    )
+  }
+
+  private func replacementRequest(in text: String) -> Bool {
+    let text = normalized(text)
+    let asksToReplace = text.contains("sustitu") || text.contains("cambia") || text.contains("reemplaza")
+    guard asksToReplace || text.contains("no puedo") else { return false }
+    return selectedSession?.exercises.contains { exercise in
+      let name = normalized(exercise.displayName)
+      return name.count > 2 && text.contains(name)
+    } ?? false
+  }
+
+  private func preferredReplacement(for source: TrainingExercise, text: String) -> TrainingExercise? {
+    let text = normalized(text)
+    if text.contains("mancuerna") {
+      return replacementCandidates.first(where: { $0.selectableEquipmentOptions.contains(.dumbbell) })
+    }
+    if text.contains("barra") {
+      return replacementCandidates.first(where: { $0.selectableEquipmentOptions.contains(.barbell) })
+    }
+    if text.contains("polea") {
+      return replacementCandidates.first(where: { $0.selectableEquipmentOptions.contains(.cable) })
+    }
+    return replacementCandidates.first { candidate in
+      let name = normalized(candidate.displayName)
+      return name.count > 2 && text.contains(name)
+    }
+  }
+
+  private var replacementDetail: String {
+    guard let source = selectedReplacementSourceExercise else {
+      return "Selecciona el ejercicio que quieres sustituir."
+    }
+    guard let replacement = selectedReplacementExercise else {
+      return "Elige una alternativa compatible para \(source.displayName)."
+    }
+    let pattern = replacement.movementPattern == source.movementPattern
+      ? "Conserva el patrón de movimiento"
+      : "Conserva el grupo muscular principal"
+    let superset = source.supersetID == nil ? "" : " Mantendrá su posición en la superserie."
+    return "\(pattern) y las \(source.sets.count) series previstas.\(superset)"
+  }
+
+  private func prepareReplacementReview() {
+    guard let session = selectedSession,
+          let source = selectedReplacementSourceExercise,
+          let replacement = selectedReplacementExercise else { return }
+    let operation = PlanningOperation.replaceExercise(sessionID: session.sessionID, exerciseID: source.exerciseID, replacementExerciseID: replacement.exerciseID)
+    if stageCompositeOperation(operation, summary: "Sustituir \(source.displayName) por \(replacement.displayName)") {
+      replacementClarificationPending = false
+      replacementSourceSelectionRequired = false
+      return
+    }
+    let intent = PlanningIntent.replaceExercise(sessionID: session.sessionID, exerciseID: source.exerciseID, replacementExerciseID: replacement.exerciseID)
+    let request = PlanningIntentRequest(userText: "Sustituir \(source.displayName) por \(replacement.displayName)", referencedSessionID: session.sessionID)
+    let record = PlanningConversationStore.start(request, in: modelContext)
+    currentConversationID = record.id
+    requestText = request.userText
+    suggestedIntent = intent
+    replacementClarificationPending = false
+    replacementSourceSelectionRequired = false
+    PlanningConversationStore.interpret(intent, summary: "Sustituir \(source.displayName) por \(replacement.displayName)", for: record, in: modelContext)
+  }
+
+  private func beginSetAdjustmentClarification(
+    _ action: CoachSetAdjustmentRequest,
+    request: PlanningIntentRequest,
+    record: PlanningConversationRecord
+  ) {
+    guard !adjustableExercises.isEmpty else {
+      let message = "La sesión elegida no contiene series que se puedan ajustar."
+      responseText = message
+      PlanningConversationStore.needsClarification(message, for: record, in: modelContext)
+      return
+    }
+    let candidates = adjustableExercises.filter { exercise in
+      let name = normalized(exercise.displayName)
+      return name.count > 2 && normalized(request.userText).contains(name)
+    }
+    pendingSetAdjustmentAction = action
+    pendingBodyweightAction = nil
+    suggestedIntent = nil
+    preparedCoachOperations = nil
+    preparedCoachSummary = nil
+    if candidates.count == 1, let exercise = candidates.first {
+      selectedSetAdjustmentExerciseID = exercise.exerciseID
+      selectedSetAdjustmentSetIndex = exercise.sets.first?.setIndex ?? 1
+      setAdjustmentExerciseSelectionRequired = false
+    } else {
+      selectedSetAdjustmentExerciseID = ""
+      selectedSetAdjustmentSetIndex = 1
+      setAdjustmentExerciseSelectionRequired = true
+    }
+    PlanningConversationStore.needsClarification(
+      candidates.count == 1
+        ? "Falta confirmar la serie que se va a ajustar."
+        : "Falta seleccionar el ejercicio y la serie que se van a ajustar.",
+      for: record,
+      in: modelContext
+    )
+  }
+
+  private func completeSetAdjustmentClarification() {
+    guard let operations = setAdjustmentOperations,
+          let exercise = selectedSetAdjustmentExercise else { return }
+    prepareSetAdjustmentReview(operations, text: "Ajustar serie de \(exercise.displayName)")
+  }
+
+  private func setAdjustmentAction(in text: String) -> CoachSetAdjustmentRequest? {
+    let text = normalized(text)
+    let raises = text.contains("sube") || text.contains("aumenta") || text.contains("mas")
+    let lowers = text.contains("baja") || text.contains("reduce") || text.contains("menos")
+    if text.contains("rep") || text.contains("repeticion") {
+      if raises { return .init(kind: .reps, direction: .increase, targetValue: requestedValue(in: text, unit: "rep")) }
+      if lowers { return .init(kind: .reps, direction: .decrease, targetValue: requestedValue(in: text, unit: "rep")) }
+    }
+    if text.contains("peso") || text.contains("carga") || text.contains("kilo") || text.contains("kg") {
+      if raises { return .init(kind: .weight, direction: .increase, targetValue: requestedValue(in: text, unit: "kg")) }
+      if lowers { return .init(kind: .weight, direction: .decrease, targetValue: requestedValue(in: text, unit: "kg")) }
+    }
+    if text.contains("descanso") {
+      if raises { return .init(kind: .rest, direction: .increase, targetValue: requestedValue(in: text, unit: "s")) }
+      if lowers { return .init(kind: .rest, direction: .decrease, targetValue: requestedValue(in: text, unit: "s")) }
+    }
+    return nil
+  }
+
+  private func requestedValue(in text: String, unit: String) -> Double? {
+    let pattern = "(?:a|hasta|en)\\s*(\\d+(?:[.,]\\d+)?)\\s*" + NSRegularExpression.escapedPattern(for: unit)
+    guard let expression = try? NSRegularExpression(pattern: pattern),
+          let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+          let range = Range(match.range(at: 1), in: text) else { return nil }
+    return Double(text[range].replacingOccurrences(of: ",", with: "."))
   }
 
   private func beginBodyweightClarification(
@@ -1944,6 +2521,10 @@ struct CoachConversationView: View {
 
   private func createReview() {
     guard let operations = proposalOperations else { return }
+    guard !hasBlockingCoachCoherenceIssue else {
+      responseText = "La propuesta contradice la fase u objetivo de la semana. Ajusta la solicitud antes de crear la revisión."
+      return
+    }
     do {
       let revision = try PlanRevisionStore.propose(
         operations: operations,
@@ -1959,6 +2540,8 @@ struct CoachConversationView: View {
       }
       responseText = "Revisión \(revision.revisionNumber) creada como pendiente. Revísala y acéptala desde Planificación."
       suggestedIntent = nil
+      preparedCoachOperations = nil
+      preparedCoachSummary = nil
     } catch {
       responseText = error.localizedDescription
     }
@@ -1975,6 +2558,60 @@ struct CoachConversationView: View {
       return "\(exercise.displayName), serie \(set.setIndex): asistencia de \(Self.weightLabel(currentBodyweightLoad.assistanceKg)) kg."
     case .weighted:
       return "\(exercise.displayName), serie \(set.setIndex): lastre de \(Self.weightLabel(currentBodyweightLoad.addedWeightKg)) kg."
+    }
+  }
+
+  private var setAdjustmentDetail: String {
+    guard let action = pendingSetAdjustmentAction,
+          let exercise = selectedSetAdjustmentExercise,
+          let set = selectedSetAdjustmentSet else {
+      return "Selecciona un ejercicio y una serie."
+    }
+    switch action.kind {
+    case .reps:
+      guard let reps = set.targetReps else { return "Esta serie no usa repeticiones." }
+      let adjustedReps = action.targetValue.map { Int($0.rounded()) }
+        ?? min(40, max(1, reps + (action.direction == .increase ? 1 : -1)))
+      return "\(exercise.displayName), serie \(set.setIndex): \(reps) → \(min(40, max(1, adjustedReps))) reps."
+    case .weight:
+      guard exercise.equipment != .bodyweight else { return "El peso corporal se ajusta mediante asistencia o lastre." }
+      let weight = action.targetValue.flatMap { requestedWeight in
+        EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: profile.loadInventory)
+          .min { abs($0 - requestedWeight) < abs($1 - requestedWeight) }
+      } ?? EquipmentLoadRules.adjustedWeight(from: set.targetWeightKg, equipment: exercise.equipment, direction: action.direction == .increase ? 1 : -1, inventory: profile.loadInventory)
+      return weight == set.targetWeightKg
+        ? "No hay otro peso disponible para este material."
+        : "\(exercise.displayName), serie \(set.setIndex): \(Self.weightLabel(set.targetWeightKg)) → \(Self.weightLabel(weight)) kg."
+    case .rest:
+      let requestedRest = action.targetValue.map { Int($0.rounded()) }
+        ?? set.restSeconds + (action.direction == .increase ? 15 : -15)
+      let rest = min(300, max(30, requestedRest))
+      return rest == set.restSeconds
+        ? "El descanso ya está en el límite permitido."
+        : "\(exercise.displayName), serie \(set.setIndex): \(set.restSeconds) → \(rest) s de descanso."
+    }
+  }
+
+  private func setAdjustmentPrompt(_ request: CoachSetAdjustmentRequest) -> String {
+    switch (request.kind, request.direction, request.targetValue) {
+    case (.reps, .increase, .some(let target)): return "Quieres dejar la serie en \(Int(target.rounded())) reps."
+    case (.reps, .decrease, .some(let target)): return "Quieres dejar la serie en \(Int(target.rounded())) reps."
+    case (.reps, .increase, nil): return "Quieres añadir una repetición."
+    case (.reps, .decrease, nil): return "Quieres reducir una repetición."
+    case (.weight, _, .some(let target)): return "Quieres aproximar el peso a \(Self.weightLabel(target)) kg con el material disponible."
+    case (.weight, .increase, nil): return "Quieres subir al siguiente peso disponible."
+    case (.weight, .decrease, nil): return "Quieres bajar al peso disponible anterior."
+    case (.rest, _, .some(let target)): return "Quieres dejar el descanso en \(Int(target.rounded())) s."
+    case (.rest, .increase, nil): return "Quieres añadir 15 segundos de descanso."
+    case (.rest, .decrease, nil): return "Quieres reducir 15 segundos de descanso."
+    }
+  }
+
+  private func setAdjustmentConfirmationLabel(_ request: CoachSetAdjustmentRequest) -> String {
+    switch request.kind {
+    case .reps: "Preparar ajuste de reps"
+    case .weight: "Preparar ajuste de peso"
+    case .rest: "Preparar ajuste de descanso"
     }
   }
 
@@ -2021,9 +2658,97 @@ struct CoachConversationView: View {
     PlanningConversationStore.interpret(intent, summary: summary(for: intent), for: record, in: modelContext)
   }
 
+  private func prepareSetAdjustmentReview(_ operations: [PlanningOperation], text: String) {
+    if stageCompositeOperations(operations, summary: text) { return }
+    let request = PlanningIntentRequest(userText: text, referencedSessionID: selectedSessionID)
+    let record = PlanningConversationStore.start(request, in: modelContext)
+    currentConversationID = record.id
+    requestText = text
+    suggestedIntent = nil
+    preparedCoachOperations = operations
+    preparedCoachSummary = operations.count == 1
+      ? "Ajustar una serie de \(selectedSetAdjustmentExercise?.displayName ?? "ejercicio")"
+      : "Ajustar \(operations.count) series de \(selectedSetAdjustmentExercise?.displayName ?? "ejercicio")"
+    pendingSetAdjustmentAction = nil
+    setAdjustmentExerciseSelectionRequired = false
+    PlanningConversationStore.interpret(operations, summary: preparedCoachSummary ?? "Ajustar series", for: record, in: modelContext)
+  }
+
+  private func stageCompositeOperation(_ operation: PlanningOperation, summary: String) -> Bool {
+    stageCompositeOperations([operation], summary: summary)
+  }
+
+  private func stageCompositeOperations(_ operations: [PlanningOperation], summary: String) -> Bool {
+    guard isBuildingCompositeRequest else { return false }
+    stagedCoachOperations.append(contentsOf: operations)
+    stagedCoachSummaries.append(summary)
+    pendingSetAdjustmentAction = nil
+    replacementClarificationPending = false
+    replacementSourceSelectionRequired = false
+    if !compositeTaskQueue.isEmpty {
+      let next = compositeTaskQueue.removeFirst()
+      guard let record = currentConversation else { return true }
+      let request = compositeRequest ?? PlanningIntentRequest(userText: requestText, referencedSessionID: selectedSessionID)
+      activate(next, request: request, record: record)
+      return true
+    }
+    isBuildingCompositeRequest = false
+    preparedCoachOperations = stagedCoachOperations
+    preparedCoachSummary = "Propuesta compuesta: " + stagedCoachSummaries.joined(separator: " · ")
+    if let record = currentConversation {
+      PlanningConversationStore.interpret(stagedCoachOperations, summary: preparedCoachSummary ?? "Propuesta compuesta", for: record, in: modelContext)
+      PlanningConversationStore.clearDraft(for: record, in: modelContext)
+    }
+    stagedCoachOperations = []
+    stagedCoachSummaries = []
+    activeCompositeTask = nil
+    compositeRequest = nil
+    return true
+  }
+
+  private func persistCompositeDraft(for record: PlanningConversationRecord? = nil) {
+    guard isBuildingCompositeRequest,
+          let activeCompositeTask,
+          let request = compositeRequest ?? Optional(PlanningIntentRequest(userText: requestText, referencedSessionID: selectedSessionID)),
+          let target = record ?? currentConversation else { return }
+    let draft = CoachConversationDraft(
+      request: request,
+      activeTask: activeCompositeTask,
+      queuedTasks: compositeTaskQueue,
+      stagedOperations: stagedCoachOperations,
+      stagedSummaries: stagedCoachSummaries
+    )
+    PlanningConversationStore.saveDraft(draft, message: "Aclaración pendiente: continúa la solicitud para crear una propuesta compuesta.", for: target, in: modelContext)
+  }
+
+  private func restoreCompositeDraft() {
+    guard !isBuildingCompositeRequest,
+          let record = conversationRecords
+            .filter({ $0.draftData != nil })
+            .sorted(by: { $0.updatedAt > $1.updatedAt })
+            .first,
+          let data = record.draftData,
+          let draft = try? JSONDecoder().decode(CoachConversationDraft.self, from: data),
+          selectableSessions.contains(where: { $0.sessionID == draft.request.referencedSessionID }) else { return }
+    currentConversationID = record.id
+    requestText = draft.request.userText
+    selectedSessionID = draft.request.referencedSessionID ?? ""
+    isBuildingCompositeRequest = true
+    compositeRequest = draft.request
+    compositeTaskQueue = draft.queuedTasks
+    stagedCoachOperations = draft.stagedOperations
+    stagedCoachSummaries = draft.stagedSummaries
+    activate(draft.activeTask, request: draft.request, record: record)
+  }
+
   private func selectInitialBodyweightExercise() {
     selectedBodyweightExerciseID = bodyweightExercises.first?.exerciseID ?? ""
     selectedBodyweightSetIndex = bodyweightExercises.first?.sets.first?.setIndex ?? 1
+  }
+
+  private func selectInitialSetAdjustmentExercise() {
+    selectedSetAdjustmentExerciseID = adjustableExercises.first?.exerciseID ?? ""
+    selectedSetAdjustmentSetIndex = adjustableExercises.first?.sets.first?.setIndex ?? 1
   }
 
   private func summary(for intent: PlanningIntent) -> String {
@@ -2068,6 +2793,14 @@ struct CoachConversationView: View {
     formatter.timeZone = .current
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.date(from: value)
+  }
+
+  private static func isoDate(_ value: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: value)
   }
 
   private static func dateLabel(_ value: String) -> String {
