@@ -208,11 +208,34 @@ public struct TrainingSet: Codable, Identifiable, Sendable {
   public var setIndex: Int
   public var targetReps: Int?
   public var targetWeightKg: Double
+  public var bodyweightLoad: BodyweightLoad?
   public var targetDurationSeconds: Int?
   public var restSeconds: Int
   public var type: TrainingSetKind
 
   public var id: Int { setIndex }
+}
+
+/// Explicit support or external load for a bodyweight set. Existing plans omit
+/// this value and therefore retain their unassisted, unweighted meaning.
+public struct BodyweightLoad: Codable, Equatable, Sendable {
+  public enum Mode: String, Codable, Sendable {
+    case unassisted
+    case assisted
+    case weighted
+  }
+
+  public var assistanceKg: Double
+  public var addedWeightKg: Double
+
+  public init(assistanceKg: Double = 0, addedWeightKg: Double = 0) {
+    self.assistanceKg = max(0, assistanceKg)
+    self.addedWeightKg = max(0, addedWeightKg)
+  }
+
+  public var mode: Mode {
+    assistanceKg > 0 ? .assisted : (addedWeightKg > 0 ? .weighted : .unassisted)
+  }
 }
 
 public enum TrainingPlanLoader {

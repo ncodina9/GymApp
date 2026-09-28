@@ -340,8 +340,95 @@ private struct LoadInventorySection: View {
       LoadNumberField(label: "Paso de las poleas", value: $profile.cableStepKg)
       LoadNumberField(label: "Peso de la barra", value: $profile.barbellWeightKg)
       LoadNumberField(label: "Peso de la Multipower", value: $profile.multipowerBarWeightKg)
+      ProfileSectionDivider()
+      Text("Peso corporal").font(.gymH3.weight(.bold))
+      Text("Configura el salto de asistencia y los lastres que puedes montar con seguridad.")
+        .font(.gymSupport)
+        .foregroundStyle(Color.gymSecondaryText)
+      LoadNumberField(label: "Paso de asistencia", value: $profile.bodyweightAssistanceStepKg)
+      BodyweightLoadEditor(values: $profile.bodyweightWeightedLoadsKg)
     }
     .padding(.vertical, 4)
+  }
+}
+
+private struct BodyweightLoadEditor: View {
+  @Binding var values: [Double]
+  @State private var weightText = ""
+  @State private var selectedWeights: Set<Double> = []
+
+  private let columns = [GridItem(.adaptive(minimum: 84), spacing: 8, alignment: .leading)]
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("Lastres disponibles").font(.gymH3.weight(.bold))
+      HStack(spacing: 8) {
+        TextField("Peso en kg", text: $weightText)
+          .font(.gymBody.weight(.semibold))
+          .keyboardType(.decimalPad)
+          .padding(.horizontal, 12)
+          .frame(minHeight: 44)
+          .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+          .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.35), lineWidth: 1) }
+        Button(action: add) {
+          Image(systemName: "plus")
+            .font(.gymH3.weight(.bold))
+            .frame(width: 44, height: 44)
+            .foregroundStyle(Color.gymAccentForeground)
+            .background(Color.gymAccent, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(parsedWeight == nil)
+        .opacity(parsedWeight == nil ? 0.45 : 1)
+        .accessibilityLabel("Añadir lastre")
+      }
+      if !values.isEmpty {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+          ForEach(values, id: \.self) { weight in
+            Button { toggleSelection(weight) } label: {
+              Text("+\(weight.formatted(.number.precision(.fractionLength(0 ... 2)))) kg")
+                .font(.gymBody.weight(.bold))
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .foregroundStyle(selectedWeights.contains(weight) ? Color.gymControlSelectionForeground : .primary)
+                .background(selectedWeights.contains(weight) ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay { RoundedRectangle(cornerRadius: 12).stroke(selectedWeights.contains(weight) ? Color.gymAccent : Color.gymAccent.opacity(0.35), lineWidth: selectedWeights.contains(weight) ? 2 : 1) }
+            }
+            .buttonStyle(.plain)
+          }
+        }
+        if !selectedWeights.isEmpty {
+          Button(role: .destructive, action: removeSelected) {
+            Label("Eliminar seleccionados", systemImage: "trash")
+              .font(.gymBody.weight(.semibold))
+              .frame(maxWidth: .infinity, minHeight: 44)
+          }
+          .buttonStyle(.bordered)
+        }
+      }
+    }
+  }
+
+  private var parsedWeight: Double? {
+    Double(weightText.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: "."))
+      .flatMap { $0 > 0 ? ($0 * 100).rounded() / 100 : nil }
+  }
+
+  private func add() {
+    guard let weight = parsedWeight else { return }
+    if !values.contains(where: { abs($0 - weight) < 0.001 }) {
+      values.append(weight)
+      values.sort()
+    }
+    weightText = ""
+  }
+
+  private func toggleSelection(_ weight: Double) {
+    if selectedWeights.contains(weight) { selectedWeights.remove(weight) } else { selectedWeights.insert(weight) }
+  }
+
+  private func removeSelected() {
+    values.removeAll { selectedWeights.contains($0) }
+    selectedWeights.removeAll()
   }
 }
 

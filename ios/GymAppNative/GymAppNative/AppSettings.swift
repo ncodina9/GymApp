@@ -1361,6 +1361,25 @@ private extension PlanningProfileIssue {
 }
 
 struct CoachConversationView: View {
+  private enum BodyweightClarificationAction: Equatable {
+    case reduceAssistance
+    case addWeight
+
+    var prompt: String {
+      switch self {
+      case .reduceAssistance: "Quieres reducir la asistencia."
+      case .addWeight: "Quieres añadir lastre."
+      }
+    }
+
+    var confirmationLabel: String {
+      switch self {
+      case .reduceAssistance: "Preparar reducción de asistencia"
+      case .addWeight: "Preparar propuesta de lastre"
+      }
+    }
+  }
+
   let plan: TrainingPlan
   let initialSessionID: String?
   @Query private var profileRecords: [TrainingProfileRecord]
@@ -1372,6 +1391,10 @@ struct CoachConversationView: View {
   @Environment(\.dismiss) private var dismiss
   @AppStorage("remotePlanningConsent") private var remotePlanningConsent = false
   @State private var selectedSessionID = ""
+  @State private var selectedBodyweightExerciseID = ""
+  @State private var selectedBodyweightSetIndex = 1
+  @State private var pendingBodyweightAction: BodyweightClarificationAction?
+  @State private var bodyweightExerciseSelectionRequired = false
   @State private var requestText = ""
   @State private var suggestedIntent: PlanningIntent?
   @State private var selectedDurationOptionID = ""
@@ -1413,6 +1436,34 @@ struct CoachConversationView: View {
 
   private var selectedSession: TrainingSession? {
     selectableSessions.first(where: { $0.sessionID == selectedSessionID })
+  }
+
+  private var bodyweightExercises: [TrainingExercise] {
+    selectedSession?.exercises.filter { $0.equipment == .bodyweight } ?? []
+  }
+
+  private var selectedBodyweightExercise: TrainingExercise? {
+    bodyweightExercises.first(where: { $0.exerciseID == selectedBodyweightExerciseID })
+  }
+
+  private var selectedBodyweightSet: TrainingSet? {
+    selectedBodyweightExercise?.sets.first(where: { $0.setIndex == selectedBodyweightSetIndex })
+  }
+
+  private var currentBodyweightLoad: BodyweightLoad {
+    selectedBodyweightSet?.bodyweightLoad ?? .init()
+  }
+
+  private var nextAssistanceKg: Double? {
+    guard currentBodyweightLoad.addedWeightKg == 0 else { return nil }
+    let step = max(0.5, profile.bodyweightAssistanceStepKg)
+    guard currentBodyweightLoad.assistanceKg > 0 else { return nil }
+    return max(0, currentBodyweightLoad.assistanceKg - step)
+  }
+
+  private var nextAddedWeightKg: Double? {
+    guard currentBodyweightLoad.assistanceKg == 0 else { return nil }
+    return profile.bodyweightWeightedLoadsKg.first(where: { $0 > currentBodyweightLoad.addedWeightKg })
   }
 
   private var currentConversation: PlanningConversationRecord? {
@@ -1515,6 +1566,81 @@ struct CoachConversationView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+          }
+
+          if !bodyweightExercises.isEmpty {
+            SettingsCategory(title: "Peso corporal") {
+              VStack(alignment: .leading, spacing: 10) {
+                if let pendingBodyweightAction {
+                  Label("Necesito concretar el ejercicio y la serie.", systemImage: "questionmark.circle")
+                    .font(.gymBody.weight(.semibold))
+                    .foregroundStyle(Color.gymAccent)
+                  Text(pendingBodyweightAction.prompt)
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymSecondaryText)
+                }
+                Picker("Ejercicio", selection: $selectedBodyweightExerciseID) {
+                  if bodyweightExerciseSelectionRequired {
+                    Text("Elige el ejercicio").tag("")
+                  }
+                  ForEach(bodyweightExercises) { exercise in
+                    Text(exercise.displayName).tag(exercise.exerciseID)
+                  }
+                }
+                if let exercise = selectedBodyweightExercise {
+                  Picker("Serie", selection: $selectedBodyweightSetIndex) {
+                    ForEach(exercise.sets, id: \.setIndex) { set in
+                      Text("Serie \(set.setIndex)").tag(set.setIndex)
+                    }
+                  }
+                }
+                Text(bodyweightLoadDetail)
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                if let pendingBodyweightAction {
+                  Button(action: { completeBodyweightClarification(pendingBodyweightAction) }) {
+                    Label(pendingBodyweightAction.confirmationLabel, systemImage: "text.badge.checkmark")
+                      .frame(maxWidth: .infinity, minHeight: 44)
+                  }
+                  .font(.gymBody.weight(.semibold))
+                  .foregroundStyle(Color.gymAccentForeground)
+                  .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 12))
+                  .buttonStyle(.plain)
+                  .disabled(selectedBodyweightExercise == nil || selectedBodyweightSet == nil || (pendingBodyweightAction == .reduceAssistance ? nextAssistanceKg == nil : nextAddedWeightKg == nil))
+                  .opacity(selectedBodyweightExercise == nil || selectedBodyweightSet == nil || (pendingBodyweightAction == .reduceAssistance ? nextAssistanceKg == nil : nextAddedWeightKg == nil) ? 0.45 : 1)
+                } else {
+                  HStack(spacing: 10) {
+                    Button(action: proposeLessAssistance) {
+                      Label("Reducir asistencia", systemImage: "arrow.down")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .font(.gymBody.weight(.semibold))
+                    .foregroundStyle(Color.gymControlSelectionForeground)
+                    .background(Color.gymControlSelectionFill, in: RoundedRectangle(cornerRadius: 12))
+                    .buttonStyle(.plain)
+                    .disabled(nextAssistanceKg == nil)
+                    .opacity(nextAssistanceKg == nil ? 0.45 : 1)
+
+                    Button(action: proposeAddedWeight) {
+                      Label("Añadir lastre", systemImage: "plus")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .font(.gymBody.weight(.semibold))
+                    .foregroundStyle(Color.gymAccentForeground)
+                    .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 12))
+                    .buttonStyle(.plain)
+                    .disabled(nextAddedWeightKg == nil)
+                    .opacity(nextAddedWeightKg == nil ? 0.45 : 1)
+                  }
+                }
+                if profile.bodyweightWeightedLoadsKg.isEmpty {
+                  Text("Añade lastres disponibles desde tu perfil para poder proponerlos.")
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymSecondaryText)
+                }
+              }
+              .padding(16)
+            }
           }
 
           SettingsCategory(title: "Solicitud") {
@@ -1683,10 +1809,20 @@ struct CoachConversationView: View {
       selectedSessionID = selectableSessions.first(where: { $0.sessionID == initialSessionID })?.sessionID
         ?? selectableSessions.first?.sessionID
         ?? ""
+      selectInitialBodyweightExercise()
     }
     .onChange(of: selectedSessionID) { _, _ in
       suggestedIntent = nil
       selectedDurationOptionID = ""
+      pendingBodyweightAction = nil
+      bodyweightExerciseSelectionRequired = false
+      selectInitialBodyweightExercise()
+    }
+    .onChange(of: selectedBodyweightExerciseID) { _, _ in
+      selectedBodyweightSetIndex = selectedBodyweightExercise?.sets.first?.setIndex ?? 1
+      if !selectedBodyweightExerciseID.isEmpty {
+        bodyweightExerciseSelectionRequired = false
+      }
     }
     .alert(
       "Entrenador",
@@ -1725,6 +1861,10 @@ struct CoachConversationView: View {
     let request = PlanningIntentRequest(userText: requestText, referencedSessionID: selectedSessionID)
     let record = PlanningConversationStore.start(request, in: modelContext)
     currentConversationID = record.id
+    if let action = bodyweightAction(in: requestText) {
+      beginBodyweightClarification(action, request: request, record: record)
+      return
+    }
     Task { @MainActor in
       do {
         let intents = try await LocalPlanningIntentInterpreter().interpret(request)
@@ -1741,6 +1881,65 @@ struct CoachConversationView: View {
         PlanningConversationStore.needsClarification(error.localizedDescription, for: record, in: modelContext)
       }
     }
+  }
+
+  private func beginBodyweightClarification(
+    _ action: BodyweightClarificationAction,
+    request: PlanningIntentRequest,
+    record: PlanningConversationRecord
+  ) {
+    guard !bodyweightExercises.isEmpty else {
+      let message = "La sesión elegida no contiene ejercicios de peso corporal para ajustar."
+      responseText = message
+      PlanningConversationStore.needsClarification(message, for: record, in: modelContext)
+      return
+    }
+    let matches = bodyweightExercises.filter { exercise in
+      let name = normalized(exercise.displayName)
+      return name.count > 2 && normalized(request.userText).contains(name)
+    }
+    pendingBodyweightAction = action
+    suggestedIntent = nil
+    if matches.count == 1, let exercise = matches.first {
+      selectedBodyweightExerciseID = exercise.exerciseID
+      selectedBodyweightSetIndex = exercise.sets.first?.setIndex ?? 1
+      bodyweightExerciseSelectionRequired = false
+    } else {
+      selectedBodyweightExerciseID = ""
+      selectedBodyweightSetIndex = 1
+      bodyweightExerciseSelectionRequired = true
+    }
+    PlanningConversationStore.needsClarification(
+      matches.count == 1
+        ? "Falta confirmar la serie de peso corporal."
+        : "Falta seleccionar el ejercicio y la serie de peso corporal.",
+      for: record,
+      in: modelContext
+    )
+  }
+
+  private func completeBodyweightClarification(_ action: BodyweightClarificationAction) {
+    switch action {
+    case .reduceAssistance: proposeLessAssistance()
+    case .addWeight: proposeAddedWeight()
+    }
+  }
+
+  private func bodyweightAction(in text: String) -> BodyweightClarificationAction? {
+    let text = normalized(text)
+    if (text.contains("asistencia") || text.contains("asistida"))
+      && (text.contains("reduce") || text.contains("baja") || text.contains("menos")) {
+      return .reduceAssistance
+    }
+    if text.contains("lastre")
+      && (text.contains("anade") || text.contains("añade") || text.contains("sube") || text.contains("aumenta")) {
+      return .addWeight
+    }
+    return nil
+  }
+
+  private func normalized(_ text: String) -> String {
+    text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
   }
 
   private func createReview() {
@@ -1765,6 +1964,68 @@ struct CoachConversationView: View {
     }
   }
 
+  private var bodyweightLoadDetail: String {
+    guard let exercise = selectedBodyweightExercise, let set = selectedBodyweightSet else {
+      return "Selecciona un ejercicio y una serie."
+    }
+    switch currentBodyweightLoad.mode {
+    case .unassisted:
+      return "\(exercise.displayName), serie \(set.setIndex): sin asistencia ni lastre."
+    case .assisted:
+      return "\(exercise.displayName), serie \(set.setIndex): asistencia de \(Self.weightLabel(currentBodyweightLoad.assistanceKg)) kg."
+    case .weighted:
+      return "\(exercise.displayName), serie \(set.setIndex): lastre de \(Self.weightLabel(currentBodyweightLoad.addedWeightKg)) kg."
+    }
+  }
+
+  private func proposeLessAssistance() {
+    guard let session = selectedSession,
+          let exercise = selectedBodyweightExercise,
+          let assistanceKg = nextAssistanceKg else { return }
+    prepareBodyweightReview(
+      .adjustBodyweightLoad(
+        sessionID: session.sessionID,
+        exerciseID: exercise.exerciseID,
+        setIndex: selectedBodyweightSetIndex,
+        assistanceKg: assistanceKg,
+        addedWeightKg: 0
+      ),
+      text: "Reducir asistencia en \(exercise.displayName)"
+    )
+  }
+
+  private func proposeAddedWeight() {
+    guard let session = selectedSession,
+          let exercise = selectedBodyweightExercise,
+          let addedWeightKg = nextAddedWeightKg else { return }
+    prepareBodyweightReview(
+      .adjustBodyweightLoad(
+        sessionID: session.sessionID,
+        exerciseID: exercise.exerciseID,
+        setIndex: selectedBodyweightSetIndex,
+        assistanceKg: 0,
+        addedWeightKg: addedWeightKg
+      ),
+      text: "Añadir lastre en \(exercise.displayName)"
+    )
+  }
+
+  private func prepareBodyweightReview(_ intent: PlanningIntent, text: String) {
+    let request = PlanningIntentRequest(userText: text, referencedSessionID: selectedSessionID)
+    let record = PlanningConversationStore.start(request, in: modelContext)
+    currentConversationID = record.id
+    requestText = text
+    suggestedIntent = intent
+    pendingBodyweightAction = nil
+    bodyweightExerciseSelectionRequired = false
+    PlanningConversationStore.interpret(intent, summary: summary(for: intent), for: record, in: modelContext)
+  }
+
+  private func selectInitialBodyweightExercise() {
+    selectedBodyweightExerciseID = bodyweightExercises.first?.exerciseID ?? ""
+    selectedBodyweightSetIndex = bodyweightExercises.first?.sets.first?.setIndex ?? 1
+  }
+
   private func summary(for intent: PlanningIntent) -> String {
     switch intent {
     case let .moveSession(_, date): "Mover la sesión al \(Self.dateLabel(date))"
@@ -1773,6 +2034,10 @@ struct CoachConversationView: View {
     case .cancelSession: "Cancelar la sesión seleccionada"
     case .replaceExercise: "Sustituir un ejercicio"
     case .adjustSet: "Ajustar una serie"
+    case let .adjustBodyweightLoad(_, _, _, assistanceKg, addedWeightKg):
+      assistanceKg > 0
+        ? "Ajustar asistencia a \(Self.weightLabel(assistanceKg)) kg"
+        : "Ajustar lastre a \(Self.weightLabel(addedWeightKg)) kg"
     case let .adaptSessionDuration(_, minutes): "Adaptar esta sesión a \(minutes) min"
     }
   }
@@ -1791,6 +2056,10 @@ struct CoachConversationView: View {
     }
     currentConversationID = nil
     try? modelContext.save()
+  }
+
+  private static func weightLabel(_ value: Double) -> String {
+    value.rounded() == value ? String(Int(value)) : String(format: "%.2f", value)
   }
 
   private static func date(from value: String) -> Date? {

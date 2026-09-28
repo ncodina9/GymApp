@@ -17,15 +17,16 @@ public enum PlanningIntent: Codable, Equatable, Sendable {
     durationSeconds: Int?,
     restSeconds: Int?
   )
+  case adjustBodyweightLoad(sessionID: String, exerciseID: String, setIndex: Int, assistanceKg: Double, addedWeightKg: Double)
   case adaptSessionDuration(sessionID: String, maximumMinutes: Int)
 
   private enum CodingKeys: String, CodingKey {
     case type, sessionID, toDate, fromDate, byDays, exerciseID, replacementExerciseID
-    case setIndex, reps, weightKg, durationSeconds, restSeconds, maximumMinutes
+    case setIndex, reps, weightKg, durationSeconds, restSeconds, assistanceKg, addedWeightKg, maximumMinutes
   }
 
   private enum Kind: String, Codable {
-    case moveSession, postponeFutureSessions, gymClosure, cancelSession, replaceExercise, adjustSet, adaptSessionDuration
+    case moveSession, postponeFutureSessions, gymClosure, cancelSession, replaceExercise, adjustSet, adjustBodyweightLoad, adaptSessionDuration
   }
 
   public init(from decoder: Decoder) throws {
@@ -43,6 +44,8 @@ public enum PlanningIntent: Codable, Equatable, Sendable {
       self = .replaceExercise(sessionID: try container.decode(String.self, forKey: .sessionID), exerciseID: try container.decode(String.self, forKey: .exerciseID), replacementExerciseID: try container.decode(String.self, forKey: .replacementExerciseID))
     case .adjustSet:
       self = .adjustSet(sessionID: try container.decode(String.self, forKey: .sessionID), exerciseID: try container.decode(String.self, forKey: .exerciseID), setIndex: try container.decode(Int.self, forKey: .setIndex), reps: try container.decodeIfPresent(Int.self, forKey: .reps), weightKg: try container.decodeIfPresent(Double.self, forKey: .weightKg), durationSeconds: try container.decodeIfPresent(Int.self, forKey: .durationSeconds), restSeconds: try container.decodeIfPresent(Int.self, forKey: .restSeconds))
+    case .adjustBodyweightLoad:
+      self = .adjustBodyweightLoad(sessionID: try container.decode(String.self, forKey: .sessionID), exerciseID: try container.decode(String.self, forKey: .exerciseID), setIndex: try container.decode(Int.self, forKey: .setIndex), assistanceKg: try container.decode(Double.self, forKey: .assistanceKg), addedWeightKg: try container.decode(Double.self, forKey: .addedWeightKg))
     case .adaptSessionDuration:
       self = .adaptSessionDuration(sessionID: try container.decode(String.self, forKey: .sessionID), maximumMinutes: try container.decode(Int.self, forKey: .maximumMinutes))
     }
@@ -63,6 +66,8 @@ public enum PlanningIntent: Codable, Equatable, Sendable {
       try container.encode(Kind.replaceExercise, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(exerciseID, forKey: .exerciseID); try container.encode(replacementExerciseID, forKey: .replacementExerciseID)
     case let .adjustSet(sessionID, exerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds):
       try container.encode(Kind.adjustSet, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(exerciseID, forKey: .exerciseID); try container.encode(setIndex, forKey: .setIndex); try container.encodeIfPresent(reps, forKey: .reps); try container.encodeIfPresent(weightKg, forKey: .weightKg); try container.encodeIfPresent(durationSeconds, forKey: .durationSeconds); try container.encodeIfPresent(restSeconds, forKey: .restSeconds)
+    case let .adjustBodyweightLoad(sessionID, exerciseID, setIndex, assistanceKg, addedWeightKg):
+      try container.encode(Kind.adjustBodyweightLoad, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(exerciseID, forKey: .exerciseID); try container.encode(setIndex, forKey: .setIndex); try container.encode(assistanceKg, forKey: .assistanceKg); try container.encode(addedWeightKg, forKey: .addedWeightKg)
     case let .adaptSessionDuration(sessionID, maximumMinutes):
       try container.encode(Kind.adaptSessionDuration, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(maximumMinutes, forKey: .maximumMinutes)
     }
@@ -103,6 +108,8 @@ public enum PlanningIntentResolver {
       .operations([.replaceExercise(sessionID: sessionID, exerciseID: exerciseID, replacementExerciseID: replacementExerciseID)])
     case let .adjustSet(sessionID, exerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds):
       .operations([.adjustSet(sessionID: sessionID, exerciseID: exerciseID, setIndex: setIndex, reps: reps, weightKg: weightKg, durationSeconds: durationSeconds, restSeconds: restSeconds)])
+    case let .adjustBodyweightLoad(sessionID, exerciseID, setIndex, assistanceKg, addedWeightKg):
+      .operations([.adjustBodyweightLoad(sessionID: sessionID, exerciseID: exerciseID, setIndex: setIndex, assistanceKg: assistanceKg, addedWeightKg: addedWeightKg)])
     case let .adaptSessionDuration(sessionID, maximumMinutes):
       .requiresPlanningStrategy(sessionID: sessionID, maximumMinutes: max(15, maximumMinutes))
     }

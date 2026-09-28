@@ -8,6 +8,7 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
   case addExercise(sessionID: String, sourceExerciseID: String)
   case removeExercise(sessionID: String, exerciseID: String)
   case adjustSet(sessionID: String, exerciseID: String, setIndex: Int, reps: Int?, weightKg: Double?, durationSeconds: Int?, restSeconds: Int?)
+  case adjustBodyweightLoad(sessionID: String, exerciseID: String, setIndex: Int, assistanceKg: Double, addedWeightKg: Double)
 
   private enum CodingKeys: String, CodingKey {
     case type
@@ -16,14 +17,14 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
     case fromDate, byDays
     case exerciseID
     case replacementExerciseID
-    case sourceExerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds
+    case sourceExerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds, assistanceKg, addedWeightKg
   }
 
   private enum Kind: String, Codable {
     case moveSession, shiftFutureSessions
     case cancelSession
     case replaceExercise
-    case addExercise, removeExercise, adjustSet
+    case addExercise, removeExercise, adjustSet, adjustBodyweightLoad
   }
 
   public init(from decoder: Decoder) throws {
@@ -53,6 +54,8 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
       self = .removeExercise(sessionID: try container.decode(String.self, forKey: .sessionID), exerciseID: try container.decode(String.self, forKey: .exerciseID))
     case .adjustSet:
       self = .adjustSet(sessionID: try container.decode(String.self, forKey: .sessionID), exerciseID: try container.decode(String.self, forKey: .exerciseID), setIndex: try container.decode(Int.self, forKey: .setIndex), reps: try container.decodeIfPresent(Int.self, forKey: .reps), weightKg: try container.decodeIfPresent(Double.self, forKey: .weightKg), durationSeconds: try container.decodeIfPresent(Int.self, forKey: .durationSeconds), restSeconds: try container.decodeIfPresent(Int.self, forKey: .restSeconds))
+    case .adjustBodyweightLoad:
+      self = .adjustBodyweightLoad(sessionID: try container.decode(String.self, forKey: .sessionID), exerciseID: try container.decode(String.self, forKey: .exerciseID), setIndex: try container.decode(Int.self, forKey: .setIndex), assistanceKg: try container.decode(Double.self, forKey: .assistanceKg), addedWeightKg: try container.decode(Double.self, forKey: .addedWeightKg))
     }
   }
 
@@ -81,6 +84,8 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
       try container.encode(Kind.removeExercise, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(exerciseID, forKey: .exerciseID)
     case let .adjustSet(sessionID, exerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds):
       try container.encode(Kind.adjustSet, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(exerciseID, forKey: .exerciseID); try container.encode(setIndex, forKey: .setIndex); try container.encodeIfPresent(reps, forKey: .reps); try container.encodeIfPresent(weightKg, forKey: .weightKg); try container.encodeIfPresent(durationSeconds, forKey: .durationSeconds); try container.encodeIfPresent(restSeconds, forKey: .restSeconds)
+    case let .adjustBodyweightLoad(sessionID, exerciseID, setIndex, assistanceKg, addedWeightKg):
+      try container.encode(Kind.adjustBodyweightLoad, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(exerciseID, forKey: .exerciseID); try container.encode(setIndex, forKey: .setIndex); try container.encode(assistanceKg, forKey: .assistanceKg); try container.encode(addedWeightKg, forKey: .addedWeightKg)
     }
   }
 
@@ -93,6 +98,7 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
     case let .addExercise(_, sourceExerciseID): "Añadir ejercicio \(sourceExerciseID)"
     case let .removeExercise(_, exerciseID): "Quitar ejercicio \(exerciseID)"
     case .adjustSet: "Ajustar objetivo de serie"
+    case .adjustBodyweightLoad: "Ajustar asistencia o lastre"
     }
   }
 }
@@ -273,6 +279,7 @@ public enum PlanningOperationError: Error, Equatable, Sendable, LocalizedError {
   case replacementIsRestricted(String)
   case cannotRemoveLastExercise
   case setNotFound(Int)
+  case invalidBodyweightLoad
 
   public var errorDescription: String? {
     switch self {
@@ -290,6 +297,7 @@ public enum PlanningOperationError: Error, Equatable, Sendable, LocalizedError {
     case let .replacementIsRestricted(id): "El ejercicio \(id) está restringido por el perfil."
     case .cannotRemoveLastExercise: "Una sesión debe conservar al menos un ejercicio."
     case let .setNotFound(index): "No existe la serie \(index)."
+    case .invalidBodyweightLoad: "La asistencia y el lastre no pueden aplicarse a la vez."
     }
   }
 }
@@ -412,6 +420,22 @@ public enum PlanningOperationEngine {
         if let durationSeconds { plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].targetDurationSeconds = max(15, durationSeconds) }
         if let restSeconds { plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].restSeconds = max(0, restSeconds) }
         appendDurationWarning(for: plan.sessions[sessionIndex], constraints: constraints, warnings: &warnings)
+      case let .adjustBodyweightLoad(sessionID, exerciseID, setIndex, assistanceKg, addedWeightKg):
+        let sessionIndex = try editableSessionIndex(sessionID, in: plan, constraints: constraints)
+        guard let exerciseIndex = plan.sessions[sessionIndex].exercises.firstIndex(where: { $0.exerciseID == exerciseID }),
+              plan.sessions[sessionIndex].exercises[exerciseIndex].equipment == .bodyweight else {
+          throw PlanningOperationError.exerciseNotFound(exerciseID)
+        }
+        guard let targetIndex = plan.sessions[sessionIndex].exercises[exerciseIndex].sets.firstIndex(where: { $0.setIndex == setIndex }) else {
+          throw PlanningOperationError.setNotFound(setIndex)
+        }
+        guard assistanceKg >= 0, addedWeightKg >= 0, assistanceKg == 0 || addedWeightKg == 0 else {
+          throw PlanningOperationError.invalidBodyweightLoad
+        }
+        plan.sessions[sessionIndex].exercises[exerciseIndex].sets[targetIndex].bodyweightLoad = BodyweightLoad(
+          assistanceKg: assistanceKg,
+          addedWeightKg: addedWeightKg
+        )
       }
     }
 
@@ -532,7 +556,8 @@ public enum PlanningOperationEngine {
     switch operation {
     case let .moveSession(sessionID, _), let .cancelSession(sessionID),
          let .replaceExercise(sessionID, _, _), let .addExercise(sessionID, _),
-         let .removeExercise(sessionID, _), let .adjustSet(sessionID, _, _, _, _, _, _):
+         let .removeExercise(sessionID, _), let .adjustSet(sessionID, _, _, _, _, _, _),
+         let .adjustBodyweightLoad(sessionID, _, _, _, _):
       sessionID
     case .shiftFutureSessions:
       nil

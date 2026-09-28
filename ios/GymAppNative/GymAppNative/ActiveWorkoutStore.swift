@@ -127,6 +127,8 @@ struct TrainingProfile: Codable, Equatable {
   var cableStepKg: Double
   var barbellWeightKg: Double
   var multipowerBarWeightKg: Double
+  var bodyweightAssistanceStepKg: Double
+  var bodyweightWeightedLoadsKg: [Double]
   var priorityMuscleGroups: [String]
   var exercisePreferences: String
   var exercisesToAvoid: String
@@ -148,6 +150,8 @@ struct TrainingProfile: Codable, Equatable {
     cableStepKg: Double,
     barbellWeightKg: Double,
     multipowerBarWeightKg: Double,
+    bodyweightAssistanceStepKg: Double = 5,
+    bodyweightWeightedLoadsKg: [Double] = [],
     priorityMuscleGroups: [String],
     exercisePreferences: String,
     exercisesToAvoid: String,
@@ -168,6 +172,8 @@ struct TrainingProfile: Codable, Equatable {
     self.cableStepKg = cableStepKg
     self.barbellWeightKg = barbellWeightKg
     self.multipowerBarWeightKg = multipowerBarWeightKg
+    self.bodyweightAssistanceStepKg = bodyweightAssistanceStepKg
+    self.bodyweightWeightedLoadsKg = bodyweightWeightedLoadsKg.sorted()
     self.priorityMuscleGroups = priorityMuscleGroups
     self.exercisePreferences = exercisePreferences
     self.exercisesToAvoid = exercisesToAvoid
@@ -179,7 +185,7 @@ struct TrainingProfile: Codable, Equatable {
   private enum CodingKeys: String, CodingKey {
     case goal, targetTimeframeWeeks, experience, trainingWeekdays, sessionDurationMinutes
     case availableEquipment, dumbbellWeightsKg, dumbbellUnitsByWeight, plateWeightsKg, plateUnitsByWeight, cableStepKg
-    case barbellWeightKg, multipowerBarWeightKg, priorityMuscleGroups
+    case barbellWeightKg, multipowerBarWeightKg, bodyweightAssistanceStepKg, bodyweightWeightedLoadsKg, priorityMuscleGroups
     case exercisePreferences, exercisesToAvoid, limitations, declaredDiscomforts, declaredInjuries
   }
 
@@ -199,6 +205,8 @@ struct TrainingProfile: Codable, Equatable {
     cableStepKg = try container.decodeIfPresent(Double.self, forKey: .cableStepKg) ?? defaults.cableStepKg
     barbellWeightKg = try container.decodeIfPresent(Double.self, forKey: .barbellWeightKg) ?? defaults.barbellWeightKg
     multipowerBarWeightKg = try container.decodeIfPresent(Double.self, forKey: .multipowerBarWeightKg) ?? defaults.multipowerBarWeightKg
+    bodyweightAssistanceStepKg = try container.decodeIfPresent(Double.self, forKey: .bodyweightAssistanceStepKg) ?? defaults.bodyweightAssistanceStepKg
+    bodyweightWeightedLoadsKg = (try container.decodeIfPresent([Double].self, forKey: .bodyweightWeightedLoadsKg) ?? defaults.bodyweightWeightedLoadsKg).sorted()
     priorityMuscleGroups = try container.decodeIfPresent([String].self, forKey: .priorityMuscleGroups) ?? defaults.priorityMuscleGroups
     exercisePreferences = try container.decodeIfPresent(String.self, forKey: .exercisePreferences) ?? defaults.exercisePreferences
     exercisesToAvoid = try container.decodeIfPresent(String.self, forKey: .exercisesToAvoid) ?? defaults.exercisesToAvoid
@@ -226,6 +234,8 @@ struct TrainingProfile: Codable, Equatable {
     cableStepKg: 5,
     barbellWeightKg: 20,
     multipowerBarWeightKg: 18,
+    bodyweightAssistanceStepKg: 5,
+    bodyweightWeightedLoadsKg: [],
     priorityMuscleGroups: [],
     exercisePreferences: "",
     exercisesToAvoid: "",

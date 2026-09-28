@@ -90,6 +90,12 @@ struct TrainingPlanDecodingTests {
     #expect(plan.sessions.count == 51)
     #expect(plan.sessions.allSatisfy { !$0.exercises.isEmpty })
     #expect(plan.sessions.allSatisfy { !$0.isCancelled })
+    #expect(plan.sessions.flatMap(\.exercises).flatMap(\.sets).allSatisfy { $0.bodyweightLoad == nil })
+
+    let assisted = BodyweightLoad(assistanceKg: 20)
+    let weighted = BodyweightLoad(addedWeightKg: 10)
+    #expect(assisted.mode == .assisted)
+    #expect(weighted.mode == .weighted)
   }
 
   @Test("Valida operaciones de planificación antes de proponer una revisión")
@@ -166,6 +172,46 @@ struct TrainingPlanDecodingTests {
           constraints: restrictedConstraints
         )
       }
+    }
+  }
+
+  @Test("Valida asistencia y lastre como carga estructurada de peso corporal")
+  func validatesBodyweightLoadOperation() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first { $0.exercises.contains(where: { $0.equipment == .bodyweight }) })
+    let exercise = try #require(session.exercises.first { $0.equipment == .bodyweight })
+    let set = try #require(exercise.sets.first)
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-01-01"))
+    )
+    let proposal = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.adjustBodyweightLoad(
+        sessionID: session.sessionID,
+        exerciseID: exercise.exerciseID,
+        setIndex: set.setIndex,
+        assistanceKg: 15,
+        addedWeightKg: 0
+      )],
+      constraints: constraints
+    )
+    let adjusted = try #require(proposal.plan.sessions.first(where: { $0.sessionID == session.sessionID })?.exercises.first(where: { $0.exerciseID == exercise.exerciseID })?.sets.first(where: { $0.setIndex == set.setIndex }))
+    #expect(adjusted.bodyweightLoad?.mode == .assisted)
+    #expect(throws: PlanningOperationError.invalidBodyweightLoad) {
+      try PlanningOperationEngine.preview(
+        basePlan: plan,
+        operations: [.adjustBodyweightLoad(
+          sessionID: session.sessionID,
+          exerciseID: exercise.exerciseID,
+          setIndex: set.setIndex,
+          assistanceKg: 10,
+          addedWeightKg: 5
+        )],
+        constraints: constraints
+      )
     }
   }
 
@@ -258,6 +304,18 @@ struct TrainingPlanDecodingTests {
       ),
     ]))
     #expect(PlanningIntentResolver.resolve(.adaptSessionDuration(sessionID: "session-1", maximumMinutes: 10)) == .requiresPlanningStrategy(sessionID: "session-1", maximumMinutes: 15))
+
+    let bodyweightIntent = PlanningIntent.adjustBodyweightLoad(
+      sessionID: "session-1",
+      exerciseID: "dominadas",
+      setIndex: 1,
+      assistanceKg: 10,
+      addedWeightKg: 0
+    )
+    #expect(try JSONDecoder().decode(PlanningIntent.self, from: JSONEncoder().encode(bodyweightIntent)) == bodyweightIntent)
+    #expect(PlanningIntentResolver.resolve(bodyweightIntent) == .operations([
+      .adjustBodyweightLoad(sessionID: "session-1", exerciseID: "dominadas", setIndex: 1, assistanceKg: 10, addedWeightKg: 0),
+    ]))
   }
 
   @Test("Interpreta solicitudes conversacionales locales sin tocar el plan")

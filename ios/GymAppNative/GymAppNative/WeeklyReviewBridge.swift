@@ -224,7 +224,7 @@ enum WeeklyReviewBridge {
       advice.append(.init(
         id: "automation-boundary",
         title: "Límite automático",
-        detail: "Superseries completas y temporizados usan reglas de bloque. Peso corporal sin asistencia ni lastre puede progresar reps; el resto se revisa manualmente.",
+        detail: "Superseries completas y temporizados usan reglas de bloque. Peso corporal progresa primero reps, después asistencia y solo al final lastre configurado.",
         symbol: "hand.raised",
         tone: .neutral
       ))
@@ -238,6 +238,7 @@ enum WeeklyReviewBridge {
     nextWeek: Int?,
     completedRecords: [CompletedWorkoutRecord],
     inventory: EquipmentLoadInventory,
+    profile: TrainingProfile,
     referenceDate: Date = .now
   ) -> LocalProgressionProposal? {
     guard let nextWeek else { return nil }
@@ -281,21 +282,39 @@ enum WeeklyReviewBridge {
         let members = session.exercises.filter { $0.supersetID == supersetID }
         return members.allSatisfy {
           completedGroups.contains($0.displayGroupID)
-            && canAdjustAutomatically($0, mode: mode, inventory: inventory)
+            && canAdjustAutomatically($0, mode: mode, inventory: inventory, profile: profile)
         }
       }
       for exercise in session.exercises where completedGroups.contains(exercise.displayGroupID) {
         guard !adjustedGroups.contains(exercise.displayGroupID) else { continue }
         guard exercise.equipment != .bodyweight
-          || exercise.sets.contains(where: { if case .timed = $0.type { return true }; return canProgressBodyweight(exercise, set: $0) }) else { continue }
+          || exercise.sets.contains(where: { canAdjustAutomatically(exercise, set: $0, mode: mode, inventory: inventory, profile: profile) }) else { continue }
         if let supersetID = exercise.supersetID, !eligibleSupersets.contains(supersetID) { continue }
         for set in exercise.sets {
+          if exercise.equipment == .bodyweight,
+             mode == .progress,
+             let adjustment = bodyweightProgression(for: exercise, set: set, profile: profile) {
+            switch adjustment {
+            case let .reps(reps):
+              operations.append(.adjustSet(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, reps: reps, weightKg: nil, durationSeconds: nil, restSeconds: nil))
+              details.append("\(exercise.displayName): \(set.targetReps ?? 0) → \(reps) reps antes de cambiar la carga corporal.")
+            case let .load(assistanceKg, addedWeightKg):
+              operations.append(.adjustBodyweightLoad(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, assistanceKg: assistanceKg, addedWeightKg: addedWeightKg))
+              if assistanceKg > 0 || (set.bodyweightLoad?.assistanceKg ?? 0) > 0 {
+                details.append("\(exercise.displayName): asistencia \(weightLabel(set.bodyweightLoad?.assistanceKg ?? 0)) kg → \(weightLabel(assistanceKg)) kg.")
+              } else {
+                details.append("\(exercise.displayName): lastre \(weightLabel(set.bodyweightLoad?.addedWeightKg ?? 0)) kg → \(weightLabel(addedWeightKg)) kg configurado en tu perfil.")
+              }
+            }
+            adjustedGroups.insert(exercise.displayGroupID)
+            break
+          }
           switch (mode, set.type) {
           case (.progress, .working):
             if exercise.phase == "acumulacion",
                let reps = set.targetReps,
                reps < maximumReps(for: exercise),
-               exercise.equipment != .bodyweight || canProgressBodyweight(exercise, set: set) {
+               exercise.equipment != .bodyweight {
               operations.append(.adjustSet(
                 sessionID: session.sessionID,
                 exerciseID: exercise.exerciseID,
@@ -422,12 +441,28 @@ enum WeeklyReviewBridge {
   private static func canAdjustAutomatically(
     _ exercise: TrainingExercise,
     mode: AutomaticAdjustmentMode,
-    inventory: EquipmentLoadInventory
+    inventory: EquipmentLoadInventory,
+    profile: TrainingProfile
   ) -> Bool {
     exercise.sets.contains { set in
-      switch (mode, set.type) {
+      canAdjustAutomatically(exercise, set: set, mode: mode, inventory: inventory, profile: profile)
+    }
+  }
+
+  private static func canAdjustAutomatically(
+    _ exercise: TrainingExercise,
+    set: TrainingSet,
+    mode: AutomaticAdjustmentMode,
+    inventory: EquipmentLoadInventory,
+    profile: TrainingProfile
+  ) -> Bool {
+    if exercise.equipment == .bodyweight,
+       mode == .progress,
+       case .working = set.type {
+      return bodyweightProgression(for: exercise, set: set, profile: profile) != nil
+    }
+    switch (mode, set.type) {
       case (.progress, .working):
-        if exercise.equipment == .bodyweight { return canProgressBodyweight(exercise, set: set) }
         if exercise.phase == "acumulacion", let reps = set.targetReps {
           return reps < maximumReps(for: exercise)
         }
@@ -450,19 +485,37 @@ enum WeeklyReviewBridge {
           && exercise.phase != "readaptacion"
           && exercise.phase != "test"
           && set.restSeconds < maximumRest(for: exercise, isTimed: true)
-      }
     }
   }
 
-  private static func canProgressBodyweight(_ exercise: TrainingExercise, set: TrainingSet) -> Bool {
+  private enum BodyweightProgression {
+    case reps(Int)
+    case load(assistanceKg: Double, addedWeightKg: Double)
+  }
+
+  private static func bodyweightProgression(
+    for exercise: TrainingExercise,
+    set: TrainingSet,
+    profile: TrainingProfile
+  ) -> BodyweightProgression? {
     guard exercise.equipment == .bodyweight,
-          exercise.phase == "acumulacion",
-          set.targetWeightKg == 0,
-          let reps = set.targetReps,
-          reps < maximumReps(for: exercise) else { return false }
-    let descriptor = "\(exercise.name) \(exercise.notes) \(exercise.variantLabel ?? "")"
-      .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-    return !descriptor.contains("asist") && !descriptor.contains("lastre") && !descriptor.contains("lastrad")
+          case .working = set.type,
+          exercise.phase != "descarga",
+          exercise.phase != "readaptacion",
+          exercise.phase != "test",
+          exercise.phase != "realizacion" else { return nil }
+    let load = set.bodyweightLoad ?? .init()
+    if exercise.phase == "acumulacion",
+       let reps = set.targetReps,
+       reps < maximumReps(for: exercise) {
+      return .reps(reps + 1)
+    }
+    if load.assistanceKg > 0 {
+      return .load(assistanceKg: max(0, load.assistanceKg - max(0.5, profile.bodyweightAssistanceStepKg)), addedWeightKg: 0)
+    }
+    guard exercise.phase == "intensificacion",
+          let nextLoad = profile.bodyweightWeightedLoadsKg.first(where: { $0 > load.addedWeightKg }) else { return nil }
+    return .load(assistanceKg: 0, addedWeightKg: nextLoad)
   }
 
   static func instructionsURL(planID: String, reviewedWeek: Int, targetWeek: Int?) throws -> URL {
@@ -494,7 +547,7 @@ enum WeeklyReviewBridge {
       ]
     }
 
-    Usa solo operaciones soportadas por GymApp: moveSession, shiftFutureSessions, cancelSession, replaceExercise, addExercise, removeExercise y adjustSet. Para ajustes de series usa adjustSet. No devuelvas un plan completo ni inventes IDs.
+    Usa solo operaciones soportadas por GymApp: moveSession, shiftFutureSessions, cancelSession, replaceExercise, addExercise, removeExercise, adjustSet y adjustBodyweightLoad. Para asistencia o lastre usa adjustBodyweightLoad con assistanceKg o addedWeightKg, nunca ambos a la vez. No devuelvas un plan completo ni inventes IDs.
     """
     let url = FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-external-agent-instructions.txt")
     try text.write(to: url, atomically: true, encoding: .utf8)
@@ -584,7 +637,8 @@ struct WeeklyReviewExportView: View {
       closedWeek: closedWeek,
       nextWeek: nextWeek,
       completedRecords: completedRecords,
-      inventory: profile.loadInventory
+      inventory: profile.loadInventory,
+      profile: profile
     )
   }
 
