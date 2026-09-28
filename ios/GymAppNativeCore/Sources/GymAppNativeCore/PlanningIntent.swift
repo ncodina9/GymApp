@@ -209,7 +209,8 @@ public struct LocalPlanningIntentInterpreter: PlanningIntentInterpreting {
     guard let sessionID = request.referencedSessionID, !sessionID.isEmpty else {
       throw LocalPlanningIntentInterpreterError.missingSessionContext
     }
-    if normalized.contains("cancel") || normalized.contains("no puedo") || normalized.contains("no podre") {
+    if normalized.contains("cancel") || normalized.contains("no puedo") || normalized.contains("no podre")
+      || normalized.contains("replanifica") || normalized.contains("reprograma") || normalized.contains("otro dia") {
       return [.cancelSession(sessionID: sessionID)]
     }
     if let minutes = Self.minutes(in: normalized) {

@@ -70,11 +70,48 @@ struct TodayView: View {
       .max()
   }
 
+  private var missedSession: TrainingSession? {
+    let today = Calendar.current.startOfDay(for: .now)
+    return plan.sessions
+      .filter {
+        !$0.isCancelled
+          && !completedSessionIDs.contains($0.sessionID)
+          && activeWorkout?.execution.session.sessionID != $0.sessionID
+          && Self.recommendationDate($0) < today
+      }
+      .sorted { $0.date < $1.date }
+      .first
+  }
+
   var body: some View {
     NavigationStack(path: $path) {
       if let displayedWeek, !weekSessions.isEmpty {
         ScrollView {
           VStack(alignment: .leading, spacing: 12) {
+            if latestClosedWeek != nil {
+              NavigationLink {
+                WeeklyReviewExportView(plan: plan)
+              } label: {
+                Label("Exportar revisión semanal", systemImage: "square.and.arrow.up")
+                  .font(.gymBody.weight(.semibold))
+                  .frame(maxWidth: .infinity, minHeight: 48)
+                  .foregroundStyle(Color.gymAccentForeground)
+                  .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
+              }
+              .buttonStyle(.plain)
+            }
+            if let missedSession {
+              NavigationLink {
+                CoachConversationView(plan: plan, initialSessionID: missedSession.sessionID)
+              } label: {
+                Label("Replanificar entrenamiento pendiente", systemImage: "calendar.badge.clock")
+                  .font(.gymBody.weight(.semibold))
+                  .frame(maxWidth: .infinity, minHeight: 46)
+                  .foregroundStyle(Color.gymWarning)
+                  .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 14))
+              }
+              .buttonStyle(.plain)
+            }
             ForEach(weekSessions) { session in
               NavigationLink(value: session.sessionID) {
                 WeekSessionCard(
@@ -95,18 +132,6 @@ struct TodayView: View {
                   .frame(maxWidth: .infinity, minHeight: 46)
                   .foregroundStyle(Color.gymAccent)
                   .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 14))
-              }
-              .buttonStyle(.plain)
-            }
-            if latestClosedWeek != nil {
-              NavigationLink {
-                WeeklyReviewExportView(plan: plan)
-              } label: {
-                Label("Exportar revisión semanal", systemImage: "square.and.arrow.up")
-                  .font(.gymBody.weight(.semibold))
-                  .frame(maxWidth: .infinity, minHeight: 48)
-                  .foregroundStyle(Color.gymAccentForeground)
-                  .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
               }
               .buttonStyle(.plain)
             }

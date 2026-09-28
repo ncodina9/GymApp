@@ -1432,6 +1432,8 @@ Actualización v0.1.140: la revisión semanal puede compartir instrucciones y re
 
 Actualización v0.1.141: `Hoy` se ancla a la semana correspondiente a la fecha real, o a la sesión activa si existe; ya no adelanta automáticamente la interfaz a una semana futura al completar la actual. Cuando el plan contiene una semana posterior, ofrece una consulta explícita en modo lectura: permite recorrer sus tarjetas y previsualizaciones, pero no iniciar ni reanudar entrenamientos. La exportación de revisión semanal queda accesible desde `Hoy` y desde el resumen de la última sesión de la semana, incluyendo esta última ejecución aunque SwiftData aún no haya actualizado su consulta.
 
+Actualización v0.1.142: una sesión pendiente cuya fecha ya pasó se puede recuperar sin alterar el histórico: `Hoy` ofrece llevarla directamente al Entrenador y el selector conversacional incluye sesiones pasadas no completadas. La persona puede pedir una fecha concreta, como el próximo miércoles, o pedir replanificación; el motor solo permite mover esa sesión a hoy o al futuro y sigue rechazando sesiones activas, completadas o canceladas. La revisión semanal incorpora una primera lectura determinista de adherencia, RIR, series omitidas, molestias y objetivo de la próxima semana. Informa recomendaciones conservadoras, pero todavía no aplica ajustes automáticos.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.
@@ -1443,7 +1445,7 @@ Actualización v0.1.141: `Hoy` se ancla a la semana correspondiente a la fecha r
 - [~] Añadir una pantalla de propuesta que muestre qué cambia, qué se conserva, por qué y el impacto semanal. El simulador local crea revisiones pendientes para mover o cancelar sesiones, sustituir ejercicios y ajustar series con cambios y avisos auditables; falta el impacto semanal completo.
 - [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, siempre como propuesta explicada y confirmada antes de modificar un plan.
 - [ ] Integrar el chat como interfaz de intención sobre las operaciones validadas, con contexto limitado al perfil, plan efectivo, sesiones ejecutadas y restricciones relevantes.
-- [~] Definir una revisión semanal estructurada local: recopila cumplimiento, RIR y molestias para exportación externa; falta compararlos con la fase de la semana siguiente y generar una propuesta conservadora trazable sin llamada remota.
+- [~] Definir una revisión semanal estructurada local: recopila cumplimiento, RIR, series omitidas y molestias; expone recomendaciones conservadoras junto al objetivo de la semana siguiente. Falta traducirlas a una propuesta tipada, trazable y confirmable sin llamada remota.
 - [~] Mantener durante las pruebas un puente de revisión externa: la app exporta contexto semanal, comparte el contrato e importa operaciones tipadas como revisión pendiente validada; falta permitir adjuntar la explicación extensa del agente y registrar proveedor/modelo/consentimiento cuando la integración sea remota.
 
 ### Futuro: nuevo macrociclo

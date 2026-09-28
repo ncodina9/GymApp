@@ -1360,8 +1360,9 @@ private extension PlanningProfileIssue {
   }
 }
 
-private struct CoachConversationView: View {
+struct CoachConversationView: View {
   let plan: TrainingPlan
+  let initialSessionID: String?
   @Query private var profileRecords: [TrainingProfileRecord]
   @Query private var revisionRecords: [PlanRevisionRecord]
   @Query private var activeRecords: [ActiveWorkoutRecord]
@@ -1377,6 +1378,11 @@ private struct CoachConversationView: View {
   @State private var selectedReschedulingOptionID = ""
   @State private var responseText: String?
   @State private var currentConversationID: String?
+
+  init(plan: TrainingPlan, initialSessionID: String? = nil) {
+    self.plan = plan
+    self.initialSessionID = initialSessionID
+  }
 
   private var profile: TrainingProfile {
     TrainingProfileStore.load(from: profileRecords) ?? .initial
@@ -1395,12 +1401,9 @@ private struct CoachConversationView: View {
   }
 
   private var selectableSessions: [TrainingSession] {
-    let today = Calendar.current.startOfDay(for: .now)
     return effectivePlan.sessions
       .filter { session in
-        guard let date = Self.date(from: session.date) else { return false }
         return !session.isCancelled
-          && date >= today
           && session.sessionID != activeSessionID
           && !completedSessionIDs.contains(session.sessionID)
       }
@@ -1489,7 +1492,7 @@ private struct CoachConversationView: View {
           ContentUnavailableView(
             "No hay sesiones disponibles",
             systemImage: "calendar.badge.exclamationmark",
-            description: Text("Las sesiones activas, completadas y pasadas se protegen de cambios."))
+            description: Text("Las sesiones activas y completadas se protegen de cambios."))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 36)
         } else {
@@ -1660,7 +1663,9 @@ private struct CoachConversationView: View {
     }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
     .onAppear {
-      selectedSessionID = selectableSessions.first?.sessionID ?? ""
+      selectedSessionID = selectableSessions.first(where: { $0.sessionID == initialSessionID })?.sessionID
+        ?? selectableSessions.first?.sessionID
+        ?? ""
     }
     .onChange(of: selectedSessionID) { _, _ in
       suggestedIntent = nil

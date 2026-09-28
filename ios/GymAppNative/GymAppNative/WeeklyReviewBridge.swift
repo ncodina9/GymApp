@@ -30,6 +30,20 @@ enum WeeklyReviewBridge {
     let maximumDiscomfort: Int
   }
 
+  struct LocalAdvice: Identifiable {
+    let id: String
+    let title: String
+    let detail: String
+    let symbol: String
+    let tone: AdviceTone
+  }
+
+  enum AdviceTone {
+    case neutral
+    case caution
+    case positive
+  }
+
   struct ExternalProposal: Codable {
     let schemaName: String
     let schemaVersion: Int
@@ -117,6 +131,80 @@ enum WeeklyReviewBridge {
     guard proposal.planID == planID else { throw BridgeError.planMismatch }
     guard !proposal.operations.isEmpty else { throw BridgeError.emptyProposal }
     return proposal
+  }
+
+  static func localAdvice(
+    plan: TrainingPlan,
+    closedWeek: Int,
+    nextWeek: Int?,
+    completedRecords: [CompletedWorkoutRecord]
+  ) -> [LocalAdvice] {
+    let executions = completedRecords.compactMap { record -> WorkoutExecutionState? in
+      guard let data = record.executionData,
+            let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data),
+            execution.session.week == closedWeek else { return nil }
+      return execution
+    }
+    let records = executions.flatMap(\.records)
+    let completed = records.filter { $0.status == .completed }
+    let skipped = records.filter { $0.status == .skipped }.count
+    let rir = completed.compactMap(\.feedback.rir)
+    let averageRIR = rir.isEmpty ? nil : Double(rir.reduce(0, +)) / Double(rir.count)
+    let maximumDiscomfort = records.map {
+      max($0.feedback.painKnee, $0.feedback.painWrist, $0.feedback.painShoulder, $0.feedback.painLowerBack, $0.feedback.declaredDiscomfortLevels.values.max() ?? 0)
+    }.max() ?? 0
+    var advice: [LocalAdvice] = []
+
+    if skipped > 0 {
+      advice.append(.init(
+        id: "adherence",
+        title: "Consolida el volumen",
+        detail: "Se omitieron \(skipped) serie\(skipped == 1 ? "" : "s"). Mantén las cargas previstas antes de progresar.",
+        symbol: "checklist",
+        tone: .caution
+      ))
+    }
+    if maximumDiscomfort >= 2 {
+      advice.append(.init(
+        id: "discomfort",
+        title: "Prioriza la tolerancia",
+        detail: "Hubo una molestia de nivel \(maximumDiscomfort)/3. Mantén técnica, RIR conservador y evita aumentar carga hasta que remita.",
+        symbol: "exclamationmark.triangle",
+        tone: .caution
+      ))
+    }
+    if let averageRIR {
+      let isDemanding = averageRIR < 1
+      advice.append(.init(
+        id: "rir",
+        title: isDemanding ? "Esfuerzo alto" : "Esfuerzo registrado",
+        detail: isDemanding
+          ? "RIR medio \(String(format: "%.1f", averageRIR)). Evita progresar la carga esta semana."
+          : "RIR medio \(String(format: "%.1f", averageRIR)). Úsalo junto con adherencia y molestias para decidir la siguiente progresión.",
+        symbol: isDemanding ? "gauge.with.dots.needle.67percent" : "gauge.with.dots.needle.50percent",
+        tone: isDemanding ? .caution : .neutral
+      ))
+    }
+    if skipped == 0, maximumDiscomfort == 0, let averageRIR, averageRIR >= 3 {
+      advice.append(.init(
+        id: "readiness",
+        title: "Margen de progreso",
+        detail: "La semana se completó sin molestias relevantes y con RIR medio alto. Una propuesta externa puede valorar una progresión pequeña y validada.",
+        symbol: "arrow.up.right",
+        tone: .positive
+      ))
+    }
+    if let nextWeek,
+       let focus = plan.sessions.first(where: { !$0.isCancelled && $0.week == nextWeek })?.weekFocusLabel {
+      advice.append(.init(
+        id: "next-week",
+        title: "Siguiente semana",
+        detail: "S\(nextWeek): \(focus). Las decisiones deben respetar este objetivo del macrociclo.",
+        symbol: "calendar",
+        tone: .neutral
+      ))
+    }
+    return advice
   }
 
   static func instructionsURL(planID: String, reviewedWeek: Int, targetWeek: Int?) throws -> URL {
@@ -221,6 +309,16 @@ struct WeeklyReviewExportView: View {
     )
   }
 
+  private var localAdvice: [WeeklyReviewBridge.LocalAdvice] {
+    guard let closedWeek else { return [] }
+    return WeeklyReviewBridge.localAdvice(
+      plan: effectivePlan,
+      closedWeek: closedWeek,
+      nextWeek: nextWeek,
+      completedRecords: completedRecords
+    )
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
@@ -259,6 +357,23 @@ struct WeeklyReviewExportView: View {
             }
             .font(.gymBody.weight(.semibold))
             .foregroundStyle(Color.gymAccent)
+          }
+          if !localAdvice.isEmpty {
+            SettingsCategory(title: "Lectura local") {
+              ForEach(localAdvice) { advice in
+                HStack(alignment: .top, spacing: 10) {
+                  Image(systemName: advice.symbol)
+                    .font(.gymH3.weight(.bold))
+                    .foregroundStyle(adviceColor(for: advice.tone))
+                    .frame(width: 22)
+                  VStack(alignment: .leading, spacing: 3) {
+                    Text(advice.title).font(.gymBody.weight(.bold))
+                    Text(advice.detail).font(.gymSupport).foregroundStyle(Color.gymSecondaryText)
+                  }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+              }
+            }
           }
         } else {
           ContentUnavailableView(
@@ -312,6 +427,14 @@ struct WeeklyReviewExportView: View {
       message = "Propuesta externa importada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
     } catch {
       message = error.localizedDescription
+    }
+  }
+
+  private func adviceColor(for tone: WeeklyReviewBridge.AdviceTone) -> Color {
+    switch tone {
+    case .neutral: Color.gymAccent
+    case .caution: Color.gymWarning
+    case .positive: Color.gymCompleted
     }
   }
 }

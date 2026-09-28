@@ -290,6 +290,12 @@ struct TrainingPlanDecodingTests {
     ))
     #expect(movedToThursday == [.moveSession(sessionID: sessionID, toDate: "2026-10-01")])
 
+    let rescheduled = try await interpreter.interpret(.init(
+      userText: "Replanifica esta sesión a otro día",
+      referencedSessionID: sessionID
+    ))
+    #expect(rescheduled == [.cancelSession(sessionID: sessionID)])
+
     let vacation = try await interpreter.interpret(.init(
       userText: "Estaré de vacaciones la semana que viene",
       createdAt: try #require(isoDate("2026-09-28"))
@@ -344,6 +350,24 @@ struct TrainingPlanDecodingTests {
     #expect(proposal.impact.changedSessionIDs.contains(original.sessionID))
     #expect(proposal.impact.scheduleEndBefore != proposal.impact.scheduleEndAfter)
     #expect(!proposal.impact.shiftedMacrocycleWeeks.isEmpty)
+  }
+
+  @Test("Permite recuperar una sesión pendiente de una fecha pasada")
+  func movesMissedSessionToFutureDate() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let missed = try #require(plan.sessions.first { $0.date == "2026-09-07" })
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-09-28"))
+    )
+    let proposal = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [.moveSession(sessionID: missed.sessionID, toDate: "2026-10-03")],
+      constraints: constraints
+    )
+    #expect(proposal.plan.sessions.first(where: { $0.sessionID == missed.sessionID })?.date == "2026-10-03")
   }
 
   @Test("Compone ausencias sucesivas sobre el plan efectivo")

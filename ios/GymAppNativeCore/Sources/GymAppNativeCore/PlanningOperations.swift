@@ -306,7 +306,7 @@ public enum PlanningOperationEngine {
     for operation in operations {
       switch operation {
       case let .moveSession(sessionID, toDate):
-        let index = try editableSessionIndex(sessionID, in: plan, constraints: constraints)
+        let index = try movableSessionIndex(sessionID, in: plan, constraints: constraints)
         let targetDate = try date(from: toDate)
         let targetDay = Calendar.current.startOfDay(for: targetDate)
         let today = Calendar.current.startOfDay(for: constraints.referenceDate)
@@ -555,6 +555,23 @@ public enum PlanningOperationEngine {
           Calendar.current.startOfDay(for: sessionDate) >= Calendar.current.startOfDay(for: constraints.referenceDate) else {
       throw PlanningOperationError.sessionNotEditable(sessionID)
     }
+    return index
+  }
+
+  /// A missed session remains movable, but never editable in place. This lets a
+  /// person recover an unfinished workout without reopening completed history.
+  private static func movableSessionIndex(
+    _ sessionID: String,
+    in plan: TrainingPlan,
+    constraints: PlanningConstraints
+  ) throws -> Int {
+    guard let index = plan.sessions.firstIndex(where: { $0.sessionID == sessionID }) else {
+      throw PlanningOperationError.sessionNotFound(sessionID)
+    }
+    let session = plan.sessions[index]
+    guard !session.isCancelled else { throw PlanningOperationError.sessionNotEditable(sessionID) }
+    guard !constraints.completedSessionIDs.contains(sessionID) else { throw PlanningOperationError.sessionCompleted(sessionID) }
+    guard constraints.activeSessionID != sessionID else { throw PlanningOperationError.sessionActive(sessionID) }
     return index
   }
 
