@@ -81,7 +81,10 @@ final class WatchWorkoutConnectivity: NSObject, ObservableObject {
         guard let data = response[Key.workoutCommandAcknowledgement] as? Data,
               let acknowledgement = try? JSONDecoder().decode(WatchWorkoutCommandAcknowledgement.self, from: data)
         else { return }
-        Task { @MainActor in self?.apply(acknowledgement) }
+        Task { @MainActor in
+          self?.apply(response)
+          self?.apply(acknowledgement)
+        }
       },
       errorHandler: { [weak self] _ in
         Task { @MainActor in
@@ -133,11 +136,9 @@ final class WatchWorkoutConnectivity: NSObject, ObservableObject {
       connectionStatus = workout == nil ? "Conectado, elige un entrenamiento" : "Sesión recibida"
       return
     }
-    guard let data = payload[Key.workoutState] as? Data else {
-      workout = nil
-      connectionStatus = "Conectado, elige un entrenamiento"
-      return
-    }
+    // A command acknowledgement has no state payload. Treating it as an empty
+    // snapshot briefly dismissed the workout and showed a false completion.
+    guard let data = payload[Key.workoutState] as? Data else { return }
     workout = try? decoder.decode(WatchWorkoutState.self, from: data)
     if let workout {
       clearQueuedCommandIfReflected(by: WatchWorkoutAppState(

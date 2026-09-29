@@ -2,6 +2,13 @@ import SwiftUI
 import SwiftData
 import GymAppNativeCore
 
+enum WarmupConfiguration {
+  static var seconds: Int {
+    let minutes = UserDefaults.standard.object(forKey: "warmupMinutes") as? Int ?? 9
+    return min(max(minutes, 3), 20) * 60
+  }
+}
+
 @main
 struct GymAppNativeApp: App {
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
@@ -67,6 +74,7 @@ private struct WatchWorkoutSyncHost: View {
       .allowsHitTesting(false)
       .accessibilityHidden(true)
       .onAppear {
+        WatchWorkoutConnectivity.shared.stateRefreshHandler = { synchronize() }
         loadPlan()
         synchronize()
         retryPendingHealthWorkouts()
@@ -87,6 +95,12 @@ private struct WatchWorkoutSyncHost: View {
         } else {
           applyDetachedWatchCommand(envelope.command)
         }
+      }
+      .onReceive(NotificationCenter.default.publisher(for: .watchHealthWorkoutFinished)) { notification in
+        guard let command = notification.object as? WatchWorkoutCommand,
+              case let .watchHealthSessionFinished(sessionID, healthWorkoutUUID) = command
+        else { return }
+        markWatchHealthWorkoutFinished(sessionID: sessionID, healthWorkoutUUID: healthWorkoutUUID)
       }
   }
 
@@ -126,6 +140,15 @@ private struct WatchWorkoutSyncHost: View {
         in: modelContext
       )
     }
+  }
+
+  private func markWatchHealthWorkoutFinished(sessionID: String, healthWorkoutUUID: String) {
+    guard let record = completedWorkoutRecords.first(where: { $0.sessionID == sessionID }) else { return }
+    record.healthKitWorkoutUUID = healthWorkoutUUID
+    record.healthKitSyncStatus = .synced
+    record.healthKitLastError = nil
+    record.healthKitLastAttemptAt = .now
+    try? modelContext.save()
   }
 
   private var resolvedWatchAppearance: String {
@@ -198,7 +221,7 @@ private struct WatchWorkoutSyncHost: View {
       ))
     case let .startWarmup(sessionID):
       guard active == nil, let session = plan?.sessions.first(where: { $0.sessionID == sessionID }) else { return }
-      let seconds = max(3, UserDefaults.standard.integer(forKey: "warmupMinutes")) * 60
+      let seconds = WarmupConfiguration.seconds
       save(ActiveWorkoutSnapshot(
         execution: WorkoutExecutionState(session: session),
         phase: .workingSet,
@@ -234,7 +257,7 @@ private struct WatchWorkoutSyncHost: View {
          !execution.selectNextBlock(exerciseIndex: exerciseIndex) {
         return
       }
-      let warmupSeconds = max(3, UserDefaults.standard.integer(forKey: "warmupMinutes")) * 60
+      let warmupSeconds = WarmupConfiguration.seconds
       save(ActiveWorkoutSnapshot(
         execution: execution,
         phase: .workingSet,

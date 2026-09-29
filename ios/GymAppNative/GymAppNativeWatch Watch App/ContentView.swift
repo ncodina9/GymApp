@@ -12,6 +12,7 @@ private extension Font {
 
 struct ContentView: View {
   @EnvironmentObject private var connectivity: WatchWorkoutConnectivity
+  @StateObject private var healthWorkout = WatchLiveHealthWorkoutManager()
   @State private var completedWorkoutName: String?
   @State private var showsTrainingSelection = false
   @State private var previewSession: TrainingSession?
@@ -80,6 +81,7 @@ struct ContentView: View {
         previewSession = nil
         showsTrainingSelection = false
       }
+      synchronizeHealthWorkout(with: sessionID)
     }
     .onChange(of: connectivity.workout) { _, current in
       guard showsTrainingSelection,
@@ -90,6 +92,24 @@ struct ContentView: View {
       else { return }
       previewSession = nil
       showsTrainingSelection = false
+    }
+    .onAppear {
+      synchronizeHealthWorkout(with: connectivity.workout?.sessionID)
+    }
+  }
+
+  private func synchronizeHealthWorkout(with sessionID: String?) {
+    if let sessionID {
+      healthWorkout.begin(sessionID: sessionID) {
+        connectivity.send(.watchHealthSessionStarted(sessionID: sessionID))
+      }
+    } else {
+      healthWorkout.finishIfNeeded(sessionID: nil) { sessionID, healthWorkoutUUID in
+        connectivity.send(.watchHealthSessionFinished(
+          sessionID: sessionID,
+          healthWorkoutUUID: healthWorkoutUUID
+        ))
+      }
     }
   }
 }
@@ -536,6 +556,7 @@ private struct WatchWorkoutView: View {
   let onCommand: (WatchWorkoutCommand) -> Void
   let onBack: () -> Void
   @State private var reviewExerciseIndex = 0
+  @State private var showsWorkoutHistory = false
 
   private var palette: WatchPalette { WatchPalette(theme: theme) }
 
@@ -563,11 +584,11 @@ private struct WatchWorkoutView: View {
   }
 
   private var usesCountdownBackground: Bool {
-    workout.phase == .rest || (workout.phase == .workingSet && workout.durationSeconds != nil)
+    workout.phase == .warmup || workout.phase == .rest || (workout.phase == .workingSet && workout.durationSeconds != nil)
   }
 
   private var countdownTotalSeconds: Int {
-    workout.phase == .rest ? workout.restTotalSeconds : (workout.durationSeconds ?? 0)
+    workout.countdownTotalSeconds ?? (workout.phase == .rest ? workout.restTotalSeconds : (workout.durationSeconds ?? 0))
   }
 
   var body: some View {
@@ -624,7 +645,10 @@ private struct WatchWorkoutView: View {
           }
           if workout.phase == .rest {
             ToolbarItem(placement: .topBarTrailing) {
-              WatchWorkoutProgressBadge(progress: workoutProgress, palette: palette)
+              Button { showsWorkoutHistory = true } label: {
+                WatchWorkoutProgressBadge(progress: workoutProgress, palette: palette)
+              }
+              .buttonStyle(.plain)
                 .accessibilityLabel("Progreso del entrenamiento: \(Int((workoutProgress * 100).rounded())) por ciento")
             }
           } else if showsSetNumber {
@@ -644,6 +668,11 @@ private struct WatchWorkoutView: View {
     .onChange(of: workout.phase) { _, phase in
       if phase != .exerciseReview { reviewExerciseIndex = 0 }
     }
+    .sheet(isPresented: $showsWorkoutHistory) {
+      WatchWorkoutHistoryView(workout: workout, palette: palette)
+        .presentationBackground(palette.canvas)
+        .preferredColorScheme(palette.colorScheme)
+    }
   }
 }
 
@@ -657,15 +686,18 @@ private enum WatchBottomBarMetrics {
 
 private struct WatchBottomBarLayout<Content: View, Footer: View>: View {
   private let footerOffset: CGFloat
+  private let footerHeight: CGFloat
   private let content: Content
   private let footer: Footer
 
   init(
     footerOffset: CGFloat = 0,
+    footerHeight: CGFloat = WatchBottomBarMetrics.height,
     @ViewBuilder content: () -> Content,
     @ViewBuilder footer: () -> Footer
   ) {
     self.footerOffset = footerOffset
+    self.footerHeight = footerHeight
     self.content = content()
     self.footer = footer()
   }
@@ -676,7 +708,7 @@ private struct WatchBottomBarLayout<Content: View, Footer: View>: View {
       let innerHeight = max(0, proxy.size.height - (WatchBottomBarMetrics.verticalPadding * 2))
       let contentHeight = max(
         0,
-        innerHeight - WatchBottomBarMetrics.height - WatchBottomBarMetrics.spacing + footerOffset
+        innerHeight - footerHeight - (footerHeight > 0 ? WatchBottomBarMetrics.spacing : 0) + footerOffset
       )
 
       Color.clear
@@ -687,8 +719,8 @@ private struct WatchBottomBarLayout<Content: View, Footer: View>: View {
         }
         .overlay(alignment: .topLeading) {
           footer
-            .frame(width: innerWidth, height: WatchBottomBarMetrics.height)
-            .offset(y: innerHeight - WatchBottomBarMetrics.height + footerOffset)
+            .frame(width: innerWidth, height: footerHeight)
+            .offset(y: innerHeight - footerHeight + footerOffset)
         }
       .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
     }
@@ -720,7 +752,7 @@ private struct WatchFeedbackView: View {
     self.isSendingAction = isSendingAction
     self.onCommand = onCommand
     _rir = State(initialValue: workout.feedback.rir ?? 2)
-    _note = State(initialValue: workout.feedback.note)
+    _note = State(initialValue: "OK")
     _painKnee = State(initialValue: workout.feedback.painKnee)
     _painWrist = State(initialValue: workout.feedback.painWrist)
     _painShoulder = State(initialValue: workout.feedback.painShoulder)
@@ -731,14 +763,13 @@ private struct WatchFeedbackView: View {
   private var isTimed: Bool { workout.durationSeconds != nil }
   private var declaredDiscomforts: [String] { workout.declaredDiscomforts ?? [] }
   private var notePage: Int { isTimed ? 0 : 1 }
-  private var finalPage: Int { notePage + declaredDiscomforts.count }
-
-  private var showsRegisterButton: Bool {
-    selectedPage == finalPage
-  }
+  private var showsRegisterButton: Bool { isTimed ? selectedPage == notePage : selectedPage == 0 }
 
   var body: some View {
-    WatchBottomBarLayout(footerOffset: WatchBottomBarMetrics.pagedFooterOffset) {
+    WatchBottomBarLayout(
+      footerOffset: showsRegisterButton ? WatchBottomBarMetrics.pagedFooterOffset : 0,
+      footerHeight: showsRegisterButton ? WatchBottomBarMetrics.height : 0
+    ) {
       TabView(selection: $selectedPage) {
         if !isTimed {
           WatchRIRFeedbackPage(rir: $rir, trainingPhase: workout.trainingPhase, palette: palette)
@@ -768,8 +799,9 @@ private struct WatchFeedbackView: View {
         .buttonStyle(.borderedProminent)
         .buttonBorderShape(.capsule)
         .tint(palette.accent)
+        .accessibilityLabel("Registrar serie")
       } else {
-        Color.clear
+        EmptyView()
       }
     }
     .disabled(isSendingAction)
@@ -1049,12 +1081,12 @@ private struct WatchDeclaredDiscomfortPage: View {
     VStack(spacing: 12) {
       Text(label)
         .font(.watchH2)
-      HStack(spacing: 6) {
+      HStack(spacing: 5) {
         ForEach(0 ... 3, id: \.self) { level in
           Button { value = level } label: {
             Text("\(level)")
               .font(.watchH2.weight(.bold))
-              .frame(width: 38, height: 42)
+              .frame(maxWidth: .infinity, minHeight: 42)
           }
           .buttonStyle(.plain)
           .foregroundStyle(value == level ? palette.accentForeground : palette.primaryText)
@@ -1066,7 +1098,7 @@ private struct WatchDeclaredDiscomfortPage: View {
         .foregroundStyle(palette.secondaryText)
       Spacer(minLength: 0)
     }
-    .padding(.horizontal, 10)
+    .padding(.horizontal, 8)
   }
 }
 
@@ -1081,7 +1113,10 @@ private struct WatchSetView: View {
   private var isTimed: Bool { workout.durationSeconds != nil }
 
   var body: some View {
-    WatchBottomBarLayout(footerOffset: WatchBottomBarMetrics.pagedFooterOffset) {
+    WatchBottomBarLayout(
+      footerOffset: selectedPage == 0 ? WatchBottomBarMetrics.pagedFooterOffset : 0,
+      footerHeight: selectedPage == 0 ? WatchBottomBarMetrics.height : 0
+    ) {
       TabView(selection: $selectedPage) {
         WatchSetPrimaryPage(
           workout: workout,
@@ -1114,7 +1149,7 @@ private struct WatchSetView: View {
           onRegister: { onCommand(.registerSet) }
         )
       } else {
-        Color.clear
+        EmptyView()
       }
     }
     .fullScreenCover(item: $editor) { metric in
@@ -1341,12 +1376,91 @@ private struct WatchWorkoutProgressBadge: View {
   }
 }
 
+private struct WatchWorkoutHistoryView: View {
+  let workout: WatchWorkoutState
+  let palette: WatchPalette
+  @Environment(\.dismiss) private var dismiss
+
+  private var exercises: [WatchWorkoutHistoryExercise] { workout.historyExercises ?? [] }
+
+  var body: some View {
+    NavigationStack {
+      List {
+        Section("Progreso") {
+          Text("\(workout.completedSetCount) de \(workout.totalSetCount) series registradas")
+            .font(.watchSupport)
+            .foregroundStyle(palette.secondaryText)
+        }
+        ForEach(exercises) { exercise in
+          Section(exercise.name) {
+            ForEach(exercise.sets) { set in
+              HStack(spacing: 7) {
+                Image(systemName: symbol(for: set.status))
+                  .foregroundStyle(color(for: set.status))
+                Text("Serie \(set.setIndex)")
+                  .font(.watchSupport.weight(.semibold))
+                Spacer(minLength: 4)
+                Text(detail(for: set))
+                  .font(.watchSupport)
+                  .monospacedDigit()
+                  .foregroundStyle(palette.primaryText)
+                  .lineLimit(1)
+              }
+            }
+          }
+        }
+      }
+      .navigationTitle("Historial")
+      .navigationBarTitleDisplayMode(.inline)
+      .scrollContentBackground(.hidden)
+      .background(palette.canvas)
+      .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          Button { dismiss() } label: { Image(systemName: "xmark") }
+        }
+      }
+    }
+  }
+
+  private func detail(for set: WatchWorkoutHistorySet) -> String {
+    if let seconds = set.durationSeconds { return "\(seconds)s" }
+    return "\(set.reps ?? 0) x \(WeightFormatter.string(from: set.weightKg))"
+  }
+
+  private func symbol(for status: WorkoutSetStatus?) -> String {
+    switch status {
+    case .completed: "checkmark.circle.fill"
+    case .skipped: "forward.circle.fill"
+    case nil: "circle"
+    }
+  }
+
+  private func color(for status: WorkoutSetStatus?) -> Color {
+    switch status {
+    case .completed: .green
+    case .skipped: .orange
+    case nil: palette.muted
+    }
+  }
+}
+
 private struct WatchRestView: View {
   let workout: WatchWorkoutState
   let palette: WatchPalette
   let isSendingAction: Bool
   let onCommand: (WatchWorkoutCommand) -> Void
-  @State private var crownRestAdjustment = 0.0
+  @State private var crownExerciseSelection = 0.0
+  @State private var selectedExerciseID: String?
+
+  private var upcomingExercises: [WatchUpcomingExercise] { workout.upcomingExercises ?? [] }
+  private var canChooseNextExercise: Bool {
+    !workout.currentExerciseHasRecordedSets && upcomingExercises.count > 1
+  }
+  private var selectedExercise: WatchUpcomingExercise? {
+    upcomingExercises.first { $0.exerciseID == selectedExerciseID }
+      ?? upcomingExercises.first { $0.exerciseID == workout.currentExerciseID }
+      ?? upcomingExercises.first
+  }
 
   var body: some View {
     TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -1358,18 +1472,18 @@ private struct WatchRestView: View {
           .font(.system(size: 46, weight: .bold, design: .rounded))
           .monospacedDigit()
           .foregroundStyle(complete ? Color.green : palette.primaryText)
-          .focusable(true)
+          .focusable(canChooseNextExercise)
           .digitalCrownRotation(
-            $crownRestAdjustment,
-            from: -60,
-            through: 60,
+            $crownExerciseSelection,
+            from: 0,
+            through: Double(max(upcomingExercises.count - 1, 0)),
             by: 1,
             sensitivity: .medium,
             isContinuous: false,
             isHapticFeedbackEnabled: true
           )
-          .onChange(of: crownRestAdjustment) { previous, current in
-            adjustRest(using: current - previous)
+          .onChange(of: crownExerciseSelection) { _, current in
+            selectExercise(at: Int(current.rounded()))
           }
           .onChange(of: complete) { _, didFinish in
             if didFinish { WKInterfaceDevice.current().play(.notification) }
@@ -1380,10 +1494,10 @@ private struct WatchRestView: View {
             .font(.watchSupport.weight(.bold))
             .foregroundStyle(palette.accent)
           VStack(alignment: .leading, spacing: 1) {
-            Text(workout.exerciseName)
+            Text(selectedExercise?.name ?? workout.exerciseName)
               .font(.watchSupport.weight(.semibold))
               .lineLimit(1)
-            Text(nextSetSummary)
+            Text(selectedExercise?.detail ?? nextSetSummary)
               .font(.watchSupport)
               .foregroundStyle(palette.secondaryText)
               .lineLimit(1)
@@ -1396,7 +1510,7 @@ private struct WatchRestView: View {
 
         Spacer(minLength: 2)
 
-        Button { onCommand(.continueAfterTimer) } label: {
+        Button(action: continueAfterRest) {
           Image(systemName: complete ? "arrow.right" : "forward.fill")
             .frame(maxWidth: .infinity, minHeight: 42)
             .foregroundStyle(complete ? Color.white : palette.accentForeground)
@@ -1407,15 +1521,35 @@ private struct WatchRestView: View {
         .disabled(isSendingAction)
       }
       .padding(.horizontal, 8)
+      .onAppear(perform: synchronizeSelection)
+      .onChange(of: workout.updatedAt) { _, _ in synchronizeSelection() }
     }
   }
 
-  private func adjustRest(using crownDelta: Double) {
+  private func synchronizeSelection() {
+    guard let currentIndex = upcomingExercises.firstIndex(where: { $0.exerciseID == workout.currentExerciseID }) else {
+      selectedExerciseID = upcomingExercises.first?.exerciseID
+      crownExerciseSelection = 0
+      return
+    }
+    selectedExerciseID = upcomingExercises[currentIndex].exerciseID
+    crownExerciseSelection = Double(currentIndex)
+  }
+
+  private func selectExercise(at index: Int) {
+    guard upcomingExercises.indices.contains(index) else { return }
+    selectedExerciseID = upcomingExercises[index].exerciseID
+  }
+
+  private func continueAfterRest() {
     guard !isSendingAction else { return }
-    let steps = Int(crownDelta.rounded())
-    guard steps != 0 else { return }
-    let command: WatchWorkoutCommand = steps > 0 ? .addRest15 : .subtractRest15
-    for _ in 0 ..< abs(steps) { onCommand(command) }
+    if canChooseNextExercise,
+       let selectedExercise,
+       selectedExercise.exerciseID != workout.currentExerciseID {
+      onCommand(.prioritizeExercise(sessionID: workout.sessionID, exerciseIndex: selectedExercise.exerciseIndex))
+    } else {
+      onCommand(.continueAfterTimer)
+    }
   }
 
   private var nextSetSummary: String {
@@ -1467,7 +1601,6 @@ private struct WatchWarmupView: View {
       let remaining = max(0, Int((workout.timerEndsAt?.timeIntervalSince(context.date) ?? 0).rounded(.up)))
       let complete = workout.timerEndsAt != nil && remaining == 0
       VStack(spacing: 12) {
-        Image(systemName: "flame.fill").font(.watchH1).foregroundStyle(palette.accent)
         if complete {
           Text("Calentamiento terminado")
             .font(.watchH2)

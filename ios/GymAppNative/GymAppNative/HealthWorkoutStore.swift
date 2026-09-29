@@ -27,6 +27,10 @@ enum HealthWorkoutStore {
           isAvailable
     else { return }
 
+    // A live Watch workout will arrive in Health with the same external UUID.
+    // Wait for its final UUID instead of creating a retrospective duplicate.
+    guard !WatchHealthWorkoutRegistry.isManaging(record.sessionID) else { return }
+
     record.healthKitSyncStatus = .syncing
     record.healthKitLastAttemptAt = .now
     record.healthKitLastError = nil

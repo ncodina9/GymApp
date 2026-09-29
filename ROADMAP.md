@@ -1476,6 +1476,10 @@ Actualización v0.1.162: el contrato Watch–iPhone incluye fase, foco semanal y
 
 Actualización v0.1.163: la lista principal del Watch recibe del iPhone la semana activa, su objetivo y la sesión recomendada, usando la misma regla que `Hoy` tras reprogramaciones, sesiones completadas o una sesión activa. Las duraciones de tarjetas y previsualización se derivan con el estimador compartido. Un bloque de diagnóstico al final de la lista muestra alcance del iPhone, última sincronización y acciones pendientes, con actualización manual para validar el flujo real en gimnasio.
 
+Actualización v0.1.164: la ejecución en Watch incorpora continuación explícita desde RIR, `OK` inicial en feedback y la duración de calentamiento configurada aunque la orden llegue antes de que iOS materialice el valor de preferencias. El calentamiento comparte la animación de barra vaciándose de descanso. En descansos entre ejercicios la corona selecciona un ejercicio pendiente sin alterar el temporizador. El progreso global abre un historial de solo lectura con series completadas, omitidas y pendientes.
+
+Actualización v0.1.165: una petición de actualización desde Watch ya no devuelve un catálogo en memoria potencialmente caducado. Al recibir `requestState`, el iPhone obliga al host de SwiftData a reconstruir y publicar el estado efectivo; la respuesta directa incluye dicho snapshot y también actualiza `applicationContext`. El diagnóstico solo marca una sincronización nueva después de decodificar ese estado recibido.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.

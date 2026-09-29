@@ -4,6 +4,28 @@ import GymAppNativeCore
 
 extension Notification.Name {
   static let watchWorkoutCommandReceived = Notification.Name("watchWorkoutCommandReceived")
+  static let watchHealthWorkoutFinished = Notification.Name("watchHealthWorkoutFinished")
+}
+
+@MainActor
+enum WatchHealthWorkoutRegistry {
+  private static let key = "watchLiveHealthWorkoutSessionIDs"
+
+  static func markStarted(_ sessionID: String) {
+    var ids = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    ids.insert(sessionID)
+    UserDefaults.standard.set(Array(ids), forKey: key)
+  }
+
+  static func markFinished(_ sessionID: String) {
+    var ids = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    ids.remove(sessionID)
+    UserDefaults.standard.set(Array(ids), forKey: key)
+  }
+
+  static func isManaging(_ sessionID: String) -> Bool {
+    Set(UserDefaults.standard.stringArray(forKey: key) ?? []).contains(sessionID)
+  }
 }
 
 /// A visible execution view owns its in-memory animation state. When it is not
@@ -17,6 +39,9 @@ final class WatchWorkoutCommandRouter {
 @MainActor
 final class WatchWorkoutConnectivity: NSObject {
   static let shared = WatchWorkoutConnectivity()
+  /// The SwiftUI host owns SwiftData queries. A Watch refresh must ask that
+  /// host for a new catalog instead of returning a stale in-memory snapshot.
+  var stateRefreshHandler: (() -> Void)?
 
   private enum Key {
     static let workoutState = "workoutState"
@@ -164,6 +189,54 @@ final class WatchWorkoutConnectivity: NSObject {
     let currentExerciseHasRecordedSets = execution.records.contains {
       $0.locator.exerciseIndex == locator.exerciseIndex
     }
+    let upcomingExercises = execution.session.exercises.enumerated().compactMap { index, candidate -> WatchUpcomingExercise? in
+      let hasPendingSet = candidate.sets.contains { set in
+        !execution.records.contains {
+          $0.locator.exerciseIndex == index && $0.locator.setIndex == set.setIndex
+        }
+      }
+      guard hasPendingSet,
+            let nextSet = candidate.sets.first(where: { set in
+              !execution.records.contains {
+                $0.locator.exerciseIndex == index && $0.locator.setIndex == set.setIndex
+              }
+            }),
+            let nextTargets = execution.targets(for: WorkoutSetLocator(exerciseIndex: index, setIndex: nextSet.setIndex))
+      else { return nil }
+      let detail: String
+      if let seconds = nextTargets.durationSeconds {
+        detail = "\(seconds)s"
+      } else {
+        let weight = nextTargets.weightKg.formatted(
+          .number.precision(.fractionLength(0 ... 2)).locale(Locale(identifier: "es_ES"))
+        )
+        detail = "\(nextTargets.reps ?? 0) reps · \(weight) kg"
+      }
+      return WatchUpcomingExercise(
+        exerciseIndex: index,
+        exerciseID: candidate.exerciseID,
+        name: candidate.displayName,
+        detail: detail
+      )
+    }
+    let historyExercises = execution.session.exercises.enumerated().map { index, candidate in
+      WatchWorkoutHistoryExercise(
+        exerciseID: candidate.exerciseID,
+        name: candidate.displayName,
+        sets: candidate.sets.map { set in
+          let locator = WorkoutSetLocator(exerciseIndex: index, setIndex: set.setIndex)
+          let record = execution.records.first { $0.locator == locator }
+          let targets = record.flatMap(execution.targets(for:)) ?? execution.targets(for: locator)
+          return WatchWorkoutHistorySet(
+            setIndex: set.setIndex,
+            reps: targets?.reps,
+            weightKg: targets?.weightKg ?? 0,
+            durationSeconds: targets?.durationSeconds,
+            status: record?.status
+          )
+        }
+      )
+    }
 
     publish(
       WatchWorkoutState(
@@ -200,6 +273,11 @@ final class WatchWorkoutConnectivity: NSObject {
         weightKg: targets.weightKg,
         durationSeconds: targets.durationSeconds,
         restTotalSeconds: snapshot.restTotalSeconds,
+        countdownTotalSeconds: snapshot.warmupStatus == .running
+          ? snapshot.warmupRemaining
+          : snapshot.phase == .rest ? snapshot.restTotalSeconds : targets.durationSeconds,
+        upcomingExercises: upcomingExercises,
+        historyExercises: historyExercises,
         timerEndsAt: timerEndsAt
       )
     )
@@ -219,6 +297,17 @@ final class WatchWorkoutConnectivity: NSObject {
     let session = WCSession.default
     guard session.activationState == .activated else { return }
 
+    guard let data = encodedAppState() else { return }
+    UserDefaults.standard.set(data, forKey: Key.persistedAppState)
+    let context: [String: Any] = [Key.appState: data]
+
+    try? session.updateApplicationContext(context)
+    if session.isReachable {
+      session.sendMessage(context, replyHandler: nil, errorHandler: nil)
+    }
+  }
+
+  private func encodedAppState() -> Data? {
     let state = WatchWorkoutAppState(
       sessions: sessions,
       completedSessionIDs: completedSessionIDs,
@@ -228,14 +317,7 @@ final class WatchWorkoutConnectivity: NSObject {
       weekFocusLabel: weekFocusLabel,
       recommendedSessionID: recommendedSessionID
     )
-    guard let data = try? encoder.encode(state) else { return }
-    UserDefaults.standard.set(data, forKey: Key.persistedAppState)
-    let context: [String: Any] = [Key.appState: data]
-
-    try? session.updateApplicationContext(context)
-    if session.isReachable {
-      session.sendMessage(context, replyHandler: nil, errorHandler: nil)
-    }
+    return try? encoder.encode(state)
   }
 }
 
@@ -287,7 +369,11 @@ extension WatchWorkoutConnectivity: WCSessionDelegate {
       }
       let acknowledgement = self.apply(envelope)
       guard let encodedAcknowledgement = try? self.encoder.encode(acknowledgement) else { return }
-      replyHandler?([Key.workoutCommandAcknowledgement: encodedAcknowledgement])
+      var response: [String: Any] = [Key.workoutCommandAcknowledgement: encodedAcknowledgement]
+      if envelope.command == .requestState, let state = self.encodedAppState() {
+        response[Key.appState] = state
+      }
+      replyHandler?(response)
     }
   }
 
@@ -299,9 +385,16 @@ extension WatchWorkoutConnectivity: WCSessionDelegate {
 
     processedCommandDates[envelope.id] = .now
     persistProcessedCommands()
-    if envelope.command == .requestState {
+    switch envelope.command {
+    case .requestState:
+      stateRefreshHandler?()
       publishLatestStateIfPossible()
-    } else {
+    case let .watchHealthSessionStarted(sessionID):
+      WatchHealthWorkoutRegistry.markStarted(sessionID)
+    case let .watchHealthSessionFinished(sessionID, _):
+      WatchHealthWorkoutRegistry.markFinished(sessionID)
+      NotificationCenter.default.post(name: .watchHealthWorkoutFinished, object: envelope.command)
+    default:
       NotificationCenter.default.post(name: .watchWorkoutCommandReceived, object: envelope)
     }
     return WatchWorkoutCommandAcknowledgement(commandID: envelope.id, result: .applied)

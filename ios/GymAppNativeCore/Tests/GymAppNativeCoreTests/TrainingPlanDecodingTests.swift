@@ -75,18 +75,27 @@ struct TrainingPlanDecodingTests {
       "press-banca-inclinado": "Subir reps",
       "remo-inclinado-barra": "Mantener"
     ])
+    let healthStarted = WatchWorkoutCommand.watchHealthSessionStarted(sessionID: "session-1")
+    let healthFinished = WatchWorkoutCommand.watchHealthSessionFinished(
+      sessionID: "session-1",
+      healthWorkoutUUID: "B6A61F65-2922-4A1D-86B1-DF33C03B7BB1"
+    )
     let decodedStart = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(start))
     let decodedReplacement = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(replacement))
     let decodedEdit = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(edited))
     let decodedEquipment = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(equipment))
     let decodedFeedback = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(feedback))
     let decodedReview = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(review))
+    let decodedHealthStarted = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(healthStarted))
+    let decodedHealthFinished = try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(healthFinished))
     #expect(decodedStart == start)
     #expect(decodedReplacement == replacement)
     #expect(decodedEdit == edited)
     #expect(decodedEquipment == equipment)
     #expect(decodedFeedback == feedback)
     #expect(decodedReview == review)
+    #expect(decodedHealthStarted == healthStarted)
+    #expect(decodedHealthFinished == healthFinished)
 
     let state = WatchWorkoutState(
       sessionID: "session-1",
@@ -107,6 +116,30 @@ struct TrainingPlanDecodingTests {
       weightKg: 24,
       durationSeconds: nil,
       restTotalSeconds: 90,
+      countdownTotalSeconds: 540,
+      upcomingExercises: [
+        WatchUpcomingExercise(
+          exerciseIndex: 2,
+          exerciseID: "remo-inclinado-barra",
+          name: "Remo inclinado",
+          detail: "8 reps · 60 kg"
+        )
+      ],
+      historyExercises: [
+        WatchWorkoutHistoryExercise(
+          exerciseID: "press-banca-inclinado",
+          name: "Press banca inclinado",
+          sets: [
+            WatchWorkoutHistorySet(
+              setIndex: 1,
+              reps: 8,
+              weightKg: 24,
+              durationSeconds: nil,
+              status: .completed
+            )
+          ]
+        )
+      ],
       timerEndsAt: nil
     )
     let decodedState = try JSONDecoder().decode(
@@ -117,6 +150,9 @@ struct TrainingPlanDecodingTests {
     #expect(decodedState.equipmentOptions == [.barbell, .dumbbell])
     #expect(decodedState.trainingPhase == "descarga")
     #expect(decodedState.declaredDiscomforts == ["Hombro", "Muñeca"])
+    #expect(decodedState.countdownTotalSeconds == 540)
+    #expect(decodedState.upcomingExercises?.first?.exerciseID == "remo-inclinado-barra")
+    #expect(decodedState.historyExercises?.first?.sets.first?.status == .completed)
 
     var legacyPayload = try #require(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(state)) as? [String: Any]

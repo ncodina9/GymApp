@@ -3,7 +3,7 @@ import Foundation
 /// Compact, transport-safe view of the active session for the Apple Watch.
 /// The iPhone owns the mutable workout state; this is intentionally a snapshot.
 public struct WatchWorkoutState: Codable, Equatable, Sendable {
-  public static let schemaVersion = 11
+  public static let schemaVersion = 12
 
   public enum Phase: String, Codable, Sendable {
     case workingSet
@@ -39,6 +39,9 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
   public let weightKg: Double
   public let durationSeconds: Int?
   public let restTotalSeconds: Int
+  public let countdownTotalSeconds: Int?
+  public let upcomingExercises: [WatchUpcomingExercise]?
+  public let historyExercises: [WatchWorkoutHistoryExercise]?
   public let timerEndsAt: Date?
   public let updatedAt: Date
 
@@ -68,6 +71,9 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
     weightKg: Double,
     durationSeconds: Int?,
     restTotalSeconds: Int = 0,
+    countdownTotalSeconds: Int? = nil,
+    upcomingExercises: [WatchUpcomingExercise]? = nil,
+    historyExercises: [WatchWorkoutHistoryExercise]? = nil,
     timerEndsAt: Date?,
     updatedAt: Date = .now
   ) {
@@ -97,8 +103,65 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
     self.weightKg = weightKg
     self.durationSeconds = durationSeconds
     self.restTotalSeconds = restTotalSeconds
+    self.countdownTotalSeconds = countdownTotalSeconds
+    self.upcomingExercises = upcomingExercises
+    self.historyExercises = historyExercises
     self.timerEndsAt = timerEndsAt
     self.updatedAt = updatedAt
+  }
+}
+
+public struct WatchUpcomingExercise: Codable, Equatable, Sendable, Identifiable {
+  public let exerciseIndex: Int
+  public let exerciseID: String
+  public let name: String
+  public let detail: String
+
+  public var id: String { exerciseID }
+
+  public init(exerciseIndex: Int, exerciseID: String, name: String, detail: String) {
+    self.exerciseIndex = exerciseIndex
+    self.exerciseID = exerciseID
+    self.name = name
+    self.detail = detail
+  }
+}
+
+public struct WatchWorkoutHistoryExercise: Codable, Equatable, Sendable, Identifiable {
+  public let exerciseID: String
+  public let name: String
+  public let sets: [WatchWorkoutHistorySet]
+
+  public var id: String { exerciseID }
+
+  public init(exerciseID: String, name: String, sets: [WatchWorkoutHistorySet]) {
+    self.exerciseID = exerciseID
+    self.name = name
+    self.sets = sets
+  }
+}
+
+public struct WatchWorkoutHistorySet: Codable, Equatable, Sendable, Identifiable {
+  public let setIndex: Int
+  public let reps: Int?
+  public let weightKg: Double
+  public let durationSeconds: Int?
+  public let status: WorkoutSetStatus?
+
+  public var id: Int { setIndex }
+
+  public init(
+    setIndex: Int,
+    reps: Int?,
+    weightKg: Double,
+    durationSeconds: Int?,
+    status: WorkoutSetStatus?
+  ) {
+    self.setIndex = setIndex
+    self.reps = reps
+    self.weightKg = weightKg
+    self.durationSeconds = durationSeconds
+    self.status = status
   }
 }
 
@@ -200,15 +263,18 @@ public enum WatchWorkoutCommand: Codable, Sendable, Equatable {
   case selectEquipment(Equipment)
   case submitSetFeedback(WorkoutSetFeedback)
   case submitExerciseReview(decisions: [String: String])
+  case watchHealthSessionStarted(sessionID: String)
+  case watchHealthSessionFinished(sessionID: String, healthWorkoutUUID: String)
 
   private enum CodingKeys: String, CodingKey {
-    case kind, sessionID, exerciseIndex, startsWithWarmup, reps, weightKg, equipment, feedback, decisions
+    case kind, sessionID, exerciseIndex, startsWithWarmup, reps, weightKg, equipment, feedback, decisions, healthWorkoutUUID
   }
 
   private enum Kind: String, Codable {
     case requestState, startWorkout, startWarmup, prioritizeExercise, replaceActiveWorkout
     case addRest15, subtractRest15, continueAfterTimer, registerSet, skipSet
     case startTimedSet, pauseTimedSet, resetTimedSet, updateWorkingSet, selectEquipment, submitSetFeedback, submitExerciseReview
+    case watchHealthSessionStarted, watchHealthSessionFinished
   }
 
   public init(from decoder: Decoder) throws {
@@ -247,6 +313,13 @@ public enum WatchWorkoutCommand: Codable, Sendable, Equatable {
       self = .submitSetFeedback(try container.decode(WorkoutSetFeedback.self, forKey: .feedback))
     case .submitExerciseReview:
       self = .submitExerciseReview(decisions: try container.decode([String: String].self, forKey: .decisions))
+    case .watchHealthSessionStarted:
+      self = .watchHealthSessionStarted(sessionID: try container.decode(String.self, forKey: .sessionID))
+    case .watchHealthSessionFinished:
+      self = .watchHealthSessionFinished(
+        sessionID: try container.decode(String.self, forKey: .sessionID),
+        healthWorkoutUUID: try container.decode(String.self, forKey: .healthWorkoutUUID)
+      )
     }
   }
 
@@ -291,6 +364,13 @@ public enum WatchWorkoutCommand: Codable, Sendable, Equatable {
     case let .submitExerciseReview(decisions):
       try container.encode(Kind.submitExerciseReview, forKey: .kind)
       try container.encode(decisions, forKey: .decisions)
+    case let .watchHealthSessionStarted(sessionID):
+      try container.encode(Kind.watchHealthSessionStarted, forKey: .kind)
+      try container.encode(sessionID, forKey: .sessionID)
+    case let .watchHealthSessionFinished(sessionID, healthWorkoutUUID):
+      try container.encode(Kind.watchHealthSessionFinished, forKey: .kind)
+      try container.encode(sessionID, forKey: .sessionID)
+      try container.encode(healthWorkoutUUID, forKey: .healthWorkoutUUID)
     }
   }
 }

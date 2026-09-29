@@ -277,6 +277,9 @@ struct SetExecutionView: View {
       switch command {
       case .requestState:
         break
+      case .watchHealthSessionStarted, .watchHealthSessionFinished:
+        // HealthKit lifecycle events are consumed by WatchWorkoutConnectivity.
+        break
       case .startWorkout, .startWarmup:
         // These commands are resolved by the app-level Watch sync host before
         // an execution view exists.
@@ -616,7 +619,7 @@ struct SetExecutionView: View {
     reviewRestSeconds = 0
     exerciseDecisions = [:]
     warmupStatus = startsWithWarmup ? .running : .completed
-    let warmupSeconds = max(3, UserDefaults.standard.integer(forKey: "warmupMinutes")) * 60
+    let warmupSeconds = WarmupConfiguration.seconds
     warmupEndsAt = startsWithWarmup ? .now.addingTimeInterval(TimeInterval(warmupSeconds)) : nil
     warmupRemaining = startsWithWarmup ? warmupSeconds : 0
     startedAt = .now
