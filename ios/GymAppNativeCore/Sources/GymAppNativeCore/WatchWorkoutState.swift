@@ -3,7 +3,7 @@ import Foundation
 /// Compact, transport-safe view of the active session for the Apple Watch.
 /// The iPhone owns the mutable workout state; this is intentionally a snapshot.
 public struct WatchWorkoutState: Codable, Equatable, Sendable {
-  public static let schemaVersion = 10
+  public static let schemaVersion = 11
 
   public enum Phase: String, Codable, Sendable {
     case workingSet
@@ -17,6 +17,8 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
   public let sessionID: String
   public let workoutName: String
   public let exerciseName: String
+  public let trainingPhase: String?
+  public let weekFocusLabel: String?
   public let equipment: Equipment
   public let equipmentName: String
   public let equipmentOptions: [Equipment]?
@@ -27,6 +29,7 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
   public let reviewExercises: [WatchExerciseReviewItem]
   public let isFinalExerciseReview: Bool
   public let feedback: WorkoutSetFeedback
+  public let declaredDiscomforts: [String]?
   public let phase: Phase
   public let completedSetCount: Int
   public let totalSetCount: Int
@@ -43,6 +46,8 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
     sessionID: String,
     workoutName: String,
     exerciseName: String,
+    trainingPhase: String? = nil,
+    weekFocusLabel: String? = nil,
     equipment: Equipment,
     equipmentName: String,
     equipmentOptions: [Equipment]? = nil,
@@ -53,6 +58,7 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
     reviewExercises: [WatchExerciseReviewItem] = [],
     isFinalExerciseReview: Bool = false,
     feedback: WorkoutSetFeedback = .ok,
+    declaredDiscomforts: [String]? = nil,
     phase: Phase,
     completedSetCount: Int,
     totalSetCount: Int,
@@ -69,6 +75,8 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
     self.sessionID = sessionID
     self.workoutName = workoutName
     self.exerciseName = exerciseName
+    self.trainingPhase = trainingPhase
+    self.weekFocusLabel = weekFocusLabel
     self.equipment = equipment
     self.equipmentName = equipmentName
     self.equipmentOptions = equipmentOptions
@@ -79,6 +87,7 @@ public struct WatchWorkoutState: Codable, Equatable, Sendable {
     self.reviewExercises = reviewExercises
     self.isFinalExerciseReview = isFinalExerciseReview
     self.feedback = feedback
+    self.declaredDiscomforts = declaredDiscomforts
     self.phase = phase
     self.completedSetCount = completedSetCount
     self.totalSetCount = totalSetCount
@@ -136,13 +145,19 @@ public struct WatchWorkoutTheme: Codable, Equatable, Sendable {
 /// TrainingSession stays the source data so the preflight screen can show the
 /// actual first set without inventing a second planning model.
 public struct WatchWorkoutAppState: Codable, Sendable {
-  public static let schemaVersion = 1
+  public static let schemaVersion = 2
 
   public let schemaVersion: Int
   public let sessions: [TrainingSession]
   public let completedSessionIDs: [String]
   public let activeWorkout: WatchWorkoutState?
   public let theme: WatchWorkoutTheme
+  /// These values are selected by the iPhone's Today view. The Watch must not
+  /// infer them independently, because rescheduling and completed sessions can
+  /// make date-only selection disagree with the phone.
+  public let currentWeek: Int?
+  public let weekFocusLabel: String?
+  public let recommendedSessionID: String?
   public let updatedAt: Date
 
   public init(
@@ -150,6 +165,9 @@ public struct WatchWorkoutAppState: Codable, Sendable {
     completedSessionIDs: [String],
     activeWorkout: WatchWorkoutState?,
     theme: WatchWorkoutTheme,
+    currentWeek: Int? = nil,
+    weekFocusLabel: String? = nil,
+    recommendedSessionID: String? = nil,
     updatedAt: Date = .now
   ) {
     schemaVersion = Self.schemaVersion
@@ -157,6 +175,9 @@ public struct WatchWorkoutAppState: Codable, Sendable {
     self.completedSessionIDs = completedSessionIDs
     self.activeWorkout = activeWorkout
     self.theme = theme
+    self.currentWeek = currentWeek
+    self.weekFocusLabel = weekFocusLabel
+    self.recommendedSessionID = recommendedSessionID
     self.updatedAt = updatedAt
   }
 }

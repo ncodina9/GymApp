@@ -50,6 +50,7 @@ private struct WatchWorkoutSyncHost: View {
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
   @Query private var planRevisionRecords: [PlanRevisionRecord]
+  @Query private var trainingProfileRecords: [TrainingProfileRecord]
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
   @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
   @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
@@ -78,6 +79,7 @@ private struct WatchWorkoutSyncHost: View {
       .onChange(of: premiumSchemeRaw) { _, _ in synchronize() }
       .onChange(of: plan?.planID) { _, _ in synchronize() }
       .onChange(of: planRevisionRecords.map(\.updatedAt)) { _, _ in synchronize() }
+      .onChange(of: trainingProfileRecords.map(\.updatedAt)) { _, _ in synchronize() }
       .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutCommandReceived)) { notification in
         guard let envelope = notification.object as? WatchWorkoutCommandEnvelope else { return }
         if let handler = WatchWorkoutCommandRouter.shared.handler {
@@ -90,20 +92,25 @@ private struct WatchWorkoutSyncHost: View {
 
   private func synchronize() {
     let activeWorkout = ActiveWorkoutStore.load(from: activeWorkoutRecords)
+    let profile = TrainingProfileStore.load(from: trainingProfileRecords) ?? .initial
     let resolvedPlan = plan.map { PlanRevisionStore.resolvedPlan(basePlan: $0, records: planRevisionRecords) }
-    let sessions = todaySessions(
+    let catalog = watchCatalog(
       from: resolvedPlan,
       activeWorkout: activeWorkout,
       completedSessionIDs: Set(completedWorkoutRecords.map(\.sessionID))
     )
     WatchWorkoutConnectivity.shared.publishCatalog(
-      sessions: sessions,
+      sessions: catalog.sessions,
       completedSessionIDs: Set(completedWorkoutRecords.map(\.sessionID)),
       theme: WatchWorkoutTheme(
         appearance: resolvedWatchAppearance,
         accent: accentRaw,
         premiumScheme: premiumSchemeRaw.isEmpty ? nil : premiumSchemeRaw
-      )
+      ),
+      declaredDiscomforts: profile.declaredDiscomforts,
+      currentWeek: catalog.week,
+      weekFocusLabel: catalog.weekFocusLabel,
+      recommendedSessionID: catalog.recommendedSessionID
     )
     if let snapshot = activeWorkout {
       WatchWorkoutConnectivity.shared.publish(snapshot)
@@ -131,24 +138,42 @@ private struct WatchWorkoutSyncHost: View {
     plan = try? TrainingPlanLoader.decode(data: Data(contentsOf: url))
   }
 
-  private func todaySessions(
+  private func watchCatalog(
     from plan: TrainingPlan?,
     activeWorkout: ActiveWorkoutSnapshot?,
     completedSessionIDs: Set<String>
-  ) -> [TrainingSession] {
-    guard let plan else { return [] }
-    let recommended: TrainingSession?
-    if let activeWorkout {
-      recommended = activeWorkout.execution.session
-    } else {
-      let pending = plan.sessions
-        .filter { !$0.isCancelled && !completedSessionIDs.contains($0.sessionID) }
-        .sorted { $0.date < $1.date }
-      let today = Calendar.current.startOfDay(for: .now)
-      recommended = pending.first(where: { sessionDate($0) >= today }) ?? pending.first
+  ) -> WatchSessionCatalog {
+    guard let plan else { return .empty }
+    let scheduled = plan.sessions
+      .filter { !$0.isCancelled }
+      .sorted { $0.date < $1.date }
+    let today = Calendar.current.startOfDay(for: .now)
+    let scheduledWeek = scheduled.last(where: { sessionDate($0) <= today })?.week ?? scheduled.first?.week
+    let week = activeWorkout?.execution.session.week ?? scheduledWeek
+    guard let week else { return .empty }
+
+    var sessions = scheduled.filter { $0.week == week }
+    if let activeSession = activeWorkout?.execution.session,
+       let index = sessions.firstIndex(where: { $0.sessionID == activeSession.sessionID }) {
+      sessions[index] = activeSession
     }
-    guard let recommended else { return [] }
-    return plan.sessions.filter { $0.week == recommended.week && !$0.isCancelled }
+    let recommendedSessionID = activeWorkout?.execution.session.sessionID
+      ?? sessions.first(where: { !completedSessionIDs.contains($0.sessionID) })?.sessionID
+    return WatchSessionCatalog(
+      sessions: sessions,
+      week: week,
+      weekFocusLabel: activeWorkout?.execution.session.weekFocusLabel ?? sessions.first?.weekFocusLabel,
+      recommendedSessionID: recommendedSessionID
+    )
+  }
+
+  private struct WatchSessionCatalog {
+    let sessions: [TrainingSession]
+    let week: Int?
+    let weekFocusLabel: String?
+    let recommendedSessionID: String?
+
+    static let empty = Self(sessions: [], week: nil, weekFocusLabel: nil, recommendedSessionID: nil)
   }
 
   private func sessionDate(_ session: TrainingSession) -> Date {
@@ -287,11 +312,12 @@ private struct WatchWorkoutSyncHost: View {
     case let .submitSetFeedback(feedback):
       guard snapshot.phase == .feedback else { return }
       snapshot.feedback = ActiveWorkoutFeedbackDraft(
-        rir: feedback.rir ?? 2,
+        rir: feedback.rir ?? recommendedRIR(for: snapshot),
         painKnee: feedback.painKnee,
         painWrist: feedback.painWrist,
         painShoulder: feedback.painShoulder,
         painLowerBack: feedback.painLowerBack,
+        declaredDiscomfortLevels: feedback.declaredDiscomfortLevels,
         note: feedback.note
       )
       register(snapshot: &snapshot, skipped: false, feedback: feedback)
@@ -315,6 +341,7 @@ private struct WatchWorkoutSyncHost: View {
     else { return }
     let isTimed = snapshot.execution.trainingSet(for: current)?.type == .timed
     if isTimed, snapshot.setTimerEndsAt.map({ $0 > .now }) != false { return }
+    snapshot.feedback.rir = recommendedRIR(for: snapshot)
     snapshot.phase = .feedback
     save(snapshot)
   }
@@ -337,13 +364,14 @@ private struct WatchWorkoutSyncHost: View {
           painWrist: feedback.painWrist,
           painShoulder: feedback.painShoulder,
           painLowerBack: feedback.painLowerBack,
+          declaredDiscomfortLevels: feedback.declaredDiscomfortLevels,
           note: feedback.note
         ))
     guard let advance else { return }
     snapshot.setTimerEndsAt = nil
     snapshot.setTimerRemaining = 0
     snapshot.feedback = ActiveWorkoutFeedbackDraft(
-      rir: 2,
+      rir: recommendedRIR(for: snapshot),
       painKnee: 0,
       painWrist: 0,
       painShoulder: 0,
@@ -391,6 +419,11 @@ private struct WatchWorkoutSyncHost: View {
   private func save(_ snapshot: ActiveWorkoutSnapshot) {
     ActiveWorkoutStore.save(snapshot, in: modelContext)
     WatchWorkoutConnectivity.shared.publish(snapshot)
+  }
+
+  private func recommendedRIR(for snapshot: ActiveWorkoutSnapshot) -> Int {
+    let phase = snapshot.execution.current.flatMap { snapshot.execution.exercise(for: $0)?.phase } ?? ""
+    return TrainingPhaseCoaching.effort(for: phase).defaultRIR
   }
 
   private func finish(_ snapshot: ActiveWorkoutSnapshot) {

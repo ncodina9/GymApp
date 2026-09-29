@@ -58,6 +58,9 @@ struct ContentView: View {
           sessions: connectivity.appState.sessions,
           completedSessionIDs: Set(connectivity.appState.completedSessionIDs),
           theme: connectivity.appState.theme,
+          currentWeek: connectivity.appState.currentWeek,
+          weekFocusLabel: connectivity.appState.weekFocusLabel,
+          recommendedSessionID: connectivity.appState.recommendedSessionID,
           activeWorkout: connectivity.workout,
           isSendingAction: connectivity.isSendingAction,
           onCommand: connectivity.send,
@@ -120,19 +123,13 @@ private struct WatchTrainingList: View {
   let sessions: [TrainingSession]
   let completedSessionIDs: Set<String>
   let theme: WatchWorkoutTheme
+  let currentWeek: Int?
+  let weekFocusLabel: String?
+  let recommendedSessionID: String?
   let activeWorkout: WatchWorkoutState?
   let isSendingAction: Bool
   let onCommand: (WatchWorkoutCommand) -> Void
   let onResume: () -> Void
-
-  private var recommendedSessionID: String? {
-    guard activeWorkout == nil else { return nil }
-    let today = Calendar.current.startOfDay(for: .now)
-    let pending = sessions
-      .filter { !completedSessionIDs.contains($0.sessionID) }
-      .sorted { $0.date < $1.date }
-    return (pending.first { Self.sessionDate($0) >= today } ?? pending.first)?.sessionID
-  }
 
   var body: some View {
     let palette = WatchPalette(theme: theme)
@@ -145,7 +142,7 @@ private struct WatchTrainingList: View {
             description: Text("No hay entrenamientos pendientes en el iPhone."))
             .listRowBackground(Color.clear)
         } else {
-          Section("Entrenamientos") {
+          Section(weekFocusLabel ?? "Entrenamientos") {
             ForEach(sessions) { session in
               if activeWorkout?.sessionID == session.sessionID {
                 Button(action: onResume) {
@@ -181,20 +178,15 @@ private struct WatchTrainingList: View {
             }
           }
         }
+        WatchConnectivityDiagnostics()
+          .listRowBackground(Color.clear)
       }
-      .navigationTitle("Entrenar")
+      .navigationTitle(currentWeek.map { "Semana \($0)" } ?? "Entrenar")
       .tint(palette.accent)
       .scrollContentBackground(.hidden)
       .background(palette.canvas)
       .foregroundStyle(palette.primaryText)
     }
-  }
-
-  private static func sessionDate(_ session: TrainingSession) -> Date {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.dateFormat = "yyyy-MM-dd"
-    return formatter.date(from: session.date) ?? .distantPast
   }
 }
 
@@ -214,7 +206,7 @@ private struct WatchTrainingRow: View {
         Text(session.label)
           .font(.watchH2)
           .lineLimit(2)
-        Text("Semana \(session.week) · \(session.estimatedMinutes) min")
+        Text("\(SessionDurationEstimator.estimate(for: session).totalMinutes) min")
           .font(.watchSupport)
           .foregroundStyle(secondaryText)
       }
@@ -241,6 +233,55 @@ private enum WatchTrainingStatus {
     case .recommended: accent
     case .inProgress: .orange
     case .completed: .green
+    }
+  }
+}
+
+private struct WatchConnectivityDiagnostics: View {
+  @EnvironmentObject private var connectivity: WatchWorkoutConnectivity
+
+  private var transportLabel: String {
+    connectivity.isPhoneReachable ? "iPhone disponible" : "iPhone no accesible"
+  }
+
+  private var actionLabel: String {
+    if connectivity.hasQueuedAction { return "Acción en cola" }
+    if connectivity.pendingCommand != nil { return "Confirmando acción" }
+    return "Sin acciones pendientes"
+  }
+
+  var body: some View {
+    Section("Diagnóstico") {
+      VStack(alignment: .leading, spacing: 5) {
+        Label(transportLabel, systemImage: connectivity.isPhoneReachable ? "iphone" : "iphone.slash")
+          .font(.watchSupport.weight(.semibold))
+        Text(connectivity.connectionStatus)
+          .font(.watchSupport)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      .padding(.vertical, 2)
+
+      LabeledContent("Última sincronización") {
+        if let date = connectivity.lastStateReceivedAt {
+          Text(date, style: .relative)
+        } else {
+          Text("Pendiente")
+        }
+      }
+      .font(.watchSupport)
+
+      LabeledContent("Estado de acción") {
+        Text(actionLabel)
+      }
+      .font(.watchSupport)
+
+      Button {
+        connectivity.requestState()
+      } label: {
+        Label("Actualizar", systemImage: "arrow.clockwise")
+      }
+      .disabled(!connectivity.isPhoneReachable || connectivity.isSendingAction)
     }
   }
 }
@@ -307,7 +348,7 @@ private struct WatchSessionPreview: View {
             .font(.watchSupport)
             .foregroundStyle(palette.secondaryText)
           Text(session.label).font(.watchH2)
-          Text("\(session.exercises.count) ejercicios · \(session.estimatedMinutes) min")
+          Text("\(session.exercises.count) ejercicios · \(SessionDurationEstimator.estimate(for: session).totalMinutes) min")
             .font(.watchSupport)
             .foregroundStyle(palette.secondaryText)
         }
@@ -665,6 +706,7 @@ private struct WatchFeedbackView: View {
   @State private var painWrist: Int
   @State private var painShoulder: Int
   @State private var painLowerBack: Int
+  @State private var declaredDiscomfortLevels: [String: Int]
   @State private var selectedPage = 0
 
   init(
@@ -683,36 +725,36 @@ private struct WatchFeedbackView: View {
     _painWrist = State(initialValue: workout.feedback.painWrist)
     _painShoulder = State(initialValue: workout.feedback.painShoulder)
     _painLowerBack = State(initialValue: workout.feedback.painLowerBack)
+    _declaredDiscomfortLevels = State(initialValue: workout.feedback.declaredDiscomfortLevels)
   }
 
   private var isTimed: Bool { workout.durationSeconds != nil }
+  private var declaredDiscomforts: [String] { workout.declaredDiscomforts ?? [] }
+  private var notePage: Int { isTimed ? 0 : 1 }
+  private var finalPage: Int { notePage + declaredDiscomforts.count }
 
   private var showsRegisterButton: Bool {
-    selectedPage == (isTimed ? 1 : 0)
+    selectedPage == finalPage
   }
 
   var body: some View {
     WatchBottomBarLayout(footerOffset: WatchBottomBarMetrics.pagedFooterOffset) {
       TabView(selection: $selectedPage) {
         if !isTimed {
-          WatchRIRFeedbackPage(rir: $rir, palette: palette)
+          WatchRIRFeedbackPage(rir: $rir, trainingPhase: workout.trainingPhase, palette: palette)
             .tag(0)
         }
 
         WatchFeedbackNotePage(note: $note, palette: palette)
-          .tag(1)
-        WatchPainFeedbackPage(area: .knee, value: $painKnee, palette: palette)
-          .tag(2)
-        WatchPainFeedbackPage(area: .wrist, value: $painWrist, palette: palette)
-          .tag(3)
-        WatchPainFeedbackPage(area: .shoulder, value: $painShoulder, palette: palette)
-          .tag(4)
-        WatchPainFeedbackPage(
-          area: .lowerBack,
-          value: $painLowerBack,
-          palette: palette
-        )
-        .tag(5)
+          .tag(notePage)
+        ForEach(Array(declaredDiscomforts.enumerated()), id: \.element) { index, discomfort in
+          WatchDeclaredDiscomfortPage(
+            label: discomfort,
+            value: discomfortBinding(for: discomfort),
+            palette: palette
+          )
+          .tag(notePage + index + 1)
+        }
       }
       .tabViewStyle(.verticalPage)
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -740,8 +782,23 @@ private struct WatchFeedbackView: View {
       painWrist: painWrist,
       painShoulder: painShoulder,
       painLowerBack: painLowerBack,
+      declaredDiscomfortLevels: declaredDiscomfortLevels,
       note: note
     )))
+  }
+
+  private func discomfortBinding(for discomfort: String) -> Binding<Int> {
+    switch discomfort.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current) {
+    case "rodilla": $painKnee
+    case "muneca": $painWrist
+    case "hombro": $painShoulder
+    case "lumbar": $painLowerBack
+    default:
+      Binding(
+        get: { declaredDiscomfortLevels[discomfort] ?? 0 },
+        set: { declaredDiscomfortLevels[discomfort] = $0 }
+      )
+    }
   }
 }
 
@@ -912,11 +969,16 @@ private struct WatchExerciseReviewOption: Identifiable {
 
 private struct WatchRIRFeedbackPage: View {
   @Binding var rir: Int
+  let trainingPhase: String?
   let palette: WatchPalette
+
+  private var effort: TrainingPhaseEffort {
+    TrainingPhaseCoaching.effort(for: trainingPhase ?? "")
+  }
 
   var body: some View {
     VStack(spacing: 12) {
-      Text("RIR")
+      Text("RIR \(effort.rangeLabel)")
         .font(.watchH2)
       HStack(spacing: 12) {
         Button { rir = max(0, rir - 1) } label: {
@@ -978,27 +1040,14 @@ private struct WatchFeedbackNotePage: View {
   }
 }
 
-private enum WatchPainArea: CaseIterable {
-  case knee, wrist, shoulder, lowerBack
-
-  var label: String {
-    switch self {
-    case .knee: "Rodilla"
-    case .wrist: "Muñeca"
-    case .shoulder: "Hombro"
-    case .lowerBack: "Lumbar"
-    }
-  }
-}
-
-private struct WatchPainFeedbackPage: View {
-  let area: WatchPainArea
+private struct WatchDeclaredDiscomfortPage: View {
+  let label: String
   @Binding var value: Int
   let palette: WatchPalette
 
   var body: some View {
     VStack(spacing: 12) {
-      Text(area.label)
+      Text(label)
         .font(.watchH2)
       HStack(spacing: 6) {
         ForEach(0 ... 3, id: \.self) { level in

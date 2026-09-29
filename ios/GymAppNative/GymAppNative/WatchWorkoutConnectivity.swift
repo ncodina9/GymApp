@@ -24,6 +24,7 @@ final class WatchWorkoutConnectivity: NSObject {
     static let workoutCommandEnvelope = "workoutCommandEnvelope"
     static let workoutCommandAcknowledgement = "workoutCommandAcknowledgement"
     static let persistedAppState = "watchPersistedAppState"
+    static let processedCommandDates = "watchProcessedCommandDates"
   }
 
   private let encoder = JSONEncoder()
@@ -33,6 +34,10 @@ final class WatchWorkoutConnectivity: NSObject {
   private var sessions: [TrainingSession] = []
   private var completedSessionIDs: [String] = []
   private var theme = WatchWorkoutTheme(appearance: "system", accent: "blue")
+  private var declaredDiscomforts: [String] = []
+  private var currentWeek: Int?
+  private var weekFocusLabel: String?
+  private var recommendedSessionID: String?
   private var processedCommandDates: [UUID: Date] = [:]
 
   private override init() {
@@ -43,6 +48,16 @@ final class WatchWorkoutConnectivity: NSObject {
       sessions = persisted.sessions
       completedSessionIDs = persisted.completedSessionIDs
       theme = persisted.theme
+      currentWeek = persisted.currentWeek
+      weekFocusLabel = persisted.weekFocusLabel
+      recommendedSessionID = persisted.recommendedSessionID
+    }
+    if let persistedDates = UserDefaults.standard.dictionary(forKey: Key.processedCommandDates) as? [String: Date] {
+      processedCommandDates = persistedDates.reduce(into: [:]) { result, entry in
+        guard let id = UUID(uuidString: entry.key) else { return }
+        result[id] = entry.value
+      }
+      pruneProcessedCommands()
     }
   }
 
@@ -63,11 +78,19 @@ final class WatchWorkoutConnectivity: NSObject {
   func publishCatalog(
     sessions: [TrainingSession],
     completedSessionIDs: Set<String>,
-    theme: WatchWorkoutTheme
+    theme: WatchWorkoutTheme,
+    declaredDiscomforts: [String],
+    currentWeek: Int?,
+    weekFocusLabel: String?,
+    recommendedSessionID: String?
   ) {
     self.sessions = sessions
     self.completedSessionIDs = Array(completedSessionIDs).sorted()
     self.theme = theme
+    self.declaredDiscomforts = declaredDiscomforts
+    self.currentWeek = currentWeek
+    self.weekFocusLabel = weekFocusLabel
+    self.recommendedSessionID = recommendedSessionID
     activate()
     publishLatestStateIfPossible()
   }
@@ -147,6 +170,8 @@ final class WatchWorkoutConnectivity: NSObject {
         sessionID: execution.session.sessionID,
         workoutName: execution.session.label,
         exerciseName: exercise.displayName,
+        trainingPhase: exercise.phase,
+        weekFocusLabel: execution.session.weekFocusLabel,
         equipment: execution.equipment(for: locator) ?? exercise.equipment,
         equipmentName: (execution.equipment(for: locator) ?? exercise.equipment).executionLabel,
         equipmentOptions: selectableEquipment,
@@ -162,8 +187,10 @@ final class WatchWorkoutConnectivity: NSObject {
           painWrist: snapshot.feedback.painWrist,
           painShoulder: snapshot.feedback.painShoulder,
           painLowerBack: snapshot.feedback.painLowerBack,
+          declaredDiscomfortLevels: snapshot.feedback.declaredDiscomfortLevels,
           note: snapshot.feedback.note
         ),
+        declaredDiscomforts: declaredDiscomforts,
         phase: phase,
         completedSetCount: execution.completedSetCount,
         totalSetCount: execution.totalSetCount,
@@ -196,7 +223,10 @@ final class WatchWorkoutConnectivity: NSObject {
       sessions: sessions,
       completedSessionIDs: completedSessionIDs,
       activeWorkout: latestState,
-      theme: theme
+      theme: theme,
+      currentWeek: currentWeek,
+      weekFocusLabel: weekFocusLabel,
+      recommendedSessionID: recommendedSessionID
     )
     guard let data = try? encoder.encode(state) else { return }
     UserDefaults.standard.set(data, forKey: Key.persistedAppState)
@@ -242,6 +272,10 @@ extension WatchWorkoutConnectivity: WCSessionDelegate {
     receive(commandFrom: applicationContext, replyHandler: nil)
   }
 
+  nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+    receive(commandFrom: userInfo, replyHandler: nil)
+  }
+
   private nonisolated func receive(
     commandFrom payload: [String: Any],
     replyHandler: (([String: Any]) -> Void)?
@@ -264,6 +298,7 @@ extension WatchWorkoutConnectivity: WCSessionDelegate {
     }
 
     processedCommandDates[envelope.id] = .now
+    persistProcessedCommands()
     if envelope.command == .requestState {
       publishLatestStateIfPossible()
     } else {
@@ -273,7 +308,15 @@ extension WatchWorkoutConnectivity: WCSessionDelegate {
   }
 
   private func pruneProcessedCommands() {
-    let cutoff = Date.now.addingTimeInterval(-300)
+    let cutoff = Date.now.addingTimeInterval(-86_400)
     processedCommandDates = processedCommandDates.filter { $0.value >= cutoff }
+    persistProcessedCommands()
+  }
+
+  private func persistProcessedCommands() {
+    UserDefaults.standard.set(
+      Dictionary(uniqueKeysWithValues: processedCommandDates.map { ($0.key.uuidString, $0.value) }),
+      forKey: Key.processedCommandDates
+    )
   }
 }

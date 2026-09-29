@@ -3,6 +3,39 @@ import Testing
 @testable import GymAppNativeCore
 
 struct TrainingPlanDecodingTests {
+  @Test("Ajusta el RIR recomendado a la fase de la semana")
+  func recommendsRIRByTrainingPhase() {
+    #expect(TrainingPhaseCoaching.effort(for: "descarga").defaultRIR == 3)
+    #expect(TrainingPhaseCoaching.effort(for: "readaptación").rangeLabel == "3-4")
+    #expect(TrainingPhaseCoaching.effort(for: "acumulacion").defaultRIR == 2)
+    #expect(TrainingPhaseCoaching.effort(for: "intensificación").defaultRIR == 1)
+    #expect(TrainingPhaseCoaching.effort(for: "realización").cue.contains("prescripción"))
+  }
+
+  @Test("Acota la compatibilidad a las próximas sesiones relevantes")
+  func limitsProfileCompatibilityHorizon() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let constraints = PlanningConstraints(
+      availableWeekdays: Set(1 ... 7),
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 30,
+      referenceDate: try #require(isoDate("2026-01-01"))
+    )
+    let issues = PlanningProfileCompatibility.issues(
+      in: plan,
+      constraints: constraints,
+      maximumUpcomingSessions: 1
+    )
+    let sessionIDs = Set(issues.map { issue -> String in
+      switch issue {
+      case let .duration(sessionID, _, _), let .unavailableEquipment(sessionID, _),
+           let .restrictedExercise(sessionID, _), let .superset(sessionID),
+           let .caution(sessionID, _): sessionID
+      }
+    })
+    #expect(sessionIDs.count == 1)
+  }
+
   @Test("Codifica órdenes del Watch con acuse y deduplicación")
   func encodesWatchCommandEnvelope() throws {
     let id = UUID()
@@ -59,9 +92,12 @@ struct TrainingPlanDecodingTests {
       sessionID: "session-1",
       workoutName: "Torso fuerza",
       exerciseName: "Press banca inclinado",
+      trainingPhase: "descarga",
+      weekFocusLabel: "Descarga técnica",
       equipment: .dumbbell,
       equipmentName: "Mancuernas",
       equipmentOptions: [.barbell, .dumbbell],
+      declaredDiscomforts: ["Hombro", "Muñeca"],
       phase: .workingSet,
       completedSetCount: 3,
       totalSetCount: 20,
@@ -79,6 +115,38 @@ struct TrainingPlanDecodingTests {
     )
     #expect(decodedState.equipment == .dumbbell)
     #expect(decodedState.equipmentOptions == [.barbell, .dumbbell])
+    #expect(decodedState.trainingPhase == "descarga")
+    #expect(decodedState.declaredDiscomforts == ["Hombro", "Muñeca"])
+
+    var legacyPayload = try #require(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(state)) as? [String: Any]
+    )
+    legacyPayload.removeValue(forKey: "trainingPhase")
+    legacyPayload.removeValue(forKey: "weekFocusLabel")
+    legacyPayload.removeValue(forKey: "declaredDiscomforts")
+    let legacyState = try JSONDecoder().decode(
+      WatchWorkoutState.self,
+      from: JSONSerialization.data(withJSONObject: legacyPayload)
+    )
+    #expect(legacyState.trainingPhase == nil)
+    #expect(legacyState.declaredDiscomforts == nil)
+
+    let appState = WatchWorkoutAppState(
+      sessions: [],
+      completedSessionIDs: [],
+      activeWorkout: state,
+      theme: WatchWorkoutTheme(appearance: "dark", accent: "blue"),
+      currentWeek: 4,
+      weekFocusLabel: "Descarga técnica",
+      recommendedSessionID: "session-1"
+    )
+    let decodedAppState = try JSONDecoder().decode(
+      WatchWorkoutAppState.self,
+      from: JSONEncoder().encode(appState)
+    )
+    #expect(decodedAppState.currentWeek == 4)
+    #expect(decodedAppState.weekFocusLabel == "Descarga técnica")
+    #expect(decodedAppState.recommendedSessionID == "session-1")
   }
 
   @Test("Decodifica el plan de producción compartido")

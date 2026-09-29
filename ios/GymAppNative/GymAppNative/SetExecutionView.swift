@@ -346,12 +346,19 @@ struct SetExecutionView: View {
   }
 
   private func move(to newPhase: ExecutionPhase, direction: FlowDirection) {
+    if newPhase == .feedback {
+      feedbackRir = recommendedRIRForCurrentExercise
+    }
     withAnimation(.smooth(duration: 0.3)) {
       transitionOrigin = phase
       transitionDirection = direction
       phase = newPhase
     }
     persistActiveWorkout()
+  }
+
+  private var recommendedRIRForCurrentExercise: Int {
+    TrainingPhaseCoaching.effort(for: execution.current.flatMap { execution.exercise(for: $0)?.phase } ?? "").defaultRIR
   }
 
   private func persistActiveWorkout() {
@@ -545,7 +552,7 @@ struct SetExecutionView: View {
       return
     }
 
-    feedbackRir = 2
+    feedbackRir = recommendedRIRForCurrentExercise
     feedbackPainKnee = 0
     feedbackPainWrist = 0
     feedbackPainShoulder = 0
@@ -595,7 +602,7 @@ struct SetExecutionView: View {
 
     execution = replacementExecution
     session = replacement
-    feedbackRir = 2
+    feedbackRir = recommendedRIRForCurrentExercise
     feedbackPainKnee = 0
     feedbackPainWrist = 0
     feedbackPainShoulder = 0
@@ -812,6 +819,7 @@ private struct WorkingSetView: View {
 
           ExerciseCoachCueCard(
             exercise: exercise,
+            weekFocus: execution.session.weekFocusLabel,
             onLongPress: {
               withAnimation(.smooth(duration: 0.2)) { isCoachGuidancePresented = true }
             }
@@ -845,6 +853,7 @@ private struct WorkingSetView: View {
           if isCoachGuidancePresented {
             ExerciseCoachGuidanceOverlay(
               exercise: exercise,
+              weekFocus: execution.session.weekFocusLabel,
               onDismiss: {
                 withAnimation(.smooth(duration: 0.18)) { isCoachGuidancePresented = false }
               }
@@ -989,6 +998,7 @@ private enum SetEditField: String, Identifiable {
 
 private struct ExerciseCoachCueCard: View {
   let exercise: TrainingExercise
+  let weekFocus: String
   let onLongPress: () -> Void
 
   var body: some View {
@@ -998,7 +1008,7 @@ private struct ExerciseCoachCueCard: View {
         .foregroundStyle(Color.gymAccent)
         .frame(width: 24)
 
-      Text(ExerciseCoachGuidance(exercise: exercise).summary)
+      Text(ExerciseCoachGuidance(exercise: exercise, weekFocus: weekFocus).summary)
         .font(.gymBody)
         .foregroundStyle(Color.gymSecondaryText)
         .multilineTextAlignment(.leading)
@@ -1018,9 +1028,10 @@ private struct ExerciseCoachCueCard: View {
 
 private struct ExerciseCoachGuidanceOverlay: View {
   let exercise: TrainingExercise
+  let weekFocus: String
   let onDismiss: () -> Void
 
-  private var guidance: ExerciseCoachGuidance { ExerciseCoachGuidance(exercise: exercise) }
+  private var guidance: ExerciseCoachGuidance { ExerciseCoachGuidance(exercise: exercise, weekFocus: weekFocus) }
 
   var body: some View {
     ZStack {
@@ -1046,6 +1057,9 @@ private struct ExerciseCoachGuidanceOverlay: View {
         Text(guidance.fullGuidance)
           .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
+        Text(weekFocus)
+          .font(.gymSupport.weight(.semibold))
+          .foregroundStyle(Color.gymAccent)
         Text("Objetivo")
           .font(.gymSupport.weight(.bold))
           .foregroundStyle(Color.gymAccent)
@@ -1069,12 +1083,15 @@ private struct ExerciseCoachGuidanceOverlay: View {
 
 private struct ExerciseCoachGuidance {
   let exercise: TrainingExercise
+  let weekFocus: String
 
-  var summary: String { "\(technicalGuidance) Objetivo: \(trainingGoal)" }
+  private var effort: TrainingPhaseEffort { TrainingPhaseCoaching.effort(for: exercise.phase) }
+
+  var summary: String { "\(technicalGuidance) \(effort.cue)" }
 
   var fullGuidance: String {
     let variation = variationName.map { "Variación: \($0). " } ?? ""
-    return "\(technicalGuidance) \(variation)"
+    return "\(technicalGuidance) \(effort.cue) \(variation)"
   }
 
   var trainingGoal: String {
@@ -1126,8 +1143,15 @@ private struct ExerciseCoachGuidance {
     let sentences = exercise.notes
       .split(separator: ".")
       .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-      .filter { !$0.isEmpty && !$0.localizedCaseInsensitiveContains("reps") }
-    return (sentences.isEmpty ? [exercise.notes] : sentences).joined(separator: ". ")
+      .filter {
+        !$0.isEmpty
+          && !$0.localizedCaseInsensitiveContains("reps")
+          && !$0.localizedCaseInsensitiveContains("rir")
+          && !$0.localizedCaseInsensitiveContains("recámara")
+      }
+    return sentences.isEmpty
+      ? "Prioriza un recorrido controlado y una técnica estable en cada repetición"
+      : sentences.joined(separator: ". ")
   }
 
   private nonisolated static func muscleLabel(_ rawValue: String) -> String {
@@ -1163,6 +1187,9 @@ private struct FeedbackView: View {
   private var targets: WorkoutSetTargets? { execution.targets(for: locator) }
   private var equipment: Equipment { execution.equipment(for: locator) ?? exercise?.equipment ?? .barbell }
   private var isTimed: Bool { trainingSet?.type == .timed }
+  private var phaseEffort: TrainingPhaseEffort {
+    TrainingPhaseCoaching.effort(for: exercise?.phase ?? "")
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -1196,7 +1223,7 @@ private struct FeedbackView: View {
 
       VStack(spacing: 10) {
         if !isTimed {
-          FeedbackStepper(label: "RIR", value: $rir, range: 0 ... 5)
+          FeedbackStepper(label: "RIR \(phaseEffort.rangeLabel)", value: $rir, range: 0 ... 5)
         }
         if !declaredDiscomforts.isEmpty {
           PainFeedbackBlock(

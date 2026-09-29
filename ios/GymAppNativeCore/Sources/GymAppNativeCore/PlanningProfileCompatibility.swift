@@ -19,15 +19,31 @@ public enum PlanningProfileIssue: Equatable, Sendable, Identifiable {
 }
 
 public enum PlanningProfileCompatibility {
-  /// Reports future plan/profile mismatches without modifying the plan or producing a revision.
-  public static func issues(in plan: TrainingPlan, constraints: PlanningConstraints) -> [PlanningProfileIssue] {
+  /// Reports the next relevant plan/profile mismatches without modifying the
+  /// plan or producing a revision. A bounded horizon keeps the result useful
+  /// for an athlete and avoids rendering an entire macrocycle as warnings.
+  public static func issues(
+    in plan: TrainingPlan,
+    constraints: PlanningConstraints,
+    maximumUpcomingSessions: Int? = nil
+  ) -> [PlanningProfileIssue] {
     let today = Calendar.current.startOfDay(for: constraints.referenceDate)
-    return plan.sessions
+    let upcomingSessions = plan.sessions
       .filter { !$0.isCancelled }
       .filter { session in
         guard let date = date(from: session.date) else { return false }
         return Calendar.current.startOfDay(for: date) >= today
       }
+      .sorted { $0.date < $1.date }
+
+    let scopedSessions: ArraySlice<TrainingSession>
+    if let maximumUpcomingSessions {
+      scopedSessions = upcomingSessions.prefix(max(0, maximumUpcomingSessions))
+    } else {
+      scopedSessions = ArraySlice(upcomingSessions)
+    }
+
+    return scopedSessions
       .flatMap { session in
         var result: [PlanningProfileIssue] = []
         if constraints.maxSessionMinutes > 0, session.estimatedMinutes > constraints.maxSessionMinutes {

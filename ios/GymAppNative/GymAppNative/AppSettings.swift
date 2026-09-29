@@ -1069,18 +1069,33 @@ private struct ProfilePlanCompatibilityView: View {
   let plan: TrainingPlan
   let profile: TrainingProfile
   @Environment(\.dismiss) private var dismiss
+  private let reviewHorizon = 3
 
   private var issues: [PlanningProfileIssue] {
     PlanningProfileCompatibility.issues(
       in: plan,
-      constraints: profile.planningConstraints(activeSessionID: nil, completedSessionIDs: [])
+      constraints: profile.planningConstraints(activeSessionID: nil, completedSessionIDs: []),
+      maximumUpcomingSessions: reviewHorizon
     )
+  }
+
+  private var cautionExerciseSummaries: [String] {
+    var result: [String] = []
+    for issue in cautionIssues {
+      guard let session = plan.sessions.first(where: { $0.sessionID == issue.sessionID }),
+            let exerciseID = issue.exerciseID,
+            let exercise = session.exercises.first(where: { $0.exerciseID == exerciseID })
+      else { continue }
+      let summary = "\(session.weekday) · \(exercise.displayName)"
+      if !result.contains(summary) { result.append(summary) }
+    }
+    return result
   }
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
-        Text("Esta revisión no cambia el plan. Las correcciones se convierten siempre en una propuesta que debes aceptar.")
+        Text("Revisa las próximas \(reviewHorizon) sesiones. Las molestias orientan la ejecución; solo las lesiones y restricciones reales bloquean cambios del plan.")
           .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
 
@@ -1088,13 +1103,15 @@ private struct ProfilePlanCompatibilityView: View {
           ContentUnavailableView(
             "Perfil compatible",
             systemImage: "checkmark.seal.fill",
-            description: Text("Las sesiones futuras respetan el material, la duración y las restricciones actuales."))
+            description: Text("Las próximas sesiones respetan el material, la duración y las restricciones actuales."))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 32)
         } else {
           SettingsCategory(title: "Requiere revisión") {
             ForEach(blockingIssues) { issue in
               ProfilePlanIssueRow(issue: issue, session: plan.sessions.first(where: { $0.sessionID == issue.sessionID }))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
               if issue.id != blockingIssues.last?.id { SettingsDivider() }
             }
           }
@@ -1102,15 +1119,31 @@ private struct ProfilePlanCompatibilityView: View {
 
         if !cautionIssues.isEmpty {
           SettingsCategory(title: "Precauciones de ejecución") {
-            ForEach(cautionIssues) { issue in
-              ProfilePlanIssueRow(issue: issue, session: plan.sessions.first(where: { $0.sessionID == issue.sessionID }))
-              if issue.id != cautionIssues.last?.id { SettingsDivider() }
+            VStack(alignment: .leading, spacing: 12) {
+              Label("No bloquean estos ejercicios", systemImage: "figure.strengthtraining.functional")
+                .font(.gymH3.weight(.bold))
+                .foregroundStyle(Color.gymAccent)
+              Text("Con molestias declaradas, mantén el rango sin dolor, una técnica estable y el RIR recomendado por la fase. Registra la intensidad real al terminar la serie.")
+                .font(.gymBody)
+                .foregroundStyle(Color.gymSecondaryText)
+              ForEach(cautionExerciseSummaries.prefix(3), id: \.self) { summary in
+                Text(summary)
+                  .font(.gymSupport.weight(.semibold))
+                  .foregroundStyle(Color.gymSecondaryText)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+              }
+              if cautionExerciseSummaries.count > 3 {
+                Text("Y \(cautionExerciseSummaries.count - 3) ejercicios próximos con la misma precaución.")
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+              }
             }
+            .padding(16)
           }
         }
 
         if !issues.isEmpty {
-          Text("Usa Simular propuesta o Hablar con el entrenador para preparar una revisión futura. Las sesiones en curso y ya realizadas nunca se modifican.")
+          Text("Usa el Entrenador para preparar una revisión futura. Las sesiones en curso y ya realizadas nunca se modifican.")
             .font(.gymSupport)
             .foregroundStyle(Color.gymSecondaryText)
         }
@@ -1357,6 +1390,13 @@ private extension PlanningProfileIssue {
   var isCaution: Bool {
     if case .caution = self { return true }
     return false
+  }
+
+  var exerciseID: String? {
+    switch self {
+    case let .restrictedExercise(_, exerciseID), let .caution(_, exerciseID): exerciseID
+    default: nil
+    }
   }
 }
 

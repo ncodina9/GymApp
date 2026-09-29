@@ -651,74 +651,74 @@ struct WeeklyReviewExportView: View {
 
         if let closedWeek, let exportURL {
           SettingsCategory(title: "Semana cerrada") {
-            Text("Semana \(closedWeek)")
-              .font(.gymH2.weight(.bold))
-            Text(nextWeek.map { "La propuesta debe respetar el objetivo de la semana \($0)." } ?? "No hay una semana posterior en el plan actual.")
-              .font(.gymBody)
-              .foregroundStyle(Color.gymSecondaryText)
-            SettingsDivider()
-            ShareLink(item: exportURL) {
-              Label("Exportar contexto de revisión", systemImage: "square.and.arrow.up")
-                .frame(maxWidth: .infinity, minHeight: 48)
-            }
-            .font(.gymBody.weight(.semibold))
-            .foregroundStyle(Color.gymAccentForeground)
-            .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
-            if let instructionsURL {
-              ShareLink(item: instructionsURL) {
-                Label("Compartir instrucciones para el agente", systemImage: "doc.text")
+            VStack(alignment: .leading, spacing: 14) {
+              VStack(alignment: .leading, spacing: 6) {
+                Text("Semana \(closedWeek)")
+                  .font(.gymH2.weight(.bold))
+                Text(nextWeek.map { "La propuesta debe respetar el objetivo de la semana \($0)." } ?? "No hay una semana posterior en el plan actual.")
+                  .font(.gymBody)
+                  .foregroundStyle(Color.gymSecondaryText)
+              }
+
+              ShareLink(item: exportURL) {
+                Label("Exportar contexto de revisión", systemImage: "square.and.arrow.up")
+                  .frame(maxWidth: .infinity, minHeight: 48)
+              }
+              .font(.gymBody.weight(.semibold))
+              .foregroundStyle(Color.gymAccentForeground)
+              .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
+              if let instructionsURL {
+                ShareLink(item: instructionsURL) {
+                  Label("Compartir instrucciones para el agente", systemImage: "doc.text")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .font(.gymBody.weight(.semibold))
+                .foregroundStyle(Color.gymAccent)
+              }
+              Button {
+                showsProposalImporter = true
+              } label: {
+                Label("Importar propuesta externa", systemImage: "square.and.arrow.down")
                   .frame(maxWidth: .infinity, minHeight: 44)
               }
               .font(.gymBody.weight(.semibold))
               .foregroundStyle(Color.gymAccent)
             }
-            Button {
-              showsProposalImporter = true
-            } label: {
-              Label("Importar propuesta externa", systemImage: "square.and.arrow.down")
-                .frame(maxWidth: .infinity, minHeight: 44)
-            }
-            .font(.gymBody.weight(.semibold))
-            .foregroundStyle(Color.gymAccent)
+            .padding(16)
           }
           if !localAdvice.isEmpty {
             SettingsCategory(title: "Lectura local") {
-              ForEach(localAdvice) { advice in
-                HStack(alignment: .top, spacing: 10) {
-                  Image(systemName: advice.symbol)
-                    .font(.gymH3.weight(.bold))
-                    .foregroundStyle(adviceColor(for: advice.tone))
-                    .frame(width: 22)
-                  VStack(alignment: .leading, spacing: 3) {
-                    Text(advice.title).font(.gymBody.weight(.bold))
-                    Text(advice.detail).font(.gymSupport).foregroundStyle(Color.gymSecondaryText)
+              VStack(spacing: 0) {
+                ForEach(Array(localAdvice.enumerated()), id: \.element.id) { index, advice in
+                  WeeklyReviewAdviceRow(advice: advice, color: adviceColor(for: advice.tone))
+                  if index < localAdvice.count - 1 { SettingsDivider() }
+                }
+                if let localProgressionProposal {
+                  SettingsDivider()
+                  VStack(alignment: .leading, spacing: 10) {
+                    Text(localProgressionProposal.summary)
+                      .font(.gymBody.weight(.semibold))
+                    ForEach(localProgressionProposal.details.prefix(4), id: \.self) { detail in
+                      Text(detail)
+                        .font(.gymSupport)
+                        .foregroundStyle(Color.gymSecondaryText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    if localProgressionProposal.details.count > 4 {
+                      Text("Y \(localProgressionProposal.details.count - 4) ajustes más en la revisión.")
+                        .font(.gymSupport)
+                        .foregroundStyle(Color.gymSecondaryText)
+                    }
+                    Button(action: { createLocalProposal(localProgressionProposal) }) {
+                      Label("Crear propuesta conservadora", systemImage: "arrow.up.right")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .font(.gymBody.weight(.semibold))
+                    .foregroundStyle(Color.gymAccentForeground)
+                    .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
                   }
+                  .padding(16)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-              }
-              if let localProgressionProposal {
-                SettingsDivider()
-                Text(localProgressionProposal.summary)
-                  .font(.gymSupport)
-                  .foregroundStyle(Color.gymSecondaryText)
-                ForEach(localProgressionProposal.details.prefix(4), id: \.self) { detail in
-                  Text(detail)
-                    .font(.gymSupport)
-                    .foregroundStyle(Color.gymSecondaryText)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                if localProgressionProposal.details.count > 4 {
-                  Text("Y \(localProgressionProposal.details.count - 4) ajustes más en la revisión.")
-                    .font(.gymSupport)
-                    .foregroundStyle(Color.gymSecondaryText)
-                }
-                Button(action: { createLocalProposal(localProgressionProposal) }) {
-                  Label("Crear propuesta conservadora", systemImage: "arrow.up.right")
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .font(.gymBody.weight(.semibold))
-                .foregroundStyle(Color.gymAccentForeground)
-                .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
               }
             }
           }
@@ -800,5 +800,29 @@ struct WeeklyReviewExportView: View {
     case .caution: Color.gymWarning
     case .positive: Color.gymCompleted
     }
+  }
+}
+
+private struct WeeklyReviewAdviceRow: View {
+  let advice: WeeklyReviewBridge.LocalAdvice
+  let color: Color
+
+  var body: some View {
+    HStack(alignment: .top, spacing: 12) {
+      Image(systemName: advice.symbol)
+        .font(.gymH3.weight(.bold))
+        .foregroundStyle(color)
+        .frame(width: 22, height: 22)
+      VStack(alignment: .leading, spacing: 6) {
+        Text(advice.title)
+          .font(.gymH3.weight(.bold))
+        Text(advice.detail)
+          .font(.gymBody)
+          .foregroundStyle(Color.gymSecondaryText)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
   }
 }
