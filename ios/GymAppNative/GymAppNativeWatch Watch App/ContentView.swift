@@ -1107,66 +1107,186 @@ private struct WatchSetView: View {
   let palette: WatchPalette
   let isSendingAction: Bool
   let onCommand: (WatchWorkoutCommand) -> Void
-  @State private var editor: WatchMetricEditor?
   @State private var selectedPage = 0
+  @State private var selectedMetric: WatchSetMetric?
+  @State private var crownValue = 0.0
+  @State private var editedReps: Int?
+  @State private var editedWeightKg: Double?
+  @FocusState private var isCrownFocused: Bool
 
   private var isTimed: Bool { workout.durationSeconds != nil }
+  private var currentReps: Int { editedReps ?? workout.reps ?? 0 }
+  private var currentWeightKg: Double { editedWeightKg ?? workout.weightKg }
+  private var availableWeights: [Double] { EquipmentLoadRules.availableLoads(for: workout.equipment) }
+
+  private var selectedWeightIndex: Int {
+    min(max(Int(crownValue.rounded()), 0), max(availableWeights.count - 1, 0))
+  }
 
   var body: some View {
-    WatchBottomBarLayout(
-      footerOffset: selectedPage == 0 ? WatchBottomBarMetrics.pagedFooterOffset : 0,
-      footerHeight: selectedPage == 0 ? WatchBottomBarMetrics.height : 0
-    ) {
-      TabView(selection: $selectedPage) {
-        WatchSetPrimaryPage(
-          workout: workout,
-          palette: palette,
-          isTimed: isTimed,
-          isSendingAction: isSendingAction,
-          onEdit: { editor = $0 },
-          onCommand: onCommand
-        )
-        .tag(0)
+    TabView(selection: $selectedPage) {
+      WatchSetWorkingPage(
+        workout: workout,
+        palette: palette,
+        isTimed: isTimed,
+        isSendingAction: isSendingAction,
+        reps: currentReps,
+        weightKg: currentWeightKg,
+        selectedMetric: selectedMetric,
+        onSelectMetric: selectMetric,
+        onCommand: onCommand
+      )
+      .tag(0)
 
-        if let options = workout.equipmentOptions, !options.isEmpty {
-          WatchEquipmentPage(
-            options: options,
-            currentEquipmentName: workout.equipmentName,
-            palette: palette,
-            onSelect: { onCommand(.selectEquipment($0)) }
-          )
-          .tag(1)
-        }
-      }
-      .tabViewStyle(.verticalPage)
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-    } footer: {
-      if selectedPage == 0 {
-        WatchSetActions(
+      if let options = workout.equipmentOptions, !options.isEmpty {
+        WatchEquipmentPage(
+          options: options,
+          exerciseName: workout.exerciseName,
+          currentEquipmentName: workout.equipmentName,
           palette: palette,
-          isSendingAction: isSendingAction,
-          onSkip: { onCommand(.skipSet) },
-          onRegister: { onCommand(.registerSet) }
+          onSelect: { onCommand(.selectEquipment($0)) }
         )
-      } else {
-        EmptyView()
+        .tag(1)
       }
     }
-    .fullScreenCover(item: $editor) { metric in
-      WatchSetEditor(
-        metric: metric,
-        reps: workout.reps ?? 0,
-        weightKg: workout.weightKg,
-        equipment: workout.equipment,
-        palette: palette
-      ) { reps, weight in
-        onCommand(.updateWorkingSet(reps: reps, weightKg: weight))
-      }
-      .presentationBackground(palette.canvas)
-      .preferredColorScheme(palette.colorScheme)
+    .tabViewStyle(.page(indexDisplayMode: .never))
+    .focusable(true)
+    .focused($isCrownFocused)
+    .digitalCrownRotation(
+      $crownValue,
+      from: crownLowerBound,
+      through: crownUpperBound,
+      by: 1,
+      sensitivity: .medium,
+      isContinuous: false,
+      isHapticFeedbackEnabled: true
+    )
+    .onChange(of: crownValue) { _, _ in
+      applyCrownChange()
+    }
+    .onChange(of: workout.reps) { _, reps in
+      synchronizeReps(reps)
+    }
+    .onChange(of: workout.weightKg) { _, weightKg in
+      synchronizeWeight(weightKg)
+    }
+    .onChange(of: workout.sessionID) { _, _ in
+      selectedMetric = nil
+      editedReps = nil
+      editedWeightKg = nil
+      isCrownFocused = true
+    }
+    .onChange(of: selectedPage) { _, page in
+      if page == 0 { restoreCrownValue() }
+      isCrownFocused = true
+    }
+    .onAppear { isCrownFocused = true }
+  }
+
+  private var crownLowerBound: Double { 0 }
+
+  private var crownUpperBound: Double {
+    guard selectedPage == 0 else { return 0 }
+    return switch selectedMetric {
+    case .reps: 40
+    case .weight: Double(max(availableWeights.count - 1, 0))
+    case nil: 0
     }
   }
 
+  private func selectMetric(_ metric: WatchSetMetric) {
+    selectedMetric = metric
+    isCrownFocused = true
+    switch metric {
+    case .reps:
+      editedReps = currentReps
+      crownValue = Double(currentReps)
+    case .weight:
+      editedWeightKg = currentWeightKg
+      crownValue = Double(closestWeightIndex(to: currentWeightKg))
+    }
+  }
+
+  private func applyCrownChange() {
+    guard selectedPage == 0 else { return }
+    switch selectedMetric {
+    case .reps:
+      let reps = Int(crownValue.rounded())
+      guard reps != currentReps else { return }
+      editedReps = reps
+      onCommand(.updateWorkingSet(reps: reps, weightKg: currentWeightKg))
+    case .weight:
+      guard availableWeights.indices.contains(selectedWeightIndex) else { return }
+      let weightKg = availableWeights[selectedWeightIndex]
+      guard weightKg != currentWeightKg else { return }
+      editedWeightKg = weightKg
+      onCommand(.updateWorkingSet(reps: currentReps, weightKg: weightKg))
+    case nil:
+      break
+    }
+  }
+
+  private func restoreCrownValue() {
+    switch selectedMetric {
+    case .reps:
+      crownValue = Double(currentReps)
+    case .weight:
+      crownValue = Double(closestWeightIndex(to: currentWeightKg))
+    case nil:
+      crownValue = 0
+    }
+  }
+
+  private func synchronizeReps(_ reps: Int?) {
+    guard selectedMetric != .reps else { return }
+    editedReps = reps
+  }
+
+  private func synchronizeWeight(_ weightKg: Double) {
+    guard selectedMetric != .weight else { return }
+    editedWeightKg = weightKg
+  }
+
+  private func closestWeightIndex(to weightKg: Double) -> Int {
+    availableWeights.indices.min {
+      abs(availableWeights[$0] - weightKg) < abs(availableWeights[$1] - weightKg)
+    } ?? 0
+  }
+}
+
+private struct WatchSetWorkingPage: View {
+  let workout: WatchWorkoutState
+  let palette: WatchPalette
+  let isTimed: Bool
+  let isSendingAction: Bool
+  let reps: Int
+  let weightKg: Double
+  let selectedMetric: WatchSetMetric?
+  let onSelectMetric: (WatchSetMetric) -> Void
+  let onCommand: (WatchWorkoutCommand) -> Void
+
+  var body: some View {
+    WatchBottomBarLayout(footerOffset: WatchBottomBarMetrics.pagedFooterOffset) {
+      WatchSetPrimaryPage(
+        workout: workout,
+        palette: palette,
+        isTimed: isTimed,
+        isSendingAction: isSendingAction,
+        reps: reps,
+        weightKg: weightKg,
+        selectedMetric: selectedMetric,
+        onSelectMetric: onSelectMetric,
+        onCommand: onCommand
+      )
+    } footer: {
+      WatchSetActions(
+        palette: palette,
+        isSendingAction: isSendingAction,
+        onSkip: { onCommand(.skipSet) },
+        onRegister: { onCommand(.registerSet) }
+      )
+    }
+  }
 }
 
 private struct WatchSetPrimaryPage: View {
@@ -1174,13 +1294,16 @@ private struct WatchSetPrimaryPage: View {
   let palette: WatchPalette
   let isTimed: Bool
   let isSendingAction: Bool
-  let onEdit: (WatchMetricEditor) -> Void
+  let reps: Int
+  let weightKg: Double
+  let selectedMetric: WatchSetMetric?
+  let onSelectMetric: (WatchSetMetric) -> Void
   let onCommand: (WatchWorkoutCommand) -> Void
 
   var body: some View {
     VStack(spacing: 7) {
       Text(workout.exerciseName)
-        .font(.watchBody.weight(.bold))
+        .font(.watchH1.weight(.bold))
         .multilineTextAlignment(.center)
         .lineLimit(1)
         .minimumScaleFactor(0.68)
@@ -1195,25 +1318,28 @@ private struct WatchSetPrimaryPage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else {
         HStack(spacing: 8) {
-          Button { onEdit(.reps) } label: {
+          Button { onSelectMetric(.reps) } label: {
             WatchMetricCard(
               label: "reps",
-              value: workout.reps.map(String.init) ?? "-",
-              palette: palette
+              value: String(reps),
+              palette: palette,
+              isSelected: selectedMetric == .reps
             )
           }
           .buttonStyle(.plain)
 
-          Button { onEdit(.weight) } label: {
+          Button { onSelectMetric(.weight) } label: {
             WatchMetricCard(
               label: "kg",
-              value: WeightFormatter.numberString(from: workout.weightKg),
-              palette: palette
+              value: WeightFormatter.numberString(from: weightKg),
+              palette: palette,
+              isSelected: selectedMetric == .weight
             )
           }
           .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 74, maxHeight: 74)
+        .disabled(isSendingAction)
       }
       Spacer(minLength: 0)
     }
@@ -1222,6 +1348,7 @@ private struct WatchSetPrimaryPage: View {
 
 private struct WatchEquipmentPage: View {
   let options: [Equipment]
+  let exerciseName: String
   let currentEquipmentName: String
   let palette: WatchPalette
   let onSelect: (Equipment) -> Void
@@ -1234,9 +1361,6 @@ private struct WatchEquipmentPage: View {
             Text(equipment.watchLabel)
               .font(.watchBody.weight(.semibold))
             Spacer()
-            if equipment.watchLabel == currentEquipmentName {
-              Image(systemName: "checkmark.circle.fill")
-            }
           }
           .padding(.horizontal, 10)
           .frame(minHeight: 38)
@@ -1257,13 +1381,20 @@ private struct WatchEquipmentPage: View {
       Spacer(minLength: 0)
     }
     .padding(.horizontal, 8)
+    .navigationTitle(exerciseName)
+    .navigationBarTitleDisplayMode(.inline)
   }
+}
+
+private enum WatchSetMetric: String {
+  case reps, weight
 }
 
 private struct WatchMetricCard: View {
   let label: String
   let value: String
   let palette: WatchPalette
+  let isSelected: Bool
 
   var body: some View {
     VStack {
@@ -1279,6 +1410,10 @@ private struct WatchMetricCard: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.quaternary, in: RoundedRectangle(cornerRadius: 14))
+    .overlay {
+      RoundedRectangle(cornerRadius: 14)
+        .stroke(isSelected ? palette.accent : .clear, lineWidth: 2)
+    }
     .overlay(alignment: .topLeading) {
       Text(label)
         .font(.watchSupport.weight(.bold))
@@ -1659,108 +1794,6 @@ private struct WatchTimedSetControls: View {
       }
       .disabled(isSendingAction)
     }
-  }
-}
-
-private enum WatchMetricEditor: String, Identifiable { case reps, weight; var id: String { rawValue } }
-
-private struct WatchSetEditor: View {
-  let metric: WatchMetricEditor
-  let reps: Int
-  let weightKg: Double
-  let equipment: Equipment
-  let palette: WatchPalette
-  let onConfirm: (Int?, Double) -> Void
-  @Environment(\.dismiss) private var dismiss
-  @State private var crownValue: Double
-
-  init(
-    metric: WatchMetricEditor,
-    reps: Int,
-    weightKg: Double,
-    equipment: Equipment,
-    palette: WatchPalette,
-    onConfirm: @escaping (Int?, Double) -> Void
-  ) {
-    self.metric = metric
-    self.reps = reps
-    self.weightKg = weightKg
-    self.equipment = equipment
-    self.palette = palette
-    self.onConfirm = onConfirm
-
-    let loads = EquipmentLoadRules.availableLoads(for: equipment)
-    let closestIndex = loads.indices.min {
-      abs(loads[$0] - weightKg) < abs(loads[$1] - weightKg)
-    } ?? 0
-    _crownValue = State(initialValue: metric == .weight ? Double(closestIndex) : 0)
-  }
-
-  private var availableWeights: [Double] {
-    EquipmentLoadRules.availableLoads(for: equipment)
-  }
-
-  private var selectedWeightIndex: Int {
-    min(max(Int(crownValue.rounded()), 0), availableWeights.count - 1)
-  }
-
-  private var value: Double {
-    metric == .reps
-      ? Double(reps) + crownValue
-      : availableWeights[selectedWeightIndex]
-  }
-
-  var body: some View {
-    ZStack {
-      palette.canvas.ignoresSafeArea()
-
-      VStack(spacing: 10) {
-        Text(metric == .reps ? "Modificar reps" : "Modificar peso")
-          .font(.watchH2)
-          .foregroundStyle(palette.primaryText)
-        Text(displayValue)
-          .font(.system(size: 34, weight: .bold, design: .rounded))
-          .foregroundStyle(palette.primaryText)
-          .focusable(true)
-          .digitalCrownRotation(
-            $crownValue,
-            from: lowerBound,
-            through: upperBound,
-            by: 1,
-            sensitivity: .medium,
-            isContinuous: false,
-            isHapticFeedbackEnabled: true
-          )
-        Text("Gira la corona digital")
-          .font(.watchSupport)
-          .foregroundStyle(palette.secondaryText)
-        Button {
-          if metric == .reps { onConfirm(max(0, Int(value.rounded())), weightKg) }
-          else { onConfirm(reps, max(0, value)) }
-          dismiss()
-        } label: {
-          Image(systemName: "checkmark")
-            .foregroundStyle(palette.accentForeground)
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(palette.accent)
-      }
-      .padding()
-    }
-    .overlay(alignment: .topLeading) {
-      Image(systemName: "xmark")
-        .font(.watchSupport.weight(.bold))
-        .foregroundStyle(palette.accentForeground)
-        .frame(width: 44, height: 44)
-        .padding(.leading, 4)
-        .padding(.top, -33)
-        .allowsHitTesting(false)
-    }
-  }
-  private var displayValue: String { metric == .reps ? "\(max(0, Int(value.rounded())))" : WeightFormatter.string(from: max(0, value)) }
-  private var lowerBound: Double { metric == .reps ? -Double(reps) : 0 }
-  private var upperBound: Double {
-    metric == .reps ? 40 : Double(max(availableWeights.count - 1, 0))
   }
 }
 

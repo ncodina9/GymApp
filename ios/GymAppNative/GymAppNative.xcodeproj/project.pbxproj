@@ -453,6 +453,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = GymAppNativeWatch;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "GymApp usa tu frecuencia cardiaca durante los entrenamientos de fuerza para registrar su esfuerzo.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GymApp guarda los entrenamientos de fuerza y la energía activa que finalizas en la app de Salud.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ncodina9.GymAppNative;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -487,6 +489,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = GymAppNativeWatch;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "GymApp usa tu frecuencia cardiaca durante los entrenamientos de fuerza para registrar su esfuerzo.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GymApp guarda los entrenamientos de fuerza y la energía activa que finalizas en la app de Salud.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ncodina9.GymAppNative;
 				LD_RUNPATH_SEARCH_PATHS = (

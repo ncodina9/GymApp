@@ -7,6 +7,7 @@ struct CompletedWorkoutDetailView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
   @State private var editor: RecordedSetEditDraft?
+  @State private var timingEditor: CompletedWorkoutTimingDraft?
   @State private var errorMessage: String?
 
   private var execution: WorkoutExecutionState? {
@@ -23,6 +24,12 @@ struct CompletedWorkoutDetailView: View {
           Text(record.completedAt.formatted(date: .complete, time: .shortened))
             .font(.gymBody)
             .foregroundStyle(Color.gymSecondaryText)
+
+          CompletedWorkoutTimingCard(
+            startedAt: record.startedAt ?? inferredStartDate,
+            completedAt: record.completedAt,
+            onEdit: openTimingEditor
+          )
 
           ForEach(Array(execution.session.exercises.enumerated()), id: \.element.exerciseID) { index, exercise in
             RecordedExerciseCard(
@@ -47,7 +54,7 @@ struct CompletedWorkoutDetailView: View {
     .background(GymCanvas())
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .top, spacing: 0) {
-      AccentHeaderCard(title: "Corregir series", detail: "Los cambios actualizan el historial y las exportaciones")
+      AccentHeaderCard(title: "Corregir entrenamiento", detail: "Los cambios actualizan el historial y las exportaciones")
     }
     .overlay(alignment: .bottomLeading) {
       Button(action: dismiss.callAsFunction) {
@@ -64,6 +71,10 @@ struct CompletedWorkoutDetailView: View {
     }
     .sheet(item: $editor) { draft in
       RecordedSetEditor(draft: draft, onConfirm: apply)
+        .presentationDetents([.medium])
+    }
+    .sheet(item: $timingEditor) { draft in
+      CompletedWorkoutTimingEditor(draft: draft, onConfirm: apply)
         .presentationDetents([.medium])
     }
     .alert("No se pudo guardar", isPresented: Binding(
@@ -91,6 +102,17 @@ struct CompletedWorkoutDetailView: View {
     )
   }
 
+  private var inferredStartDate: Date {
+    record.completedAt.addingTimeInterval(-3_600)
+  }
+
+  private func openTimingEditor() {
+    timingEditor = CompletedWorkoutTimingDraft(
+      startedAt: record.startedAt ?? inferredStartDate,
+      completedAt: record.completedAt
+    )
+  }
+
   private func apply(_ draft: RecordedSetEditDraft) {
     guard var updatedExecution = execution else { return }
     guard updatedExecution.correctRecordedSet(
@@ -106,9 +128,153 @@ struct CompletedWorkoutDetailView: View {
     record.executionData = data
     try? modelContext.save()
     Task {
-      await HealthWorkoutStore.prepareForResync(record: record, in: modelContext)
-      await HealthWorkoutStore.syncIfEnabled(record: record, execution: updatedExecution, in: modelContext)
+      let preservedEnergy = await HealthWorkoutStore.prepareForResync(record: record, in: modelContext)
+      await HealthWorkoutStore.syncIfEnabled(
+        record: record,
+        execution: updatedExecution,
+        in: modelContext,
+        preservedActiveEnergyKilocalories: preservedEnergy
+      )
     }
+  }
+
+  private func apply(_ draft: CompletedWorkoutTimingDraft) {
+    guard draft.completedAt > draft.startedAt else {
+      errorMessage = "La hora de finalización debe ser posterior a la de inicio."
+      return
+    }
+    guard let execution else { return }
+
+    record.startedAt = draft.startedAt
+    record.completedAt = draft.completedAt
+    try? modelContext.save()
+    Task {
+      let preservedEnergy = await HealthWorkoutStore.prepareForResync(record: record, in: modelContext)
+      await HealthWorkoutStore.syncIfEnabled(
+        record: record,
+        execution: execution,
+        in: modelContext,
+        preservedActiveEnergyKilocalories: preservedEnergy
+      )
+    }
+  }
+}
+
+private struct CompletedWorkoutTimingCard: View {
+  let startedAt: Date
+  let completedAt: Date
+  let onEdit: () -> Void
+
+  private var duration: TimeInterval {
+    completedAt.timeIntervalSince(startedAt)
+  }
+
+  var body: some View {
+    HStack(spacing: 14) {
+      VStack(alignment: .leading, spacing: 5) {
+        Text("Duración total")
+          .font(.gymH3.weight(.bold))
+        Text(Duration.seconds(duration).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated)))
+          .font(.gymH2.weight(.bold))
+          .monospacedDigit()
+        Text("\(startedAt.formatted(date: .omitted, time: .shortened)) - \(completedAt.formatted(date: .omitted, time: .shortened))")
+          .font(.gymSupport)
+          .foregroundStyle(Color.gymSecondaryText)
+      }
+      Spacer(minLength: 8)
+      Button(action: onEdit) {
+        Label("Editar", systemImage: "pencil")
+          .font(.gymSupport.weight(.bold))
+          .frame(minWidth: 76, minHeight: 38)
+          .foregroundStyle(Color.gymAccent)
+          .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 10))
+          .overlay { RoundedRectangle(cornerRadius: 10).stroke(Color.gymAccent.opacity(0.55), lineWidth: 1) }
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel("Editar duración total")
+    }
+    .padding(14)
+    .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+    .overlay { RoundedRectangle(cornerRadius: 18).stroke(Color.gymAccent.opacity(0.36), lineWidth: 1) }
+  }
+}
+
+private struct CompletedWorkoutTimingDraft: Identifiable {
+  let id = UUID()
+  var startedAt: Date
+  var completedAt: Date
+}
+
+private struct CompletedWorkoutTimingEditor: View {
+  @Environment(\.dismiss) private var dismiss
+  @State private var draft: CompletedWorkoutTimingDraft
+  let onConfirm: (CompletedWorkoutTimingDraft) -> Void
+
+  init(draft: CompletedWorkoutTimingDraft, onConfirm: @escaping (CompletedWorkoutTimingDraft) -> Void) {
+    _draft = State(initialValue: draft)
+    self.onConfirm = onConfirm
+  }
+
+  private var isValid: Bool {
+    draft.completedAt > draft.startedAt
+  }
+
+  private var durationLabel: String {
+    Duration.seconds(draft.completedAt.timeIntervalSince(draft.startedAt))
+      .formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 18) {
+      HStack {
+        VStack(alignment: .leading, spacing: 3) {
+          Text("Corregir duración")
+            .font(.gymH2.weight(.bold))
+          Text("La sesión de Salud se actualizará con este intervalo.")
+            .font(.gymBody)
+            .foregroundStyle(Color.gymSecondaryText)
+        }
+        Spacer()
+        Button(action: dismiss.callAsFunction) {
+          Image(systemName: "xmark")
+            .font(.gymH3.weight(.bold))
+            .frame(width: 44, height: 44)
+            .foregroundStyle(.primary)
+            .background(Color.gymCanvas, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Cancelar")
+      }
+
+      Text(durationLabel)
+        .font(.gymH1.weight(.bold))
+        .monospacedDigit()
+        .frame(maxWidth: .infinity, alignment: .center)
+
+      DatePicker("Inicio", selection: $draft.startedAt, displayedComponents: [.date, .hourAndMinute])
+        .font(.gymBody.weight(.semibold))
+      DatePicker("Finalización", selection: $draft.completedAt, displayedComponents: [.date, .hourAndMinute])
+        .font(.gymBody.weight(.semibold))
+
+      if !isValid {
+        Text("La finalización debe ser posterior al inicio.")
+          .font(.gymSupport)
+          .foregroundStyle(.red)
+      }
+
+      Button("Guardar duración") {
+        onConfirm(draft)
+        dismiss()
+      }
+      .font(.gymH2.weight(.bold))
+      .frame(maxWidth: .infinity, minHeight: 56)
+      .foregroundStyle(Color.gymAccentForeground)
+      .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
+      .buttonStyle(.plain)
+      .disabled(!isValid)
+    }
+    .padding(20)
+    .presentationBackground(Color.gymSurface)
   }
 }
 

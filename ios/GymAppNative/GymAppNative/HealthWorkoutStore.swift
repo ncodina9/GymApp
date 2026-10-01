@@ -14,13 +14,18 @@ enum HealthWorkoutStore {
 
   static func requestAuthorization() async throws {
     guard isAvailable else { throw HealthWorkoutError.unavailable }
-    try await store.requestAuthorization(toShare: [HKObjectType.workoutType()], read: [])
+    let activeEnergy = HKQuantityType(.activeEnergyBurned)
+    try await store.requestAuthorization(
+      toShare: [HKObjectType.workoutType(), activeEnergy],
+      read: []
+    )
   }
 
   static func syncIfEnabled(
     record: CompletedWorkoutRecord,
     execution: WorkoutExecutionState,
-    in context: ModelContext
+    in context: ModelContext,
+    preservedActiveEnergyKilocalories: Double? = nil
   ) async {
     guard UserDefaults.standard.bool(forKey: syncEnabledKey),
           record.healthKitSyncStatus != .synced,
@@ -55,6 +60,18 @@ enum HealthWorkoutStore {
         "GymAppCompletedSets": execution.records.filter { $0.status == .completed }.count,
         "GymAppSkippedSets": execution.records.filter { $0.status == .skipped }.count
       ])
+      let activeEnergy = HKQuantityType(.activeEnergyBurned)
+      if let preservedActiveEnergyKilocalories,
+         preservedActiveEnergyKilocalories > 0,
+         store.authorizationStatus(for: activeEnergy) == .sharingAuthorized {
+        let sample = HKQuantitySample(
+          type: activeEnergy,
+          quantity: HKQuantity(unit: .kilocalorie(), doubleValue: preservedActiveEnergyKilocalories),
+          start: start,
+          end: record.completedAt
+        )
+        try await builder.addSamples([sample])
+      }
       try await builder.endCollection(at: record.completedAt)
       guard let workout = try await builder.finishWorkout() else {
         record.healthKitSyncStatus = .failed
@@ -94,29 +111,39 @@ enum HealthWorkoutStore {
   static func prepareForResync(
     record: CompletedWorkoutRecord,
     in context: ModelContext
-  ) async {
+  ) async -> Double? {
     guard let rawUUID = record.healthKitWorkoutUUID,
           let uuid = UUID(uuidString: rawUUID)
     else {
       record.healthKitSyncStatus = .pending
       record.healthKitLastError = nil
       try? context.save()
-      return
+      return nil
     }
 
     do {
       let predicate = HKQuery.predicateForObject(with: uuid)
       if let workout = try await workout(with: predicate) {
+        let activeEnergy = workout.statistics(for: HKQuantityType(.activeEnergyBurned))?
+          .sumQuantity()?
+          .doubleValue(for: .kilocalorie())
         try await store.delete(workout)
+        record.healthKitWorkoutUUID = nil
+        record.healthKitSyncStatus = .pending
+        record.healthKitLastError = nil
+        try? context.save()
+        return activeEnergy
       }
       record.healthKitWorkoutUUID = nil
       record.healthKitSyncStatus = .pending
       record.healthKitLastError = nil
       try? context.save()
+      return nil
     } catch {
       record.healthKitSyncStatus = .failed
       record.healthKitLastError = error.localizedDescription
       try? context.save()
+      return nil
     }
   }
 
