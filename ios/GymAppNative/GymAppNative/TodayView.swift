@@ -8,6 +8,7 @@ struct TodayView: View {
   let plan: TrainingPlan
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
+  @Query private var planRevisionRecords: [PlanRevisionRecord]
   @AppStorage("themeAccent") private var themeAccentRaw = ThemeAccent.blue.rawValue
   @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
   @State private var path: [String] = []
@@ -70,6 +71,19 @@ struct TodayView: View {
       .max()
   }
 
+  private var hasAcceptedWeeklyPlan: Bool {
+    guard let displayedWeek else { return false }
+    return planRevisionRecords.contains { revision in
+      guard revision.basePlanID == plan.planID, revision.status == .accepted else { return false }
+      if revision.reviewedWeek == displayedWeek { return true }
+
+      // Revisions created before the explicit marker retain their weekly trace.
+      return PlanRevisionStore.rationales(for: revision).contains { rationale in
+        plan.sessions.first(where: { $0.sessionID == rationale.sessionID })?.week == displayedWeek
+      }
+    }
+  }
+
   private var missedSession: TrainingSession? {
     let today = Calendar.current.startOfDay(for: .now)
     return plan.sessions
@@ -88,7 +102,7 @@ struct TodayView: View {
       if let displayedWeek, !weekSessions.isEmpty {
         ScrollView {
           VStack(alignment: .leading, spacing: 12) {
-            if !isReadOnlyWeek, displayedWeek == latestClosedWeek {
+            if !isReadOnlyWeek, displayedWeek == latestClosedWeek, !hasAcceptedWeeklyPlan {
               NavigationLink {
                 WeeklyReviewExportView(plan: plan)
               } label: {

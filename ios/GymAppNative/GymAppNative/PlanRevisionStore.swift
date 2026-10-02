@@ -43,6 +43,7 @@ final class PlanRevisionRecord {
   var updatedAt: Date
   var reason: String
   var statusRaw: String
+  var reviewedWeek: Int?
   var acceptedAt: Date?
   var parentRevisionID: String?
   var planData: Data
@@ -62,6 +63,7 @@ final class PlanRevisionRecord {
     revisionNumber: Int,
     effectiveFrom: Date,
     reason: String,
+    reviewedWeek: Int? = nil,
     status: PlanRevisionStatus = .proposed,
     parentRevisionID: String? = nil,
     planData: Data,
@@ -77,6 +79,7 @@ final class PlanRevisionRecord {
     self.revisionNumber = revisionNumber
     self.effectiveFrom = effectiveFrom
     self.reason = reason
+    self.reviewedWeek = reviewedWeek
     statusRaw = status.rawValue
     self.parentRevisionID = parentRevisionID
     self.planData = planData
@@ -156,7 +159,8 @@ enum PlanRevisionStore {
     constraints: PlanningConstraints,
     in context: ModelContext,
     existingRecords: [PlanRevisionRecord],
-    rationales: [PlanRevisionRationale] = []
+    rationales: [PlanRevisionRationale] = [],
+    reviewedWeek: Int? = nil
   ) throws -> PlanRevisionRecord {
     let normalizedEffectiveFrom = Calendar.current.startOfDay(for: effectiveFrom)
     let parentRevision = sourceRevision(for: basePlan, records: existingRecords, at: normalizedEffectiveFrom)
@@ -188,6 +192,7 @@ enum PlanRevisionStore {
       revisionNumber: nextNumber,
       effectiveFrom: normalizedEffectiveFrom,
       reason: reason,
+      reviewedWeek: reviewedWeek,
       parentRevisionID: parentRevision?.id,
       planData: planData,
       operationsData: operationsData,

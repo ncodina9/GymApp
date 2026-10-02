@@ -1119,7 +1119,8 @@ struct WeeklyReviewExportView: View {
         constraints: constraints,
         in: modelContext,
         existingRecords: revisionRecords,
-        rationales: proposal.rationales ?? []
+        rationales: proposal.rationales ?? [],
+        reviewedWeek: closedWeek
       )
       message = "Propuesta externa importada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
     } catch {
@@ -1137,7 +1138,8 @@ struct WeeklyReviewExportView: View {
         constraints: constraints,
         in: modelContext,
         existingRecords: revisionRecords,
-        rationales: proposal.rationales
+        rationales: proposal.rationales,
+        reviewedWeek: closedWeek
       )
       message = "Propuesta local creada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
     } catch {
