@@ -653,12 +653,16 @@ private struct WatchWorkoutView: View {
             }
           } else if showsSetNumber {
             ToolbarItem(placement: .topBarTrailing) {
-              Text("\(workout.exerciseSetNumber)")
-                .font(.watchBody.weight(.bold).monospacedDigit())
-                .foregroundStyle(palette.accentForeground)
-                .frame(width: 28, height: 28)
-                .background(palette.accent, in: Circle())
+              Button { showsWorkoutHistory = true } label: {
+                Text("\(workout.exerciseSetNumber)")
+                  .font(.watchBody.weight(.bold).monospacedDigit())
+                  .foregroundStyle(palette.accentForeground)
+                  .frame(width: 28, height: 28)
+                  .background(palette.accent, in: Circle())
+              }
+              .buttonStyle(.plain)
                 .accessibilityLabel("Serie \(workout.exerciseSetNumber)")
+                .accessibilityHint("Abre el historial del entrenamiento")
             }
           }
         }
@@ -1731,6 +1735,8 @@ private struct WatchWarmupView: View {
   let workout: WatchWorkoutState
   let palette: WatchPalette
   let onCommand: (WatchWorkoutCommand) -> Void
+  @State private var didAnnounceCompletion = false
+
   var body: some View {
     TimelineView(.periodic(from: .now, by: 1)) { context in
       let remaining = max(0, Int((workout.timerEndsAt?.timeIntervalSince(context.date) ?? 0).rounded(.up)))
@@ -1752,6 +1758,11 @@ private struct WatchWarmupView: View {
           .buttonStyle(.borderedProminent).tint(complete ? .green : palette.accent)
       }
       .padding(.horizontal, 8)
+      .onChange(of: complete) { _, finished in
+        guard finished, !didAnnounceCompletion else { return }
+        didAnnounceCompletion = true
+        WKInterfaceDevice.current().play(.notification)
+      }
     }
   }
 }

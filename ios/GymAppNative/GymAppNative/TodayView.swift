@@ -88,11 +88,11 @@ struct TodayView: View {
       if let displayedWeek, !weekSessions.isEmpty {
         ScrollView {
           VStack(alignment: .leading, spacing: 12) {
-            if latestClosedWeek != nil {
+            if !isReadOnlyWeek, displayedWeek == latestClosedWeek {
               NavigationLink {
                 WeeklyReviewExportView(plan: plan)
               } label: {
-                Label("Exportar revisión semanal", systemImage: "square.and.arrow.up")
+                Label("Evaluar semana y planificar siguiente", systemImage: "calendar.badge.checkmark")
                   .font(.gymBody.weight(.semibold))
                   .frame(maxWidth: .infinity, minHeight: 48)
                   .foregroundStyle(Color.gymAccentForeground)

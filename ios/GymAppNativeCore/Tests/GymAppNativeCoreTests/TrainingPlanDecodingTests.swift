@@ -12,6 +12,43 @@ struct TrainingPlanDecodingTests {
     #expect(TrainingPhaseCoaching.effort(for: "realización").cue.contains("prescripción"))
   }
 
+  @Test("La revisión semanal ignora RIR en ejercicios temporizados")
+  func excludesRIRForTimedWork() {
+    #expect(!WeeklyReviewPolicy.includesRIR(durationSeconds: 60))
+    #expect(WeeklyReviewPolicy.includesRIR(durationSeconds: nil))
+  }
+
+  @Test("La revisión semanal compara carga solo con el mismo material")
+  func comparesPerformedWeightByEquipment() {
+    let observed: [Equipment: Double] = [.barbell: 70, .multipower: 58]
+
+    #expect(WeeklyReviewPolicy.performedWeight(in: observed, matching: .barbell) == 70)
+    #expect(WeeklyReviewPolicy.performedWeight(in: observed, matching: .dumbbell) == nil)
+  }
+
+  @Test("La revisión semanal no duplica una carga ya prevista")
+  func preventsDuplicatedLoadProgression() {
+    #expect(!WeeklyReviewPolicy.allowsAutomaticLoadIncrease(
+      phase: "intensificación",
+      averageRIR: 3,
+      performedWeightKg: 62.5,
+      plannedWeightKg: 72.5
+    ))
+    #expect(WeeklyReviewPolicy.allowsAutomaticLoadIncrease(
+      phase: "intensificación",
+      averageRIR: 2,
+      performedWeightKg: 72.5,
+      plannedWeightKg: 72.5
+    ))
+  }
+
+  @Test("La revisión semanal no progresa una superserie de forma parcial")
+  func preventsPartialSupersetProgression() {
+    #expect(WeeklyReviewPolicy.allowsSupersetProgression(memberEligibility: [true, true]))
+    #expect(!WeeklyReviewPolicy.allowsSupersetProgression(memberEligibility: [true, false]))
+    #expect(!WeeklyReviewPolicy.allowsSupersetProgression(memberEligibility: []))
+  }
+
   @Test("Acota la compatibilidad a las próximas sesiones relevantes")
   func limitsProfileCompatibilityHorizon() throws {
     let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))

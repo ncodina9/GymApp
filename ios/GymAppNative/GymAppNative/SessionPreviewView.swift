@@ -521,7 +521,7 @@ private struct ExercisePreviewRow: View {
         PreviewMetric(label: loadLabel, value: loadValue)
       }
 
-      Text("Material sugerido: \(exercise.variantLabel ?? exercise.equipment.label)")
+      Text("Material sugerido: \(exercise.equipment.label)")
         .font(.gymSupport.weight(.semibold))
         .foregroundStyle(Color.gymSecondaryText)
         .lineLimit(1)

@@ -1057,12 +1057,19 @@ private struct ExerciseCoachGuidanceOverlay: View {
           .buttonStyle(.plain)
           .accessibilityLabel("Cerrar indicaciones")
         }
+        if let variationName = guidance.variationName {
+          Text("Variación")
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymAccent)
+          Text(variationName)
+            .font(.gymH3.weight(.semibold))
+        }
+        Text("Ejecución y recomendaciones")
+          .font(.gymSupport.weight(.bold))
+          .foregroundStyle(Color.gymAccent)
         Text(guidance.fullGuidance)
           .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
-        Text(weekFocus)
-          .font(.gymSupport.weight(.semibold))
-          .foregroundStyle(Color.gymAccent)
         Text("Objetivo")
           .font(.gymSupport.weight(.bold))
           .foregroundStyle(Color.gymAccent)
@@ -1090,11 +1097,16 @@ private struct ExerciseCoachGuidance {
 
   private var effort: TrainingPhaseEffort { TrainingPhaseCoaching.effort(for: exercise.phase) }
 
-  var summary: String { "\(technicalGuidance) \(effort.cue)" }
+  var summary: String {
+    [variationName.map { "\($0)." }, technicalGuidance, phaseRecommendation]
+      .compactMap { $0 }
+      .joined(separator: " ")
+  }
 
   var fullGuidance: String {
-    let variation = variationName.map { "Variación: \($0). " } ?? ""
-    return "\(technicalGuidance) \(effort.cue) \(variation)"
+    [technicalGuidance, phaseRecommendation]
+      .compactMap { $0 }
+      .joined(separator: " ")
   }
 
   var trainingGoal: String {
@@ -1112,7 +1124,7 @@ private struct ExerciseCoachGuidance {
     return goal.prefix(1).uppercased() + goal.dropFirst()
   }
 
-  private var variationName: String? {
+  var variationName: String? {
     if let coachingVariationName = exercise.coachingVariationName {
       return coachingVariationName
     }
@@ -1120,6 +1132,10 @@ private struct ExerciseCoachGuidance {
           !isMaterialOnlyVariant
     else { return nil }
     return exercise.name
+  }
+
+  private var phaseRecommendation: String? {
+    exercise.sets.contains(where: { $0.targetDurationSeconds != nil }) ? nil : effort.cue
   }
 
   private var isMaterialOnlyVariant: Bool {
@@ -2240,7 +2256,7 @@ private struct PendingBlockOption: Identifiable {
 
   var equipmentSummary: String {
     exercises.reduce(into: [String]()) { labels, exercise in
-      let label = exercise.variantLabel ?? exercise.equipment.executionLabel
+      let label = exercise.equipment.executionLabel
       if !labels.contains(label) {
         labels.append(label)
       }
@@ -2338,9 +2354,6 @@ private struct RestPreviewCard: View {
           .frame(maxWidth: .infinity, alignment: .leading)
         RestEquipmentChip(
           equipment: preview.equipment,
-          variantLabel: preview.equipment == preview.exercise.equipment
-            ? preview.exercise.variantLabel
-            : nil,
           action: onCycleEquipment
         )
       }
@@ -2399,11 +2412,10 @@ private struct RestPreviewMetric: View {
 
 private struct RestEquipmentChip: View {
   let equipment: Equipment
-  let variantLabel: String?
   var action: (() -> Void)? = nil
 
   var body: some View {
-    let content = Text(variantLabel ?? equipment.executionLabel)
+    let content = Text(equipment.executionLabel)
       .font(.gymSupport.weight(.semibold))
       .foregroundStyle(Color.gymSecondaryText)
       .lineLimit(1)
@@ -2430,6 +2442,7 @@ private struct FinishedWorkoutView: View {
   let onFinish: () -> Void
   @State private var csvURL: URL?
   @State private var rewardVisible = false
+  @State private var showsWeeklyReview = false
   @Query private var profileRecords: [TrainingProfileRecord]
   @Query private var completedRecords: [CompletedWorkoutRecord]
 
@@ -2507,6 +2520,16 @@ private struct FinishedWorkoutView: View {
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
       }
       if let weeklyReviewURL {
+        Button {
+          showsWeeklyReview = true
+        } label: {
+          Label("Evaluar semana y planificar siguiente", systemImage: "calendar.badge.checkmark")
+        }
+        .font(.gymBody.weight(.semibold))
+        .frame(maxWidth: .infinity, minHeight: 48)
+        .foregroundStyle(Color.gymAccentForeground)
+        .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
+        .buttonStyle(.plain)
         ShareLink(item: weeklyReviewURL) {
           Label("Exportar revisión semanal", systemImage: "square.and.arrow.up")
         }
@@ -2535,6 +2558,13 @@ private struct FinishedWorkoutView: View {
       }
     }
     .sensoryFeedback(.success, trigger: rewardVisible)
+    .sheet(isPresented: $showsWeeklyReview) {
+      if let plan {
+        NavigationStack {
+          WeeklyReviewExportView(plan: plan)
+        }
+      }
+    }
   }
 
   private func durationLabel(_ totalSeconds: Int) -> String {

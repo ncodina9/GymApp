@@ -124,7 +124,14 @@ enum WeeklyReviewBridge {
     }
     let records = executions.flatMap(\.records)
     let completed = records.filter { $0.status == .completed }
-    let rirValues = completed.compactMap { $0.feedback.rir }
+    let rirValues = executions.flatMap { execution in
+      execution.records.compactMap { record -> Int? in
+        guard record.status == .completed,
+              WeeklyReviewPolicy.includesRIR(durationSeconds: execution.targets(for: record)?.durationSeconds)
+        else { return nil }
+        return record.feedback.rir
+      }
+    }
     let maxDiscomfort = records.map {
       max($0.feedback.painKnee, $0.feedback.painWrist, $0.feedback.painShoulder, $0.feedback.painLowerBack, $0.feedback.declaredDiscomfortLevels.values.max() ?? 0)
     }.max() ?? 0
@@ -189,9 +196,15 @@ enum WeeklyReviewBridge {
       return execution
     }
     let records = executions.flatMap(\.records)
-    let completed = records.filter { $0.status == .completed }
     let skipped = records.filter { $0.status == .skipped }.count
-    let rir = completed.compactMap(\.feedback.rir)
+    let rir = executions.flatMap { execution in
+      execution.records.compactMap { record -> Int? in
+        guard record.status == .completed,
+              WeeklyReviewPolicy.includesRIR(durationSeconds: execution.targets(for: record)?.durationSeconds)
+        else { return nil }
+        return record.feedback.rir
+      }
+    }
     let averageRIR = rir.isEmpty ? nil : Double(rir.reduce(0, +)) / Double(rir.count)
     let maximumDiscomfort = records.map {
       max($0.feedback.painKnee, $0.feedback.painWrist, $0.feedback.painShoulder, $0.feedback.painLowerBack, $0.feedback.declaredDiscomfortLevels.values.max() ?? 0)
@@ -301,7 +314,9 @@ enum WeeklyReviewBridge {
         var signal = signals[groupID] ?? .init()
         if record.status == .completed {
           signal.completedSets += 1
-          if let rir = record.feedback.rir { signal.rirValues.append(rir) }
+          if WeeklyReviewPolicy.includesRIR(durationSeconds: targets?.durationSeconds), let rir = record.feedback.rir {
+            signal.rirValues.append(rir)
+          }
           if let reps = targets?.reps {
             signal.maximumActualReps = max(signal.maximumActualReps ?? reps, reps)
           }
@@ -344,10 +359,10 @@ enum WeeklyReviewBridge {
 
     for session in targetSessions {
       let progressiveSupersets = Set(session.exercises.compactMap(\.supersetID)).filter { supersetID in
-        session.exercises.filter { $0.supersetID == supersetID }.allSatisfy { member in
+        WeeklyReviewPolicy.allowsSupersetProgression(memberEligibility: session.exercises.filter { $0.supersetID == supersetID }.map { member in
           guard let signal = signals[member.displayGroupID] else { return false }
           return isProgression(intent(for: signal, phase: member.phase))
-        }
+        })
       }
 
       for exercise in session.exercises {
@@ -441,9 +456,16 @@ enum WeeklyReviewBridge {
               }
               continue
             }
-            guard set.targetWeightKg > 0 else { continue }
-            guard let performedWeight = signal.maximumActualWeightKgByEquipment[exercise.equipment],
-                  performedWeight >= set.targetWeightKg else { continue }
+            let performedWeight = WeeklyReviewPolicy.performedWeight(
+              in: signal.maximumActualWeightKgByEquipment,
+              matching: exercise.equipment
+            )
+            guard WeeklyReviewPolicy.allowsAutomaticLoadIncrease(
+              phase: exercise.phase,
+              averageRIR: signal.averageRIR,
+              performedWeightKg: performedWeight,
+              plannedWeightKg: set.targetWeightKg
+            ), let performedWeight else { continue }
             let observedWeight = max(set.targetWeightKg, performedWeight)
             let maximumWeight = set.targetWeightKg * (1 + maximumLoadIncrease(for: exercise.equipment))
             guard let weight = EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: inventory)
