@@ -1484,6 +1484,8 @@ Actualización v0.1.166: cada comando alcanzable del Watch recibe en su propia r
 
 Actualización v0.1.167: el contexto exportado de revisión semanal sube a schema v2 e incluye las decisiones finales por ejercicio de cada sesión. Las instrucciones compartidas con el agente externo reproducen las mismas reglas de seguridad, fase, material, redondeos y no duplicación de progresión del motor local, para que ambas rutas generen borradores equivalentes y auditables.
 
+Actualización v0.1.168: las revisiones semanales conservan una traza por ejercicio con material, series afectadas, decisión y motivo. La aceptación o descarte selectivo de ajustes queda anotada como siguiente evolución, porque exige regenerar las operaciones, el impacto y las validaciones del borrador.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.
@@ -1496,6 +1498,7 @@ Actualización v0.1.167: el contexto exportado de revisión semanal sube a schem
 - [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, siempre como propuesta explicada y confirmada antes de modificar un plan.
 - [~] Integrar el chat como interfaz de intención sobre las operaciones validadas, con contexto limitado al perfil, plan efectivo, sesiones ejecutadas y restricciones relevantes. El intérprete local entiende ausencias, fechas, cierres, duración, ajustes de series y sustituciones de ejercicios; Entrenador encadena una sustitución y un ajuste de serie en una revisión compuesta. Faltan más de dos acciones, peticiones contradictorias y aclaraciones que dependan de una respuesta anterior.
 - [~] Definir una revisión semanal estructurada local: recopila cumplimiento, RIR, series omitidas, decisiones y molestias por ejercicio; contrasta cada señal con la fase siguiente y puede crear un borrador de carga, reps, descanso, duración, asistencia o lastre tipado, limitado y confirmable. Distingue los cambios de aquello que conserva y evita que una incidencia aislada bloquee toda la semana; falta una explicación agrupada por sesión.
+- [ ] Permitir aceptar o descartar ajustes individuales dentro de una revisión semanal antes de confirmar el borrador completo. Al excluir una operación, recalcular impacto, validación y trazabilidad para conservar coherencia del plan.
 - [~] Mantener durante las pruebas un puente de revisión externa: la app exporta contexto semanal, comparte el contrato e importa operaciones tipadas como revisión pendiente validada; falta permitir adjuntar la explicación extensa del agente y registrar proveedor/modelo/consentimiento cuando la integración sea remota.
 
 ### Futuro: nuevo macrociclo

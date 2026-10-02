@@ -44,6 +44,7 @@ enum WeeklyReviewBridge {
     let summary: String
     let details: [String]
     let preservedDetails: [String]
+    let rationales: [PlanRevisionRationale]
   }
 
   enum AdviceTone {
@@ -85,6 +86,7 @@ enum WeeklyReviewBridge {
     let targetWeek: Int?
     let summary: String
     let operations: [PlanningOperation]
+    let rationales: [PlanRevisionRationale]?
   }
 
   enum BridgeError: LocalizedError {
@@ -601,7 +603,13 @@ enum WeeklyReviewBridge {
       operations: operations,
       summary: summary,
       details: details,
-      preservedDetails: preservedDetails
+      preservedDetails: preservedDetails,
+      rationales: weeklyRationales(
+        targetSessions: targetSessions,
+        operations: operations,
+        details: details,
+        preservedDetails: preservedDetails
+      )
     )
   }
 
@@ -742,6 +750,42 @@ enum WeeklyReviewBridge {
     values.append(value)
   }
 
+  private static func weeklyRationales(
+    targetSessions: [TrainingSession],
+    operations: [PlanningOperation],
+    details: [String],
+    preservedDetails: [String]
+  ) -> [PlanRevisionRationale] {
+    targetSessions.flatMap { session in
+      session.exercises.map { exercise in
+        let setIndexes = operations.compactMap { operation -> Int? in
+          switch operation {
+          case let .adjustSet(sessionID, exerciseID, setIndex, _, _, _, _),
+               let .adjustBodyweightLoad(sessionID, exerciseID, setIndex, _, _):
+            return sessionID == session.sessionID && exerciseID == exercise.exerciseID ? setIndex : nil
+          default:
+            return nil
+          }
+        }
+        let changed = !setIndexes.isEmpty
+        let matchingDetails = changed ? details : preservedDetails
+        let detail = matchingDetails.first { $0.hasPrefix("\(exercise.displayName):") }
+          ?? (changed
+            ? "Se ajusta según la ejecución registrada y la fase de la semana."
+            : "Se conserva la prescripción actual por falta de una señal que justifique cambiarla.")
+        return PlanRevisionRationale(
+          sessionID: session.sessionID,
+          exerciseID: exercise.exerciseID,
+          exerciseName: exercise.displayName,
+          material: exercise.equipment.executionLabel,
+          setIndexes: setIndexes,
+          outcome: changed ? .adjusted : .preserved,
+          detail: detail
+        )
+      }
+    }
+  }
+
   private static func normalized(_ value: String) -> String {
     value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "es_ES"))
       .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -802,6 +846,17 @@ enum WeeklyReviewBridge {
       "reviewedWeek": \(reviewedWeek),
       "targetWeek": \(target),
       "summary": "explicación breve y auditable",
+      "rationales": [
+        {
+          "sessionID": "id de sesión futura",
+          "exerciseID": "id de ejercicio",
+          "exerciseName": "nombre visible",
+          "material": "Barra",
+          "setIndexes": [1, 2],
+          "outcome": "adjusted",
+          "detail": "señal observada, comparación de material y motivo del ajuste"
+        }
+      ],
       "operations": [
         {
           "type": "adjustSet",
@@ -816,7 +871,7 @@ enum WeeklyReviewBridge {
       ]
     }
 
-    Usa solo operaciones soportadas por GymApp: moveSession, shiftFutureSessions, cancelSession, replaceExercise, addExercise, removeExercise, adjustSet y adjustBodyweightLoad. Aplica un cambio coherente a todas las series futuras elegibles del ejercicio, no solo a la primera. Para asistencia o lastre usa adjustBodyweightLoad con assistanceKg o addedWeightKg, nunca ambos a la vez. No devuelvas un plan completo ni inventes IDs.
+    Usa solo operaciones soportadas por GymApp: moveSession, shiftFutureSessions, cancelSession, replaceExercise, addExercise, removeExercise, adjustSet y adjustBodyweightLoad. Aplica un cambio coherente a todas las series futuras elegibles del ejercicio, no solo a la primera. Para asistencia o lastre usa adjustBodyweightLoad con assistanceKg o addedWeightKg, nunca ambos a la vez. Incluye una rationale por ejercicio modificado y, cuando sea relevante, por el que se conserve: identifica las series, material comparable y razón. No devuelvas un plan completo ni inventes IDs.
     """
     let url = FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-external-agent-instructions.txt")
     try text.write(to: url, atomically: true, encoding: .utf8)
@@ -1063,7 +1118,8 @@ struct WeeklyReviewExportView: View {
         reason: "Revisión externa S\(proposal.reviewedWeek) → S\(proposal.targetWeek.map(String.init) ?? "final"): \(proposal.summary)",
         constraints: constraints,
         in: modelContext,
-        existingRecords: revisionRecords
+        existingRecords: revisionRecords,
+        rationales: proposal.rationales ?? []
       )
       message = "Propuesta externa importada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
     } catch {
@@ -1080,7 +1136,8 @@ struct WeeklyReviewExportView: View {
         reason: proposal.summary,
         constraints: constraints,
         in: modelContext,
-        existingRecords: revisionRecords
+        existingRecords: revisionRecords,
+        rationales: proposal.rationales
       )
       message = "Propuesta local creada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
     } catch {

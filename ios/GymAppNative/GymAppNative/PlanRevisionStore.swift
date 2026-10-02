@@ -16,6 +16,23 @@ enum PlanRevisionStatus: String, Codable, CaseIterable {
   }
 }
 
+struct PlanRevisionRationale: Codable, Identifiable {
+  enum Outcome: String, Codable {
+    case adjusted
+    case preserved
+  }
+
+  let sessionID: String
+  let exerciseID: String
+  let exerciseName: String
+  let material: String
+  let setIndexes: [Int]
+  let outcome: Outcome
+  let detail: String
+
+  var id: String { "\(sessionID)-\(exerciseID)-\(outcome.rawValue)" }
+}
+
 @Model
 final class PlanRevisionRecord {
   @Attribute(.unique) var id: String
@@ -32,6 +49,7 @@ final class PlanRevisionRecord {
   var operationsData: Data?
   var warningsData: Data?
   var impactData: Data?
+  var rationaleData: Data?
 
   var status: PlanRevisionStatus {
     get { PlanRevisionStatus(rawValue: statusRaw) ?? .proposed }
@@ -50,6 +68,7 @@ final class PlanRevisionRecord {
     operationsData: Data? = nil,
     warningsData: Data? = nil,
     impactData: Data? = nil,
+    rationaleData: Data? = nil,
     createdAt: Date = .now,
     acceptedAt: Date? = nil
   ) {
@@ -64,6 +83,7 @@ final class PlanRevisionRecord {
     self.operationsData = operationsData
     self.warningsData = warningsData
     self.impactData = impactData
+    self.rationaleData = rationaleData
     self.createdAt = createdAt
     updatedAt = createdAt
     self.acceptedAt = acceptedAt
@@ -135,7 +155,8 @@ enum PlanRevisionStore {
     reason: String,
     constraints: PlanningConstraints,
     in context: ModelContext,
-    existingRecords: [PlanRevisionRecord]
+    existingRecords: [PlanRevisionRecord],
+    rationales: [PlanRevisionRationale] = []
   ) throws -> PlanRevisionRecord {
     let normalizedEffectiveFrom = Calendar.current.startOfDay(for: effectiveFrom)
     let parentRevision = sourceRevision(for: basePlan, records: existingRecords, at: normalizedEffectiveFrom)
@@ -150,10 +171,12 @@ enum PlanRevisionStore {
       operations: operations,
       constraints: constraints
     )
+    let rationaleData = rationales.isEmpty ? nil : try? JSONEncoder().encode(rationales)
     guard let planData = try? JSONEncoder().encode(proposal.plan),
           let operationsData = try? JSONEncoder().encode(operations),
           let warningsData = try? JSONEncoder().encode(proposal.warnings),
-          let impactData = try? JSONEncoder().encode(proposal.impact) else {
+          let impactData = try? JSONEncoder().encode(proposal.impact),
+          rationales.isEmpty || rationaleData != nil else {
       throw PlanRevisionStoreError.encodingFailed
     }
     let nextNumber = (existingRecords
@@ -169,7 +192,8 @@ enum PlanRevisionStore {
       planData: planData,
       operationsData: operationsData,
       warningsData: warningsData,
-      impactData: impactData
+      impactData: impactData,
+      rationaleData: rationaleData
     )
     context.insert(revision)
     try? context.save()
@@ -189,6 +213,11 @@ enum PlanRevisionStore {
   static func impact(for revision: PlanRevisionRecord) -> PlanningImpact? {
     guard let data = revision.impactData else { return nil }
     return try? JSONDecoder().decode(PlanningImpact.self, from: data)
+  }
+
+  static func rationales(for revision: PlanRevisionRecord) -> [PlanRevisionRationale] {
+    guard let data = revision.rationaleData else { return [] }
+    return (try? JSONDecoder().decode([PlanRevisionRationale].self, from: data)) ?? []
   }
 
   static func isCurrent(

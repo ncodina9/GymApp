@@ -162,6 +162,7 @@ private struct PlanRevisionsView: View {
               operations: PlanRevisionStore.operations(for: revision),
               warnings: PlanRevisionStore.warnings(for: revision),
               impact: PlanRevisionStore.impact(for: revision),
+              rationales: PlanRevisionStore.rationales(for: revision),
               parentRevisionNumber: revision.parentRevisionID.flatMap { parentID in
                 revisionRecords.first(where: { $0.id == parentID })?.revisionNumber
               },
@@ -236,6 +237,7 @@ private struct PlanRevisionCard: View {
   let operations: [PlanningOperation]
   let warnings: [PlanningWarning]
   let impact: PlanningImpact?
+  let rationales: [PlanRevisionRationale]
   let parentRevisionNumber: Int?
   let isStale: Bool
   let onAccept: () -> Void
@@ -276,6 +278,35 @@ private struct PlanRevisionCard: View {
             Label(operation.summary, systemImage: "arrow.triangle.branch")
               .font(.gymSupport)
               .foregroundStyle(Color.gymSecondaryText)
+          }
+        }
+      }
+
+      if !rationales.isEmpty {
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Motivo por ejercicio")
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymSecondaryText)
+          ForEach(rationales) { rationale in
+            VStack(alignment: .leading, spacing: 4) {
+              HStack(spacing: 6) {
+                Text(rationale.exerciseName)
+                  .font(.gymBody.weight(.semibold))
+                Spacer(minLength: 8)
+                Text(rationale.outcome == .adjusted ? "Ajustado" : "Se conserva")
+                  .font(.gymSupport.weight(.bold))
+                  .foregroundStyle(rationale.outcome == .adjusted ? Color.gymAccent : Color.gymSecondaryText)
+              }
+              Text("\(rationale.material) · \(rationale.setIndexes.isEmpty ? "sin cambios de serie" : "series \(rationale.setIndexes.map(String.init).joined(separator: ", "))")")
+                .font(.gymSupport)
+                .foregroundStyle(Color.gymSecondaryText)
+              Text(rationale.detail)
+                .font(.gymBody)
+                .foregroundStyle(Color.gymSecondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(10)
+            .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 10))
           }
         }
       }
