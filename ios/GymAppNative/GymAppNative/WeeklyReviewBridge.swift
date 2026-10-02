@@ -18,6 +18,7 @@ enum WeeklyReviewBridge {
     let profile: TrainingProfile
     let completedSessionIDs: [String]
     let executions: [WorkoutExecutionState]
+    let exerciseDecisionsBySession: [String: [String: String]]
     let localSummary: LocalSummary
   }
 
@@ -42,6 +43,7 @@ enum WeeklyReviewBridge {
     let operations: [PlanningOperation]
     let summary: String
     let details: [String]
+    let preservedDetails: [String]
   }
 
   enum AdviceTone {
@@ -50,9 +52,29 @@ enum WeeklyReviewBridge {
     case positive
   }
 
-  private enum AutomaticAdjustmentMode {
-    case progress
+  private enum ExerciseAdjustmentIntent: Equatable {
+    case hold
+    case increaseReps
+    case increaseLoad
+    case decreaseReps
+    case decreaseLoad
     case recover
+  }
+
+  private struct ExerciseSignal {
+    var completedSets = 0
+    var skippedSets = 0
+    var rirValues: [Int] = []
+    var maximumDiscomfort = 0
+    var maximumActualReps: Int?
+    var maximumActualWeightKgByEquipment: [Equipment: Double] = [:]
+    var maximumActualDurationSeconds: Int?
+    var decision: String?
+
+    var averageRIR: Double? {
+      guard !rirValues.isEmpty else { return nil }
+      return Double(rirValues.reduce(0, +)) / Double(rirValues.count)
+    }
   }
 
   struct ExternalProposal: Codable {
@@ -107,9 +129,18 @@ enum WeeklyReviewBridge {
       max($0.feedback.painKnee, $0.feedback.painWrist, $0.feedback.painShoulder, $0.feedback.painLowerBack, $0.feedback.declaredDiscomfortLevels.values.max() ?? 0)
     }.max() ?? 0
     let plannedSessions = plan.sessions.filter { !$0.isCancelled && $0.week == closedWeek }.count
+    let exerciseDecisionsBySession = completedRecords.reduce(into: [String: [String: String]]()) { decisionsBySession, record in
+      guard let data = record.executionData,
+            let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data),
+            execution.session.week == closedWeek,
+            let decisionsData = record.decisionsData,
+            let decisions = try? JSONDecoder().decode([String: String].self, from: decisionsData),
+            !decisions.isEmpty else { return }
+      decisionsBySession[record.sessionID] = decisions
+    }
     let export = Export(
       schemaName: contextSchemaName,
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: .now,
       closedWeek: closedWeek,
       nextWeek: nextWeek,
@@ -117,6 +148,7 @@ enum WeeklyReviewBridge {
       profile: profile,
       completedSessionIDs: executions.map { $0.session.sessionID }.sorted(),
       executions: executions,
+      exerciseDecisionsBySession: exerciseDecisionsBySession,
       localSummary: LocalSummary(
         plannedSessions: plannedSessions,
         completedSessions: executions.count,
@@ -242,80 +274,110 @@ enum WeeklyReviewBridge {
     referenceDate: Date = .now
   ) -> LocalProgressionProposal? {
     guard let nextWeek else { return nil }
-    let executions = completedRecords.compactMap { record -> WorkoutExecutionState? in
+    let weekResults = completedRecords.sorted { $0.completedAt < $1.completedAt }.compactMap { record -> (WorkoutExecutionState, [String: String])? in
       guard let data = record.executionData,
             let execution = try? JSONDecoder().decode(WorkoutExecutionState.self, from: data),
             execution.session.week == closedWeek else { return nil }
-      return execution
+      let decisions = record.decisionsData.flatMap {
+        try? JSONDecoder().decode([String: String].self, from: $0)
+      } ?? [:]
+      return (execution, decisions)
     }
-    let records = executions.flatMap(\.records)
-    let completed = records.filter { $0.status == .completed }
-    let skipped = records.contains { $0.status == .skipped }
-    let maxDiscomfort = records.map {
-      max($0.feedback.painKnee, $0.feedback.painWrist, $0.feedback.painShoulder, $0.feedback.painLowerBack, $0.feedback.declaredDiscomfortLevels.values.max() ?? 0)
-    }.max() ?? 0
-    let rir = completed.compactMap(\.feedback.rir)
-    guard !skipped, maxDiscomfort == 0, !rir.isEmpty else { return nil }
-    let averageRIR = Double(rir.reduce(0, +)) / Double(rir.count)
-    let mode: AutomaticAdjustmentMode
-    if averageRIR >= 3 {
-      mode = .progress
-    } else if averageRIR < 1 {
-      mode = .recover
-    } else {
-      return nil
+    guard !weekResults.isEmpty else { return nil }
+
+    var signals: [String: ExerciseSignal] = [:]
+    for (execution, decisions) in weekResults {
+      for exercise in execution.session.exercises {
+        guard let decision = decisions[exercise.exerciseID] else { continue }
+        var signal = signals[exercise.displayGroupID] ?? .init()
+        signal.decision = decision
+        signals[exercise.displayGroupID] = signal
+      }
+      for record in execution.records {
+        guard execution.session.exercises.indices.contains(record.locator.exerciseIndex) else { continue }
+        let exercise = execution.session.exercises[record.locator.exerciseIndex]
+        let groupID = exercise.displayGroupID
+        let targets = execution.targets(for: record)
+        var signal = signals[groupID] ?? .init()
+        if record.status == .completed {
+          signal.completedSets += 1
+          if let rir = record.feedback.rir { signal.rirValues.append(rir) }
+          if let reps = targets?.reps {
+            signal.maximumActualReps = max(signal.maximumActualReps ?? reps, reps)
+          }
+          if let weight = targets?.weightKg, weight > 0 {
+            let equipment = execution.equipment(for: record) ?? exercise.equipment
+            signal.maximumActualWeightKgByEquipment[equipment] = max(
+              signal.maximumActualWeightKgByEquipment[equipment] ?? weight,
+              weight
+            )
+          }
+          if let duration = targets?.durationSeconds {
+            signal.maximumActualDurationSeconds = max(signal.maximumActualDurationSeconds ?? duration, duration)
+          }
+        } else {
+          signal.skippedSets += 1
+        }
+        signal.maximumDiscomfort = max(
+          signal.maximumDiscomfort,
+          record.feedback.painKnee,
+          record.feedback.painWrist,
+          record.feedback.painShoulder,
+          record.feedback.painLowerBack,
+          record.feedback.declaredDiscomfortLevels.values.max() ?? 0
+        )
+        signals[groupID] = signal
+      }
     }
 
-    let completedGroups = Set(executions.flatMap { execution in
-      execution.records.compactMap { record -> String? in
-        guard record.status == .completed,
-              execution.session.exercises.indices.contains(record.locator.exerciseIndex) else { return nil }
-        return execution.session.exercises[record.locator.exerciseIndex].displayGroupID
-      }
-    })
     let today = Calendar.current.startOfDay(for: referenceDate)
+    let targetSessions = plan.sessions.filter {
+      !$0.isCancelled && $0.week == nextWeek && date(from: $0.date) >= today
+    }
+    guard !targetSessions.isEmpty else { return nil }
+
     var operations: [PlanningOperation] = []
     var details: [String] = []
-    var adjustedGroups = Set<String>()
-    for session in plan.sessions where !session.isCancelled && session.week == nextWeek && date(from: session.date) >= today {
-      let eligibleSupersets = Set(session.exercises.compactMap(\.supersetID)).filter { supersetID in
-        let members = session.exercises.filter { $0.supersetID == supersetID }
-        return members.allSatisfy {
-          completedGroups.contains($0.displayGroupID)
-            && canAdjustAutomatically($0, mode: mode, inventory: inventory, profile: profile)
+    var preservedDetails: [String] = []
+    var explainedAdjustments = Set<String>()
+    var explainedPreservations = Set<String>()
+
+    for session in targetSessions {
+      let progressiveSupersets = Set(session.exercises.compactMap(\.supersetID)).filter { supersetID in
+        session.exercises.filter { $0.supersetID == supersetID }.allSatisfy { member in
+          guard let signal = signals[member.displayGroupID] else { return false }
+          return isProgression(intent(for: signal, phase: member.phase))
         }
       }
-      for exercise in session.exercises where completedGroups.contains(exercise.displayGroupID) {
-        guard !adjustedGroups.contains(exercise.displayGroupID) else { continue }
-        guard exercise.equipment != .bodyweight
-          || exercise.sets.contains(where: { canAdjustAutomatically(exercise, set: $0, mode: mode, inventory: inventory, profile: profile) }) else { continue }
-        if let supersetID = exercise.supersetID, !eligibleSupersets.contains(supersetID) { continue }
+
+      for exercise in session.exercises {
+        guard let signal = signals[exercise.displayGroupID], signal.completedSets > 0 else {
+          appendUnique(
+            "\(exercise.displayName): se conserva por falta de una ejecución comparable en S\(closedWeek).",
+            key: exercise.displayGroupID,
+            seen: &explainedPreservations,
+            values: &preservedDetails
+          )
+          continue
+        }
+        var adjustment = intent(for: signal, phase: exercise.phase)
+        if isProgression(adjustment),
+           let supersetID = exercise.supersetID,
+           !progressiveSupersets.contains(supersetID) {
+          adjustment = .hold
+        }
+
+        var exerciseOperations: [PlanningOperation] = []
         for set in exercise.sets {
-          if exercise.equipment == .bodyweight,
-             mode == .progress,
-             let adjustment = bodyweightProgression(for: exercise, set: set, profile: profile) {
-            switch adjustment {
-            case let .reps(reps):
-              operations.append(.adjustSet(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, reps: reps, weightKg: nil, durationSeconds: nil, restSeconds: nil))
-              details.append("\(exercise.displayName): \(set.targetReps ?? 0) → \(reps) reps antes de cambiar la carga corporal.")
-            case let .load(assistanceKg, addedWeightKg):
-              operations.append(.adjustBodyweightLoad(sessionID: session.sessionID, exerciseID: exercise.exerciseID, setIndex: set.setIndex, assistanceKg: assistanceKg, addedWeightKg: addedWeightKg))
-              if assistanceKg > 0 || (set.bodyweightLoad?.assistanceKg ?? 0) > 0 {
-                details.append("\(exercise.displayName): asistencia \(weightLabel(set.bodyweightLoad?.assistanceKg ?? 0)) kg → \(weightLabel(assistanceKg)) kg.")
-              } else {
-                details.append("\(exercise.displayName): lastre \(weightLabel(set.bodyweightLoad?.addedWeightKg ?? 0)) kg → \(weightLabel(addedWeightKg)) kg configurado en tu perfil.")
-              }
-            }
-            adjustedGroups.insert(exercise.displayGroupID)
-            break
-          }
-          switch (mode, set.type) {
-          case (.progress, .working):
-            if exercise.phase == "acumulacion",
-               let reps = set.targetReps,
-               reps < maximumReps(for: exercise),
-               exercise.equipment != .bodyweight {
-              operations.append(.adjustSet(
+          switch adjustment {
+          case .increaseReps:
+            switch set.type {
+            case .working:
+              guard normalizedPhase(exercise.phase) == "acumulacion",
+                    let reps = set.targetReps,
+                    (signal.maximumActualReps ?? 0) >= reps,
+                    reps < maximumReps(for: exercise) else { continue }
+              exerciseOperations.append(.adjustSet(
                 sessionID: session.sessionID,
                 exerciseID: exercise.exerciseID,
                 setIndex: set.setIndex,
@@ -324,72 +386,200 @@ enum WeeklyReviewBridge {
                 durationSeconds: nil,
                 restSeconds: nil
               ))
-              details.append("\(exercise.displayName): \(reps) → \(reps + 1) reps, prioridad de acumulación.")
-              adjustedGroups.insert(exercise.displayGroupID)
-            } else if exercise.phase == "intensificacion" {
-              let maximumWeight = set.targetWeightKg * (1 + maximumLoadIncrease(for: exercise.equipment))
-              guard set.targetWeightKg > 0,
-                    let weight = EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: inventory)
-                      .first(where: { $0 > set.targetWeightKg && $0 <= maximumWeight }) else { continue }
-              operations.append(.adjustSet(
+              appendUnique(
+                "\(exercise.displayName): +1 repetición en cada serie elegible; \(signalLabel(signal)).",
+                key: exercise.displayGroupID,
+                seen: &explainedAdjustments,
+                values: &details
+              )
+            case .timed:
+              guard normalizedPhase(exercise.phase) == "acumulacion",
+                    let duration = set.targetDurationSeconds,
+                    (signal.maximumActualDurationSeconds ?? 0) >= duration,
+                    duration < maximumTimedDuration else { continue }
+              let nextDuration = min(maximumTimedDuration, duration + 5)
+              exerciseOperations.append(.adjustSet(
                 sessionID: session.sessionID,
                 exerciseID: exercise.exerciseID,
                 setIndex: set.setIndex,
                 reps: nil,
-                weightKg: weight,
-                durationSeconds: nil,
+                weightKg: nil,
+                durationSeconds: nextDuration,
                 restSeconds: nil
               ))
-              details.append("\(exercise.displayName): \(weightLabel(set.targetWeightKg)) kg → \(weightLabel(weight)) kg, intensidad y material disponible.")
-              adjustedGroups.insert(exercise.displayGroupID)
+              appendUnique(
+                "\(exercise.displayName): \(duration) → \(nextDuration) s por serie; \(signalLabel(signal)).",
+                key: exercise.displayGroupID,
+                seen: &explainedAdjustments,
+                values: &details
+              )
             }
-          case (.progress, .timed):
-            guard exercise.phase == "acumulacion",
-                  let duration = set.targetDurationSeconds,
-                  duration < maximumTimedDuration else { continue }
-            let nextDuration = min(maximumTimedDuration, duration + 5)
-            operations.append(.adjustSet(
+          case .increaseLoad:
+            guard case .working = set.type,
+                  normalizedPhase(exercise.phase) == "intensificacion" else { continue }
+            if exercise.equipment == .bodyweight,
+               let bodyweight = bodyweightProgression(for: exercise, set: set, profile: profile) {
+              if case let .load(assistanceKg, addedWeightKg) = bodyweight {
+                exerciseOperations.append(.adjustBodyweightLoad(
+                  sessionID: session.sessionID,
+                  exerciseID: exercise.exerciseID,
+                  setIndex: set.setIndex,
+                  assistanceKg: assistanceKg,
+                  addedWeightKg: addedWeightKg
+                ))
+                let currentAssistance = set.bodyweightLoad?.assistanceKg ?? 0
+                let currentAddedWeight = set.bodyweightLoad?.addedWeightKg ?? 0
+                let description = assistanceKg > 0 || currentAssistance > 0
+                  ? "asistencia \(weightLabel(currentAssistance)) → \(weightLabel(assistanceKg)) kg"
+                  : "lastre \(weightLabel(currentAddedWeight)) → \(weightLabel(addedWeightKg)) kg"
+                appendUnique(
+                  "\(exercise.displayName): \(description), usando los pasos configurados en el perfil; \(signalLabel(signal)).",
+                  key: exercise.displayGroupID,
+                  seen: &explainedAdjustments,
+                  values: &details
+                )
+              }
+              continue
+            }
+            guard set.targetWeightKg > 0 else { continue }
+            guard let performedWeight = signal.maximumActualWeightKgByEquipment[exercise.equipment],
+                  performedWeight >= set.targetWeightKg else { continue }
+            let observedWeight = max(set.targetWeightKg, performedWeight)
+            let maximumWeight = set.targetWeightKg * (1 + maximumLoadIncrease(for: exercise.equipment))
+            guard let weight = EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: inventory)
+              .first(where: { $0 > observedWeight && $0 <= maximumWeight }) else { continue }
+            exerciseOperations.append(.adjustSet(
               sessionID: session.sessionID,
               exerciseID: exercise.exerciseID,
               setIndex: set.setIndex,
               reps: nil,
-              weightKg: nil,
-              durationSeconds: nextDuration,
+              weightKg: weight,
+              durationSeconds: nil,
               restSeconds: nil
             ))
-            details.append("\(exercise.displayName): \(duration) s → \(nextDuration) s, progresión temporizada de acumulación.")
-            adjustedGroups.insert(exercise.displayGroupID)
-          case (.recover, .working), (.recover, .timed):
-            guard exercise.equipment != .bodyweight,
-                  exercise.phase != "descarga", exercise.phase != "readaptacion", exercise.phase != "test" else { continue }
+            appendUnique(
+              "\(exercise.displayName): siguiente salto de carga disponible en cada serie elegible; \(signalLabel(signal)).",
+              key: exercise.displayGroupID,
+              seen: &explainedAdjustments,
+              values: &details
+            )
+          case .decreaseReps:
+            guard case .working = set.type,
+                  let reps = set.targetReps,
+                  reps >= (signal.maximumActualReps ?? reps),
+                  reps > 1 else { continue }
+            exerciseOperations.append(.adjustSet(
+              sessionID: session.sessionID,
+              exerciseID: exercise.exerciseID,
+              setIndex: set.setIndex,
+              reps: reps - 1,
+              weightKg: nil,
+              durationSeconds: nil,
+              restSeconds: nil
+            ))
+            appendUnique(
+              "\(exercise.displayName): -1 repetición en cada serie elegible, siguiendo el feedback de la semana.",
+              key: exercise.displayGroupID,
+              seen: &explainedAdjustments,
+              values: &details
+            )
+          case .decreaseLoad:
+            guard case .working = set.type,
+                  exercise.equipment != .bodyweight,
+                  set.targetWeightKg > 0 else { continue }
+            if let observed = signal.maximumActualWeightKgByEquipment[exercise.equipment],
+               set.targetWeightKg < observed {
+              continue
+            }
+            let weight = EquipmentLoadRules.adjustedWeight(
+              from: set.targetWeightKg,
+              equipment: exercise.equipment,
+              direction: -1,
+              inventory: inventory
+            )
+            guard weight < set.targetWeightKg else { continue }
+            exerciseOperations.append(.adjustSet(
+              sessionID: session.sessionID,
+              exerciseID: exercise.exerciseID,
+              setIndex: set.setIndex,
+              reps: nil,
+              weightKg: weight,
+              durationSeconds: nil,
+              restSeconds: nil
+            ))
+            appendUnique(
+              "\(exercise.displayName): un salto menos de carga en cada serie elegible, respetando el material configurado.",
+              key: exercise.displayGroupID,
+              seen: &explainedAdjustments,
+              values: &details
+            )
+          case .recover:
             let isTimed: Bool
             if case .timed = set.type { isTimed = true } else { isTimed = false }
             let rest = min(maximumRest(for: exercise, isTimed: isTimed), set.restSeconds + 15)
-            guard rest > set.restSeconds else { continue }
-            operations.append(.adjustSet(
+            var weight: Double?
+            var duration: Int?
+            if shouldReduceLoad(for: signal),
+               !isTimed,
+               exercise.equipment != .bodyweight,
+               set.targetWeightKg > 0 {
+              let observed = signal.maximumActualWeightKgByEquipment[exercise.equipment]
+              let planAlreadyRecovers = observed.map { set.targetWeightKg < $0 } ?? false
+              if !planAlreadyRecovers {
+                let reduced = EquipmentLoadRules.adjustedWeight(
+                  from: set.targetWeightKg,
+                  equipment: exercise.equipment,
+                  direction: -1,
+                  inventory: inventory
+                )
+                if reduced < set.targetWeightKg { weight = reduced }
+              }
+            }
+            if shouldReduceLoad(for: signal), isTimed, let seconds = set.targetDurationSeconds {
+              let planAlreadyRecovers = signal.maximumActualDurationSeconds.map { seconds < $0 } ?? false
+              if !planAlreadyRecovers { duration = max(15, seconds - 5) }
+            }
+            guard weight != nil || duration != nil || rest > set.restSeconds else { continue }
+            exerciseOperations.append(.adjustSet(
               sessionID: session.sessionID,
               exerciseID: exercise.exerciseID,
               setIndex: set.setIndex,
               reps: nil,
-              weightKg: nil,
-              durationSeconds: nil,
-              restSeconds: rest
+              weightKg: weight,
+              durationSeconds: duration,
+              restSeconds: rest > set.restSeconds ? rest : nil
             ))
-            details.append("\(exercise.displayName): descanso \(set.restSeconds) s → \(rest) s por RIR bajo.")
-            adjustedGroups.insert(exercise.displayGroupID)
+            appendUnique(
+              "\(exercise.displayName): recuperación conservadora con más descanso\(weight != nil || duration != nil ? " y menor exigencia" : ""); \(signalLabel(signal)).",
+              key: exercise.displayGroupID,
+              seen: &explainedAdjustments,
+              values: &details
+            )
+          case .hold:
+            break
           }
-          if adjustedGroups.contains(exercise.displayGroupID) { break }
+        }
+        operations.append(contentsOf: exerciseOperations)
+        if exerciseOperations.isEmpty {
+          appendUnique(
+            preservationReason(for: exercise, signal: signal, intent: adjustment, closedWeek: closedWeek),
+            key: exercise.displayGroupID,
+            seen: &explainedPreservations,
+            values: &preservedDetails
+          )
         }
       }
     }
-    guard !operations.isEmpty else { return nil }
-    let summary = mode == .progress
-      ? "Progresión conservadora en S\(nextWeek), condicionada por la fase y el material disponible."
-      : "Recuperación conservadora en S\(nextWeek): más descanso tras un RIR medio bajo."
+
+    let changedGroups = explainedAdjustments.count
+    let summary = operations.isEmpty
+      ? "La prescripción actual de S\(nextWeek) ya encaja con el feedback de S\(closedWeek); no se proponen cambios automáticos."
+      : "Borrador para S\(nextWeek): \(changedGroups) ejercicio\(changedGroups == 1 ? "" : "s") ajustado\(changedGroups == 1 ? "" : "s") según ejecución, feedback y fase del macrociclo."
     return .init(
       operations: operations,
       summary: summary,
-      details: Array(Set(details)).sorted()
+      details: details,
+      preservedDetails: preservedDetails
     )
   }
 
@@ -406,7 +596,7 @@ enum WeeklyReviewBridge {
   }
 
   private static func phaseRule(for phase: String?) -> String {
-    switch phase {
+    switch normalizedPhase(phase ?? "") {
     case "acumulacion": "Acumulación: prioriza una repetición adicional antes que aumentar carga."
     case "intensificacion": "Intensificación: permite carga solo si el siguiente salto está disponible y es conservador."
     case "descarga": "Descarga: no se generan progresiones automáticas."
@@ -438,54 +628,105 @@ enum WeeklyReviewBridge {
 
   private static var maximumTimedDuration: Int { 90 }
 
-  private static func canAdjustAutomatically(
-    _ exercise: TrainingExercise,
-    mode: AutomaticAdjustmentMode,
-    inventory: EquipmentLoadInventory,
-    profile: TrainingProfile
-  ) -> Bool {
-    exercise.sets.contains { set in
-      canAdjustAutomatically(exercise, set: set, mode: mode, inventory: inventory, profile: profile)
+  private static func intent(for signal: ExerciseSignal, phase: String) -> ExerciseAdjustmentIntent {
+    let decision = normalized(signal.decision ?? "")
+    if signal.maximumDiscomfort >= 2 || signal.skippedSets > 0 || (signal.averageRIR ?? 2) < 1 {
+      return .recover
+    }
+    switch decision {
+    case "marcar molestia", "molestia": return .recover
+    case "bajar reps": return .decreaseReps
+    case "bajar peso": return .decreaseLoad
+    case "mantener", "mantener tiempo", "mejorar posicion": return .hold
+    case "subir reps":
+      return normalizedPhase(phase) == "acumulacion" ? .increaseReps : .hold
+    case "subir peso":
+      return normalizedPhase(phase) == "intensificacion" ? .increaseLoad : .hold
+    default:
+      break
+    }
+    guard signal.maximumDiscomfort == 0, let averageRIR = signal.averageRIR else { return .hold }
+    switch normalizedPhase(phase) {
+    case "acumulacion" where averageRIR >= 3:
+      return .increaseReps
+    case "intensificacion" where averageRIR >= 2:
+      return .increaseLoad
+    default:
+      return .hold
     }
   }
 
-  private static func canAdjustAutomatically(
-    _ exercise: TrainingExercise,
-    set: TrainingSet,
-    mode: AutomaticAdjustmentMode,
-    inventory: EquipmentLoadInventory,
-    profile: TrainingProfile
-  ) -> Bool {
-    if exercise.equipment == .bodyweight,
-       mode == .progress,
-       case .working = set.type {
-      return bodyweightProgression(for: exercise, set: set, profile: profile) != nil
+  private static func isProgression(_ intent: ExerciseAdjustmentIntent) -> Bool {
+    intent == .increaseReps || intent == .increaseLoad
+  }
+
+  private static func shouldReduceLoad(for signal: ExerciseSignal) -> Bool {
+    let decision = normalized(signal.decision ?? "")
+    return signal.maximumDiscomfort >= 2
+      || signal.skippedSets > 0
+      || decision == "marcar molestia"
+      || decision == "molestia"
+  }
+
+  private static func signalLabel(_ signal: ExerciseSignal) -> String {
+    var parts: [String] = []
+    if let averageRIR = signal.averageRIR {
+      parts.append("RIR medio \(String(format: "%.1f", averageRIR))")
     }
-    switch (mode, set.type) {
-      case (.progress, .working):
-        if exercise.phase == "acumulacion", let reps = set.targetReps {
-          return reps < maximumReps(for: exercise)
-        }
-        if exercise.phase == "intensificacion", set.targetWeightKg > 0 {
-          let maximumWeight = set.targetWeightKg * (1 + maximumLoadIncrease(for: exercise.equipment))
-          return EquipmentLoadRules.availableLoads(for: exercise.equipment, inventory: inventory)
-            .contains { $0 > set.targetWeightKg && $0 <= maximumWeight }
-        }
-        return false
-      case (.progress, .timed):
-        return exercise.phase == "acumulacion" && (set.targetDurationSeconds ?? maximumTimedDuration) < maximumTimedDuration
-      case (.recover, .working):
-        return exercise.equipment != .bodyweight
-          && exercise.phase != "descarga"
-          && exercise.phase != "readaptacion"
-          && exercise.phase != "test"
-          && set.restSeconds < maximumRest(for: exercise)
-      case (.recover, .timed):
-        return exercise.phase != "descarga"
-          && exercise.phase != "readaptacion"
-          && exercise.phase != "test"
-          && set.restSeconds < maximumRest(for: exercise, isTimed: true)
+    if signal.skippedSets > 0 {
+      parts.append("\(signal.skippedSets) serie\(signal.skippedSets == 1 ? " omitida" : "s omitidas")")
     }
+    if signal.maximumDiscomfort > 0 {
+      parts.append("molestia \(signal.maximumDiscomfort)/3")
+    }
+    if let decision = signal.decision, !decision.isEmpty {
+      parts.append("feedback «\(decision)»")
+    }
+    return parts.isEmpty ? "ejecución completada sin señal suficiente" : parts.joined(separator: ", ")
+  }
+
+  private static func preservationReason(
+    for exercise: TrainingExercise,
+    signal: ExerciseSignal,
+    intent: ExerciseAdjustmentIntent,
+    closedWeek: Int
+  ) -> String {
+    let phase = normalizedPhase(exercise.phase)
+    if ["descarga", "readaptacion", "realizacion", "test"].contains(phase) {
+      return "\(exercise.displayName): se conserva porque la fase «\(exercise.phase)» no admite progresión automática."
+    }
+    if exercise.supersetID != nil, intent == .hold {
+      return "\(exercise.displayName): se conserva para no descompensar su superserie; \(signalLabel(signal))."
+    }
+    if signal.maximumDiscomfort == 1 {
+      return "\(exercise.displayName): se conserva con precaución por molestia 1/3."
+    }
+    if normalized(signal.decision ?? "").hasPrefix("mantener") {
+      return "\(exercise.displayName): se conserva según el feedback «\(signal.decision ?? "Mantener")»."
+    }
+    if signal.averageRIR == nil {
+      return "\(exercise.displayName): se conserva porque S\(closedWeek) no aporta RIR suficiente para ajustar con seguridad."
+    }
+    return "\(exercise.displayName): el objetivo previsto ya encaja con \(signalLabel(signal))."
+  }
+
+  private static func appendUnique(
+    _ value: String,
+    key: String,
+    seen: inout Set<String>,
+    values: inout [String]
+  ) {
+    guard seen.insert(key).inserted else { return }
+    values.append(value)
+  }
+
+  private static func normalized(_ value: String) -> String {
+    value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "es_ES"))
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  private static func normalizedPhase(_ phase: String) -> String {
+    normalized(phase)
   }
 
   private enum BodyweightProgression {
@@ -500,12 +741,9 @@ enum WeeklyReviewBridge {
   ) -> BodyweightProgression? {
     guard exercise.equipment == .bodyweight,
           case .working = set.type,
-          exercise.phase != "descarga",
-          exercise.phase != "readaptacion",
-          exercise.phase != "test",
-          exercise.phase != "realizacion" else { return nil }
+          !["descarga", "readaptacion", "test", "realizacion"].contains(normalizedPhase(exercise.phase)) else { return nil }
     let load = set.bodyweightLoad ?? .init()
-    if exercise.phase == "acumulacion",
+    if normalizedPhase(exercise.phase) == "acumulacion",
        let reps = set.targetReps,
        reps < maximumReps(for: exercise) {
       return .reps(reps + 1)
@@ -513,7 +751,7 @@ enum WeeklyReviewBridge {
     if load.assistanceKg > 0 {
       return .load(assistanceKg: max(0, load.assistanceKg - max(0.5, profile.bodyweightAssistanceStepKg)), addedWeightKg: 0)
     }
-    guard exercise.phase == "intensificacion",
+    guard normalizedPhase(exercise.phase) == "intensificacion",
           let nextLoad = profile.bodyweightWeightedLoadsKg.first(where: { $0 > load.addedWeightKg }) else { return nil }
     return .load(assistanceKg: 0, addedWeightKg: nextLoad)
   }
@@ -523,7 +761,16 @@ enum WeeklyReviewBridge {
     let text = """
     Eres un entrenador que revisa una semana de GymApp. Recibirás un JSON con schemaName \(contextSchemaName).
 
-    Evalúa adherencia, series omitidas, cargas reales, reps, RIR, descansos, molestias y el objetivo de la siguiente semana. No cambies sesiones completadas, activas o pasadas. Respeta el material, lesiones, molestias y límites de progresión indicados en el contexto.
+    Evalúa ejercicio a ejercicio, agrupando variantes por baseExerciseId cuando exista; no uses un único RIR medio global. El contexto v2 incluye exerciseDecisionsBySession: la decisión final de la evaluación de cada ejercicio. No cambies sesiones completadas, activas o pasadas.
+
+    Sigue estas reglas, que son las mismas del motor local:
+    - Prioriza seguridad. Una serie omitida, una molestia de nivel 2 o 3, o RIR medio inferior a 1 requieren recuperación solo para ese ejercicio: añade hasta 15 s de descanso. Ante omisión o molestia 2-3, reduce además una carga disponible o la duración solo si la siguiente semana no la ha reducido ya. Molestia de nivel 1 implica mantener y advertir; no bloquea automáticamente el ejercicio.
+    - Respeta la decisión explícita: Mantener, Mantener tiempo y Mejorar posición conservan el objetivo; Bajar reps o Bajar peso solo reducen el parámetro indicado; Subir reps solo puede progresar durante acumulación y Subir peso solo durante intensificación.
+    - Sin una decisión explícita, propone como máximo +1 repetición durante acumulación si se cumplió el objetivo y el RIR medio es al menos 3; para temporizados, como máximo +5 s hasta 90 s. Durante intensificación, propone solo la siguiente carga disponible si se cumplió el objetivo con el mismo material y el RIR medio es al menos 2.
+    - No progreses automáticamente en descarga, readaptación, realización ni test. No dupliques una progresión ya prevista: compara siempre el objetivo de la siguiente semana con el valor realmente ejecutado antes de incrementarlo o reducirlo.
+    - Compara cargas reales únicamente dentro del mismo material. Nunca extrapoles entre barra, mancuernas, máquina, polea o multipower. Para barra/multipower, un incremento no puede superar el 2,5 %; para mancuernas, polea, máquinas o carga externa, el 5 %. Usa solo valores disponibles en el perfil.
+    - En superseries, no propongas una progresión parcial: si todos los miembros no son elegibles, conserva el bloque. Una recuperación por molestia o serie omitida sí puede afectar solo al ejercicio señalado.
+    - Respeta material, lesiones, molestias y límites de progresión indicados en el contexto. La summary debe indicar de forma breve qué ejercicios cambian, cuáles se conservan y el motivo.
 
     Devuelve solo JSON, sin Markdown, con este contrato:
     {
@@ -547,7 +794,7 @@ enum WeeklyReviewBridge {
       ]
     }
 
-    Usa solo operaciones soportadas por GymApp: moveSession, shiftFutureSessions, cancelSession, replaceExercise, addExercise, removeExercise, adjustSet y adjustBodyweightLoad. Para asistencia o lastre usa adjustBodyweightLoad con assistanceKg o addedWeightKg, nunca ambos a la vez. No devuelvas un plan completo ni inventes IDs.
+    Usa solo operaciones soportadas por GymApp: moveSession, shiftFutureSessions, cancelSession, replaceExercise, addExercise, removeExercise, adjustSet y adjustBodyweightLoad. Aplica un cambio coherente a todas las series futuras elegibles del ejercicio, no solo a la primera. Para asistencia o lastre usa adjustBodyweightLoad con assistanceKg o addedWeightKg, nunca ambos a la vez. No devuelvas un plan completo ni inventes IDs.
     """
     let url = FileManager.default.temporaryDirectory.appendingPathComponent("gymapp-external-agent-instructions.txt")
     try text.write(to: url, atomically: true, encoding: .utf8)
@@ -645,7 +892,7 @@ struct WeeklyReviewExportView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
-        Text("Genera un contexto versionado para revisar la semana cerrada con un agente externo. El archivo no modifica tu planificación.")
+        Text("Revisa la semana cerrada y prepara un borrador conservador para la siguiente. Nada cambia hasta que aceptes la propuesta desde Planificación.")
           .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
 
@@ -695,27 +942,52 @@ struct WeeklyReviewExportView: View {
                 }
                 if let localProgressionProposal {
                   SettingsDivider()
-                  VStack(alignment: .leading, spacing: 10) {
+                  VStack(alignment: .leading, spacing: 12) {
                     Text(localProgressionProposal.summary)
                       .font(.gymBody.weight(.semibold))
-                    ForEach(localProgressionProposal.details.prefix(4), id: \.self) { detail in
-                      Text(detail)
-                        .font(.gymSupport)
+                    if !localProgressionProposal.details.isEmpty {
+                      Text("Cambios propuestos")
+                        .font(.gymSupport.weight(.bold))
+                        .foregroundStyle(Color.gymAccent)
+                      ForEach(localProgressionProposal.details.prefix(4), id: \.self) { detail in
+                        Text(detail)
+                          .font(.gymBody)
+                          .foregroundStyle(Color.gymSecondaryText)
+                          .frame(maxWidth: .infinity, alignment: .leading)
+                      }
+                      if localProgressionProposal.details.count > 4 {
+                        Text("Y \(localProgressionProposal.details.count - 4) ajustes más en la revisión.")
+                          .font(.gymSupport)
+                          .foregroundStyle(Color.gymSecondaryText)
+                      }
+                    }
+                    if !localProgressionProposal.preservedDetails.isEmpty {
+                      Text("Se conserva")
+                        .font(.gymSupport.weight(.bold))
                         .foregroundStyle(Color.gymSecondaryText)
+                        .padding(.top, 2)
+                      ForEach(localProgressionProposal.preservedDetails.prefix(3), id: \.self) { detail in
+                        Text(detail)
+                          .font(.gymBody)
+                          .foregroundStyle(Color.gymSecondaryText)
+                          .frame(maxWidth: .infinity, alignment: .leading)
+                      }
+                    }
+                    if localProgressionProposal.operations.isEmpty {
+                      Label("No hace falta crear una revisión", systemImage: "checkmark.circle")
+                        .font(.gymBody.weight(.semibold))
+                        .foregroundStyle(Color.gymCompleted)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 2)
+                    } else {
+                      Button(action: { createLocalProposal(localProgressionProposal) }) {
+                        Label("Crear borrador para la semana siguiente", systemImage: "arrow.up.right")
+                          .frame(maxWidth: .infinity, minHeight: 48)
+                      }
+                      .font(.gymBody.weight(.semibold))
+                      .foregroundStyle(Color.gymAccentForeground)
+                      .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
                     }
-                    if localProgressionProposal.details.count > 4 {
-                      Text("Y \(localProgressionProposal.details.count - 4) ajustes más en la revisión.")
-                        .font(.gymSupport)
-                        .foregroundStyle(Color.gymSecondaryText)
-                    }
-                    Button(action: { createLocalProposal(localProgressionProposal) }) {
-                      Label("Crear propuesta conservadora", systemImage: "arrow.up.right")
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .font(.gymBody.weight(.semibold))
-                    .foregroundStyle(Color.gymAccentForeground)
-                    .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
                   }
                   .padding(16)
                 }
@@ -738,7 +1010,7 @@ struct WeeklyReviewExportView: View {
     .navigationBarBackButtonHidden()
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .top, spacing: 0) {
-      AccentHeaderCard(title: "Revisión semanal", detail: "Contexto para una propuesta externa")
+      AccentHeaderCard(title: "Revisión semanal", detail: "Feedback y propuesta para la próxima semana")
     }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
     .fileImporter(isPresented: $showsProposalImporter, allowedContentTypes: [.json]) { result in

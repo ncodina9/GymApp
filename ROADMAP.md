@@ -1480,6 +1480,10 @@ Actualización v0.1.164: la ejecución en Watch incorpora continuación explíci
 
 Actualización v0.1.165: una petición de actualización desde Watch ya no devuelve un catálogo en memoria potencialmente caducado. Al recibir `requestState`, el iPhone obliga al host de SwiftData a reconstruir y publicar el estado efectivo; la respuesta directa incluye dicho snapshot y también actualiza `applicationContext`. El diagnóstico solo marca una sincronización nueva después de decodificar ese estado recibido.
 
+Actualización v0.1.166: cada comando alcanzable del Watch recibe en su propia respuesta el snapshot resultante para avanzar de pantalla sin depender de un segundo envío. La revisión semanal deja de usar un único RIR medio global: analiza adherencia, RIR, molestias, decisión y valores ejecutados por ejercicio y material, contrasta esas señales con la fase de la semana siguiente y crea únicamente un borrador revisable. La pantalla separa cambios propuestos de objetivos que ya conviene conservar.
+
+Actualización v0.1.167: el contexto exportado de revisión semanal sube a schema v2 e incluye las decisiones finales por ejercicio de cada sesión. Las instrucciones compartidas con el agente externo reproducen las mismas reglas de seguridad, fase, material, redondeos y no duplicación de progresión del motor local, para que ambas rutas generen borradores equivalentes y auditables.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.
@@ -1491,7 +1495,7 @@ Actualización v0.1.165: una petición de actualización desde Watch ya no devue
 - [~] Añadir una pantalla de propuesta que muestre qué cambia, qué se conserva, por qué y el impacto semanal. El simulador local crea revisiones pendientes para mover o cancelar sesiones, sustituir ejercicios y ajustar series con cambios y avisos auditables; falta el impacto semanal completo.
 - [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, siempre como propuesta explicada y confirmada antes de modificar un plan.
 - [~] Integrar el chat como interfaz de intención sobre las operaciones validadas, con contexto limitado al perfil, plan efectivo, sesiones ejecutadas y restricciones relevantes. El intérprete local entiende ausencias, fechas, cierres, duración, ajustes de series y sustituciones de ejercicios; Entrenador encadena una sustitución y un ajuste de serie en una revisión compuesta. Faltan más de dos acciones, peticiones contradictorias y aclaraciones que dependan de una respuesta anterior.
-- [~] Definir una revisión semanal estructurada local: recopila cumplimiento, RIR, series omitidas y molestias; expone recomendaciones y puede crear propuestas de carga, reps, descanso, duración, asistencia o lastre tipadas, limitadas y confirmables. La regla de peso corporal ya prioriza reps, asistencia y lastre configurado; falta una explicación agrupada por sesión.
+- [~] Definir una revisión semanal estructurada local: recopila cumplimiento, RIR, series omitidas, decisiones y molestias por ejercicio; contrasta cada señal con la fase siguiente y puede crear un borrador de carga, reps, descanso, duración, asistencia o lastre tipado, limitado y confirmable. Distingue los cambios de aquello que conserva y evita que una incidencia aislada bloquee toda la semana; falta una explicación agrupada por sesión.
 - [~] Mantener durante las pruebas un puente de revisión externa: la app exporta contexto semanal, comparte el contrato e importa operaciones tipadas como revisión pendiente validada; falta permitir adjuntar la explicación extensa del agente y registrar proveedor/modelo/consentimiento cuando la integración sea remota.
 
 ### Futuro: nuevo macrociclo
@@ -1530,7 +1534,7 @@ Prioridad 2:
 
 - [x] mostrar superseries como secuencia de ejercicios vinculados, manteniendo clara la integrante actual
 - [ ] sincronizar tokens de apariencia y acento del iPhone con Watch: fondo, superficies, realce, variantes desaturadas, éxito, aviso y contraste accesible en todos los temas
-- [ ] incorporar una cola local en el reloj para registrar acciones sin conexión temporal con el teléfono y reconciliarlas al volver
+- [ ] incorporar una cola local visible en el reloj para registrar acciones sin conexión temporal con el teléfono, mostrar qué está pendiente y reconciliar automáticamente en orden al recuperar alcance, con deduplicación y resolución explícita de conflictos
 - [ ] definir notificaciones y sonidos de finalización coherentes entre iPhone y reloj, sin avisos duplicados
 
 Fuera de la primera versión:

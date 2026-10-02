@@ -370,7 +370,10 @@ extension WatchWorkoutConnectivity: WCSessionDelegate {
       let acknowledgement = self.apply(envelope)
       guard let encodedAcknowledgement = try? self.encoder.encode(acknowledgement) else { return }
       var response: [String: Any] = [Key.workoutCommandAcknowledgement: encodedAcknowledgement]
-      if envelope.command == .requestState, let state = self.encodedAppState() {
+      // NotificationCenter delivers the command synchronously on the main
+      // actor. Include the resulting snapshot in every direct reply so the
+      // Watch can advance immediately instead of waiting for a second push.
+      if let state = self.encodedAppState() {
         response[Key.appState] = state
       }
       replyHandler?(response)
