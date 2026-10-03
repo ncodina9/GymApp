@@ -8,7 +8,6 @@ struct TodayView: View {
   let plan: TrainingPlan
   @Query private var activeWorkoutRecords: [ActiveWorkoutRecord]
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
-  @Query private var planRevisionRecords: [PlanRevisionRecord]
   @AppStorage("themeAccent") private var themeAccentRaw = ThemeAccent.blue.rawValue
   @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
   @State private var path: [String] = []
@@ -64,26 +63,6 @@ struct TodayView: View {
     Set(completedWorkoutRecords.map(\.sessionID))
   }
 
-  private var latestClosedWeek: Int? {
-    Dictionary(grouping: plan.sessions.filter { !$0.isCancelled }, by: \.week)
-      .filter { _, sessions in sessions.allSatisfy { completedSessionIDs.contains($0.sessionID) } }
-      .map(\.key)
-      .max()
-  }
-
-  private var hasAcceptedWeeklyPlan: Bool {
-    guard let displayedWeek else { return false }
-    return planRevisionRecords.contains { revision in
-      guard revision.basePlanID == plan.planID, revision.status == .accepted else { return false }
-      if revision.reviewedWeek == displayedWeek { return true }
-
-      // Revisions created before the explicit marker retain their weekly trace.
-      return PlanRevisionStore.rationales(for: revision).contains { rationale in
-        plan.sessions.first(where: { $0.sessionID == rationale.sessionID })?.week == displayedWeek
-      }
-    }
-  }
-
   private var missedSession: TrainingSession? {
     let today = Calendar.current.startOfDay(for: .now)
     return plan.sessions
@@ -97,23 +76,46 @@ struct TodayView: View {
       .first
   }
 
+  private var isMacrocycleComplete: Bool {
+    activeWorkout == nil
+      && !plan.sessions.filter { !$0.isCancelled }.isEmpty
+      && plan.sessions.filter { !$0.isCancelled }.allSatisfy { completedSessionIDs.contains($0.sessionID) }
+  }
+
   var body: some View {
     NavigationStack(path: $path) {
-      if let displayedWeek, !weekSessions.isEmpty {
+      if isMacrocycleComplete {
+        VStack(spacing: 18) {
+          Image(systemName: "flag.checkered.circle")
+            .font(.system(size: 54))
+            .foregroundStyle(Color.gymCompleted)
+          Text("Macrociclo completado")
+            .font(.gymH1.weight(.bold))
+          Text("Has completado todas las sesiones de este plan. Define el objetivo y la duración del siguiente ciclo para generar una nueva planificación.")
+            .font(.gymBody)
+            .foregroundStyle(Color.gymSecondaryText)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 24)
+          NavigationLink {
+            MacrocycleGenerationView(previousPlan: plan)
+          } label: {
+            Label("Crear nuevo macrociclo", systemImage: "calendar.badge.plus")
+              .font(.gymBody.weight(.semibold))
+              .frame(maxWidth: .infinity, minHeight: 52)
+              .foregroundStyle(Color.gymAccentForeground)
+              .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
+          }
+          .buttonStyle(.plain)
+          .padding(.horizontal, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(GymCanvas())
+        .safeAreaInset(edge: .top, spacing: 0) {
+          AccentHeaderCard(title: "Planificación", detail: "Ciclo completado")
+        }
+      } else if let displayedWeek, !weekSessions.isEmpty {
         ScrollView {
           VStack(alignment: .leading, spacing: 12) {
-            if !isReadOnlyWeek, displayedWeek == latestClosedWeek, !hasAcceptedWeeklyPlan {
-              NavigationLink {
-                WeeklyReviewExportView(plan: plan)
-              } label: {
-                Label("Evaluar semana y planificar siguiente", systemImage: "calendar.badge.checkmark")
-                  .font(.gymBody.weight(.semibold))
-                  .frame(maxWidth: .infinity, minHeight: 48)
-                  .foregroundStyle(Color.gymAccentForeground)
-                  .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
-              }
-              .buttonStyle(.plain)
-            }
             if let missedSession {
               NavigationLink {
                 CoachConversationView(plan: plan, initialSessionID: missedSession.sessionID)

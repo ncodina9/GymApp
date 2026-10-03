@@ -2442,7 +2442,6 @@ private struct FinishedWorkoutView: View {
   let onFinish: () -> Void
   @State private var csvURL: URL?
   @State private var rewardVisible = false
-  @State private var showsWeeklyReview = false
   @Query private var profileRecords: [TrainingProfileRecord]
   @Query private var completedRecords: [CompletedWorkoutRecord]
 
@@ -2520,16 +2519,6 @@ private struct FinishedWorkoutView: View {
         .glassEffect(.regular.tint(Color.gymAccent).interactive(), in: Capsule())
       }
       if let weeklyReviewURL {
-        Button {
-          showsWeeklyReview = true
-        } label: {
-          Label("Evaluar semana y planificar siguiente", systemImage: "calendar.badge.checkmark")
-        }
-        .font(.gymBody.weight(.semibold))
-        .frame(maxWidth: .infinity, minHeight: 48)
-        .foregroundStyle(Color.gymAccentForeground)
-        .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 14))
-        .buttonStyle(.plain)
         ShareLink(item: weeklyReviewURL) {
           Label("Exportar revisión semanal", systemImage: "square.and.arrow.up")
         }
@@ -2558,13 +2547,6 @@ private struct FinishedWorkoutView: View {
       }
     }
     .sensoryFeedback(.success, trigger: rewardVisible)
-    .sheet(isPresented: $showsWeeklyReview) {
-      if let plan {
-        NavigationStack {
-          WeeklyReviewExportView(plan: plan)
-        }
-      }
-    }
   }
 
   private func durationLabel(_ totalSeconds: Int) -> String {

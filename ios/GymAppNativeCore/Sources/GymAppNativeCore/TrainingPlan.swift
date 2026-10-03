@@ -42,6 +42,22 @@ public struct TrainingPlan: Codable, Sendable {
     case durationWeeks
     case sessions
   }
+
+  public init(
+    planID: String,
+    sourceDocument: String,
+    startsOn: String,
+    endsOn: String,
+    durationWeeks: Int,
+    sessions: [TrainingSession]
+  ) {
+    self.planID = planID
+    self.sourceDocument = sourceDocument
+    self.startsOn = startsOn
+    self.endsOn = endsOn
+    self.durationWeeks = durationWeeks
+    self.sessions = sessions
+  }
 }
 
 public struct TrainingSession: Codable, Identifiable, Sendable {

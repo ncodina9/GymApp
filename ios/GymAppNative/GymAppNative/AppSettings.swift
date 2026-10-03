@@ -1725,6 +1725,10 @@ struct CoachConversationView: View {
   @State private var selectedReplacementSourceExerciseID = ""
   @State private var selectedReplacementExerciseID = ""
   @State private var replacementSourceSelectionRequired = false
+  @State private var catalogAdditionClarificationPending = false
+  @State private var selectedCatalogAdditionID = ""
+  @State private var temporaryAvailabilityClarificationPending = false
+  @State private var temporaryAvailableWeekdays = Set<Int>()
   @State private var compositeTaskQueue: [CoachFollowup] = []
   @State private var stagedCoachOperations: [PlanningOperation] = []
   @State private var stagedCoachSummaries: [String] = []
@@ -1856,6 +1860,36 @@ struct CoachConversationView: View {
 
   private var selectedReplacementExercise: TrainingExercise? {
     replacementCandidates.first(where: { $0.exerciseID == selectedReplacementExerciseID })
+  }
+
+  private var catalogAdditionCandidates: [ExerciseCatalogEntry] {
+    guard let session = selectedSession else { return [] }
+    let restrictions = ProfilePlanningRestrictions.compile(from: profile)
+    let presentGroups = Set(session.exercises.map(\.displayGroupID))
+    return ExerciseCatalogStore.entries(for: effectivePlan).filter { entry in
+      !presentGroups.contains(entry.baseExerciseID)
+        && !profile.catalogPreferences.disabledBaseExerciseIDs.contains(entry.baseExerciseID)
+        && !restrictions.exerciseIDs.contains(entry.baseExerciseID)
+        && !restrictions.movementPatterns.contains(entry.movementPattern ?? "")
+        && entry.equipment.contains { equipment in
+          profile.availableEquipment.contains(equipment)
+            && profile.catalogPreferences.allows(equipment, for: entry.baseExerciseID)
+        }
+    }
+  }
+
+  private var selectedCatalogAddition: ExerciseCatalogEntry? {
+    catalogAdditionCandidates.first(where: { $0.baseExerciseID == selectedCatalogAdditionID })
+  }
+
+  private var catalogAdditionTemplate: TrainingExercise? {
+    guard let session = selectedSession,
+          let entry = selectedCatalogAddition,
+          let equipment = entry.equipment.first(where: {
+            profile.availableEquipment.contains($0)
+              && profile.catalogPreferences.allows($0, for: entry.baseExerciseID)
+          }) else { return nil }
+    return entry.additionTemplate(for: session, equipment: equipment, inventory: profile.loadInventory)
   }
 
   private var setAdjustmentOperations: [PlanningOperation]? {
@@ -2204,6 +2238,94 @@ struct CoachConversationView: View {
             }
           }
 
+          if catalogAdditionClarificationPending {
+            SettingsCategory(title: "Añadir ejercicio") {
+              VStack(alignment: .leading, spacing: 10) {
+                Label("Elige un ejercicio para incorporar.", systemImage: "plus.rectangle.on.rectangle")
+                  .font(.gymBody.weight(.semibold))
+                  .foregroundStyle(Color.gymAccent)
+                Text("Solo se muestran alternativas del catálogo que no duplican la sesión y respetan tu material, preferencias y restricciones.")
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                if catalogAdditionCandidates.isEmpty {
+                  Text("No hay ejercicios compatibles disponibles para añadir a esta sesión.")
+                    .font(.gymSupport)
+                    .foregroundStyle(Color.gymWarning)
+                } else {
+                  Picker("Ejercicio", selection: $selectedCatalogAdditionID) {
+                    Text("Elige un ejercicio").tag("")
+                    ForEach(catalogAdditionCandidates) { entry in
+                      Text(entry.name).tag(entry.baseExerciseID)
+                    }
+                  }
+                  if let template = catalogAdditionTemplate,
+                     let firstSet = template.sets.first {
+                    let volume = firstSet.targetReps.map { "\($0) reps" }
+                      ?? firstSet.targetDurationSeconds.map { "\($0) s" }
+                      ?? "series técnicas"
+                    Text("Introducción: \(template.sets.count) series · \(volume) · \(firstSet.restSeconds) s de descanso.")
+                      .font(.gymSupport)
+                      .foregroundStyle(Color.gymSecondaryText)
+                    Text("Se añade como accesorio técnico y no se integra en una superserie.")
+                      .font(.gymSupport)
+                      .foregroundStyle(Color.gymSecondaryText)
+                  }
+                }
+                Button(action: prepareCatalogAdditionReview) {
+                  Label("Preparar incorporación", systemImage: "text.badge.checkmark")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .font(.gymBody.weight(.semibold))
+                .foregroundStyle(Color.gymAccentForeground)
+                .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.plain)
+                .disabled(catalogAdditionTemplate == nil)
+                .opacity(catalogAdditionTemplate == nil ? 0.45 : 1)
+              }
+              .padding(16)
+            }
+          }
+
+          if temporaryAvailabilityClarificationPending {
+            SettingsCategory(title: "Disponibilidad temporal") {
+              VStack(alignment: .leading, spacing: 12) {
+                Label("Elige los días disponibles para esa semana.", systemImage: "calendar.badge.clock")
+                  .font(.gymBody.weight(.semibold))
+                  .foregroundStyle(Color.gymAccent)
+                Text("No se modificará tu disponibilidad habitual. El entrenador conservará el trabajo esencial y preparará una revisión para que la aceptes.")
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                HStack(spacing: 8) {
+                  ForEach(Array(zip(["L", "M", "X", "J", "V", "S", "D"], 1...7)), id: \.1) { label, day in
+                    Button(label) {
+                      if temporaryAvailableWeekdays.contains(day) {
+                        temporaryAvailableWeekdays.remove(day)
+                      } else {
+                        temporaryAvailableWeekdays.insert(day)
+                      }
+                    }
+                    .font(.gymSupport.weight(.bold))
+                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .foregroundStyle(temporaryAvailableWeekdays.contains(day) ? Color.gymControlSelectionForeground : Color.gymSecondaryText)
+                    .background(temporaryAvailableWeekdays.contains(day) ? Color.gymControlSelectionFill : Color.gymSurface, in: RoundedRectangle(cornerRadius: 10))
+                    .buttonStyle(.plain)
+                  }
+                }
+                Button(action: prepareTemporaryAvailabilityReview) {
+                  Label("Preparar adaptación semanal", systemImage: "calendar.badge.checkmark")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .font(.gymBody.weight(.semibold))
+                .foregroundStyle(Color.gymAccentForeground)
+                .background(Color.gymAccent, in: RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.plain)
+                .disabled(temporaryAvailableWeekdays.isEmpty)
+                .opacity(temporaryAvailableWeekdays.isEmpty ? 0.45 : 1)
+              }
+              .padding(16)
+            }
+          }
+
           if let maximumMinutes = pendingCompositeMaximumMinutes {
             SettingsCategory(title: "Adaptar duración") {
               VStack(alignment: .leading, spacing: 10) {
@@ -2444,6 +2566,10 @@ struct CoachConversationView: View {
       preparedCoachSummary = nil
       replacementClarificationPending = false
       replacementSourceSelectionRequired = false
+      catalogAdditionClarificationPending = false
+      selectedCatalogAdditionID = ""
+      temporaryAvailabilityClarificationPending = false
+      temporaryAvailableWeekdays = []
       selectInitialBodyweightExercise()
       selectInitialSetAdjustmentExercise()
     }
@@ -2524,6 +2650,14 @@ struct CoachConversationView: View {
       beginReplacementClarification(request: request, record: record)
       return
     }
+    if catalogAdditionRequest(in: requestText) {
+      beginCatalogAdditionClarification(request: request, record: record)
+      return
+    }
+    if temporaryAvailabilityRequest(in: requestText) {
+      beginTemporaryAvailabilityClarification(request: request, record: record)
+      return
+    }
     if let action = setAdjustmentAction(in: requestText) {
       beginSetAdjustmentClarification(action, request: request, record: record)
       return
@@ -2551,6 +2685,7 @@ struct CoachConversationView: View {
     if let date = requestedDate(in: text) { result.append(.moveSession(toDate: date)) }
     if let minutes = requestedMinutes(in: text) { result.append(.adaptDuration(maximumMinutes: minutes)) }
     if replacementRequest(in: text) { result.append(.replacement) }
+    if catalogAdditionRequest(in: text) { result.append(.catalogAddition) }
     if let action = setAdjustmentAction(in: text) { result.append(.setAdjustment(action)) }
     return result
   }
@@ -2560,6 +2695,8 @@ struct CoachConversationView: View {
     switch followup {
     case .replacement:
       beginReplacementClarification(request: request, record: record)
+    case .catalogAddition:
+      beginCatalogAdditionClarification(request: request, record: record)
     case let .setAdjustment(action):
       beginSetAdjustmentClarification(action, request: request, record: record)
     case let .moveSession(toDate):
@@ -2662,6 +2799,68 @@ struct CoachConversationView: View {
     } ?? false
   }
 
+  private func catalogAdditionRequest(in text: String) -> Bool {
+    let text = normalized(text)
+    let asksToAdd = text.contains("anade") || text.contains("agrega") || text.contains("incluye") || text.contains("incorpora")
+    guard asksToAdd else { return false }
+    return text.contains("ejercicio") || catalogAdditionCandidates.contains { entry in
+      let name = normalized(entry.name)
+      return name.count > 2 && text.contains(name)
+    }
+  }
+
+  private func temporaryAvailabilityRequest(in text: String) -> Bool {
+    let value = normalized(text)
+    return (value.contains("solo puedo entrenar") || value.contains("solo tendre") || value.contains("solo tengo"))
+      && (value.contains("dia") || value.contains("semana"))
+  }
+
+  private func beginTemporaryAvailabilityClarification(
+    request: PlanningIntentRequest,
+    record: PlanningConversationRecord
+  ) {
+    guard let session = selectedSession else {
+      let message = "Selecciona una sesión de la semana que quieres adaptar."
+      responseText = message
+      PlanningConversationStore.needsClarification(message, for: record, in: modelContext)
+      return
+    }
+    temporaryAvailabilityClarificationPending = true
+    temporaryAvailableWeekdays = Set(profile.trainingWeekdays)
+    preparedCoachOperations = nil
+    preparedCoachSummary = nil
+    suggestedIntent = nil
+    PlanningConversationStore.needsClarification(
+      "Indica los días concretos disponibles para la semana de \(session.sessionLabel). No cambiaré la disponibilidad habitual de tu perfil.",
+      for: record,
+      in: modelContext
+    )
+  }
+
+  private func prepareTemporaryAvailabilityReview() {
+    guard let session = selectedSession else { return }
+    var temporaryConstraints = constraints
+    temporaryConstraints.availableWeekdays = Set(temporaryAvailableWeekdays.map { $0 == 7 ? 1 : $0 + 1 })
+    let sessions = effectivePlan.sessions.filter {
+      !$0.isCancelled && $0.week == session.week && $0.date >= Self.isoDate(.now)
+    }
+    guard let option = WeeklySessionCompressionPlanner.option(
+      basePlan: effectivePlan,
+      sessionIDs: sessions.map(\.sessionID),
+      constraints: temporaryConstraints
+    ) else {
+      responseText = "Con esos días no hace falta reducir sesiones; puedes reprogramarlas manteniendo la estructura actual."
+      return
+    }
+    preparedCoachOperations = option.operations
+    let omitted = effectivePlan.sessions
+      .filter { option.cancelledSessionIDs.contains($0.sessionID) }
+      .map(\.sessionLabel)
+      .joined(separator: ", ")
+    preparedCoachSummary = "Adaptar S\(session.week) a \(temporaryAvailableWeekdays.count) días. Se conserva el trabajo principal y queda sin programar: \(omitted)."
+    temporaryAvailabilityClarificationPending = false
+  }
+
   private func preferredReplacement(for source: TrainingExercise, text: String) -> TrainingExercise? {
     let text = normalized(text)
     if text.contains("mancuerna") {
@@ -2715,6 +2914,60 @@ struct CoachConversationView: View {
     replacementClarificationPending = false
     replacementSourceSelectionRequired = false
     PlanningConversationStore.interpret([operation], summary: preparedCoachSummary ?? "Sustituir ejercicio", for: record, in: modelContext)
+  }
+
+  private func beginCatalogAdditionClarification(
+    request: PlanningIntentRequest,
+    record: PlanningConversationRecord
+  ) {
+    guard selectedSession != nil else {
+      let message = "Selecciona una sesión antes de incorporar un ejercicio."
+      responseText = message
+      PlanningConversationStore.needsClarification(message, for: record, in: modelContext)
+      return
+    }
+    guard !catalogAdditionCandidates.isEmpty else {
+      let message = "No hay ejercicios del catálogo compatibles con el material y las restricciones actuales."
+      responseText = message
+      PlanningConversationStore.needsClarification(message, for: record, in: modelContext)
+      return
+    }
+    catalogAdditionClarificationPending = true
+    replacementClarificationPending = false
+    replacementSourceSelectionRequired = false
+    pendingBodyweightAction = nil
+    pendingSetAdjustmentAction = nil
+    suggestedIntent = nil
+    preparedCoachOperations = nil
+    preparedCoachSummary = nil
+    selectedCatalogAdditionID = ""
+    PlanningConversationStore.needsClarification(
+      "Elige qué ejercicio compatible quieres incorporar. Prepararé una introducción conservadora para que la revises.",
+      for: record,
+      in: modelContext
+    )
+  }
+
+  private func prepareCatalogAdditionReview() {
+    guard let session = selectedSession,
+          let template = catalogAdditionTemplate else { return }
+    let operation = PlanningOperation.addExerciseWithTemplate(sessionID: session.sessionID, exercise: template)
+    let summary = "Incorporar \(template.displayName) como accesorio en \(session.sessionLabel)"
+    if stageCompositeOperation(operation, summary: summary) {
+      catalogAdditionClarificationPending = false
+      selectedCatalogAdditionID = ""
+      return
+    }
+    let request = PlanningIntentRequest(userText: summary, referencedSessionID: session.sessionID)
+    let record = PlanningConversationStore.start(request, in: modelContext)
+    currentConversationID = record.id
+    requestText = summary
+    suggestedIntent = nil
+    preparedCoachOperations = [operation]
+    preparedCoachSummary = summary
+    catalogAdditionClarificationPending = false
+    selectedCatalogAdditionID = ""
+    PlanningConversationStore.interpret([operation], summary: summary, for: record, in: modelContext)
   }
 
   private func beginSetAdjustmentClarification(
@@ -3013,6 +3266,8 @@ struct CoachConversationView: View {
     pendingSetAdjustmentAction = nil
     replacementClarificationPending = false
     replacementSourceSelectionRequired = false
+    catalogAdditionClarificationPending = false
+    selectedCatalogAdditionID = ""
     if !compositeTaskQueue.isEmpty {
       let next = compositeTaskQueue.removeFirst()
       guard let record = currentConversation else { return true }

@@ -286,6 +286,7 @@ enum WeeklyReviewBridge {
     completedRecords: [CompletedWorkoutRecord],
     inventory: EquipmentLoadInventory,
     profile: TrainingProfile,
+    constraints: PlanningConstraints,
     referenceDate: Date = .now
   ) -> LocalProgressionProposal? {
     guard let nextWeek else { return nil }
@@ -348,16 +349,66 @@ enum WeeklyReviewBridge {
     }
 
     let today = Calendar.current.startOfDay(for: referenceDate)
-    let targetSessions = plan.sessions.filter {
+    let initialTargetSessions = plan.sessions.filter {
       !$0.isCancelled && $0.week == nextWeek && date(from: $0.date) >= today
     }
-    guard !targetSessions.isEmpty else { return nil }
+    guard !initialTargetSessions.isEmpty else { return nil }
 
     var operations: [PlanningOperation] = []
     var details: [String] = []
     var preservedDetails: [String] = []
     var explainedAdjustments = Set<String>()
     var explainedPreservations = Set<String>()
+    var workingPlan = plan
+    var structuralDetails: [String] = []
+
+    if let compression = WeeklySessionCompressionPlanner.option(
+      basePlan: workingPlan,
+      sessionIDs: initialTargetSessions.map(\.sessionID),
+      constraints: constraints
+    ), let preview = try? PlanningOperationEngine.preview(
+      basePlan: workingPlan,
+      operations: compression.operations,
+      constraints: constraints
+    ) {
+      operations.append(contentsOf: compression.operations)
+      workingPlan = preview.plan
+      let skippedLabels = initialTargetSessions
+        .filter { compression.cancelledSessionIDs.contains($0.sessionID) }
+        .map(\.sessionLabel)
+        .joined(separator: ", ")
+      let transferred = compression.transferredExerciseNames.isEmpty
+        ? "No añade ejercicios para no superar la duración configurada."
+        : "Integra: \(compression.transferredExerciseNames.joined(separator: ", "))."
+      structuralDetails.append(
+        "Disponibilidad reducida a \(constraints.availableWeekdays.count) días: conserva \(compression.retainedSessionIDs.count) sesiones y deja sin programar \(skippedLabels). \(transferred)"
+      )
+    }
+
+    var targetSessions = workingPlan.sessions.filter {
+      !$0.isCancelled && $0.week == nextWeek && date(from: $0.date) >= today
+    }
+    guard !targetSessions.isEmpty else { return nil }
+
+    let structuralAdjustments = structuralRescheduling(
+      targetSessions: targetSessions,
+      basePlan: workingPlan,
+      constraints: constraints
+    )
+    operations.append(contentsOf: structuralAdjustments.operations)
+    structuralDetails.append(contentsOf: structuralAdjustments.details)
+    if !structuralAdjustments.operations.isEmpty,
+       let preview = try? PlanningOperationEngine.preview(
+         basePlan: workingPlan,
+         operations: structuralAdjustments.operations,
+         constraints: constraints
+       ) {
+      workingPlan = preview.plan
+      targetSessions = workingPlan.sessions.filter {
+        !$0.isCancelled && $0.week == nextWeek && date(from: $0.date) >= today
+      }
+    }
+    details.append(contentsOf: structuralDetails)
 
     for session in targetSessions {
       let progressiveSupersets = Set(session.exercises.compactMap(\.supersetID)).filter { supersetID in
@@ -596,9 +647,10 @@ enum WeeklyReviewBridge {
     }
 
     let changedGroups = explainedAdjustments.count
+    let structuralChangeCount = structuralDetails.count
     let summary = operations.isEmpty
       ? "La prescripción actual de S\(nextWeek) ya encaja con el feedback de S\(closedWeek); no se proponen cambios automáticos."
-      : "Borrador para S\(nextWeek): \(changedGroups) ejercicio\(changedGroups == 1 ? "" : "s") ajustado\(changedGroups == 1 ? "" : "s") según ejecución, feedback y fase del macrociclo."
+      : "Borrador para S\(nextWeek): \(changedGroups) ejercicio\(changedGroups == 1 ? "" : "s") ajustado\(changedGroups == 1 ? "" : "s")\(structuralChangeCount > 0 ? " y \(structuralChangeCount) adaptación\(structuralChangeCount == 1 ? "" : "es") estructural\(structuralChangeCount == 1 ? "" : "es")" : "") según ejecución, feedback, disponibilidad y fase del macrociclo."
     return .init(
       operations: operations,
       summary: summary,
@@ -611,6 +663,39 @@ enum WeeklyReviewBridge {
         preservedDetails: preservedDetails
       )
     )
+  }
+
+  private static func structuralRescheduling(
+    targetSessions: [TrainingSession],
+    basePlan: TrainingPlan,
+    constraints: PlanningConstraints
+  ) -> (operations: [PlanningOperation], details: [String]) {
+    var workingPlan = basePlan
+    var operations: [PlanningOperation] = []
+    var details: [String] = []
+    for session in targetSessions.sorted(by: { $0.date < $1.date }) {
+      let sessionDate = date(from: session.date)
+      guard !constraints.availableWeekdays.contains(Calendar.current.component(.weekday, from: sessionDate)),
+            let option = try? SessionReschedulingPlanner.options(
+              basePlan: workingPlan,
+              sessionID: session.sessionID,
+              constraints: constraints,
+              maximumResults: 1
+            ).first,
+            !option.isOutsideAvailability,
+            let preview = try? PlanningOperationEngine.preview(
+              basePlan: workingPlan,
+              operations: option.operations,
+              constraints: constraints
+            ) else { continue }
+      operations.append(contentsOf: option.operations)
+      workingPlan = preview.plan
+      let chain = option.shiftsOtherSessions
+        ? " Reordena \(option.shiftedSessionIDs.count) sesión\(option.shiftedSessionIDs.count == 1 ? "" : "es") adicional\(option.shiftedSessionIDs.count == 1 ? "" : "es")."
+        : ""
+      details.append("\(session.sessionLabel): se mueve del \(session.date) al \(option.date) para respetar la disponibilidad actual.\(chain)")
+    }
+    return (operations, details)
   }
 
   private static func date(from value: String) -> Date {
@@ -834,7 +919,8 @@ enum WeeklyReviewBridge {
     - Respeta la decisión explícita: Mantener, Mantener tiempo y Mejorar posición conservan el objetivo; Bajar reps o Bajar peso solo reducen el parámetro indicado; Subir reps solo puede progresar durante acumulación y Subir peso solo durante intensificación.
     - Sin una decisión explícita, propone como máximo +1 repetición durante acumulación si se cumplió el objetivo y el RIR medio es al menos 3; para temporizados, como máximo +5 s hasta 90 s. Durante intensificación, propone solo la siguiente carga disponible si se cumplió el objetivo con el mismo material y el RIR medio es al menos 2.
     - No progreses automáticamente en descarga, readaptación, realización ni test. No dupliques una progresión ya prevista: compara siempre el objetivo de la siguiente semana con el valor realmente ejecutado antes de incrementarlo o reducirlo.
-    - Compara cargas reales únicamente dentro del mismo material. Nunca extrapoles entre barra, mancuernas, máquina, polea o multipower. Para barra/multipower, un incremento no puede superar el 2,5 %; para mancuernas, polea, máquinas o carga externa, el 5 %. Usa solo valores disponibles en el perfil.
+    - Compara cargas reales únicamente dentro del mismo material. Nunca extrapoles entre barra, mancuernas, kettlebells, máquina, polea, multipower, discos o landmine. Para barra, barra corta, barra Z y multipower, un incremento no puede superar el 2,5 %; para mancuernas, kettlebells, polea, máquinas, discos, landmine o carga externa, el 5 %. Usa solo valores disponibles en el perfil.
+    - Para peso corporal, progresa primero reps en acumulación. Si el perfil declara asistencia, la siguiente progresión puede reducirla por el paso configurado; si declara lastres, solo añade el siguiente lastre disponible durante intensificación. Nunca combines asistencia y lastre.
     - En superseries, no propongas una progresión parcial: si todos los miembros no son elegibles, conserva el bloque. Una recuperación por molestia o serie omitida sí puede afectar solo al ejercicio señalado.
     - Respeta material, lesiones, molestias y límites de progresión indicados en el contexto. La summary debe indicar de forma breve qué ejercicios cambian, cuáles se conservan y el motivo.
 
@@ -962,14 +1048,15 @@ struct WeeklyReviewExportView: View {
       nextWeek: nextWeek,
       completedRecords: completedRecords,
       inventory: profile.loadInventory,
-      profile: profile
+      profile: profile,
+      constraints: constraints
     )
   }
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
-        Text("Revisa la semana cerrada y prepara un borrador conservador para la siguiente. Nada cambia hasta que aceptes la propuesta desde Planificación.")
+        Text("La planificación automática analiza el feedback de la semana cerrada y prepara un borrador conservador para la siguiente. Nada cambia hasta que aceptes la propuesta desde Planificación.")
           .font(.gymBody)
           .foregroundStyle(Color.gymSecondaryText)
 
@@ -1011,7 +1098,7 @@ struct WeeklyReviewExportView: View {
             .padding(16)
           }
           if !localAdvice.isEmpty {
-            SettingsCategory(title: "Lectura local") {
+            SettingsCategory(title: "Planificación automática") {
               VStack(spacing: 0) {
                 ForEach(Array(localAdvice.enumerated()), id: \.element.id) { index, advice in
                   WeeklyReviewAdviceRow(advice: advice, color: adviceColor(for: advice.tone))
@@ -1058,7 +1145,7 @@ struct WeeklyReviewExportView: View {
                         .padding(.top, 2)
                     } else {
                       Button(action: { createLocalProposal(localProgressionProposal) }) {
-                        Label("Crear borrador para la semana siguiente", systemImage: "arrow.up.right")
+                        Label("Crear revisión automática para la semana siguiente", systemImage: "arrow.up.right")
                           .frame(maxWidth: .infinity, minHeight: 48)
                       }
                       .font(.gymBody.weight(.semibold))
@@ -1087,7 +1174,7 @@ struct WeeklyReviewExportView: View {
     .navigationBarBackButtonHidden()
     .toolbar(.hidden, for: .navigationBar)
     .safeAreaInset(edge: .top, spacing: 0) {
-      AccentHeaderCard(title: "Revisión semanal", detail: "Feedback y propuesta para la próxima semana")
+      AccentHeaderCard(title: "Revisión semanal", detail: "Feedback y planificación automática")
     }
     .overlay(alignment: .bottomLeading) { BottomBackButton(action: { dismiss() }) }
     .fileImporter(isPresented: $showsProposalImporter, allowedContentTypes: [.json]) { result in
@@ -1141,7 +1228,7 @@ struct WeeklyReviewExportView: View {
         rationales: proposal.rationales,
         reviewedWeek: closedWeek
       )
-      message = "Propuesta local creada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
+      message = "Planificación automática creada como revisión \(revision.revisionNumber). Revísala antes de aceptarla."
     } catch {
       message = error.localizedDescription
     }

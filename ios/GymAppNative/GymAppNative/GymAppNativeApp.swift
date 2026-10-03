@@ -45,7 +45,8 @@ struct GymAppNativeApp: App {
       CompletedWorkoutRecord.self,
       TrainingProfileRecord.self,
       PlanRevisionRecord.self,
-      PlanningConversationRecord.self
+      PlanningConversationRecord.self,
+      GeneratedMacrocycleRecord.self
     ])
     .onChange(of: appearanceRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }
     .onChange(of: premiumSchemeRaw) { _, _ in WatchWorkoutConnectivity.shared.activate() }
@@ -58,6 +59,7 @@ private struct WatchWorkoutSyncHost: View {
   @Query private var completedWorkoutRecords: [CompletedWorkoutRecord]
   @Query private var planRevisionRecords: [PlanRevisionRecord]
   @Query private var trainingProfileRecords: [TrainingProfileRecord]
+  @Query private var generatedPlanRecords: [GeneratedMacrocycleRecord]
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
   @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
   @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
@@ -88,6 +90,10 @@ private struct WatchWorkoutSyncHost: View {
       .onChange(of: plan?.planID) { _, _ in synchronize() }
       .onChange(of: planRevisionRecords.map(\.updatedAt)) { _, _ in synchronize() }
       .onChange(of: trainingProfileRecords.map(\.updatedAt)) { _, _ in synchronize() }
+      .onChange(of: generatedPlanRecords.map { "\($0.planID)-\($0.isActive)-\($0.activatedAt.timeIntervalSinceReferenceDate)" }) { _, _ in
+        loadPlan()
+        synchronize()
+      }
       .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutCommandReceived)) { notification in
         guard let envelope = notification.object as? WatchWorkoutCommandEnvelope else { return }
         if let handler = WatchWorkoutCommandRouter.shared.handler {
@@ -157,6 +163,10 @@ private struct WatchWorkoutSyncHost: View {
   }
 
   private func loadPlan() {
+    if let generatedPlan = ActiveTrainingPlanStore.load(from: generatedPlanRecords) {
+      plan = generatedPlan
+      return
+    }
     guard let url = Bundle.main.url(forResource: "trainingPlan", withExtension: "json") else { return }
     plan = try? TrainingPlanLoader.decode(data: Data(contentsOf: url))
   }

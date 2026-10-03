@@ -2,17 +2,19 @@ import Foundation
 
 public enum CoachConversationPendingTask: Codable, Equatable, Sendable {
   case replacement
+  case catalogAddition
   case setAdjustment(CoachSetAdjustmentRequest)
   case moveSession(toDate: String)
   case adaptDuration(maximumMinutes: Int)
 
   private enum CodingKeys: String, CodingKey { case type, adjustment, toDate, maximumMinutes }
-  private enum Kind: String, Codable { case replacement, setAdjustment, moveSession, adaptDuration }
+  private enum Kind: String, Codable { case replacement, catalogAddition, setAdjustment, moveSession, adaptDuration }
 
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     switch try container.decode(Kind.self, forKey: .type) {
     case .replacement: self = .replacement
+    case .catalogAddition: self = .catalogAddition
     case .setAdjustment: self = .setAdjustment(try container.decode(CoachSetAdjustmentRequest.self, forKey: .adjustment))
     case .moveSession: self = .moveSession(toDate: try container.decode(String.self, forKey: .toDate))
     case .adaptDuration: self = .adaptDuration(maximumMinutes: try container.decode(Int.self, forKey: .maximumMinutes))
@@ -23,6 +25,7 @@ public enum CoachConversationPendingTask: Codable, Equatable, Sendable {
     var container = encoder.container(keyedBy: CodingKeys.self)
     switch self {
     case .replacement: try container.encode(Kind.replacement, forKey: .type)
+    case .catalogAddition: try container.encode(Kind.catalogAddition, forKey: .type)
     case let .setAdjustment(request):
       try container.encode(Kind.setAdjustment, forKey: .type)
       try container.encode(request, forKey: .adjustment)

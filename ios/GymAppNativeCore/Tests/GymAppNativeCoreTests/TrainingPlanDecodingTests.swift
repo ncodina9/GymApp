@@ -576,6 +576,7 @@ struct TrainingPlanDecodingTests {
       activeTask: .setAdjustment(.init(kind: .weight, direction: .decrease)),
       queuedTasks: [
         .replacement,
+        .catalogAddition,
         .moveSession(toDate: "2026-10-03"),
         .adaptDuration(maximumMinutes: 45),
       ],
@@ -833,6 +834,50 @@ struct TrainingPlanDecodingTests {
     #expect(!fallbackOptions.isEmpty)
     #expect(fallbackOptions.allSatisfy { $0.isOutsideAvailability })
     #expect(fallbackOptions.contains { $0.shiftsOtherSessions })
+  }
+
+  @Test("Comprime una semana de cuatro sesiones en tres días disponibles")
+  func compressesWeekWhenAvailabilityDrops() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let weekSessions = plan.sessions.filter { $0.week == 2 }
+    #expect(weekSessions.count == 4)
+    let constraints = PlanningConstraints(
+      availableWeekdays: [2, 3, 5],
+      availableEquipment: Set(Equipment.allCases),
+      maxSessionMinutes: 90,
+      referenceDate: try #require(isoDate("2026-09-14"))
+    )
+
+    let option = try #require(WeeklySessionCompressionPlanner.option(
+      basePlan: plan,
+      sessionIDs: weekSessions.map(\.sessionID),
+      constraints: constraints
+    ))
+    #expect(option.retainedSessionIDs.count == 3)
+    #expect(option.cancelledSessionIDs.count == 1)
+    #expect(option.operations.contains { operation in
+      if case .cancelSession = operation { return true }
+      return false
+    })
+
+    let preview = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: option.operations,
+      constraints: constraints
+    )
+    let remaining = preview.plan.sessions.filter {
+      $0.week == 2 && !$0.isCancelled
+    }
+    #expect(remaining.count == 3)
+    #expect(option.operations.allSatisfy { operation in
+      if case let .addExerciseWithTemplate(_, exercise) = operation {
+        return exercise.supersetID == nil && exercise.type.folding(
+          options: [.caseInsensitive, .diacriticInsensitive],
+          locale: .current
+        ) != "Accesorio"
+      }
+      return true
+    })
   }
 
   @Test("Conserva superseries, temporizados y material")

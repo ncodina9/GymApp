@@ -7,13 +7,14 @@ struct ContentView: View {
   @State private var loadingError: String?
   @Query private var trainingProfiles: [TrainingProfileRecord]
   @Query private var planRevisionRecords: [PlanRevisionRecord]
+  @Query private var generatedPlanRecords: [GeneratedMacrocycleRecord]
   @AppStorage("trainingProfileOnboardingDeferred") private var onboardingDeferred = false
 
   var body: some View {
     Group {
       if TrainingProfileStore.load(from: trainingProfiles) == nil, !onboardingDeferred {
         TrainingProfileOnboardingView(onDefer: { onboardingDeferred = true })
-      } else if let plan {
+      } else if let plan = activePlan {
         TodayView(plan: PlanRevisionStore.resolvedPlan(basePlan: plan, records: planRevisionRecords))
       } else if let loadingError {
         ContentUnavailableView(
@@ -44,5 +45,9 @@ struct ContentView: View {
     } catch {
       loadingError = error.localizedDescription
     }
+  }
+
+  private var activePlan: TrainingPlan? {
+    ActiveTrainingPlanStore.load(from: generatedPlanRecords) ?? plan
   }
 }

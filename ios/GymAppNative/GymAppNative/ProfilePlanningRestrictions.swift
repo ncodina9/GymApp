@@ -63,7 +63,8 @@ extension TrainingProfile {
   ) -> PlanningConstraints {
     let restrictions = ProfilePlanningRestrictions.compile(from: self)
     return PlanningConstraints(
-      availableWeekdays: trainingWeekdays,
+      // The profile stores Monday as 1, while Calendar uses Sunday as 1.
+      availableWeekdays: Set(trainingWeekdays.map { $0 == 7 ? 1 : $0 + 1 }),
       availableEquipment: availableEquipment,
       disabledEquipmentByBaseExercise: catalogPreferences.disabledEquipmentByBaseExercise,
       restrictedExerciseIDs: restrictions.exerciseIDs
