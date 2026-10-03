@@ -122,10 +122,14 @@ struct TrainingProfile: Codable, Equatable {
   var availableEquipment: Set<Equipment>
   var dumbbellWeightsKg: [Double]
   var dumbbellUnitsByWeight: [String: Int]
+  var kettlebellWeightsKg: [Double]
+  var kettlebellUnitsByWeight: [String: Int]
   var plateWeightsKg: [Double]
   var plateUnitsByWeight: [String: Int]
   var cableStepKg: Double
   var barbellWeightKg: Double
+  var shortBarWeightKg: Double
+  var ezBarWeightKg: Double
   var multipowerBarWeightKg: Double
   var bodyweightAssistanceStepKg: Double
   var bodyweightWeightedLoadsKg: [Double]
@@ -135,6 +139,7 @@ struct TrainingProfile: Codable, Equatable {
   var limitations: String
   var declaredDiscomforts: [String]
   var declaredInjuries: [String]
+  var catalogPreferences: ExerciseCatalogPreferences
 
   init(
     goal: TrainingGoal,
@@ -145,10 +150,14 @@ struct TrainingProfile: Codable, Equatable {
     availableEquipment: Set<Equipment>,
     dumbbellWeightsKg: [Double],
     dumbbellUnitsByWeight: [String: Int],
+    kettlebellWeightsKg: [Double],
+    kettlebellUnitsByWeight: [String: Int],
     plateWeightsKg: [Double],
     plateUnitsByWeight: [String: Int],
     cableStepKg: Double,
     barbellWeightKg: Double,
+    shortBarWeightKg: Double,
+    ezBarWeightKg: Double,
     multipowerBarWeightKg: Double,
     bodyweightAssistanceStepKg: Double = 5,
     bodyweightWeightedLoadsKg: [Double] = [],
@@ -157,7 +166,8 @@ struct TrainingProfile: Codable, Equatable {
     exercisesToAvoid: String,
     limitations: String,
     declaredDiscomforts: [String] = [],
-    declaredInjuries: [String] = []
+    declaredInjuries: [String] = [],
+    catalogPreferences: ExerciseCatalogPreferences = .init()
   ) {
     self.goal = goal
     self.targetTimeframeWeeks = targetTimeframeWeeks
@@ -167,10 +177,14 @@ struct TrainingProfile: Codable, Equatable {
     self.availableEquipment = availableEquipment
     self.dumbbellWeightsKg = dumbbellWeightsKg
     self.dumbbellUnitsByWeight = dumbbellUnitsByWeight
+    self.kettlebellWeightsKg = kettlebellWeightsKg
+    self.kettlebellUnitsByWeight = kettlebellUnitsByWeight
     self.plateWeightsKg = plateWeightsKg
     self.plateUnitsByWeight = plateUnitsByWeight
     self.cableStepKg = cableStepKg
     self.barbellWeightKg = barbellWeightKg
+    self.shortBarWeightKg = shortBarWeightKg
+    self.ezBarWeightKg = ezBarWeightKg
     self.multipowerBarWeightKg = multipowerBarWeightKg
     self.bodyweightAssistanceStepKg = bodyweightAssistanceStepKg
     self.bodyweightWeightedLoadsKg = bodyweightWeightedLoadsKg.sorted()
@@ -180,13 +194,14 @@ struct TrainingProfile: Codable, Equatable {
     self.limitations = limitations
     self.declaredDiscomforts = declaredDiscomforts
     self.declaredInjuries = declaredInjuries
+    self.catalogPreferences = catalogPreferences
   }
 
   private enum CodingKeys: String, CodingKey {
     case goal, targetTimeframeWeeks, experience, trainingWeekdays, sessionDurationMinutes
-    case availableEquipment, dumbbellWeightsKg, dumbbellUnitsByWeight, plateWeightsKg, plateUnitsByWeight, cableStepKg
-    case barbellWeightKg, multipowerBarWeightKg, bodyweightAssistanceStepKg, bodyweightWeightedLoadsKg, priorityMuscleGroups
-    case exercisePreferences, exercisesToAvoid, limitations, declaredDiscomforts, declaredInjuries
+    case availableEquipment, dumbbellWeightsKg, dumbbellUnitsByWeight, kettlebellWeightsKg, kettlebellUnitsByWeight, plateWeightsKg, plateUnitsByWeight, cableStepKg
+    case barbellWeightKg, shortBarWeightKg, ezBarWeightKg, multipowerBarWeightKg, bodyweightAssistanceStepKg, bodyweightWeightedLoadsKg, priorityMuscleGroups
+    case exercisePreferences, exercisesToAvoid, limitations, declaredDiscomforts, declaredInjuries, catalogPreferences
   }
 
   init(from decoder: Decoder) throws {
@@ -200,10 +215,14 @@ struct TrainingProfile: Codable, Equatable {
     availableEquipment = try container.decodeIfPresent(Set<Equipment>.self, forKey: .availableEquipment) ?? defaults.availableEquipment
     dumbbellWeightsKg = try container.decodeIfPresent([Double].self, forKey: .dumbbellWeightsKg) ?? defaults.dumbbellWeightsKg
     dumbbellUnitsByWeight = try container.decodeIfPresent([String: Int].self, forKey: .dumbbellUnitsByWeight) ?? defaults.dumbbellUnitsByWeight
+    kettlebellWeightsKg = try container.decodeIfPresent([Double].self, forKey: .kettlebellWeightsKg) ?? defaults.kettlebellWeightsKg
+    kettlebellUnitsByWeight = try container.decodeIfPresent([String: Int].self, forKey: .kettlebellUnitsByWeight) ?? defaults.kettlebellUnitsByWeight
     plateWeightsKg = try container.decodeIfPresent([Double].self, forKey: .plateWeightsKg) ?? defaults.plateWeightsKg
     plateUnitsByWeight = try container.decodeIfPresent([String: Int].self, forKey: .plateUnitsByWeight) ?? defaults.plateUnitsByWeight
     cableStepKg = try container.decodeIfPresent(Double.self, forKey: .cableStepKg) ?? defaults.cableStepKg
     barbellWeightKg = try container.decodeIfPresent(Double.self, forKey: .barbellWeightKg) ?? defaults.barbellWeightKg
+    shortBarWeightKg = try container.decodeIfPresent(Double.self, forKey: .shortBarWeightKg) ?? defaults.shortBarWeightKg
+    ezBarWeightKg = try container.decodeIfPresent(Double.self, forKey: .ezBarWeightKg) ?? defaults.ezBarWeightKg
     multipowerBarWeightKg = try container.decodeIfPresent(Double.self, forKey: .multipowerBarWeightKg) ?? defaults.multipowerBarWeightKg
     bodyweightAssistanceStepKg = try container.decodeIfPresent(Double.self, forKey: .bodyweightAssistanceStepKg) ?? defaults.bodyweightAssistanceStepKg
     bodyweightWeightedLoadsKg = (try container.decodeIfPresent([Double].self, forKey: .bodyweightWeightedLoadsKg) ?? defaults.bodyweightWeightedLoadsKg).sorted()
@@ -218,6 +237,7 @@ struct TrainingProfile: Codable, Equatable {
       declaredDiscomforts = Self.mergingDiscomforts(["Hombro", "Lumbar", "Muñeca", "Rodilla"], legacyDiscomforts)
     }
     declaredInjuries = Self.mergingDiscomforts([], try container.decodeIfPresent([String].self, forKey: .declaredInjuries) ?? [])
+    catalogPreferences = try container.decodeIfPresent(ExerciseCatalogPreferences.self, forKey: .catalogPreferences) ?? .init()
   }
 
   static let initial = TrainingProfile(
@@ -229,10 +249,14 @@ struct TrainingProfile: Codable, Equatable {
     availableEquipment: Set(Equipment.allCases),
     dumbbellWeightsKg: [5, 6, 7.5, 8, 9, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30],
     dumbbellUnitsByWeight: [:],
+    kettlebellWeightsKg: [4, 6, 8, 10, 12, 16, 20, 24],
+    kettlebellUnitsByWeight: [:],
     plateWeightsKg: [1.25, 2.5, 5, 10, 15, 20],
     plateUnitsByWeight: ["1.25": 4, "2.50": 4, "5.00": 12, "10.00": 12, "15.00": 2, "20.00": 4],
     cableStepKg: 5,
     barbellWeightKg: 20,
+    shortBarWeightKg: 10,
+    ezBarWeightKg: 8,
     multipowerBarWeightKg: 18,
     bodyweightAssistanceStepKg: 5,
     bodyweightWeightedLoadsKg: [],
@@ -241,20 +265,25 @@ struct TrainingProfile: Codable, Equatable {
     exercisesToAvoid: "",
     limitations: "",
     declaredDiscomforts: [],
-    declaredInjuries: []
+    declaredInjuries: [],
+    catalogPreferences: .init()
   )
 
   var loadInventory: EquipmentLoadInventory {
     return EquipmentLoadInventory(
       dumbbellLoadsKg: dumbbellWeightsKg,
+      kettlebellLoadsKg: kettlebellWeightsKg,
       plates: plateWeightsKg.map { PlateLoad(weightKg: $0, count: plateUnits(for: $0)) },
       cableStepKg: max(0.5, cableStepKg),
       barbellWeightKg: max(0, barbellWeightKg),
+      shortBarWeightKg: max(0, shortBarWeightKg),
+      ezBarWeightKg: max(0, ezBarWeightKg),
       multipowerBarWeightKg: max(0, multipowerBarWeightKg)
     )
   }
 
   func dumbbellUnits(for weight: Double) -> Int { max(1, dumbbellUnitsByWeight[loadKey(weight)] ?? 2) }
+  func kettlebellUnits(for weight: Double) -> Int { max(1, kettlebellUnitsByWeight[loadKey(weight)] ?? 1) }
   func plateUnits(for weight: Double) -> Int { max(1, plateUnitsByWeight[loadKey(weight)] ?? 2) }
   func loadKey(_ weight: Double) -> String { String(format: "%.2f", weight) }
 

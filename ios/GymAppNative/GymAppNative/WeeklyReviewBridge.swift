@@ -643,11 +643,11 @@ enum WeeklyReviewBridge {
 
   private static func maximumLoadIncrease(for equipment: Equipment) -> Double {
     switch equipment {
-    case .barbell, .multipower:
+    case .barbell, .shortBar, .ezBar, .multipower:
       0.025
-    case .dumbbell, .cable, .plateLoadedMachine, .external:
+    case .dumbbell, .kettlebell, .cable, .weightPlate, .plateLoadedMachine, .landmine, .external:
       0.05
-    case .bodyweight:
+    case .bodyweight, .abWheel, .assaultBike, .stationaryBike, .skiErg, .rowErg, .battleRopes:
       0
     }
   }

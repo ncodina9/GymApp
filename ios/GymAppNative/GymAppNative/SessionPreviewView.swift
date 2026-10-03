@@ -710,10 +710,21 @@ private extension Equipment {
   var label: String {
     switch self {
     case .barbell: "Barra"
+    case .shortBar: "Barra corta"
+    case .ezBar: "Barra Z"
     case .multipower: "Multipower"
     case .dumbbell: "Mancuernas"
+    case .kettlebell: "Kettlebell"
     case .cable: "Polea"
-    case .plateLoadedMachine: "Discos"
+    case .weightPlate: "Discos"
+    case .plateLoadedMachine: "Máquina de discos"
+    case .landmine: "Landmine"
+    case .abWheel: "Rodillo abdominal"
+    case .assaultBike: "Bici Assault"
+    case .stationaryBike: "Bici estática"
+    case .skiErg: "Ski"
+    case .rowErg: "Row"
+    case .battleRopes: "Battle ropes"
     case .external: "Lastre"
     case .bodyweight: "Corporal"
     }

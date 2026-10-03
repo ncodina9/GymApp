@@ -256,6 +256,10 @@ struct TrainingPlanDecodingTests {
       maxSessionMinutes: 45,
       referenceDate: referenceDate
     )
+    var materialScopedConstraints = constraints
+    materialScopedConstraints.disabledEquipmentByBaseExercise = [originalExercise.baseExerciseID: [.barbell]]
+    #expect(!materialScopedConstraints.allows(.barbell, for: originalExercise))
+    #expect(materialScopedConstraints.allows(.dumbbell, for: originalExercise))
 
     let moved = try PlanningOperationEngine.preview(
       basePlan: plan,
@@ -318,6 +322,80 @@ struct TrainingPlanDecodingTests {
         )
       }
     }
+  }
+
+  @Test("Sustituye un ejercicio por una plantilla de catálogo compatible")
+  func replacesExerciseUsingCatalogTemplate() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first { session in
+      session.exercises.contains { $0.movementPattern == "traccion-horizontal" }
+    })
+    let source = try #require(session.exercises.first { $0.movementPattern == "traccion-horizontal" })
+    var template = source
+    template.exerciseID = "catalog.face-pull.for.\(source.exerciseID)"
+    template.name = "Face pull"
+    template.baseExerciseID = "face-pull"
+    template.baseExerciseName = "Face pull"
+    template.equipment = .cable
+    template.equipmentOptions = [.cable]
+
+    let operation = PlanningOperation.replaceExerciseWithTemplate(
+      sessionID: session.sessionID,
+      exerciseID: source.exerciseID,
+      replacement: template
+    )
+    let encoded = try JSONEncoder().encode(operation)
+    #expect(try JSONDecoder().decode(PlanningOperation.self, from: encoded) == operation)
+
+    let result = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [operation],
+      constraints: PlanningConstraints(
+        availableWeekdays: Set(1 ... 7),
+        availableEquipment: [.cable],
+        maxSessionMinutes: 90,
+        referenceDate: try #require(isoDate("2026-01-01"))
+      )
+    )
+    let replaced = try #require(result.plan.sessions.first(where: { $0.sessionID == session.sessionID })?.exercises.first(where: { $0.exerciseID == template.exerciseID }))
+    #expect(replaced.displayName == "Face pull")
+    #expect(replaced.equipment == .cable)
+    #expect(replaced.sets == source.sets)
+  }
+
+  @Test("Añade una plantilla de catálogo sin duplicar una familia existente")
+  func addsExerciseUsingCatalogTemplate() throws {
+    let plan = try TrainingPlanLoader.decode(data: Data(contentsOf: sharedPlanURL))
+    let session = try #require(plan.sessions.first)
+    let source = try #require(session.exercises.first)
+    var template = source
+    template.exerciseID = "catalog.face-pull.addition.\(session.sessionID)"
+    template.name = "Face pull"
+    template.baseExerciseID = "face-pull"
+    template.baseExerciseName = "Face pull"
+    template.equipment = .cable
+    template.equipmentOptions = [.cable]
+    template.supersetID = nil
+    template.supersetOrder = nil
+
+    let operation = PlanningOperation.addExerciseWithTemplate(sessionID: session.sessionID, exercise: template)
+    let encoded = try JSONEncoder().encode(operation)
+    #expect(try JSONDecoder().decode(PlanningOperation.self, from: encoded) == operation)
+
+    let result = try PlanningOperationEngine.preview(
+      basePlan: plan,
+      operations: [operation],
+      constraints: PlanningConstraints(
+        availableWeekdays: Set(1 ... 7),
+        availableEquipment: [.cable],
+        maxSessionMinutes: 90,
+        referenceDate: try #require(isoDate("2026-01-01"))
+      )
+    )
+    let updatedSession = try #require(result.plan.sessions.first(where: { $0.sessionID == session.sessionID }))
+    #expect(updatedSession.exercises.count == session.exercises.count + 1)
+    #expect(updatedSession.exercises.last?.exerciseID == template.exerciseID)
+    #expect(updatedSession.exercises.last?.supersetID == nil)
   }
 
   @Test("Valida asistencia y lastre como carga estructurada de peso corporal")
@@ -792,7 +870,7 @@ struct TrainingPlanDecodingTests {
     #expect(closeGripPress.displayGroupID == "press-banca")
     #expect(closeGripPress.coachingVariationName == "Agarre cerrado")
     #expect(closeGripPress.selectableEquipmentOptions == [.multipower, .dumbbell])
-    #expect(technicalRDL.selectableEquipmentOptions == [.barbell, .multipower])
+    #expect(technicalRDL.selectableEquipmentOptions == [.barbell, .multipower, .dumbbell])
 
     let canonicalExercises = TrainingExerciseCatalog.canonicalExercises(in: plan.sessions)
     #expect(canonicalExercises.filter { $0.displayName == "Curl de bíceps" }.count == 1)
@@ -830,6 +908,7 @@ struct TrainingPlanDecodingTests {
   func usesCustomLoadInventory() {
     let inventory = EquipmentLoadInventory(
       dumbbellLoadsKg: [8, 14, 18],
+      kettlebellLoadsKg: [8, 12, 16],
       plates: [.init(weightKg: 2.5, count: 4), .init(weightKg: 10, count: 4)],
       cableStepKg: 2.5,
       cableMaximumKg: 50,
@@ -838,8 +917,10 @@ struct TrainingPlanDecodingTests {
     )
 
     #expect(EquipmentLoadRules.weightForReferenceWeight(30, equipment: .dumbbell, inventory: inventory) == 14)
+    #expect(EquipmentLoadRules.weightForReferenceWeight(24, equipment: .kettlebell, inventory: inventory) == 12)
     #expect(EquipmentLoadRules.availableLoads(for: .cable, inventory: inventory).prefix(3) == [2.5, 5, 7.5])
     #expect(EquipmentLoadRules.plateLayout(totalWeightKg: 35, equipment: .barbell, inventory: inventory)?.barWeightKg == 15)
+    #expect(EquipmentLoadRules.plateLayout(totalWeightKg: 30, equipment: .shortBar, inventory: inventory)?.barWeightKg == 10)
   }
 
   @Test("Desglosa los discos de una barra por lado")

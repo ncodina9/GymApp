@@ -2,15 +2,26 @@ import Foundation
 
 public enum Equipment: String, Codable, CaseIterable, Sendable, Hashable {
   case barbell
+  case shortBar = "short_bar"
+  case ezBar = "ez_bar"
   case multipower
   case dumbbell
+  case kettlebell
   case cable
+  case weightPlate = "weight_plate"
   case plateLoadedMachine = "plate_loaded_machine"
+  case landmine
+  case abWheel = "ab_wheel"
+  case assaultBike = "assault_bike"
+  case stationaryBike = "stationary_bike"
+  case skiErg = "ski_erg"
+  case rowErg = "row_erg"
+  case battleRopes = "battle_ropes"
   case external
   case bodyweight
 }
 
-public enum TrainingSetKind: String, Codable, Sendable {
+public enum TrainingSetKind: String, Codable, Sendable, Equatable {
   case working
   case timed
 }
@@ -66,7 +77,7 @@ public struct TrainingSession: Codable, Identifiable, Sendable {
   }
 }
 
-public struct TrainingExercise: Codable, Identifiable, Sendable {
+public struct TrainingExercise: Codable, Identifiable, Sendable, Equatable {
   public var exerciseID: String
   public var name: String
   public var baseExerciseID: String
@@ -112,12 +123,58 @@ public struct TrainingExercise: Codable, Identifiable, Sendable {
     case decisionOptions
     case sets
   }
+
+  public init(
+    exerciseID: String,
+    name: String,
+    baseExerciseID: String,
+    baseExerciseName: String,
+    variantLabel: String? = nil,
+    type: String,
+    block: String,
+    equipment: Equipment,
+    equipmentOptions: [Equipment]? = nil,
+    trainingBlock: String? = nil,
+    movementPattern: String? = nil,
+    primaryMuscles: [String],
+    secondaryMuscles: [String] = [],
+    supersetID: String? = nil,
+    supersetOrder: Int? = nil,
+    phase: String,
+    notes: String,
+    target: String,
+    decisionOptions: [String] = [],
+    sets: [TrainingSet]
+  ) {
+    self.exerciseID = exerciseID
+    self.name = name
+    self.baseExerciseID = baseExerciseID
+    self.baseExerciseName = baseExerciseName
+    self.variantLabel = variantLabel
+    self.type = type
+    self.block = block
+    self.equipment = equipment
+    self.equipmentOptions = equipmentOptions
+    self.trainingBlock = trainingBlock
+    self.movementPattern = movementPattern
+    self.primaryMuscles = primaryMuscles
+    self.secondaryMuscles = secondaryMuscles
+    self.supersetID = supersetID
+    self.supersetOrder = supersetOrder
+    self.phase = phase
+    self.notes = notes
+    self.target = target
+    self.decisionOptions = decisionOptions
+    self.sets = sets
+  }
 }
 
 public extension TrainingExercise {
   var displayGroupID: String {
     switch baseExerciseID {
     case "press-banca-agarre-cerrado":
+      "press-banca"
+    case "press-banca-inclinado":
       "press-banca"
     case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
       "curl-biceps"
@@ -129,6 +186,8 @@ public extension TrainingExercise {
       "peso-muerto-rumano"
     case "elevacion-lateral-mecanica":
       "elevaciones-laterales"
+    case "press-militar-sentado", "press-militar-sentado-velocidad":
+      "press-militar"
     default:
       baseExerciseID
     }
@@ -138,6 +197,8 @@ public extension TrainingExercise {
   var displayName: String {
     switch baseExerciseID {
     case "press-banca-agarre-cerrado":
+      "Press banca"
+    case "press-banca-inclinado":
       "Press banca"
     case "curl-biceps", "curl-biceps-alterno", "curl-martillo":
       "Curl de bíceps"
@@ -149,6 +210,10 @@ public extension TrainingExercise {
       "Peso muerto rumano"
     case "elevacion-lateral-mecanica":
       "Elevaciones laterales"
+    case "press-militar-sentado", "press-militar-sentado-velocidad":
+      "Press militar"
+    case "curl-femoral-maquina":
+      "Curl femoral"
     default:
       baseExerciseName
     }
@@ -159,6 +224,12 @@ public extension TrainingExercise {
     switch exerciseID {
     case "press-cerrado-multipower":
       "Agarre cerrado"
+    case "press-banca-inclinado":
+      "Inclinado"
+    case "press-militar-sentado", "press-militar-sentado-velocidad":
+      "Sentado"
+    case "elevacion-lateral-mecanica":
+      "Mecánica"
     default:
       nil
     }
@@ -171,11 +242,19 @@ public extension TrainingExercise {
     }
 
     let alternatives: [Equipment] = switch exerciseID {
-    case "press-banca-barra", "press-banca-inclinado", "press-militar-sentado", "press-militar-sentado-velocidad":
+    case "press-banca-barra", "press-banca-inclinado":
       [.barbell, .multipower, .dumbbell]
+    case "press-militar-sentado", "press-militar-sentado-velocidad":
+      [.barbell, .shortBar, .multipower, .dumbbell]
     case "press-cerrado-multipower":
       [.multipower, .dumbbell]
-    case "remo-inclinado-barra", "remo-barra-multipower", "hip-thrust-barra", "hip-thrust-volumen", "peso-muerto-rumano-barra", "rdl-tecnico":
+    case "remo-inclinado-barra":
+      [.barbell, .multipower, .dumbbell]
+    case "remo-barra-multipower":
+      [.barbell, .multipower, .dumbbell, .cable]
+    case "peso-muerto-rumano-barra", "rdl-tecnico":
+      [.barbell, .multipower, .dumbbell]
+    case "hip-thrust-barra", "hip-thrust-volumen":
       [.barbell, .multipower]
     default:
       [equipment]
@@ -204,7 +283,7 @@ public enum TrainingExerciseCatalog {
   }
 }
 
-public struct TrainingSet: Codable, Identifiable, Sendable {
+public struct TrainingSet: Codable, Identifiable, Sendable, Equatable {
   public var setIndex: Int
   public var targetReps: Int?
   public var targetWeightKg: Double

@@ -5,7 +5,9 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
   case shiftFutureSessions(fromDate: String, byDays: Int)
   case cancelSession(sessionID: String)
   case replaceExercise(sessionID: String, exerciseID: String, replacementExerciseID: String)
+  case replaceExerciseWithTemplate(sessionID: String, exerciseID: String, replacement: TrainingExercise)
   case addExercise(sessionID: String, sourceExerciseID: String)
+  case addExerciseWithTemplate(sessionID: String, exercise: TrainingExercise)
   case removeExercise(sessionID: String, exerciseID: String)
   case adjustSet(sessionID: String, exerciseID: String, setIndex: Int, reps: Int?, weightKg: Double?, durationSeconds: Int?, restSeconds: Int?)
   case adjustBodyweightLoad(sessionID: String, exerciseID: String, setIndex: Int, assistanceKg: Double, addedWeightKg: Double)
@@ -17,6 +19,8 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
     case fromDate, byDays
     case exerciseID
     case replacementExerciseID
+    case replacement
+    case exercise
     case sourceExerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds, assistanceKg, addedWeightKg
   }
 
@@ -24,7 +28,8 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
     case moveSession, shiftFutureSessions
     case cancelSession
     case replaceExercise
-    case addExercise, removeExercise, adjustSet, adjustBodyweightLoad
+    case replaceExerciseWithTemplate
+    case addExercise, addExerciseWithTemplate, removeExercise, adjustSet, adjustBodyweightLoad
   }
 
   public init(from decoder: Decoder) throws {
@@ -48,8 +53,19 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
         exerciseID: try container.decode(String.self, forKey: .exerciseID),
         replacementExerciseID: try container.decode(String.self, forKey: .replacementExerciseID)
       )
+    case .replaceExerciseWithTemplate:
+      self = .replaceExerciseWithTemplate(
+        sessionID: try container.decode(String.self, forKey: .sessionID),
+        exerciseID: try container.decode(String.self, forKey: .exerciseID),
+        replacement: try container.decode(TrainingExercise.self, forKey: .replacement)
+      )
     case .addExercise:
       self = .addExercise(sessionID: try container.decode(String.self, forKey: .sessionID), sourceExerciseID: try container.decode(String.self, forKey: .sourceExerciseID))
+    case .addExerciseWithTemplate:
+      self = .addExerciseWithTemplate(
+        sessionID: try container.decode(String.self, forKey: .sessionID),
+        exercise: try container.decode(TrainingExercise.self, forKey: .exercise)
+      )
     case .removeExercise:
       self = .removeExercise(sessionID: try container.decode(String.self, forKey: .sessionID), exerciseID: try container.decode(String.self, forKey: .exerciseID))
     case .adjustSet:
@@ -78,8 +94,17 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
       try container.encode(sessionID, forKey: .sessionID)
       try container.encode(exerciseID, forKey: .exerciseID)
       try container.encode(replacementExerciseID, forKey: .replacementExerciseID)
+    case let .replaceExerciseWithTemplate(sessionID, exerciseID, replacement):
+      try container.encode(Kind.replaceExerciseWithTemplate, forKey: .type)
+      try container.encode(sessionID, forKey: .sessionID)
+      try container.encode(exerciseID, forKey: .exerciseID)
+      try container.encode(replacement, forKey: .replacement)
     case let .addExercise(sessionID, sourceExerciseID):
       try container.encode(Kind.addExercise, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(sourceExerciseID, forKey: .sourceExerciseID)
+    case let .addExerciseWithTemplate(sessionID, exercise):
+      try container.encode(Kind.addExerciseWithTemplate, forKey: .type)
+      try container.encode(sessionID, forKey: .sessionID)
+      try container.encode(exercise, forKey: .exercise)
     case let .removeExercise(sessionID, exerciseID):
       try container.encode(Kind.removeExercise, forKey: .type); try container.encode(sessionID, forKey: .sessionID); try container.encode(exerciseID, forKey: .exerciseID)
     case let .adjustSet(sessionID, exerciseID, setIndex, reps, weightKg, durationSeconds, restSeconds):
@@ -95,7 +120,9 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
     case let .shiftFutureSessions(fromDate, byDays): "Desplazar sesiones desde \(fromDate) \(byDays) días"
     case .cancelSession: "Cancelar la sesión"
     case let .replaceExercise(_, _, replacementExerciseID): "Sustituir ejercicio por \(replacementExerciseID)"
+    case let .replaceExerciseWithTemplate(_, _, replacement): "Sustituir ejercicio por \(replacement.displayName)"
     case let .addExercise(_, sourceExerciseID): "Añadir ejercicio \(sourceExerciseID)"
+    case let .addExerciseWithTemplate(_, exercise): "Añadir ejercicio \(exercise.displayName)"
     case let .removeExercise(_, exerciseID): "Quitar ejercicio \(exerciseID)"
     case .adjustSet: "Ajustar objetivo de serie"
     case .adjustBodyweightLoad: "Ajustar asistencia o lastre"
@@ -105,7 +132,7 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
   public var targetSessionID: String? {
     switch self {
     case let .moveSession(sessionID, _), let .cancelSession(sessionID),
-         let .replaceExercise(sessionID, _, _), let .addExercise(sessionID, _),
+         let .replaceExercise(sessionID, _, _), let .replaceExerciseWithTemplate(sessionID, _, _), let .addExercise(sessionID, _), let .addExerciseWithTemplate(sessionID, _),
          let .removeExercise(sessionID, _), let .adjustSet(sessionID, _, _, _, _, _, _),
          let .adjustBodyweightLoad(sessionID, _, _, _, _):
       sessionID
@@ -116,11 +143,11 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
 
   public var targetExerciseID: String? {
     switch self {
-    case let .replaceExercise(_, exerciseID, _), let .removeExercise(_, exerciseID),
+    case let .replaceExercise(_, exerciseID, _), let .replaceExerciseWithTemplate(_, exerciseID, _), let .removeExercise(_, exerciseID),
          let .adjustSet(_, exerciseID, _, _, _, _, _),
          let .adjustBodyweightLoad(_, exerciseID, _, _, _):
       exerciseID
-    case .moveSession, .shiftFutureSessions, .cancelSession, .addExercise:
+    case .moveSession, .shiftFutureSessions, .cancelSession, .addExercise, .addExerciseWithTemplate:
       nil
     }
   }
@@ -129,6 +156,7 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
 public struct PlanningConstraints: Sendable {
   public var availableWeekdays: Set<Int>
   public var availableEquipment: Set<Equipment>
+  public var disabledEquipmentByBaseExercise: [String: Set<Equipment>]
   public var restrictedExerciseIDs: Set<String>
   public var restrictedMovementPatterns: Set<String>
   public var cautionMovementPatterns: Set<String>
@@ -142,6 +170,7 @@ public struct PlanningConstraints: Sendable {
   public init(
     availableWeekdays: Set<Int>,
     availableEquipment: Set<Equipment>,
+    disabledEquipmentByBaseExercise: [String: Set<Equipment>] = [:],
     restrictedExerciseIDs: Set<String> = [],
     restrictedMovementPatterns: Set<String> = [],
     cautionMovementPatterns: Set<String> = [],
@@ -154,6 +183,7 @@ public struct PlanningConstraints: Sendable {
   ) {
     self.availableWeekdays = availableWeekdays
     self.availableEquipment = availableEquipment
+    self.disabledEquipmentByBaseExercise = disabledEquipmentByBaseExercise
     self.restrictedExerciseIDs = restrictedExerciseIDs
     self.restrictedMovementPatterns = restrictedMovementPatterns
     self.cautionMovementPatterns = cautionMovementPatterns
@@ -163,6 +193,10 @@ public struct PlanningConstraints: Sendable {
     self.activeSessionID = activeSessionID
     self.completedSessionIDs = completedSessionIDs
     self.referenceDate = referenceDate
+  }
+
+  public func allows(_ equipment: Equipment, for exercise: TrainingExercise) -> Bool {
+    !disabledEquipmentByBaseExercise[exercise.baseExerciseID, default: []].contains(equipment)
   }
 }
 
@@ -462,7 +496,9 @@ public enum PlanningOperationEngine {
               !(constraints.avoidsSupersets && replacement.supersetID != nil) else {
           throw PlanningOperationError.replacementIsRestricted(replacementExerciseID)
         }
-        guard let equipment = replacement.selectableEquipmentOptions.first(where: constraints.availableEquipment.contains) else {
+        guard let equipment = replacement.selectableEquipmentOptions.first(where: {
+          constraints.availableEquipment.contains($0) && constraints.allows($0, for: replacement)
+        }) else {
           throw PlanningOperationError.replacementUsesUnavailableEquipment(replacementExerciseID)
         }
 
@@ -474,15 +510,69 @@ public enum PlanningOperationEngine {
         replacement.supersetOrder = original.supersetOrder
         plan.sessions[sessionIndex].exercises[exerciseIndex] = replacement
         appendDurationWarning(for: plan.sessions[sessionIndex], constraints: constraints, warnings: &warnings)
+      case let .replaceExerciseWithTemplate(sessionID, exerciseID, replacement):
+        let sessionIndex = try editableSessionIndex(sessionID, in: plan, constraints: constraints)
+        guard let exerciseIndex = plan.sessions[sessionIndex].exercises.firstIndex(where: { $0.exerciseID == exerciseID }) else {
+          throw PlanningOperationError.exerciseNotFound(exerciseID)
+        }
+        let original = plan.sessions[sessionIndex].exercises[exerciseIndex]
+        let sharesPrimaryMuscle = !Set(replacement.primaryMuscles).isDisjoint(with: Set(original.primaryMuscles))
+        guard replacement.movementPattern == original.movementPattern || sharesPrimaryMuscle else {
+          throw PlanningOperationError.replacementIsRestricted(replacement.exerciseID)
+        }
+        guard !constraints.restrictedExerciseIDs.contains(replacement.exerciseID),
+              !constraints.restrictedExerciseIDs.contains(replacement.baseExerciseID),
+              !constraints.restrictedMovementPatterns.contains(replacement.movementPattern ?? ""),
+              !(constraints.avoidsSupersets && original.supersetID != nil) else {
+          throw PlanningOperationError.replacementIsRestricted(replacement.exerciseID)
+        }
+        guard let equipment = replacement.selectableEquipmentOptions.first(where: {
+          constraints.availableEquipment.contains($0) && constraints.allows($0, for: replacement)
+        }) else {
+          throw PlanningOperationError.replacementUsesUnavailableEquipment(replacement.exerciseID)
+        }
+        var appliedReplacement = replacement
+        appliedReplacement.equipment = equipment
+        appliedReplacement.sets = original.sets
+        appliedReplacement.block = original.block
+        appliedReplacement.supersetID = original.supersetID
+        appliedReplacement.supersetOrder = original.supersetOrder
+        plan.sessions[sessionIndex].exercises[exerciseIndex] = appliedReplacement
+        appendDurationWarning(for: plan.sessions[sessionIndex], constraints: constraints, warnings: &warnings)
       case let .addExercise(sessionID, sourceExerciseID):
         let sessionIndex = try editableSessionIndex(sessionID, in: plan, constraints: constraints)
         guard let exercise = plan.sessions.flatMap(\.exercises).first(where: { $0.exerciseID == sourceExerciseID }) else { throw PlanningOperationError.replacementNotFound(sourceExerciseID) }
-        guard exercise.selectableEquipmentOptions.contains(where: constraints.availableEquipment.contains) else { throw PlanningOperationError.replacementUsesUnavailableEquipment(sourceExerciseID) }
+        guard exercise.selectableEquipmentOptions.contains(where: {
+          constraints.availableEquipment.contains($0) && constraints.allows($0, for: exercise)
+        }) else { throw PlanningOperationError.replacementUsesUnavailableEquipment(sourceExerciseID) }
         guard !constraints.restrictedExerciseIDs.contains(exercise.exerciseID),
               !constraints.restrictedExerciseIDs.contains(exercise.baseExerciseID),
               !constraints.restrictedMovementPatterns.contains(exercise.movementPattern ?? ""),
               !(constraints.avoidsSupersets && exercise.supersetID != nil) else { throw PlanningOperationError.replacementIsRestricted(sourceExerciseID) }
         plan.sessions[sessionIndex].exercises.append(exercise)
+        appendDurationWarning(for: plan.sessions[sessionIndex], constraints: constraints, warnings: &warnings)
+      case let .addExerciseWithTemplate(sessionID, exercise):
+        let sessionIndex = try editableSessionIndex(sessionID, in: plan, constraints: constraints)
+        guard !exercise.sets.isEmpty,
+              !plan.sessions[sessionIndex].exercises.contains(where: { $0.displayGroupID == exercise.displayGroupID }) else {
+          throw PlanningOperationError.replacementIsRestricted(exercise.exerciseID)
+        }
+        guard !constraints.restrictedExerciseIDs.contains(exercise.exerciseID),
+              !constraints.restrictedExerciseIDs.contains(exercise.baseExerciseID),
+              !constraints.restrictedMovementPatterns.contains(exercise.movementPattern ?? ""),
+              !constraints.avoidsSupersets || exercise.supersetID == nil else {
+          throw PlanningOperationError.replacementIsRestricted(exercise.exerciseID)
+        }
+        guard let equipment = exercise.selectableEquipmentOptions.first(where: {
+          constraints.availableEquipment.contains($0) && constraints.allows($0, for: exercise)
+        }) else {
+          throw PlanningOperationError.replacementUsesUnavailableEquipment(exercise.exerciseID)
+        }
+        var addition = exercise
+        addition.equipment = equipment
+        addition.supersetID = nil
+        addition.supersetOrder = nil
+        plan.sessions[sessionIndex].exercises.append(addition)
         appendDurationWarning(for: plan.sessions[sessionIndex], constraints: constraints, warnings: &warnings)
       case let .removeExercise(sessionID, exerciseID):
         let sessionIndex = try editableSessionIndex(sessionID, in: plan, constraints: constraints)
@@ -778,7 +868,7 @@ public enum PlanningOperationEngine {
   private static func sessionID(for operation: PlanningOperation) -> String? {
     switch operation {
     case let .moveSession(sessionID, _), let .cancelSession(sessionID),
-         let .replaceExercise(sessionID, _, _), let .addExercise(sessionID, _),
+         let .replaceExercise(sessionID, _, _), let .replaceExerciseWithTemplate(sessionID, _, _), let .addExercise(sessionID, _), let .addExerciseWithTemplate(sessionID, _),
          let .removeExercise(sessionID, _), let .adjustSet(sessionID, _, _, _, _, _, _),
          let .adjustBodyweightLoad(sessionID, _, _, _, _):
       sessionID

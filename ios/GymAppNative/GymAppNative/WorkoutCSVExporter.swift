@@ -88,11 +88,12 @@ enum WorkoutCSVExporter {
 
   private static func loadType(for equipment: Equipment) -> String {
     switch equipment {
-    case .barbell, .multipower, .plateLoadedMachine: "total"
-    case .dumbbell: "per_dumbbell"
+    case .barbell, .shortBar, .ezBar, .multipower, .plateLoadedMachine: "total"
+    case .dumbbell, .kettlebell: "per_dumbbell"
     case .cable: "machine"
-    case .external: "external"
+    case .weightPlate, .landmine, .external: "external"
     case .bodyweight: "bodyweight"
+    case .abWheel, .assaultBike, .stationaryBike, .skiErg, .rowErg, .battleRopes: "untracked"
     }
   }
 

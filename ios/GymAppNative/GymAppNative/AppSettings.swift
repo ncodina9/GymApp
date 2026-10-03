@@ -636,6 +636,34 @@ private struct ExercisesLibraryView: View {
   var body: some View {
     ScrollView {
       LazyVStack(spacing: 10) {
+        NavigationLink {
+          ExerciseCatalogSettingsView(plan: plan)
+        } label: {
+          HStack(spacing: 12) {
+            Image(systemName: "slider.horizontal.3")
+              .font(.gymH2.weight(.semibold))
+              .foregroundStyle(Color.gymAccent)
+              .frame(width: 30, height: 30)
+            VStack(alignment: .leading, spacing: 4) {
+              Text("Catálogo y preferencias")
+                .font(.gymH2.weight(.bold))
+                .foregroundStyle(.primary)
+              Text("Ejercicios, variantes y material para propuestas futuras")
+                .font(.gymBody)
+                .foregroundStyle(Color.gymSecondaryText)
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right")
+              .font(.gymBody.weight(.bold))
+              .foregroundStyle(Color.gymSecondaryText)
+          }
+          .padding(14)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(Color.gymSurface, in: RoundedRectangle(cornerRadius: 18))
+          .overlay { RoundedRectangle(cornerRadius: 18).stroke(Color.gymAccent.opacity(0.35), lineWidth: 1) }
+        }
+        .buttonStyle(.plain)
+
         ForEach(exercises) { exercise in
           NavigationLink {
             ExerciseHistoryView(exercise: exercise, records: completedWorkoutRecords)
@@ -684,10 +712,21 @@ private struct ExercisesLibraryView: View {
   private func equipmentLabel(_ equipment: Equipment) -> String {
     switch equipment {
     case .barbell: "Barra"
+    case .shortBar: "Barra corta"
+    case .ezBar: "Barra Z"
     case .multipower: "Multipower"
     case .dumbbell: "Mancuernas"
+    case .kettlebell: "Kettlebell"
     case .cable: "Polea"
+    case .weightPlate: "Discos"
     case .plateLoadedMachine: "Máquina de discos"
+    case .landmine: "Landmine"
+    case .abWheel: "Rodillo abdominal"
+    case .assaultBike: "Bici Assault"
+    case .stationaryBike: "Bici estática"
+    case .skiErg: "Ski"
+    case .rowErg: "Row"
+    case .battleRopes: "Battle ropes"
     case .external: "Lastre"
     case .bodyweight: "Peso corporal"
     }
@@ -914,7 +953,7 @@ private struct AppearanceSettingsView: View {
   }
 }
 
-private struct ThemeToggleStyle: ToggleStyle {
+struct ThemeToggleStyle: ToggleStyle {
   func makeBody(configuration: Configuration) -> some View {
     HStack(spacing: 12) {
       configuration.label
@@ -1595,10 +1634,21 @@ private struct ProfilePlanIssueRow: View {
   private func equipmentLabel(_ equipment: Equipment) -> String {
     switch equipment {
     case .barbell: "Barra"
+    case .shortBar: "Barra corta"
+    case .ezBar: "Barra Z"
     case .dumbbell: "Mancuernas"
+    case .kettlebell: "Kettlebell"
     case .cable: "Polea"
     case .multipower: "Multipower"
+    case .weightPlate: "Discos"
     case .plateLoadedMachine: "Máquina de discos"
+    case .landmine: "Landmine"
+    case .abWheel: "Rodillo abdominal"
+    case .assaultBike: "Bici Assault"
+    case .stationaryBike: "Bici estática"
+    case .skiErg: "Ski"
+    case .rowErg: "Row"
+    case .battleRopes: "Battle ropes"
     case .external: "Carga externa"
     case .bodyweight: "Peso corporal"
     }
@@ -1773,13 +1823,23 @@ struct CoachConversationView: View {
   private var replacementCandidates: [TrainingExercise] {
     guard let source = selectedReplacementSourceExercise else { return [] }
     let restrictions = ProfilePlanningRestrictions.compile(from: profile)
-    return TrainingExerciseCatalog.canonicalExercises(
+    let planCandidates = TrainingExerciseCatalog.canonicalExercises(
       in: effectivePlan.sessions,
       excludingDisplayGroupID: source.displayGroupID
     )
-    .filter { candidate in
+    let existingGroups = Set(planCandidates.map(\.displayGroupID))
+    let catalogCandidates = ExerciseCatalogStore.entries(for: effectivePlan)
+      .filter { $0.baseExerciseID != source.displayGroupID && !existingGroups.contains($0.baseExerciseID) }
+      .map { $0.replacementTemplate(for: source) }
+
+    return (planCandidates + catalogCandidates)
+      .filter { candidate in
       guard candidate.exerciseID != source.exerciseID,
-            candidate.selectableEquipmentOptions.contains(where: profile.availableEquipment.contains),
+            profile.catalogPreferences.allows(candidate),
+            candidate.selectableEquipmentOptions.contains(where: {
+              profile.availableEquipment.contains($0)
+                && profile.catalogPreferences.allows($0, for: candidate.baseExerciseID)
+            }),
             !restrictions.exerciseIDs.contains(candidate.exerciseID),
             !restrictions.exerciseIDs.contains(candidate.baseExerciseID),
             !restrictions.movementPatterns.contains(candidate.movementPattern ?? "") else { return false }
@@ -2103,7 +2163,7 @@ struct CoachConversationView: View {
                 Label("Necesito concretar la sustitución.", systemImage: "arrow.triangle.swap")
                   .font(.gymBody.weight(.semibold))
                   .foregroundStyle(Color.gymAccent)
-                Text("Las alternativas mantienen el patrón o el grupo muscular principal y respetan tu perfil.")
+                Text("Elige una alternativa: se muestran las opciones equivalentes del catálogo que respetan tu perfil.")
                   .font(.gymSupport)
                   .foregroundStyle(Color.gymSecondaryText)
                 Picker("Ejercicio actual", selection: $selectedReplacementSourceExerciseID) {
@@ -2577,9 +2637,7 @@ struct CoachConversationView: View {
     if matches.count == 1, let exercise = matches.first {
       selectedReplacementSourceExerciseID = exercise.exerciseID
       replacementSourceSelectionRequired = false
-      selectedReplacementExerciseID = preferredReplacement(for: exercise, text: request.userText)?.exerciseID
-        ?? replacementCandidates.first?.exerciseID
-        ?? ""
+      selectedReplacementExerciseID = ""
     } else {
       selectedReplacementSourceExerciseID = ""
       selectedReplacementExerciseID = ""
@@ -2639,21 +2697,24 @@ struct CoachConversationView: View {
     guard let session = selectedSession,
           let source = selectedReplacementSourceExercise,
           let replacement = selectedReplacementExercise else { return }
-    let operation = PlanningOperation.replaceExercise(sessionID: session.sessionID, exerciseID: source.exerciseID, replacementExerciseID: replacement.exerciseID)
+    let operation: PlanningOperation = replacement.exerciseID.hasPrefix("catalog.")
+      ? .replaceExerciseWithTemplate(sessionID: session.sessionID, exerciseID: source.exerciseID, replacement: replacement)
+      : .replaceExercise(sessionID: session.sessionID, exerciseID: source.exerciseID, replacementExerciseID: replacement.exerciseID)
     if stageCompositeOperation(operation, summary: "Sustituir \(source.displayName) por \(replacement.displayName)") {
       replacementClarificationPending = false
       replacementSourceSelectionRequired = false
       return
     }
-    let intent = PlanningIntent.replaceExercise(sessionID: session.sessionID, exerciseID: source.exerciseID, replacementExerciseID: replacement.exerciseID)
     let request = PlanningIntentRequest(userText: "Sustituir \(source.displayName) por \(replacement.displayName)", referencedSessionID: session.sessionID)
     let record = PlanningConversationStore.start(request, in: modelContext)
     currentConversationID = record.id
     requestText = request.userText
-    suggestedIntent = intent
+    suggestedIntent = nil
+    preparedCoachOperations = [operation]
+    preparedCoachSummary = "Sustituir \(source.displayName) por \(replacement.displayName)"
     replacementClarificationPending = false
     replacementSourceSelectionRequired = false
-    PlanningConversationStore.interpret(intent, summary: "Sustituir \(source.displayName) por \(replacement.displayName)", for: record, in: modelContext)
+    PlanningConversationStore.interpret([operation], summary: preparedCoachSummary ?? "Sustituir ejercicio", for: record, in: modelContext)
   }
 
   private func beginSetAdjustmentClarification(
@@ -3100,6 +3161,7 @@ private struct ProposalSimulatorView: View {
   @State private var targetDate = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now
   @State private var selectedExerciseID = ""
   @State private var replacementExerciseID = ""
+  @State private var selectedCatalogExerciseID = ""
   @State private var selectedSetIndex = 1
   @State private var adjustedReps = 8
   @State private var adjustedWeightKg = 0.0
@@ -3170,6 +3232,37 @@ private struct ProposalSimulatorView: View {
     )
   }
 
+  private var catalogAdditionCandidates: [ExerciseCatalogEntry] {
+    guard let selectedSession else { return [] }
+    let restrictions = ProfilePlanningRestrictions.compile(from: profile)
+    let presentGroups = Set(selectedSession.exercises.map(\.displayGroupID))
+    return ExerciseCatalogStore.entries(for: effectivePlan)
+      .filter { entry in
+        !presentGroups.contains(entry.baseExerciseID)
+          && !profile.catalogPreferences.disabledBaseExerciseIDs.contains(entry.baseExerciseID)
+          && !restrictions.exerciseIDs.contains(entry.baseExerciseID)
+          && !restrictions.movementPatterns.contains(entry.movementPattern ?? "")
+          && entry.equipment.contains { equipment in
+            profile.availableEquipment.contains(equipment)
+              && profile.catalogPreferences.allows(equipment, for: entry.baseExerciseID)
+          }
+      }
+  }
+
+  private var selectedCatalogExercise: ExerciseCatalogEntry? {
+    catalogAdditionCandidates.first(where: { $0.baseExerciseID == selectedCatalogExerciseID })
+  }
+
+  private var catalogAdditionTemplate: TrainingExercise? {
+    guard let selectedSession,
+          let entry = selectedCatalogExercise,
+          let equipment = entry.equipment.first(where: {
+            profile.availableEquipment.contains($0)
+              && profile.catalogPreferences.allows($0, for: entry.baseExerciseID)
+          }) else { return nil }
+    return entry.additionTemplate(for: selectedSession, equipment: equipment, inventory: profile.loadInventory)
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
@@ -3215,6 +3308,8 @@ private struct ProposalSimulatorView: View {
               exercisePicker
               SettingsDivider()
               replacementPicker
+            case .addExercise:
+              catalogAdditionPicker
             case .adjustSet:
               exercisePicker
               SettingsDivider()
@@ -3299,6 +3394,7 @@ private struct ProposalSimulatorView: View {
     }
     .onChange(of: selectedSessionID) { _, _ in
       resetExerciseSelection()
+      selectedCatalogExerciseID = catalogAdditionCandidates.first?.baseExerciseID ?? ""
       selectedAdaptationID = durationOptions.first?.id ?? ""
     }
     .onChange(of: selectedExerciseID) { _, _ in
@@ -3316,6 +3412,9 @@ private struct ProposalSimulatorView: View {
     .onChange(of: intent) { _, newIntent in
       if newIntent == .adaptDuration {
         selectedAdaptationID = durationOptions.first?.id ?? ""
+      }
+      if newIntent == .addExercise {
+        selectedCatalogExerciseID = catalogAdditionCandidates.first?.baseExerciseID ?? ""
       }
     }
     .alert(
@@ -3353,6 +3452,12 @@ private struct ProposalSimulatorView: View {
         exerciseID: selectedExerciseID,
         replacementExerciseID: replacementExerciseID
       )
+    case .addExercise:
+      guard let template = catalogAdditionTemplate else {
+        resultMessage = "Elige un ejercicio compatible del catálogo."
+        return
+      }
+      operation = .addExerciseWithTemplate(sessionID: session.sessionID, exercise: template)
     case .adjustSet:
       guard !selectedExerciseID.isEmpty else {
         resultMessage = "Elige el ejercicio y la serie que quieres ajustar."
@@ -3432,6 +3537,26 @@ private struct ProposalSimulatorView: View {
   }
 
   @ViewBuilder
+  private var catalogAdditionPicker: some View {
+    if catalogAdditionCandidates.isEmpty {
+      Text("No hay ejercicios nuevos del catálogo compatibles con el perfil para esta sesión.")
+        .font(.gymSupport)
+        .foregroundStyle(Color.gymSecondaryText)
+    } else {
+      Picker("Ejercicio del catálogo", selection: $selectedCatalogExerciseID) {
+        ForEach(catalogAdditionCandidates) { entry in
+          Text(entry.name).tag(entry.baseExerciseID)
+        }
+      }
+      if let template = catalogAdditionTemplate {
+        Text("Introducción: \(template.sets.count) series · \(template.sets.first?.targetReps ?? 0) reps · \(template.sets.first?.restSeconds ?? 0) s · \(template.equipment.executionLabel)")
+          .font(.gymSupport)
+          .foregroundStyle(Color.gymSecondaryText)
+      }
+    }
+  }
+
+  @ViewBuilder
   private var setAdjustmentControls: some View {
     Picker("Serie", selection: $selectedSetIndex) {
       ForEach(selectedExercise?.sets ?? []) { trainingSet in
@@ -3462,6 +3587,7 @@ private struct ProposalSimulatorView: View {
     }
     selectedExerciseID = firstExercise.exerciseID
     replacementExerciseID = replacementExercises.first?.exerciseID ?? ""
+    selectedCatalogExerciseID = catalogAdditionCandidates.first?.baseExerciseID ?? ""
     selectedSetIndex = firstExercise.sets.first?.setIndex ?? 1
     syncAdjustmentValues()
   }
@@ -3497,6 +3623,7 @@ private enum ProposalSimulationIntent: String, CaseIterable, Identifiable {
   case move
   case cancel
   case replaceExercise
+  case addExercise
   case adjustSet
   case adaptDuration
 
@@ -3506,6 +3633,7 @@ private enum ProposalSimulationIntent: String, CaseIterable, Identifiable {
     case .move: "Mover sesión"
     case .cancel: "Cancelar sesión"
     case .replaceExercise: "Sustituir ejercicio"
+    case .addExercise: "Añadir ejercicio del catálogo"
     case .adjustSet: "Ajustar serie"
     case .adaptDuration: "Adaptar duración"
     }
@@ -3518,6 +3646,7 @@ private enum ProposalSimulationIntent: String, CaseIterable, Identifiable {
     case .move: "calendar.badge.clock"
     case .cancel: "calendar.badge.minus"
     case .replaceExercise: "arrow.triangle.swap"
+    case .addExercise: "plus.rectangle.on.rectangle"
     case .adjustSet: "slider.horizontal.3"
     case .adaptDuration: "clock.arrow.2.circlepath"
     }

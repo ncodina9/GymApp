@@ -333,12 +333,20 @@ private struct LoadInventorySection: View {
         unitsByWeight: $profile.dumbbellUnitsByWeight
       )
       LoadInventoryEditor(
+        title: "Kettlebells",
+        values: $profile.kettlebellWeightsKg,
+        unitsByWeight: $profile.kettlebellUnitsByWeight,
+        defaultUnits: 1
+      )
+      LoadInventoryEditor(
         title: "Discos",
         values: $profile.plateWeightsKg,
         unitsByWeight: $profile.plateUnitsByWeight
       )
       LoadNumberField(label: "Paso de las poleas", value: $profile.cableStepKg)
       LoadNumberField(label: "Peso de la barra", value: $profile.barbellWeightKg)
+      LoadNumberField(label: "Peso de la barra corta", value: $profile.shortBarWeightKg)
+      LoadNumberField(label: "Peso de la barra Z", value: $profile.ezBarWeightKg)
       LoadNumberField(label: "Peso de la Multipower", value: $profile.multipowerBarWeightKg)
       ProfileSectionDivider()
       Text("Peso corporal").font(.gymH3.weight(.bold))
@@ -436,9 +444,18 @@ private struct LoadInventoryEditor: View {
   let title: String
   @Binding var values: [Double]
   @Binding var unitsByWeight: [String: Int]
+  var defaultUnits = 2
   @State private var weightText = ""
-  @State private var units = 2
+  @State private var units: Int
   @State private var selectedWeights: Set<Double> = []
+
+  init(title: String, values: Binding<[Double]>, unitsByWeight: Binding<[String: Int]>, defaultUnits: Int = 2) {
+    self.title = title
+    _values = values
+    _unitsByWeight = unitsByWeight
+    self.defaultUnits = defaultUnits
+    _units = State(initialValue: defaultUnits)
+  }
 
   private let chipColumns = [GridItem(.adaptive(minimum: 78), spacing: 8, alignment: .leading)]
 
@@ -566,7 +583,7 @@ private struct LoadInventoryEditor: View {
   }
 
   private func units(for weight: Double) -> Int {
-    max(1, unitsByWeight[loadKey(weight)] ?? 2)
+    max(1, unitsByWeight[loadKey(weight)] ?? defaultUnits)
   }
 
   private func loadKey(_ weight: Double) -> String {
@@ -769,10 +786,21 @@ private extension Equipment {
   var label: String {
     switch self {
     case .barbell: "Barra"
+    case .shortBar: "Barra corta"
+    case .ezBar: "Barra Z"
     case .multipower: "Multipower"
     case .dumbbell: "Mancuernas"
+    case .kettlebell: "Kettlebells"
     case .cable: "Polea"
+    case .weightPlate: "Discos"
     case .plateLoadedMachine: "Máquina de discos"
+    case .landmine: "Landmine"
+    case .abWheel: "Rodillo abdominal"
+    case .assaultBike: "Bici Assault"
+    case .stationaryBike: "Bici estática"
+    case .skiErg: "Ski"
+    case .rowErg: "Row"
+    case .battleRopes: "Battle ropes"
     case .external: "Lastre"
     case .bodyweight: "Peso corporal"
     }
@@ -781,10 +809,19 @@ private extension Equipment {
   var symbol: String {
     switch self {
     case .barbell: "figure.strengthtraining.traditional"
+    case .shortBar, .ezBar: "barbell"
     case .multipower: "square.stack.3d.up"
     case .dumbbell: "dumbbell.fill"
+    case .kettlebell: "figure.strengthtraining.functional"
     case .cable: "arrow.down.to.line"
+    case .weightPlate: "circle.inset.filled"
     case .plateLoadedMachine: "gearshape.2"
+    case .landmine: "rotate.3d"
+    case .abWheel: "circle.grid.cross"
+    case .assaultBike, .stationaryBike: "bicycle"
+    case .skiErg: "figure.skiing.crosscountry"
+    case .rowErg: "figure.rower"
+    case .battleRopes: "waveform.path.ecg"
     case .external: "plus.circle"
     case .bodyweight: "figure.strengthtraining.functional"
     }

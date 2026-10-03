@@ -65,7 +65,10 @@ extension TrainingProfile {
     return PlanningConstraints(
       availableWeekdays: trainingWeekdays,
       availableEquipment: availableEquipment,
-      restrictedExerciseIDs: restrictions.exerciseIDs,
+      disabledEquipmentByBaseExercise: catalogPreferences.disabledEquipmentByBaseExercise,
+      restrictedExerciseIDs: restrictions.exerciseIDs
+        .union(catalogPreferences.disabledBaseExerciseIDs)
+        .union(catalogPreferences.disabledVariantExerciseIDs),
       restrictedMovementPatterns: restrictions.movementPatterns,
       cautionMovementPatterns: restrictions.cautionMovementPatterns,
       avoidsSupersets: restrictions.avoidsSupersets,
