@@ -101,6 +101,29 @@ public enum PlanningOperation: Codable, Equatable, Sendable {
     case .adjustBodyweightLoad: "Ajustar asistencia o lastre"
     }
   }
+
+  public var targetSessionID: String? {
+    switch self {
+    case let .moveSession(sessionID, _), let .cancelSession(sessionID),
+         let .replaceExercise(sessionID, _, _), let .addExercise(sessionID, _),
+         let .removeExercise(sessionID, _), let .adjustSet(sessionID, _, _, _, _, _, _),
+         let .adjustBodyweightLoad(sessionID, _, _, _, _):
+      sessionID
+    case .shiftFutureSessions:
+      nil
+    }
+  }
+
+  public var targetExerciseID: String? {
+    switch self {
+    case let .replaceExercise(_, exerciseID, _), let .removeExercise(_, exerciseID),
+         let .adjustSet(_, exerciseID, _, _, _, _, _),
+         let .adjustBodyweightLoad(_, exerciseID, _, _, _):
+      exerciseID
+    case .moveSession, .shiftFutureSessions, .cancelSession, .addExercise:
+      nil
+    }
+  }
 }
 
 public struct PlanningConstraints: Sendable {
@@ -158,7 +181,67 @@ public struct PlanningProposal: Sendable {
 }
 
 public struct PlanningImpact: Codable, Equatable, Sendable {
+  public struct Diagnostic: Codable, Equatable, Identifiable, Sendable {
+    public enum Tone: String, Codable, Sendable { case positive, caution, critical }
+
+    public let id: String
+    public let tone: Tone
+    public let title: String
+    public let detail: String
+
+    public init(id: String, tone: Tone, title: String, detail: String) {
+      self.id = id
+      self.tone = tone
+      self.title = title
+      self.detail = detail
+    }
+  }
+
+  public struct SessionChange: Codable, Equatable, Identifiable, Sendable {
+    public let sessionID: String
+    public let label: String
+    public let week: Int
+    public let focus: String
+    public let dateBefore: String
+    public let dateAfter: String
+    public let estimatedMinutesBefore: Int
+    public let estimatedMinutesAfter: Int
+    public let wasCancelled: Bool
+    public let isCancelled: Bool
+    public let changes: [String]
+
+    public var id: String { sessionID }
+
+    public init(
+      sessionID: String,
+      label: String,
+      week: Int,
+      focus: String,
+      dateBefore: String,
+      dateAfter: String,
+      estimatedMinutesBefore: Int,
+      estimatedMinutesAfter: Int,
+      wasCancelled: Bool,
+      isCancelled: Bool,
+      changes: [String]
+    ) {
+      self.sessionID = sessionID
+      self.label = label
+      self.week = week
+      self.focus = focus
+      self.dateBefore = dateBefore
+      self.dateAfter = dateAfter
+      self.estimatedMinutesBefore = estimatedMinutesBefore
+      self.estimatedMinutesAfter = estimatedMinutesAfter
+      self.wasCancelled = wasCancelled
+      self.isCancelled = isCancelled
+      self.changes = changes
+    }
+  }
+
   public let changedSessionIDs: [String]
+  public let sessionChanges: [SessionChange]
+  public let diagnostics: [Diagnostic]
   public let estimatedMinutesBefore: Int
   public let estimatedMinutesAfter: Int
   public let supersetsBefore: Int
@@ -169,13 +252,15 @@ public struct PlanningImpact: Codable, Equatable, Sendable {
   public let scheduleEndAfter: String?
 
   private enum CodingKeys: String, CodingKey {
-    case changedSessionIDs, estimatedMinutesBefore, estimatedMinutesAfter
+    case changedSessionIDs, sessionChanges, diagnostics, estimatedMinutesBefore, estimatedMinutesAfter
     case supersetsBefore, supersetsAfter, weeklySetChanges, shiftedMacrocycleWeeks
     case scheduleEndBefore, scheduleEndAfter
   }
 
   public init(
     changedSessionIDs: [String],
+    sessionChanges: [SessionChange] = [],
+    diagnostics: [Diagnostic] = [],
     estimatedMinutesBefore: Int,
     estimatedMinutesAfter: Int,
     supersetsBefore: Int,
@@ -186,6 +271,8 @@ public struct PlanningImpact: Codable, Equatable, Sendable {
     scheduleEndAfter: String? = nil
   ) {
     self.changedSessionIDs = changedSessionIDs
+    self.sessionChanges = sessionChanges
+    self.diagnostics = diagnostics
     self.estimatedMinutesBefore = estimatedMinutesBefore
     self.estimatedMinutesAfter = estimatedMinutesAfter
     self.supersetsBefore = supersetsBefore
@@ -199,6 +286,8 @@ public struct PlanningImpact: Codable, Equatable, Sendable {
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     changedSessionIDs = try container.decode([String].self, forKey: .changedSessionIDs)
+    sessionChanges = try container.decodeIfPresent([SessionChange].self, forKey: .sessionChanges) ?? []
+    diagnostics = try container.decodeIfPresent([Diagnostic].self, forKey: .diagnostics) ?? []
     estimatedMinutesBefore = try container.decode(Int.self, forKey: .estimatedMinutesBefore)
     estimatedMinutesAfter = try container.decode(Int.self, forKey: .estimatedMinutesAfter)
     supersetsBefore = try container.decode(Int.self, forKey: .supersetsBefore)
@@ -212,6 +301,8 @@ public struct PlanningImpact: Codable, Equatable, Sendable {
   public func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encode(changedSessionIDs, forKey: .changedSessionIDs)
+    try container.encode(sessionChanges, forKey: .sessionChanges)
+    try container.encode(diagnostics, forKey: .diagnostics)
     try container.encode(estimatedMinutesBefore, forKey: .estimatedMinutesBefore)
     try container.encode(estimatedMinutesAfter, forKey: .estimatedMinutesAfter)
     try container.encode(supersetsBefore, forKey: .supersetsBefore)
@@ -445,14 +536,15 @@ public enum PlanningOperationEngine {
       plan: plan,
       operations: operations,
       warnings: warnings,
-      impact: impact(from: basePlan, to: plan, operations: operations)
+      impact: impact(from: basePlan, to: plan, operations: operations, constraints: constraints)
     )
   }
 
   private static func impact(
     from basePlan: TrainingPlan,
     to proposedPlan: TrainingPlan,
-    operations: [PlanningOperation]
+    operations: [PlanningOperation],
+    constraints: PlanningConstraints
   ) -> PlanningImpact {
     let beforeVolume = weeklyVolume(for: basePlan)
     let afterVolume = weeklyVolume(for: proposedPlan)
@@ -474,13 +566,50 @@ public enum PlanningOperationEngine {
             original.date != proposed.date else { return nil }
       return proposed.week
     }
+    let changedSessionIDs = proposedPlan.sessions.compactMap { proposed -> String? in
+      guard let original = basePlan.sessions.first(where: { $0.sessionID == proposed.sessionID }) else { return proposed.sessionID }
+      return original.date != proposed.date || original.isCancelled != proposed.isCancelled || explicitlyChangedSessionIDs.contains(proposed.sessionID)
+        ? proposed.sessionID
+        : nil
+    }
+    .sorted()
+    let sessionChanges = changedSessionIDs.compactMap { sessionID -> PlanningImpact.SessionChange? in
+      guard let before = basePlan.sessions.first(where: { $0.sessionID == sessionID }),
+            let after = proposedPlan.sessions.first(where: { $0.sessionID == sessionID }) else { return nil }
+      var changes: [String] = []
+      if before.date != after.date { changes.append("Fecha: \(before.date) → \(after.date)") }
+      if before.isCancelled != after.isCancelled {
+        changes.append(after.isCancelled ? "Sesión cancelada" : "Sesión recuperada")
+      }
+      if before.estimatedMinutes != after.estimatedMinutes {
+        changes.append("Duración estimada: \(before.estimatedMinutes) → \(after.estimatedMinutes) min")
+      }
+      changes.append(contentsOf: operations.compactMap { operation in
+        Self.sessionID(for: operation) == sessionID ? operation.summary : nil
+      })
+      return PlanningImpact.SessionChange(
+        sessionID: sessionID,
+        label: after.label,
+        week: after.week,
+        focus: after.focus,
+        dateBefore: before.date,
+        dateAfter: after.date,
+        estimatedMinutesBefore: before.estimatedMinutes,
+        estimatedMinutesAfter: after.estimatedMinutes,
+        wasCancelled: before.isCancelled,
+        isCancelled: after.isCancelled,
+        changes: Array(NSOrderedSet(array: changes)).compactMap { $0 as? String }
+      )
+    }
     return PlanningImpact(
-      changedSessionIDs: proposedPlan.sessions.compactMap { proposed in
-        guard let original = basePlan.sessions.first(where: { $0.sessionID == proposed.sessionID }) else { return proposed.sessionID }
-        return original.date != proposed.date || original.isCancelled != proposed.isCancelled || explicitlyChangedSessionIDs.contains(proposed.sessionID)
-          ? proposed.sessionID
-          : nil
-      }.sorted(),
+      changedSessionIDs: changedSessionIDs,
+      sessionChanges: sessionChanges,
+      diagnostics: diagnostics(
+        proposedPlan: proposedPlan,
+        sessionChanges: sessionChanges,
+        weeklySetChanges: changedVolume,
+        constraints: constraints
+      ),
       estimatedMinutesBefore: basePlan.sessions.filter { !$0.isCancelled }.reduce(0) { $0 + $1.estimatedMinutes },
       estimatedMinutesAfter: proposedPlan.sessions.filter { !$0.isCancelled }.reduce(0) { $0 + $1.estimatedMinutes },
       supersetsBefore: supersetCount(for: basePlan),
@@ -492,11 +621,105 @@ public enum PlanningOperationEngine {
     )
   }
 
+  private static func diagnostics(
+    proposedPlan: TrainingPlan,
+    sessionChanges: [PlanningImpact.SessionChange],
+    weeklySetChanges: [WeeklySetChange],
+    constraints: PlanningConstraints
+  ) -> [PlanningImpact.Diagnostic] {
+    let affectedWeeks = Set(sessionChanges.map(\.week))
+    var result: [PlanningImpact.Diagnostic] = []
+
+    for week in affectedWeeks.sorted() {
+      let sessions = proposedPlan.sessions
+        .filter { !$0.isCancelled && $0.week == week }
+        .sorted { $0.date < $1.date }
+      guard let referenceSession = sessions.first else { continue }
+      let phases = Set(sessions.flatMap(\.exercises).map { normalizedPhase($0.phase) })
+      let phaseSummary = phases.sorted().joined(separator: ", ")
+      result.append(.init(
+        id: "week-focus-\(week)",
+        tone: .positive,
+        title: "S\(week) · \(referenceSession.weekFocusLabel)",
+        detail: "La propuesta conserva el foco semanal y se revisa frente a la fase \(phaseSummary.isEmpty ? "planificada" : phaseSummary)."
+      ))
+
+      let weekVolumeChanges = weeklySetChanges.filter { $0.week == week && $0.before != $0.after }
+      if phases.contains("descarga") || phases.contains("readaptacion") {
+        for change in weekVolumeChanges where change.after > change.before {
+          result.append(.init(
+            id: "phase-volume-increase-\(week)-\(change.muscle)",
+            tone: .caution,
+            title: "Volumen contrario a la fase",
+            detail: "\(change.muscle.capitalized) pasa de \(change.before) a \(change.after) series en una semana de \(phases.contains("descarga") ? "descarga" : "readaptación"). Revisa que sea intencional."
+          ))
+        }
+      } else if phases.contains("acumulacion") {
+        for change in weekVolumeChanges where change.before > 0 && Double(change.after) < Double(change.before) * 0.85 {
+          result.append(.init(
+            id: "phase-volume-reduction-\(week)-\(change.muscle)",
+            tone: .caution,
+            title: "Volumen reducido en acumulación",
+            detail: "\(change.muscle.capitalized) baja de \(change.before) a \(change.after) series. Confirma que la reducción responde a recuperación, disponibilidad o una prioridad mayor."
+          ))
+        }
+      } else if phases.contains("intensificacion") {
+        for change in weekVolumeChanges where change.before > 0 && Double(change.after) > Double(change.before) * 1.15 {
+          result.append(.init(
+            id: "phase-volume-increase-\(week)-\(change.muscle)",
+            tone: .caution,
+            title: "Volumen alto en intensificación",
+            detail: "\(change.muscle.capitalized) sube de \(change.before) a \(change.after) series. En intensificación conviene concentrar la carga sin elevar demasiado la fatiga acumulada."
+          ))
+        }
+      }
+
+      for session in sessions where session.estimatedMinutes > constraints.maxSessionMinutes {
+        result.append(.init(
+          id: "duration-\(session.sessionID)",
+          tone: .caution,
+          title: "Duración por encima del límite",
+          detail: "\(session.label) queda en \(session.estimatedMinutes) min, por encima de tu límite de \(constraints.maxSessionMinutes) min."
+        ))
+      }
+
+      for pair in zip(sessions, sessions.dropFirst()) {
+        guard let firstDate = try? date(from: pair.0.date),
+              let secondDate = try? date(from: pair.1.date) else { continue }
+        let fullDays = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: firstDate), to: Calendar.current.startOfDay(for: secondDate)).day ?? 0
+        let sharedMuscles = Set(pair.0.exercises.flatMap(\.primaryMuscles)).intersection(pair.1.exercises.flatMap(\.primaryMuscles))
+        guard fullDays < 1, !sharedMuscles.isEmpty else { continue }
+        result.append(.init(
+          id: "recovery-\(week)-\(pair.0.sessionID)-\(pair.1.sessionID)",
+          tone: .critical,
+          title: "Recuperación insuficiente",
+          detail: "\(pair.0.label) y \(pair.1.label) quedan el mismo día y repiten \(sharedMuscles.sorted().joined(separator: ", ")). Revisa el calendario antes de aceptar."
+        ))
+      }
+    }
+
+    for change in weeklySetChanges where change.before > 0 && change.after > change.before {
+      let increase = Double(change.after - change.before) / Double(change.before)
+      guard increase > 0.15 else { continue }
+      result.append(.init(
+        id: "volume-\(change.week)-\(change.muscle)",
+        tone: increase > 0.30 ? .caution : .positive,
+        title: "Volumen de \(change.muscle.capitalized)",
+        detail: "S\(change.week): \(change.before) → \(change.after) series (\(Int((increase * 100).rounded())) %)."
+      ))
+    }
+    return result
+  }
+
   private static func scheduleEndDate(for plan: TrainingPlan) -> String? {
     plan.sessions
       .filter { !$0.isCancelled }
       .map(\.date)
       .max()
+  }
+
+  private static func normalizedPhase(_ value: String) -> String {
+    value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "es_ES"))
   }
 
   private static func weeklyVolume(for plan: TrainingPlan) -> [String: Int] {

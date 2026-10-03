@@ -268,6 +268,55 @@ enum PlanRevisionStore {
     try context.save()
   }
 
+  static func keepOperations(
+    at indexes: Set<Int>,
+    in revision: PlanRevisionRecord,
+    basedOn basePlan: TrainingPlan,
+    records: [PlanRevisionRecord],
+    constraints: PlanningConstraints,
+    context: ModelContext
+  ) throws {
+    guard revision.status == .proposed else { return }
+    let operations = operations(for: revision)
+    let keptOperations = operations.enumerated().compactMap { indexes.contains($0.offset) ? $0.element : nil }
+    guard !keptOperations.isEmpty else { throw PlanRevisionStoreError.noOperationsSelected }
+
+    let parentRevision = sourceRevision(for: basePlan, records: records, at: revision.effectiveFrom)
+    let effectiveBasePlan: TrainingPlan
+    if let parentRevision, let decoded = try? TrainingPlanLoader.decode(data: parentRevision.planData) {
+      effectiveBasePlan = decoded
+    } else {
+      effectiveBasePlan = basePlan
+    }
+    let proposal = try PlanningOperationEngine.preview(
+      basePlan: effectiveBasePlan,
+      operations: keptOperations,
+      constraints: constraints
+    )
+    let keptRationales = rationales(for: revision).filter { rationale in
+      rationale.outcome == .preserved || keptOperations.contains { operation in
+        operation.targetSessionID == rationale.sessionID
+          && (operation.targetExerciseID == nil || operation.targetExerciseID == rationale.exerciseID)
+      }
+    }
+    let rationaleData = keptRationales.isEmpty ? nil : try? JSONEncoder().encode(keptRationales)
+    guard let planData = try? JSONEncoder().encode(proposal.plan),
+          let operationsData = try? JSONEncoder().encode(keptOperations),
+          let warningsData = try? JSONEncoder().encode(proposal.warnings),
+          let impactData = try? JSONEncoder().encode(proposal.impact),
+          keptRationales.isEmpty || rationaleData != nil else {
+      throw PlanRevisionStoreError.encodingFailed
+    }
+    revision.parentRevisionID = parentRevision?.id
+    revision.planData = planData
+    revision.operationsData = operationsData
+    revision.warningsData = warningsData
+    revision.impactData = impactData
+    revision.rationaleData = rationaleData
+    revision.updatedAt = .now
+    try context.save()
+  }
+
   static func accept(
     _ revision: PlanRevisionRecord,
     basedOn basePlan: TrainingPlan,
@@ -297,6 +346,7 @@ enum PlanRevisionStoreError: LocalizedError {
   case encodingFailed
   case staleProposal
   case missingOperations
+  case noOperationsSelected
 
   var errorDescription: String? {
     switch self {
@@ -305,6 +355,8 @@ enum PlanRevisionStoreError: LocalizedError {
       "Esta propuesta se basó en una planificación anterior. Crea una nueva propuesta para combinarla con los cambios ya aceptados."
     case .missingOperations:
       "Esta propuesta antigua no contiene operaciones para poder actualizarse."
+    case .noOperationsSelected:
+      "Selecciona al menos un ajuste o descarta la revisión completa."
     }
   }
 }

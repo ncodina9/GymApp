@@ -1486,19 +1486,28 @@ Actualización v0.1.167: el contexto exportado de revisión semanal sube a schem
 
 Actualización v0.1.168: las revisiones semanales conservan una traza por ejercicio con material, series afectadas, decisión y motivo. La aceptación o descarte selectivo de ajustes queda anotada como siguiente evolución, porque exige regenerar las operaciones, el impacto y las validaciones del borrador.
 
+Actualización v0.1.169: el impacto de cada propuesta persiste también por sesión. Antes de aceptarla, Planificación muestra las sesiones afectadas, cambios de fecha, duración, cancelación y objetivo, además de volumen muscular, superseries y posible desplazamiento del macrociclo.
+
+Actualización v0.1.170: el impacto de una propuesta añade un diagnóstico persistible de foco y fase semanal, límite de duración, solapamiento de recuperación por músculo y variaciones relevantes de volumen. Los avisos distinguen información, precaución y conflicto que requiere revisar el calendario.
+
+Actualización v0.1.171: las revisiones pendientes se señalan con un badge en el acceso principal a Planificación. Dentro de cada borrador, cada ajuste puede excluirse antes de aceptar: la app recalcula plan, avisos, impacto y motivos solo con la selección conservada.
+
+Actualización v0.1.172: el diagnóstico de una propuesta convierte la fase semanal en reglas de volumen explicables. Advierte aumentos durante descarga/readaptación, reducciones significativas durante acumulación y subidas de volumen que añaden fatiga en intensificación; los avisos siguen requiriendo confirmación, no bloquean automáticamente el borrador.
+
 ### Futuro: planificación y análisis con IA
 
 - Dirección de producto: GymApp prioriza un agente de IA que actúa como entrenador personal conversacional. El objetivo no es construir primero un editor manual amplio, sino permitir expresar intenciones como "no podré entrenar el jueves", "quiero priorizar dominadas" o "me molesta el hombro" y recibir una propuesta explicable de reajuste.
 - Principio de arquitectura: el agente interpreta la intención y propone cambios, pero no es la fuente de verdad ni modifica directamente el plan. El motor determinista valida calendario, volumen, material, restricciones, ejercicios compatibles y límites de progresión antes de que el usuario confirme.
 - [~] Definir el perfil estructurado que condiciona toda propuesta: objetivo, experiencia, disponibilidad, duración máxima por sesión, material, preferencias, prioridades musculares, ejercicios a evitar y limitaciones existen; faltan cardio y referencias iniciales por patrón.
+- [ ] Crear un catálogo central de ejercicios con ejercicio base, variantes, materiales compatibles, patrones, grupos musculares, instrucciones y disponibilidad comercial. `Ejercicios` permitirá consultar el catálogo y el perfil podrá habilitar o excluir ejercicios, variantes y materiales antes de que el generador proponga una sesión. La arquitectura separará catálogo gratuito y contenido opcional de pago sin mezclar elegibilidad comercial con restricciones de salud.
 - [~] Versionar el plan con fecha de vigencia. Las instantáneas, estados, operaciones, diff legible, generación validada y encadenamiento explícito sobre el plan efectivo existen; falta una herramienta guiada para regenerar una propuesta obsoleta sin reescribir la petición.
 - [~] Crear operaciones de planificación tipadas y auditables: mover, cancelar, añadir, quitar y sustituir ejercicios, y cambiar reps, carga, duración, descanso, asistencia o lastre existen con validación y cambios resultantes; faltan reglas más ricas para prioridades y superseries.
-- [~] Implementar un motor determinista de calendario y programación que funcione sin IA: comprueba conflictos, sesiones duplicadas, duración, material, restricciones y progresión conservadora; faltan límites por bloque, distribución semanal completa y reglas de periodización.
-- [~] Añadir una pantalla de propuesta que muestre qué cambia, qué se conserva, por qué y el impacto semanal. El simulador local crea revisiones pendientes para mover o cancelar sesiones, sustituir ejercicios y ajustar series con cambios y avisos auditables; falta el impacto semanal completo.
+- [~] Implementar un motor determinista de calendario y programación que funcione sin IA: comprueba conflictos, sesiones duplicadas, duración, material, restricciones y progresión conservadora; interpreta volumen de forma distinta según descarga, readaptación, acumulación e intensificación. Faltan límites por bloque y distribución semanal completa.
+- [~] Añadir una pantalla de propuesta que muestre qué cambia, qué se conserva, por qué y el impacto semanal. El simulador local crea revisiones pendientes para mover o cancelar sesiones, sustituir ejercicios y ajustar series con cambios y avisos auditables; el impacto muestra sesiones, volumen, duración, superseries, calendario y diagnóstico de coherencia. Faltan reglas más ricas de recuperación y distribución semanal por bloque.
 - [ ] Análisis de entrenamiento con IA sobre historial, adherencia, feedback, cargas y duración real, siempre como propuesta explicada y confirmada antes de modificar un plan.
 - [~] Integrar el chat como interfaz de intención sobre las operaciones validadas, con contexto limitado al perfil, plan efectivo, sesiones ejecutadas y restricciones relevantes. El intérprete local entiende ausencias, fechas, cierres, duración, ajustes de series y sustituciones de ejercicios; Entrenador encadena una sustitución y un ajuste de serie en una revisión compuesta. Faltan más de dos acciones, peticiones contradictorias y aclaraciones que dependan de una respuesta anterior.
 - [~] Definir una revisión semanal estructurada local: recopila cumplimiento, RIR, series omitidas, decisiones y molestias por ejercicio; contrasta cada señal con la fase siguiente y puede crear un borrador de carga, reps, descanso, duración, asistencia o lastre tipado, limitado y confirmable. Distingue los cambios de aquello que conserva y evita que una incidencia aislada bloquee toda la semana; falta una explicación agrupada por sesión.
-- [ ] Permitir aceptar o descartar ajustes individuales dentro de una revisión semanal antes de confirmar el borrador completo. Al excluir una operación, recalcular impacto, validación y trazabilidad para conservar coherencia del plan.
+- [x] Permitir aceptar o descartar ajustes individuales dentro de una revisión semanal antes de confirmar el borrador completo. Al excluir una operación, recalcular impacto, validación y trazabilidad para conservar coherencia del plan.
 - [~] Mantener durante las pruebas un puente de revisión externa: la app exporta contexto semanal, comparte el contrato e importa operaciones tipadas como revisión pendiente validada; falta permitir adjuntar la explicación extensa del agente y registrar proveedor/modelo/consentimiento cuando la integración sea remota.
 
 ### Futuro: nuevo macrociclo
@@ -1528,6 +1537,7 @@ Prioridad 1:
 - [~] diseñar la selección de entrenamiento equivalente a Hoy: lista compacta, estados en curso/completado y acceso a previsualización; falta validar jerarquía y estados con datos reales
 - [~] diseñar la previsualización de Watch: ejercicios con primera serie, navegación nativa, selección de siguiente ejercicio y botón Play superior; falta reflejar la siguiente serie de un borrador reanudado
 - [~] diseñar la pantalla de serie: número de serie y material en etiqueta superior, dos cajas verticales para reps y peso, edición por Digital Crown con confirmación, y acciones inferiores de saltar (un tercio) y registrar (dos tercios); falta validar ergonomía física
+- [ ] Diseñar la ejecución EMOM en iPhone y Watch: la pantalla de serie mostrará el temporizador y la animación de vaciado en su cabecera, las repeticiones deben completarse dentro de la ventana fijada y el tiempo restante será el descanso hasta la siguiente serie, sin navegar a una pantalla de descanso separada.
 - [~] diseñar la pantalla de descanso con cuenta atrás, próxima serie y háptica al finalizar
 - [~] aplicar en descanso una animación de vaciado del realce como fondo, contador grande, tip de próxima serie y estado verde sutil con háptica al terminar; el vaciado continuo queda pendiente
 - [~] diseñar una pantalla compacta de entrenamiento completado, adaptada al resumen nativo del iPhone
@@ -1576,6 +1586,7 @@ Criterio de aceptación:
 
 ## Backlog futuro
 
+- Reorganizar Opciones y sus submenús alrededor de tareas frecuentes, con accesos más directos a perfil, planificación, entrenador, historial e integraciones; revisar jerarquía y etiquetas para que las funciones sean localizables.
 - Integracion opcional con Atajos de iOS.
 - Paridad nativa del flujo principal: preview, serie, feedback, descanso y finalizacion.
 - Live Activity para temporizador de descanso.

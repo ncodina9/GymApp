@@ -28,6 +28,7 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
   let plan: TrainingPlan
+  @Query private var revisionRecords: [PlanRevisionRecord]
   @AppStorage("appearanceTheme") private var appearanceRaw = AppAppearance.system.rawValue
   @AppStorage("themeAccent") private var accentRaw = ThemeAccent.blue.rawValue
   @AppStorage("premiumColorScheme") private var premiumSchemeRaw = ""
@@ -35,6 +36,10 @@ struct SettingsView: View {
 
   private var themeKey: String {
     "\(appearanceRaw)-\(accentRaw)-\(premiumSchemeRaw)"
+  }
+
+  private var pendingRevisionCount: Int {
+    revisionRecords.count { $0.basePlanID == plan.planID && $0.status == .proposed }
   }
 
   var body: some View {
@@ -56,7 +61,8 @@ struct SettingsView: View {
           SettingsRow(
             title: "Planificación",
             detail: "Calendario, sesiones, revisiones y datos locales",
-            destination: PlanningHubView(plan: plan)
+            destination: PlanningHubView(plan: plan),
+            badge: pendingRevisionCount
           )
           SettingsDivider()
           SettingsRow(
@@ -188,8 +194,24 @@ private struct PlanRevisionsView: View {
                   revisionMessage = error.localizedDescription
                 }
               },
-              onReject: { PlanRevisionStore.reject(revision, in: modelContext) }
+              onReject: { PlanRevisionStore.reject(revision, in: modelContext) },
+              onKeepOperations: { indexes in
+                do {
+                  try PlanRevisionStore.keepOperations(
+                    at: indexes,
+                    in: revision,
+                    basedOn: plan,
+                    records: revisionRecords,
+                    constraints: planningConstraints,
+                    context: modelContext
+                  )
+                  revisionMessage = "La propuesta se ha recalculado con los ajustes seleccionados."
+                } catch {
+                  revisionMessage = error.localizedDescription
+                }
+              }
             )
+            .id("\(revision.id)-\(revision.updatedAt.timeIntervalSinceReferenceDate)")
           }
         }
       }
@@ -243,6 +265,35 @@ private struct PlanRevisionCard: View {
   let onAccept: () -> Void
   let onRefresh: () -> Void
   let onReject: () -> Void
+  let onKeepOperations: (Set<Int>) -> Void
+  @State private var selectedOperationIndexes: Set<Int>
+
+  init(
+    revision: PlanRevisionRecord,
+    operations: [PlanningOperation],
+    warnings: [PlanningWarning],
+    impact: PlanningImpact?,
+    rationales: [PlanRevisionRationale],
+    parentRevisionNumber: Int?,
+    isStale: Bool,
+    onAccept: @escaping () -> Void,
+    onRefresh: @escaping () -> Void,
+    onReject: @escaping () -> Void,
+    onKeepOperations: @escaping (Set<Int>) -> Void
+  ) {
+    self.revision = revision
+    self.operations = operations
+    self.warnings = warnings
+    self.impact = impact
+    self.rationales = rationales
+    self.parentRevisionNumber = parentRevisionNumber
+    self.isStale = isStale
+    self.onAccept = onAccept
+    self.onRefresh = onRefresh
+    self.onReject = onReject
+    self.onKeepOperations = onKeepOperations
+    _selectedOperationIndexes = State(initialValue: Set(operations.indices))
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -270,14 +321,40 @@ private struct PlanRevisionCard: View {
       }
 
       if !operations.isEmpty {
-        VStack(alignment: .leading, spacing: 4) {
-          Text("Cambios")
+        VStack(alignment: .leading, spacing: 8) {
+          Text(revision.status == .proposed ? "Ajustes a aplicar" : "Cambios")
             .font(.gymSupport.weight(.bold))
             .foregroundStyle(Color.gymSecondaryText)
-          ForEach(Array(operations.enumerated()), id: \.offset) { _, operation in
-            Label(operation.summary, systemImage: "arrow.triangle.branch")
-              .font(.gymSupport)
-              .foregroundStyle(Color.gymSecondaryText)
+          ForEach(Array(operations.enumerated()), id: \.offset) { index, operation in
+            if revision.status == .proposed {
+              Toggle(isOn: operationSelectionBinding(for: index)) {
+                Label(operation.summary, systemImage: "arrow.triangle.branch")
+                  .font(.gymBody.weight(.medium))
+              }
+              .tint(Color.gymAccent)
+              .padding(10)
+              .background(
+                selectedOperationIndexes.contains(index) ? Color.gymAccent.opacity(0.10) : Color.gymCanvas,
+                in: RoundedRectangle(cornerRadius: 10)
+              )
+            } else {
+              Label(operation.summary, systemImage: "arrow.triangle.branch")
+                .font(.gymSupport)
+                .foregroundStyle(Color.gymSecondaryText)
+            }
+          }
+          if revision.status == .proposed, selectedOperationIndexes != Set(operations.indices) {
+            Button {
+              onKeepOperations(selectedOperationIndexes)
+            } label: {
+              Label("Recalcular con \(selectedOperationIndexes.count) ajuste\(selectedOperationIndexes.count == 1 ? "" : "s")", systemImage: "arrow.triangle.2.circlepath")
+                .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .font(.gymBody.weight(.semibold))
+            .foregroundStyle(Color.gymAccent)
+            .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 12))
+            .disabled(selectedOperationIndexes.isEmpty)
+            .opacity(selectedOperationIndexes.isEmpty ? 0.45 : 1)
           }
         }
       }
@@ -363,6 +440,19 @@ private struct PlanRevisionCard: View {
     }
   }
 
+  private func operationSelectionBinding(for index: Int) -> Binding<Bool> {
+    Binding(
+      get: { selectedOperationIndexes.contains(index) },
+      set: { isSelected in
+        if isSelected {
+          selectedOperationIndexes.insert(index)
+        } else {
+          selectedOperationIndexes.remove(index)
+        }
+      }
+    )
+  }
+
   private static let dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.locale = Locale(identifier: "es_ES")
@@ -375,14 +465,80 @@ private struct PlanningImpactSummary: View {
   let impact: PlanningImpact
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 12) {
       Text("Impacto previsto")
         .font(.gymSupport.weight(.bold))
         .foregroundStyle(Color.gymSecondaryText)
 
       HStack(spacing: 8) {
+        impactMetric("Sesiones", value: "\(impact.sessionChanges.count)", color: impact.sessionChanges.isEmpty ? Color.gymSecondaryText : Color.gymAccent)
         impactMetric("Duración", delta: impact.estimatedMinutesAfter - impact.estimatedMinutesBefore, suffix: " min")
         impactMetric("Superseries", delta: impact.supersetsAfter - impact.supersetsBefore, suffix: "")
+      }
+
+      if !impact.sessionChanges.isEmpty {
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Sesiones afectadas")
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymSecondaryText)
+          ForEach(impact.sessionChanges) { change in
+            VStack(alignment: .leading, spacing: 5) {
+              HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("S\(change.week) · \(change.label)")
+                  .font(.gymBody.weight(.semibold))
+                  .lineLimit(1)
+                Spacer(minLength: 8)
+                if change.isCancelled {
+                  Text("Cancelada")
+                    .font(.gymSupport.weight(.bold))
+                    .foregroundStyle(Color.gymWarning)
+                } else if change.estimatedMinutesBefore != change.estimatedMinutesAfter {
+                  Text("\(change.estimatedMinutesAfter) min")
+                    .font(.gymSupport.weight(.bold))
+                    .foregroundStyle(Color.gymAccent)
+                }
+              }
+              if !change.focus.isEmpty {
+                Text(change.focus)
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+                  .lineLimit(1)
+              }
+              ForEach(change.changes, id: \.self) { detail in
+                Label(detail, systemImage: "arrow.right")
+                  .font(.gymSupport)
+                  .foregroundStyle(Color.gymSecondaryText)
+              }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 10))
+          }
+        }
+      }
+
+      if !impact.diagnostics.isEmpty {
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Coherencia y recuperación")
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymSecondaryText)
+          ForEach(impact.diagnostics) { diagnostic in
+            Label {
+              VStack(alignment: .leading, spacing: 2) {
+                Text(diagnostic.title)
+                  .font(.gymBody.weight(.semibold))
+                Text(diagnostic.detail)
+                  .font(.gymSupport)
+              }
+            } icon: {
+              Image(systemName: diagnosticSymbol(for: diagnostic.tone))
+            }
+            .foregroundStyle(diagnosticColor(for: diagnostic.tone))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+            .background(diagnosticColor(for: diagnostic.tone).opacity(0.10), in: RoundedRectangle(cornerRadius: 10))
+          }
+        }
       }
 
       if let previousEnd = impact.scheduleEndBefore,
@@ -414,15 +570,39 @@ private struct PlanningImpactSummary: View {
   }
 
   private func impactMetric(_ title: String, delta: Int, suffix: String) -> some View {
+    impactMetric(
+      title,
+      value: "\(delta >= 0 ? "+" : "")\(delta)\(suffix)",
+      color: delta == 0 ? Color.gymSecondaryText : (delta > 0 ? Color.gymCompleted : Color.gymWarning)
+    )
+  }
+
+  private func impactMetric(_ title: String, value: String, color: Color) -> some View {
     VStack(alignment: .leading, spacing: 2) {
       Text(title).font(.gymSupport.weight(.semibold)).foregroundStyle(Color.gymSecondaryText)
-      Text("\(delta >= 0 ? "+" : "")\(delta)\(suffix)")
+      Text(value)
         .font(.gymBody.weight(.bold))
-        .foregroundStyle(delta == 0 ? Color.gymSecondaryText : (delta > 0 ? Color.gymCompleted : Color.gymWarning))
+        .foregroundStyle(color)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(8)
     .background(Color.gymCanvas, in: RoundedRectangle(cornerRadius: 10))
+  }
+
+  private func diagnosticColor(for tone: PlanningImpact.Diagnostic.Tone) -> Color {
+    switch tone {
+    case .positive: Color.gymCompleted
+    case .caution: Color.gymWarning
+    case .critical: Color.gymDanger
+    }
+  }
+
+  private func diagnosticSymbol(for tone: PlanningImpact.Diagnostic.Tone) -> String {
+    switch tone {
+    case .positive: "checkmark.circle"
+    case .caution: "exclamationmark.triangle"
+    case .critical: "xmark.octagon"
+    }
   }
 
   private static func dateLabel(_ value: String) -> String {
@@ -603,6 +783,14 @@ private struct SettingsRow<Destination: View>: View {
   let title: String
   let detail: String
   let destination: Destination
+  let badge: Int?
+
+  init(title: String, detail: String, destination: Destination, badge: Int? = nil) {
+    self.title = title
+    self.detail = detail
+    self.destination = destination
+    self.badge = badge
+  }
 
   var body: some View {
     NavigationLink { destination } label: {
@@ -612,6 +800,14 @@ private struct SettingsRow<Destination: View>: View {
           Text(detail).font(.gymBody).foregroundStyle(Color.gymSecondaryText)
         }
         Spacer()
+        if let badge, badge > 0 {
+          Text("\(badge)")
+            .font(.gymSupport.weight(.bold))
+            .foregroundStyle(Color.gymAccentForeground)
+            .frame(minWidth: 24, minHeight: 24)
+            .background(Color.gymAccent, in: Capsule())
+            .accessibilityLabel("\(badge) revisiones pendientes")
+        }
         Image(systemName: "chevron.right").foregroundStyle(Color.gymSecondaryText)
       }
       .padding(16)

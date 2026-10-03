@@ -264,6 +264,9 @@ struct TrainingPlanDecodingTests {
     )
     #expect(moved.plan.sessions.first?.date == "2027-01-06")
     #expect(moved.plan.sessions.first?.weekday == "Miércoles")
+    #expect(moved.impact.sessionChanges.first?.sessionID == session.sessionID)
+    #expect(moved.impact.sessionChanges.first?.dateAfter == "2027-01-06")
+    #expect(!moved.impact.diagnostics.isEmpty)
     #expect(moved.warnings.contains(.durationExceedsPreference(
       sessionID: session.sessionID,
       minutes: session.estimatedMinutes,
@@ -278,6 +281,7 @@ struct TrainingPlanDecodingTests {
     #expect(cancelled.plan.sessions.first?.isCancelled == true)
     #expect(cancelled.impact.changedSessionIDs == [session.sessionID])
     #expect(cancelled.impact.estimatedMinutesAfter == cancelled.impact.estimatedMinutesBefore - session.estimatedMinutes)
+    #expect(cancelled.impact.diagnostics.contains { $0.title == "Volumen reducido en acumulación" })
 
     let replaced = try PlanningOperationEngine.preview(
       basePlan: plan,
